@@ -1,0 +1,24 @@
+{
+  "name": "discord-bot",
+  "version": "0.1.0",
+  "description": "Simple Discord bot scaffold",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "register-commands": "node register-commands.js"
+  },
+  "engines": {
+    "node": ">=16.9.0"
+  },
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "discord.js": "^14.21.0",
+    "dotenv": "^17.2.1",
+    "axios": "^1.4.0",
+    "@google/genai": "^1.13.0",
+    "express": "^5.1.0",
+    "multer": "^2.0.2",
+    "cors": "^2.8.5"
+  }
+}
