@@ -39,8 +39,11 @@ if (!token) {
   process.exit(0);
 }
 
-// Intents: Guilds for slash commands. Message content intent only if you enabled it in the Developer Portal.
-const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages], partials:[Partials.Channel, Partials.Message] });
+// Intents: add MessageContent only if autoresponder enabled (requires privileged intent in dev portal)
+const enableAutoReply = process.env.AUTOREPLY_ENABLED === '1';
+const intents = [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages];
+if (enableAutoReply) intents.push(GatewayIntentBits.MessageContent);
+const client = new Client({ intents, partials:[Partials.Channel, Partials.Message] });
 loadCommands(client);
 
 // Poll handler will come from commands/poll if present

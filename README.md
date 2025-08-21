@@ -6,6 +6,13 @@ Lightweight Discord bot with modular slash commands, multi‑image AI explanatio
 
 </div>
 
+## 🚀 Invite the Bot
+
+Use this OAuth2 URL to add the bot to a server (requires "Manage Server" permission):
+
+https://discord.com/oauth2/authorize?client_id=951335667756072981&scope=bot%20applications.commands
+
+
 ## ✨ Features
 * Modular slash commands (guild‑scoped for rapid iteration)
 * Message context menu: **Explain Image** (right‑click → Apps → Explain Image)
@@ -20,6 +27,7 @@ Lightweight Discord bot with modular slash commands, multi‑image AI explanatio
 * Long outputs auto‑chunked (2,000 char safe slicing)
 * Select‑menu driven help (`/help`) with ephemeral category switching
 * Exponential backoff + size checks for AI image fetches
+* Optional auto‑responses to greetings / casual phrases (toggle via env)
 
 ## 📦 Tech Stack
 * Node.js >= 16.9 (discord.js v14 requirement)
@@ -59,6 +67,10 @@ Context Menu:
 * Message → Apps → **Summarize** – Summarize chat context (captures up to ~15 messages before/after, filters noise)
 * Message → Apps → **Translate** – Auto‑detect source and translate message content to ID (model driven)
 
+Auto Replies (optional):
+* Responds to greetings / common Indonesian & English phrases (e.g. "pagi", "hi", "makasih", gaming terms like "lag", "push rank") when enabled.
+* Cooldown per channel & phrase group (default 30s) to reduce spam.
+
 ## 🖼️ Image Explanation
 ### Context Menu (recommended)
 Right‑click (mobile: long press) image message → Apps → **Explain Image**. Guarantees the exact attachment.
@@ -95,6 +107,18 @@ Right‑click (mobile: long press) image message → Apps → **Explain Image**.
 
 ## 📝 License
 MIT
+
+---
+## 🗣 Auto Responses (Optional)
+
+Enable lightweight pattern‑based greeting / chatter replies.
+
+Considerations:
+* Avoid responding to sensitive phrases – review patterns before production.
+* High traffic channels may need longer cooldowns.
+* For advanced behavior (per‑guild config, persistence, commands to add/remove patterns) promote patterns to a data store and expose admin slash commands.
+
+---
 
 ---
 Feel free to extend: add persistence, global commands, moderation tools, rate limiting, and observability.
