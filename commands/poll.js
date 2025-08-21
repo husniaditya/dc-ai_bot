@@ -23,7 +23,7 @@ module.exports = {
     } else if (sub === 'results') {
       const pollId = interaction.options.getString('id');
       const poll = polls.get(pollId);
-      if (!poll) return interaction.reply({ content: 'Poll not found.', flags: 64 });
+  if (!poll) return interaction.reply({ content: 'Poll not found.', flags: 64 });
       const counts = new Array(poll.options.length).fill(0);
       for (const v of poll.userVotes.values()) counts[v]++;
       const total = Math.max(1, Array.from(poll.userVotes.values()).length);
@@ -43,7 +43,7 @@ module.exports = {
     const optIndex = parseInt(parts[parts.length - 1], 10);
     const poll = polls.get(pollId);
     if (!poll) {
-      await interaction.reply({ content: 'Poll not found or expired.', ephemeral: true });
+  await interaction.reply({ content: 'Poll not found or expired.', flags: 64 });
       return true;
     }
     const userId = interaction.user.id;
@@ -60,10 +60,10 @@ module.exports = {
       const ch = await client.channels.fetch(poll.channelId);
       const msg = await ch.messages.fetch(poll.messageId);
       await msg.edit({ components: [row] });
-      await interaction.reply({ content: 'Vote updated.', ephemeral: true });
+  await interaction.reply({ content: 'Vote updated.', flags: 64 });
     } catch (e) {
       console.error('Failed to update poll message', e);
-      try { await interaction.reply({ content: 'Vote recorded (could not update message).', ephemeral: true }); } catch {}
+  try { await interaction.reply({ content: 'Vote recorded (could not update message).', flags: 64 }); } catch {}
     }
     return true;
   }

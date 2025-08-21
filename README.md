@@ -56,6 +56,8 @@ AI / Knowledge:
 
 Context Menu:
 * Message → Apps → **Explain Image** – Single image explanation
+* Message → Apps → **Summarize** – Summarize chat context (captures up to ~15 messages before/after, filters noise)
+* Message → Apps → **Translate** – Auto‑detect source and translate message content to ID (model driven)
 
 ## 🖼️ Image Explanation
 ### Context Menu (recommended)

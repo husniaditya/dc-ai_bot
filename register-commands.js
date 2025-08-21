@@ -124,6 +124,14 @@ const commands = [
   {
     name: 'Explain Image',
     type: 3 // MESSAGE context menu
+  },
+  {
+    name: 'Summarize',
+    type: 3 // MESSAGE context menu
+  },
+  {
+    name: 'Translate',
+    type: 3 // MESSAGE context menu
   }
 ];
 
