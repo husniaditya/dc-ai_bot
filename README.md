@@ -2,86 +2,97 @@
 
 # Discord AI Bot (Node.js + discord.js v14)
 
-Lightweight Discord bot with slash commands, a message context menu image explainer powered by Google Gemini, polls, reminders, math utilities, and more.
+Lightweight Discord bot with modular slash commands, multi‑image AI explanation, conversational follow‑ups, message context menu image explainer powered by Google Gemini, polls (with live updates + results), reminders, math & utility commands, summarization, translation, and more.
 
 </div>
 
 ## ✨ Features
-* Slash commands (guild‑scoped for fast iteration)
-* Message context menu: **Explain Image** (AI description of an image you right‑click)
-* AI text Q&A via Gemini (`/ask`)
-* Image explanation via `/explain_image` with direct attachment upload (and fallback to replying)
-* Poll creation with live button vote counts
-* Reminders via DM (fallback to channel if DM blocked)
+* Modular slash commands (guild‑scoped for rapid iteration)
+* Message context menu: **Explain Image** (right‑click → Apps → Explain Image)
+* AI text Q&A via Gemini (`/ask`) with short‑term response caching (3 min)
+* Conversation follow‑ups (`/askfollow`) – keeps last turns (in‑memory)
+* Multi‑image explanation (1–3 images) via `/explain_image` + optional prompt
+* Channel summarization (`/summarize [count]`)
+* Translation (`/translate text target`)
+* Poll creation + live vote buttons + `/poll results id` snapshot
+* Reminders via DM with channel fallback
 * Basic user + math utilities
-* Long AI responses are auto‑chunked to respect the 2000 char Discord limit
-* Help delivered as a single ephemeral embed (`/help`)
+* Long outputs auto‑chunked (2,000 char safe slicing)
+* Select‑menu driven help (`/help`) with ephemeral category switching
+* Exponential backoff + size checks for AI image fetches
 
 ## 📦 Tech Stack
 * Node.js >= 16.9 (discord.js v14 requirement)
 * discord.js
 * Google GenAI SDK (`@google/genai`) for Gemini models
 * Axios (download & re-upload images for embeds)
-* dotenv for configuration
 
 ## 🧩 Commands Overview
-Basic:
+Core:
 * `/ping` – Pong!
 * `/whoami` – Your tag + ID
 * `/uptime` – Bot uptime
 * `/echo text:<text>` – Echo back text
-* `/help` – Ephemeral embed with categorized feature list
+* `/help` – Ephemeral help + category select
 
-Utilities:
+User & Math:
 * `/user info [target]` – Info about you or another user
-* `/math add|sub|mul|div a b` – Basic arithmetic
+* `/math add|sub|mul|div a b` – Arithmetic
 
 Polls:
-* `/poll create question:<q> options:<comma,separated,choices>` (2–5 options). Example:
-	```
-	/poll create question:Which color? options:red, green, blue
-	```
-	Users press buttons; counts update live.
+* `/poll create question:<q> options:<a,b,c>` – 2–5 options
+* `/poll results id:<pollId>` – Snapshot text summary
 
 Reminders:
-* `/remind minutes:<n> text:<message>` – Sends a DM after the delay (fallback to channel if DM blocked).
+* `/remind minutes:<n> text:<message>` – DM (channel fallback)
 
-AI:
-* `/ask prompt:<your question>` – Send prompt to Gemini model.
-* `/explain_image image:<attachment> [prompt]` – Upload an image directly (best)
-	* Fallback: reply to a message with an image then run without attachment (may be less reliable)
+AI / Knowledge:
+* `/ask prompt:<text>` – Ask Gemini
+* `/askfollow prompt:<text>` – Follow‑up with recent context (last ~10 turns stored)
+* `/summarize [count]` – Summarize last N (default 30, max 100) channel messages
+* `/translate text:<t> target:<lang>` – Quick translation (outputs only translation)
+* `/explain_image image(image1,image2,image3):<attachments> [prompt]` – 1–3 images
+	* Fallback legacy: reply to image message (less reliable)
 
-## 🖼️ Image Explanation (Context Menu)
-Best method. Right‑click (mobile: long press) an image message → Apps → **Explain Image**. The bot fetches the attachment, sends it to Gemini, and posts a description.
+Context Menu:
+* Message → Apps → **Explain Image** – Single image explanation
 
-Why context menu? It guarantees access to the exact target message & attachment; slash replies don’t always pass the original message object.
+## 🖼️ Image Explanation
+### Context Menu (recommended)
+Right‑click (mobile: long press) image message → Apps → **Explain Image**. Guarantees the exact attachment.
 
-### Slash Command Variant (`/explain_image`)
-1. Type `/explain_image`
-2. Add your image via the attachment field (paperclip) and optional prompt
-3. Bot responds with an embed: first part of explanation + re-uploaded image (if < ~7.5MB)
-4. Overflow explanation chunks send as follow-up messages
+### Slash Command (`/explain_image`)
+1. Provide up to 3 attachments (image, image2, image3) + optional prompt
+2. Bot re‑uploads first (<8MB) into embed; shows others via count footer
+3. Explanation split across embed + follow‑ups
+4. Oversized images (>8MB) skipped with notice
 
 ## 🤖 AI (Gemini) Notes
-* Uses `@google/genai` (model: `gemini-2.0-flash` for text & images)
-* Errors are truncated; raw stack traces not exposed
-* Long outputs chunked (slash + context menu)
-* Image > ~7.5MB: falls back to original URL embed (no re-upload)
+* SDK: `@google/genai` using `gemini-2.0-flash`
+* Text & multimodal (image) handled
+* Exponential backoff (3 attempts) on transient failures
+* `/ask` responses cached (3 min) per identical prompt
+* `/askfollow` keeps limited rolling history (in‑memory per user)
+* Long outputs chunked safely
+* Images >8MB: rejected (slash) or not re‑uploaded (context menu fallback to URL)
 
 ## ♻️ Limitations / Next Ideas
-* Poll & reminder data in-memory (lost on restart)
-* No rate limiting or quotas yet
-* No database / persistence layer
-* Multi-image explain not implemented
-* Add logging/metrics & moderation guards
+* All state (polls, reminders, conversations, cache) in-memory → lost on restart
+* No rate limiting / abuse throttling yet
+* No persistence (DB, KV, or file) or analytics
+* No permission gating (e.g., restrict heavy AI commands to roles)
+* Conversation context limited to small rolling window
+* No structured logging / metrics exporter
+* Add tests & CI, graceful shutdown persistence snapshot
 
 ## 🔒 Safety / Abuse Considerations
-* Consider per-user cooldown (e.g. 15s) for `/ask` & image explanations
-* Add content filtering if deploying broadly
-* Log AI failures separately (rotate logs, redact keys)
+* Implement per-user cooldown (e.g. 10–15s) for `ask/askfollow/explain_image/summarize`
+* Add content moderation / filtering before broad release
+* Redact sensitive data in logs; rotate & centralize
+* Consider token usage tracking & quotas
 
 ## 📝 License
 MIT
 
 ---
-Feel free to extend: add persistence, global commands, or moderation tools.
+Feel free to extend: add persistence, global commands, moderation tools, rate limiting, and observability.

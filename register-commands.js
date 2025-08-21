@@ -63,7 +63,8 @@ const commands = [
     name: 'poll',
     description: 'Create a simple poll',
     options: [
-      { name: 'create', description: 'Create a poll', type: 1, options: [ { name: 'question', description: 'Poll question', type: 3, required: true }, { name: 'options', description: 'Comma-separated options (max 5)', type: 3, required: true } ] }
+  { name: 'create', description: 'Create a poll', type: 1, options: [ { name: 'question', description: 'Poll question', type: 3, required: true }, { name: 'options', description: 'Comma-separated options (max 5)', type: 3, required: true } ] },
+  { name: 'results', description: 'Show poll results', type: 1, options: [ { name: 'id', description: 'Poll id', type: 3, required: true } ] }
     ]
   },
   {
@@ -83,7 +84,7 @@ const commands = [
   },
   {
     name: 'explain_image',
-    description: 'Upload (attach) an image or (legacy) reply to one to get an AI explanation.',
+    description: 'Upload up to 3 images or reply to one to get AI explanations.',
     options: [
       {
         name: 'image',
@@ -91,6 +92,8 @@ const commands = [
         type: 11, // ATTACHMENT
         required: false
       },
+      { name: 'image2', description: 'Second image (optional)', type: 11, required: false },
+      { name: 'image3', description: 'Third image (optional)', type: 11, required: false },
       {
         name: 'prompt',
         description: 'Optional extra context / instruction',
@@ -98,6 +101,21 @@ const commands = [
         required: false
       }
     ],
+  },
+  {
+    name: 'askfollow',
+    description: 'Ask follow-up based on your recent AI conversation',
+    options: [ { name: 'prompt', description: 'Follow-up prompt', type: 3, required: true } ]
+  },
+  {
+    name: 'summarize',
+    description: 'Summarize recent channel messages',
+    options: [ { name: 'count', description: 'Number of messages (max 100, default 30)', type: 4, required: false } ]
+  },
+  {
+    name: 'translate',
+    description: 'Translate text to a target language',
+    options: [ { name: 'text', description: 'Text to translate', type: 3, required: true }, { name: 'target', description: 'Target language (e.g. en, id, fr)', type: 3, required: true } ]
   },
   {
     name: 'help',
