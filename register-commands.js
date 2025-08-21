@@ -82,8 +82,30 @@ const commands = [
     ]
   },
   {
+    name: 'explain_image',
+    description: 'Upload (attach) an image or (legacy) reply to one to get an AI explanation.',
+    options: [
+      {
+        name: 'image',
+        description: 'Image attachment to explain',
+        type: 11, // ATTACHMENT
+        required: false
+      },
+      {
+        name: 'prompt',
+        description: 'Optional extra context / instruction',
+        type: 3,
+        required: false
+      }
+    ],
+  },
+  {
     name: 'help',
     description: 'Show help (ephemeral)'
+  },
+  {
+    name: 'Explain Image',
+    type: 3 // MESSAGE context menu
   }
 ];
 
