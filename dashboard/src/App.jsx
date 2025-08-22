@@ -215,6 +215,9 @@ export default function App(){
   // Fetch user profile (selected guild) after login
   useEffect(()=>{ if(token){ (async()=>{ try{ const r=await fetch('/api/user/me',{ headers:{ Authorization:'Bearer '+token }}); if(r.ok){ const j=await r.json(); if(j && j.selected_guild_id){ setSelectedGuild(j.selected_guild_id); if(view==='login') setView('dashboard'); } else if(view==='login') { setView('guild'); } } }catch{} })(); } }, [token, view]);
 
+  // Fetch guild list after reload if token present (so banner can show name not ID)
+  useEffect(()=>{ if(token && guilds.length===0){ (async()=>{ try { const r = await fetch('/api/guilds',{ headers:{ Authorization:'Bearer '+token }}); if(r.ok){ const j = await r.json(); if(Array.isArray(j)) setGuilds(j); } } catch {} })(); } }, [token, guilds.length]);
+
   async function saveSelectedGuild(nextView='dashboard'){
     if(!selectedGuild) return;
     try {
@@ -322,9 +325,10 @@ export default function App(){
   // Dashboard view --------------------------------------------------
   if(view!=='dashboard') return null; // safety
 
+  const resolvedGuildName = guilds.find(g=>g.id===selectedGuild)?.name || (selectedGuild && selectedGuild.length>4 ? 'Server '+selectedGuild.slice(0,6)+'…' : selectedGuild) || 'Unknown';
   const guildBanner = <div className="card card-glass py-2 px-3 d-flex flex-row justify-content-between align-items-center mb-3 fade-in" style={{border:'1px solid rgba(255,255,255,0.15)'}}>
     <div>
-      <span className="badge-soft me-2">Server</span>{guilds.find(g=>g.id===selectedGuild)?.name || selectedGuild || 'Unknown'}
+      <span className="badge-soft me-2">Server</span>{resolvedGuildName}
     </div>
     <div className="d-flex gap-2">
       <button className="btn btn-sm btn-outline-light" onClick={()=>setView('guild')}>Change</button>

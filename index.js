@@ -240,6 +240,13 @@ app.get('/api/auto-responses', authMiddleware, async (req,res)=>{
     return res.json(store.getAutoResponses());
   } catch(e){ return res.status(500).json({ error:'load_failed' }); }
 });
+// Lightweight guild list (names/icons) for dashboard refresh so we can render selected guild name after page reload
+app.get('/api/guilds', authMiddleware, (req,res)=>{
+  try {
+    const list = client.guilds.cache.map(g=>({ id:g.id, name:g.name, icon:g.icon }));
+    res.json(list);
+  } catch(e){ res.status(500).json({ error:'load_failed' }); }
+});
 app.post('/api/auto-responses', authMiddleware, async (req,res)=>{
   const { key, pattern, flags, replies, enabled } = req.body || {};
   if (!key || !pattern) return res.status(400).json({ error: 'key and pattern required' });
