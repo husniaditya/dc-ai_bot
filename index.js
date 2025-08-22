@@ -1,4 +1,9 @@
 const { Client, GatewayIntentBits, Partials } = require('discord.js');
+const express = require('express');
+const cors = require('cors');
+const jwt = require('jsonwebtoken');
+// Use built-in global fetch (Node 18+) to avoid ESM require issues
+const fetchFn = (...args) => globalThis.fetch(...args);
 require('dotenv').config();
 const { askGemini, explainImage } = require('./ai-client');
 const axios = require('axios');
@@ -39,12 +44,238 @@ if (!token) {
   process.exit(0);
 }
 
-// Intents: add MessageContent only if autoresponder enabled (requires privileged intent in dev portal)
+// Intents: include MessageContent (feature gated by settings at runtime)
 const enableAutoReply = process.env.AUTOREPLY_ENABLED === '1';
-const intents = [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages];
-if (enableAutoReply) intents.push(GatewayIntentBits.MessageContent);
+const intents = [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent];
 const client = new Client({ intents, partials:[Partials.Channel, Partials.Message] });
 loadCommands(client);
+
+// --- Settings / Dashboard API (basic) ---
+const store = require('./config/store');
+store.initPersistence().then(mode => console.log('Persistence mode:', mode));
+const app = express();
+app.use(express.json());
+
+// Basic in-memory rate limiting (per IP) for dashboard API
+const rlWindowMs = parseInt(process.env.DASHBOARD_RATE_WINDOW_MS || '60000',10); // 1 min
+const rlMax = parseInt(process.env.DASHBOARD_RATE_MAX || '120',10);
+const rlMap = new Map(); // ip -> { count, ts }
+app.use('/api', (req,res,next)=>{
+  const ip = req.ip || req.connection.remoteAddress || 'unknown';
+  const now = Date.now();
+  let rec = rlMap.get(ip);
+  if(!rec || rec.ts + rlWindowMs < now){ rec = { count:0, ts: now }; }
+  rec.count++;
+  rlMap.set(ip, rec);
+  if(rec.count > rlMax){ return res.status(429).json({ error: 'rate limit exceeded' }); }
+  next();
+});
+
+// Audit log (append to file) for mutating routes
+const auditPath = path.join(__dirname, 'dashboard-audit.log');
+function audit(req, body){
+  const line = JSON.stringify({ time:new Date().toISOString(), ip:req.ip, user:req.user && req.user.user, method:req.method, path:req.originalUrl, body }) + '\n';
+  fs.appendFile(auditPath, line, ()=>{});
+}
+
+// CORS setup
+const allowedOrigins = (process.env.DASHBOARD_CORS_ORIGINS || '').split(',').map(s=>s.trim()).filter(Boolean);
+app.use(cors({ origin: (origin, cb) => {
+  if (!origin) return cb(null, true); // non-browser / same-origin
+  if (allowedOrigins.length === 0 || allowedOrigins.includes(origin)) return cb(null, true);
+  return cb(new Error('Not allowed by CORS'));
+}, credentials: false }));
+
+// Auth helpers
+const JWT_SECRET = process.env.DASHBOARD_JWT_SECRET || 'changeme_dev_secret';
+// Legacy single admin creds (kept for fallback if DISABLE_LEGACY_LOGIN not set)
+const ADMIN_USER = process.env.DASHBOARD_ADMIN_USER || 'admin';
+const ADMIN_PASS = process.env.DASHBOARD_ADMIN_PASS || 'password';
+
+// Discord OAuth config
+const OAUTH_CLIENT_ID = process.env.CLIENT_ID; // already in .env
+const OAUTH_CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET; // new secret
+const OAUTH_REDIRECT_URI = process.env.DASHBOARD_OAUTH_REDIRECT || 'http://localhost:3001/oauth/callback';
+const OAUTH_SCOPES = ['identify', 'guilds'];
+// In-memory OAuth state store (anti-CSRF). Key: state -> timestamp
+const oauthStateStore = new Map();
+
+function authMiddleware(req,res,next){
+  const auth = req.headers.authorization || '';
+  const token = auth.startsWith('Bearer ') ? auth.slice(7) : null;
+  if (!token) return res.status(401).json({ error: 'missing token' });
+  try { req.user = jwt.verify(token, JWT_SECRET); next(); } catch(e){ return res.status(401).json({ error: 'invalid token' }); }
+}
+
+// Discord OAuth authorize URL (front-end will redirect user here)
+app.get('/api/oauth/discord/url', (req,res)=>{
+  const state = Math.random().toString(36).slice(2,18);
+  oauthStateStore.set(state, Date.now());
+  // prune expired (>10m)
+  const now = Date.now();
+  for (const [s,ts] of oauthStateStore){ if (now - ts > 10*60*1000) oauthStateStore.delete(s); }
+  const params = new URLSearchParams({
+    client_id: OAUTH_CLIENT_ID,
+    response_type: 'code',
+    redirect_uri: OAUTH_REDIRECT_URI,
+    scope: OAUTH_SCOPES.join(' '),
+    state
+  });
+  res.json({ url: `https://discord.com/api/oauth2/authorize?${params.toString()}` });
+});
+
+// OAuth callback exchange (code -> token -> user info & guilds)
+app.post('/api/oauth/discord/exchange', express.json(), async (req,res)=>{
+  const { code, state } = req.body || {};
+  if(!code) return res.status(400).json({ error: 'missing code' });
+  if(!state || !oauthStateStore.has(state)) return res.status(400).json({ error:'invalid_state' });
+  try {
+  oauthStateStore.delete(state);
+  const tokenResp = await fetchFn('https://discord.com/api/oauth2/token', {
+      method:'POST',
+      headers:{ 'Content-Type':'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        client_id: OAUTH_CLIENT_ID,
+        client_secret: OAUTH_CLIENT_SECRET,
+        grant_type: 'authorization_code',
+        code,
+        redirect_uri: OAUTH_REDIRECT_URI
+      })
+    });
+    if(!tokenResp.ok){
+      const text = await tokenResp.text();
+      return res.status(400).json({ error:'token_exchange_failed', detail:text });
+    }
+    const tokenJson = await tokenResp.json();
+    const accessToken = tokenJson.access_token;
+    // Fetch user
+  const userResp = await fetchFn('https://discord.com/api/users/@me', { headers:{ Authorization:`Bearer ${accessToken}` }});
+    const user = await userResp.json();
+    // Fetch guilds
+  const guildResp = await fetchFn('https://discord.com/api/users/@me/guilds', { headers:{ Authorization:`Bearer ${accessToken}` }});
+    const rawGuilds = await guildResp.json();
+    // Filter guilds to those where the bot is actually present to avoid listing unrelated servers.
+    const botGuildIds = new Set(client.guilds.cache.map(g=>g.id));
+    const MANAGE_GUILD = 1 << 5; // 0x20
+    const guilds = Array.isArray(rawGuilds) ? rawGuilds
+      .filter(g => botGuildIds.has(g.id))
+      .map(g => {
+        let permsNumber = 0;
+        try { permsNumber = g.permissions ? Number(g.permissions) : 0; } catch {}
+        return { id: g.id, name: g.name, icon: g.icon, canManage: (permsNumber & MANAGE_GUILD) === MANAGE_GUILD };
+      }) : [];
+    // Persist user (MariaDB only currently)
+    try { await store.upsertUser(user); } catch(e){ console.warn('Persist user failed', e.message); }
+    const jwtToken = jwt.sign({ userId: user.id, username: user.username, type:'discord' }, JWT_SECRET, { expiresIn:'6h' });
+    audit(req, { action:'oauth-login', user:user.id });
+    res.json({ token: jwtToken, user, guilds });
+  } catch(e){
+    console.error('OAuth exchange error', e);
+    res.status(500).json({ error:'oauth_failed' });
+  }
+});
+
+// Set selected guild for user (must be one the bot is in; validated client-side for now)
+app.post('/api/user/select-guild', authMiddleware, async (req,res)=>{
+  const { guildId } = req.body || {};
+  if(!guildId) return res.status(400).json({ error:'guildId required' });
+  try {
+  // minimal server-side validation: ensure bot is in guild
+  if (!client.guilds.cache.has(guildId)) return res.status(400).json({ error:'bot_not_in_guild' });
+    await store.setUserSelectedGuild(req.user.userId, guildId);
+    // Trigger seed (loads defaults into guild tables if empty)
+    try {
+      await store.getGuildSettings(guildId);
+      await store.getGuildAutoResponses(guildId);
+    } catch(seedErr){ console.warn('Guild seed failed', seedErr.message); }
+    audit(req, { action:'select-guild', guild:guildId });
+    res.json({ ok:true });
+  } catch(e){ res.status(500).json({ error:'persist_failed' }); }
+});
+
+// Get current user profile + stored selection
+app.get('/api/user/me', authMiddleware, async (req,res)=>{
+  try { const u = await store.getUser(req.user.userId); res.json(u || {}); } catch(e){ res.status(500).json({ error:'load_failed' }); }
+});
+
+if (!process.env.DISABLE_LEGACY_LOGIN) {
+  app.post('/api/login', (req,res)=>{
+    const { username, password } = req.body || {};
+    if (username === ADMIN_USER && password === ADMIN_PASS){
+      const token = jwt.sign({ user: username, role: 'admin', type:'legacy' }, JWT_SECRET, { expiresIn: '6h' });
+      audit(req, { action:'login-success', user:username });
+      return res.json({ token });
+    }
+    audit(req, { action:'login-fail', user:username });
+    return res.status(401).json({ error: 'invalid credentials' });
+  });
+}
+
+// Protected routes
+app.get('/api/settings', authMiddleware, async (req,res)=>{
+  try {
+    const guildId = req.query.guildId || (req.user.type==='discord' ? (await store.getUser(req.user.userId))?.selected_guild_id : null);
+    if (guildId) {
+      const gs = await store.getGuildSettings(guildId);
+      return res.json({ ...gs, guildId });
+    }
+    return res.json(store.getSettings());
+  } catch(e){ return res.status(500).json({ error:'load_failed' }); }
+});
+app.put('/api/settings', authMiddleware, async (req,res)=>{
+  try {
+    const guildId = req.query.guildId || (req.user.type==='discord' ? (await store.getUser(req.user.userId))?.selected_guild_id : null);
+    const allowed = { autoReplyEnabled: req.body.autoReplyEnabled, autoReplyCooldownMs: req.body.autoReplyCooldownMs };
+    let updated;
+    if (guildId) updated = await store.setGuildSettings(guildId, allowed); else updated = await store.setSettings(allowed);
+    audit(req, { action: guildId ? 'update-guild-settings':'update-settings', guildId, data:allowed });
+    res.json(updated);
+  } catch(e){ res.status(500).json({ error:'persist_failed' }); }
+});
+
+app.get('/api/auto-responses', authMiddleware, async (req,res)=>{
+  try {
+    const guildId = req.query.guildId || (req.user.type==='discord' ? (await store.getUser(req.user.userId))?.selected_guild_id : null);
+    if (guildId) return res.json(await store.getGuildAutoResponses(guildId));
+    return res.json(store.getAutoResponses());
+  } catch(e){ return res.status(500).json({ error:'load_failed' }); }
+});
+app.post('/api/auto-responses', authMiddleware, async (req,res)=>{
+  const { key, pattern, flags, replies, enabled } = req.body || {};
+  if (!key || !pattern) return res.status(400).json({ error: 'key and pattern required' });
+  try {
+    const guildId = req.query.guildId || (req.user.type==='discord' ? (await store.getUser(req.user.userId))?.selected_guild_id : null);
+    let entry;
+    if (guildId) entry = await store.upsertGuildAutoResponse(guildId, { key, pattern, flags, replies, enabled });
+    else entry = await store.upsertAutoResponse({ key, pattern, flags, replies, enabled });
+    audit(req, { action: guildId ? 'upsert-guild-auto':'upsert-auto', key, guildId, enabled });
+    res.json(entry);
+  } catch(e){ res.status(500).json({ error:'persist_failed' }); }
+});
+app.delete('/api/auto-responses/:key', authMiddleware, async (req,res)=>{
+  try {
+    const guildId = req.query.guildId || (req.user.type==='discord' ? (await store.getUser(req.user.userId))?.selected_guild_id : null);
+    if (guildId) await store.removeGuildAutoResponse(guildId, req.params.key); else await store.removeAutoResponse(req.params.key);
+    audit(req, { action: guildId ? 'delete-guild-auto':'delete-auto', key:req.params.key, guildId });
+    res.json({ ok: true });
+  } catch(e){ res.status(500).json({ error:'delete_failed' }); }
+});
+
+// Serve built dashboard (if built with vite build output in /dashboard/dist)
+const distPath = path.join(__dirname, 'dashboard', 'dist');
+if (fs.existsSync(distPath)) {
+  app.use(express.static(distPath));
+  // SPA fallback (Express 5: avoid legacy '*' pattern that triggers path-to-regexp error)
+  app.use((req,res,next)=>{
+    if (req.method === 'GET' && !req.path.startsWith('/api/') && !req.path.includes('.')) {
+      return res.sendFile(path.join(distPath, 'index.html'));
+    }
+    return next();
+  });
+}
+
+const DASHBOARD_PORT = process.env.DASHBOARD_PORT || 3001;
+app.listen(DASHBOARD_PORT, ()=>console.log('Dashboard API listening on :' + DASHBOARD_PORT));
 
 // Poll handler will come from commands/poll if present
 const pollModule = commandMap.get('poll');
