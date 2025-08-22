@@ -90,12 +90,15 @@ export default function App(){
   const [search, setSearch] = useState('');
   const [selectedKeys, setSelectedKeys] = useState(new Set());
   const [page, setPage] = useState(1);
-  const pageSize = 15;
   const [showRegexTester, setShowRegexTester] = useState(false);
   const [testerPattern, setTesterPattern] = useState('');
   const [testerFlags, setTesterFlags] = useState('i');
   const [testerSample, setTesterSample] = useState('');
   const [testerResult, setTesterResult] = useState(null);
+  // DataTable multi-column sorting (array of {col, dir})
+  const [sortRules, setSortRules] = useState([{ col:'key', dir:'asc' }]);
+  // Page size selector
+  const [pageSize, setPageSize] = useState(15);
   const filteredAutos = autos.filter(a => {
     if(!search) return true;
     const s = search.toLowerCase();
@@ -105,10 +108,52 @@ export default function App(){
       (Array.isArray(a.replies) && a.replies.some(r => typeof r === 'string' && r.toLowerCase().includes(s)))
     );
   });
-  useEffect(()=>{ setPage(1); }, [search]);
-  const totalPages = Math.max(1, Math.ceil(filteredAutos.length / pageSize));
-  const pagedAutos = filteredAutos.slice((page-1)*pageSize, page*pageSize);
-  const fillerCount = Math.max(0, pageSize - pagedAutos.length);
+  const sortedAutos = React.useMemo(()=>{
+    if(!sortRules.length) return filteredAutos;
+    const copy = [...filteredAutos];
+    copy.sort((a,b)=>{
+      for(const rule of sortRules){
+        let av = a[rule.col];
+        let bv = b[rule.col];
+        // Support enabled column which is boolean / undefined
+        if(rule.col==='enabled') { av = a.enabled!==false; bv = b.enabled!==false; }
+        av = (av===undefined||av===null)? '' : av.toString().toLowerCase();
+        bv = (bv===undefined||bv===null)? '' : bv.toString().toLowerCase();
+        if(av < bv) return rule.dir==='asc'? -1:1;
+        if(av > bv) return rule.dir==='asc'? 1:-1;
+      }
+      return 0;
+    });
+    return copy;
+  }, [filteredAutos, sortRules]);
+  useEffect(()=>{ setPage(1); }, [search, pageSize]);
+  const totalPages = Math.max(1, Math.ceil(sortedAutos.length / pageSize));
+  const pagedAutos = sortedAutos.slice((page-1)*pageSize, page*pageSize);
+  function toggleSort(col, evt){
+    setSortRules(prev => {
+      const isShift = evt && (evt.shiftKey || evt.metaKey || evt.ctrlKey);
+      // Cycle order: asc -> desc -> remove
+      const idx = prev.findIndex(r=>r.col===col);
+      if(!isShift){
+        if(idx===-1) return [{ col, dir:'asc' }];
+        const existing = prev[idx];
+        if(existing.dir==='asc') return [{ col, dir:'desc' }];
+        if(existing.dir==='desc') return [{ col:'key', dir:'asc' }]; // fall back to default key asc
+      }
+      // Shift (multi) logic
+      if(idx===-1) return [...prev, { col, dir:'asc' }];
+      const copy = [...prev];
+      if(copy[idx].dir==='asc') copy[idx] = { ...copy[idx], dir:'desc' };
+      else { copy.splice(idx,1); }
+      return copy.length? copy : [{ col:'key', dir:'asc' }];
+    });
+  }
+
+  function getSortMeta(col){
+    const idx = sortRules.findIndex(r=>r.col===col);
+    if(idx===-1) return { dir:null, index:null };
+    return { dir: sortRules[idx].dir, index: idx };
+  }
 
   // simple stats
   const totalEnabled = autos.filter(a=>a.enabled!==false).length;
@@ -414,9 +459,34 @@ export default function App(){
           <button className="btn btn-sm btn-outline-danger" onClick={bulkDelete}>Delete</button>
           <button className="btn btn-sm btn-outline-secondary" onClick={clearSelection}>Clear</button>
         </div> : <div className="bulk-bar-placeholder mb-2" />}
-        <div className="table-responsive table-modern-shell">
-          <table className="table table-sm table-modern align-middle">
-            <thead><tr><th style={{width:28}}><input type="checkbox" title="Select page" onChange={e=> e.target.checked? selectAllPage(): clearSelection()} checked={pagedAutos.length>0 && pagedAutos.every(a=>selectedKeys.has(a.key))} /></th><th>Key</th><th>Pattern</th><th>Flags</th><th>Replies</th><th>On</th><th style={{width:110}}>Actions</th></tr></thead>
+        <div className="table-responsive table-modern-shell dt-compact">
+          <div className="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2 dt-toolbar">
+            <div className="dt-status small text-muted">{sortedAutos.length} items • Sort: {sortRules.map(r=>r.col+':' + r.dir).join(', ')}</div>
+            <div className="d-flex align-items-center gap-2">
+              <label className="small text-muted">Rows</label>
+              <select className="form-select form-select-sm" style={{width:90}} value={pageSize} onChange={e=>setPageSize(parseInt(e.target.value)||15)}>
+                {[10,15,25,50,100].map(s=> <option key={s} value={s}>{s}</option>)}
+              </select>
+            </div>
+          </div>
+          <table className="table table-sm table-modern table-dt align-middle">
+            <thead><tr>
+              <th style={{width:28}}><input type="checkbox" title="Select page" onChange={e=> e.target.checked? selectAllPage(): clearSelection()} checked={pagedAutos.length>0 && pagedAutos.every(a=>selectedKeys.has(a.key))} /></th>
+              {['key','pattern','flags','enabled'].map(col => {
+                if(col==='enabled') return (
+                  <th key={col} className={'sortable '+(getSortMeta(col).dir? 'sort-'+getSortMeta(col).dir:'')} onClick={(e)=>toggleSort(col,e)}>
+                    On {getSortMeta(col).index!==null && <sup className="sort-order">{getSortMeta(col).index+1}</sup>}
+                  </th>
+                );
+                const label = col==='key'? 'Key' : (col==='pattern'? 'Pattern': 'Flags');
+                const meta = getSortMeta(col);
+                return <th key={col} className={'sortable '+(meta.dir? 'sort-'+meta.dir:'')} onClick={(e)=>toggleSort(col,e)}>
+                  {label} {meta.index!==null && <sup className="sort-order">{meta.index+1}</sup>}
+                </th>;
+              })}
+              <th>Replies</th>
+              <th style={{width:110}}>Actions</th>
+            </tr></thead>
             <tbody>
               {pagedAutos.map(a => {
                 const matchClass = testerResult && testerResult.ok && testerPattern ? (()=>{ try { return new RegExp(testerPattern, testerFlags).test(a.pattern)? 'match-highlight':'' } catch { return ''; } })() : '';
@@ -446,7 +516,7 @@ export default function App(){
                 </td>
               </tr>})}
               {pagedAutos.length===0 && <tr><td colSpan={7} className="text-center text-muted">No matches</td></tr>}
-              {pagedAutos.length>0 && fillerCount>0 && Array.from({length:fillerCount}).map((_,i)=> <tr key={'filler'+i} className="row-filler"><td colSpan={7}>&nbsp;</td></tr>)}
+              {/* Removed filler rows so table ends cleanly at last record */}
             </tbody>
           </table>
           <div className="d-flex justify-content-between align-items-center mt-2 gap-2 pagination-bar flex-nowrap">

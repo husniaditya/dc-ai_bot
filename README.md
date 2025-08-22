@@ -29,10 +29,8 @@ Dashboard:
 * Per‑guild settings + auto‑response CRUD (enabled flags)
 * Regex tester panel (pattern + flags + multi‑line sample)
 * Bulk enable / disable / delete actions
-* Pagination w/ stable layout & filler rows (no jumping)
 * Per‑user cooldown setting (ms) for auto replies
 * Glass UI, dark/light theme toggle, animated toasts, modern full‑screen login
-* Modal editor (Esc & outside click close) with gradient styling
 
 Persistence:
 * Guild‑scoped tables for settings + auto responses
@@ -117,10 +115,6 @@ Right‑click (mobile: long press) image message → Apps → **Explain Image**.
 * Redact sensitive data in logs; rotate + centralize
 * Track token usage & add quotas
 
-## 📝 License
-MIT
-
----
 ## 🗣 Auto Responses Quick Guide
 Dashboard → Auto Responses:
 1. Add / Edit pattern (regex + flags)
