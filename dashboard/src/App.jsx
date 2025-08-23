@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
+// Option B: removed DataTables – using pure React table implementation
 import { login, getSettings, updateSettings, listAuto, upsertAuto, deleteAuto } from './api';
 
 export default function App(){
@@ -30,13 +31,22 @@ export default function App(){
     if(sidebarOpen) { document.body.classList.add('sidebar-open'); }
     else { document.body.classList.remove('sidebar-open'); }
   }, [sidebarOpen]);
-  // Effect: close sidebar on Escape
+  // Global Escape key handler: closes modal first, then sidebar
   useEffect(()=>{
-    if(!sidebarOpen) return;
-    const handler = (e)=>{ if(e.key==='Escape') setSidebarOpen(false); };
+    const handler = (e)=>{
+      if(e.key !== 'Escape') return;
+      if(showAutoModal){
+        e.preventDefault();
+        closeAutoModal();
+        return;
+      }
+      if(sidebarOpen){
+        setSidebarOpen(false);
+      }
+    };
     window.addEventListener('keydown', handler);
     return ()=> window.removeEventListener('keydown', handler);
-  }, [sidebarOpen]);
+  }, [showAutoModal, sidebarOpen]);
   // Detect OAuth code immediately to avoid login flash
   const initialAuthCode = (typeof window !== 'undefined') ? new URLSearchParams(window.location.search).get('code') : null;
   const [authProcessing, setAuthProcessing] = useState(!!initialAuthCode && !token);
@@ -223,110 +233,127 @@ export default function App(){
 
   // search/filter
   const [search, setSearch] = useState('');
+  // Manual selection state (keys)
   const [selectedKeys, setSelectedKeys] = useState(new Set());
-  const [page, setPage] = useState(1);
   const [showRegexTester, setShowRegexTester] = useState(false);
   const [testerPattern, setTesterPattern] = useState('');
   const [testerFlags, setTesterFlags] = useState('i');
   const [testerSample, setTesterSample] = useState('');
   const [testerResult, setTesterResult] = useState(null);
-  // DataTable multi-column sorting (array of {col, dir})
-  const [sortRules, setSortRules] = useState([{ col:'key', dir:'asc' }]);
-  // Page size selector
+  // Pagination + sorting (pure React table for autos)
   const [pageSize, setPageSize] = useState(15);
-  const filteredAutos = autos.filter(a => {
-    if(!search) return true;
-    const s = search.toLowerCase();
-    return (
-      (a.key||'').toLowerCase().includes(s) ||
-      (a.pattern||'').toLowerCase().includes(s) ||
-      (Array.isArray(a.replies) && a.replies.some(r => typeof r === 'string' && r.toLowerCase().includes(s)))
+  const [page, setPage] = useState(1);
+  const [sort, setSort] = useState({ field: 'key', dir: 'asc' }); // dir: asc|desc
+  const headerSelectRef = useRef(null);
+  // Responsive breakpoint detection for mobile optimized UI
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(()=>{
+    function handleResize(){ setIsMobile(window.innerWidth < 720); }
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return ()=> window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Filtered list
+  const filteredAutos = useMemo(()=>{
+    if(!search) return autos;
+    const q = search.toLowerCase();
+    return autos.filter(a =>
+      a.key.toLowerCase().includes(q) ||
+      a.pattern.toLowerCase().includes(q) ||
+      (a.flags||'').toLowerCase().includes(q) ||
+      (Array.isArray(a.replies)? a.replies.join(' | ') : '').toLowerCase().includes(q)
     );
-  });
-  const sortedAutos = React.useMemo(()=>{
-    if(!sortRules.length) return filteredAutos;
-    const copy = [...filteredAutos];
-    copy.sort((a,b)=>{
-      for(const rule of sortRules){
-        let av = a[rule.col];
-        let bv = b[rule.col];
-        if(rule.col==='enabled') { av = a.enabled!==false; bv = b.enabled!==false; }
-        av = (av===undefined||av===null)? '' : av.toString().toLowerCase();
-        bv = (bv===undefined||bv===null)? '' : bv.toString().toLowerCase();
-        if(av < bv) return rule.dir==='asc'? -1:1;
-        if(av > bv) return rule.dir==='asc'? 1:-1;
-      }
+  }, [autos, search]);
+
+  // Sort
+  const sortedAutos = useMemo(()=>{
+    const arr = [...filteredAutos];
+    const { field, dir } = sort;
+    if(!field) return arr;
+    arr.sort((a,b)=>{
+      let av = a[field];
+      let bv = b[field];
+      if(Array.isArray(av)) av = av.join(' ');
+      if(Array.isArray(bv)) bv = bv.join(' ');
+      if(typeof av === 'boolean') av = av?1:0;
+      if(typeof bv === 'boolean') bv = bv?1:0;
+      av = (av ?? '').toString().toLowerCase();
+      bv = (bv ?? '').toString().toLowerCase();
+      if(av < bv) return dir==='asc'? -1: 1;
+      if(av > bv) return dir==='asc'? 1: -1;
       return 0;
     });
-    return copy;
-  }, [filteredAutos, sortRules]);
-  useEffect(()=>{ setPage(1); }, [search, pageSize]);
+    return arr;
+  }, [filteredAutos, sort]);
+
+  // Pagination boundaries
   const totalPages = Math.max(1, Math.ceil(sortedAutos.length / pageSize));
-  const pagedAutos = sortedAutos.slice((page-1)*pageSize, page*pageSize);
-  function toggleSort(col, evt){
-    setSortRules(prev => {
-      const isShift = evt && (evt.shiftKey || evt.metaKey || evt.ctrlKey);
-      const idx = prev.findIndex(r=>r.col===col);
-      if(!isShift){
-        if(idx===-1) return [{ col, dir:'asc' }];
-        const existing = prev[idx];
-        if(existing.dir==='asc') return [{ col, dir:'desc' }];
-        if(existing.dir==='desc') return [{ col:'key', dir:'asc' }];
-      }
-      if(idx===-1) return [...prev, { col, dir:'asc' }];
-      const copy = [...prev];
-      if(copy[idx].dir==='asc') copy[idx] = { ...copy[idx], dir:'desc' };
-      else { copy.splice(idx,1); }
-      return copy.length? copy : [{ col:'key', dir:'asc' }];
+  useEffect(()=>{ if(page > totalPages) setPage(totalPages); }, [totalPages, page]);
+  const pageAutos = useMemo(()=>{
+    const start = (page-1)*pageSize;
+    return sortedAutos.slice(start, start+pageSize);
+  }, [sortedAutos, page, pageSize]);
+
+  // Select all (filtered)
+  const allFilteredKeys = useMemo(()=> filteredAutos.map(a=>a.key), [filteredAutos]);
+  const selectedInFilterCount = useMemo(()=> allFilteredKeys.reduce((acc,k)=> acc + (selectedKeys.has(k)?1:0), 0), [allFilteredKeys, selectedKeys]);
+  const allFilteredSelected = allFilteredKeys.length>0 && selectedInFilterCount === allFilteredKeys.length;
+  const someFilteredSelected = selectedInFilterCount>0 && !allFilteredSelected;
+  useEffect(()=>{ if(headerSelectRef.current) headerSelectRef.current.indeterminate = someFilteredSelected; }, [someFilteredSelected, allFilteredSelected]);
+
+  function toggleSort(field){
+    setSort(prev => {
+      if(prev.field !== field) return { field, dir:'asc' };
+      if(prev.dir === 'asc') return { field, dir:'desc' };
+      return { field:null, dir:'asc' }; // third click removes sorting
     });
   }
 
-  function getSortMeta(col){
-    const idx = sortRules.findIndex(r=>r.col===col);
-    if(idx===-1) return { dir:null, index:null };
-    return { dir: sortRules[idx].dir, index: idx };
+  function toggleRowSelect(key){
+    setSelectedKeys(prev => { const n = new Set(prev); if(n.has(key)) n.delete(key); else n.add(key); return n; });
+  }
+  function headerToggleSelect(e){
+    const checked = e.target.checked;
+    setSelectedKeys(prev => {
+      if(checked){ return new Set([...prev, ...allFilteredKeys]); }
+      // remove all filtered keys
+      const n = new Set(prev);
+      allFilteredKeys.forEach(k=> n.delete(k));
+      return n;
+    });
+  }
+  function clearSelection(){ setSelectedKeys(new Set()); }
+  function selectAllFiltered(){
+    setSelectedKeys(new Set(allFilteredKeys));
+  }
+  async function bulkEnable(disable=false){
+    const keys = Array.from(selectedKeys);
+    if(!keys.length) return;
+    for(const k of keys){ const item = autos.find(x=>x.key===k); if(!item) continue; try { await upsertAuto({ ...item, enabled: !disable }, selectedGuild); } catch {} }
+    pushToast('success', disable? 'Disabled selected':'Enabled selected');
+    refresh();
+  }
+  async function bulkDelete(){
+    const keys = Array.from(selectedKeys);
+    if(!keys.length) return;
+    if(!window.confirm('Delete '+keys.length+' selected?')) return;
+    for(const k of keys){ try { await deleteAuto(k, selectedGuild); } catch {} }
+    pushToast('success','Deleted selected');
+    refresh();
+    clearSelection();
+  }
+  function editAutoByKey(k){ const item = autos.find(a=>a.key===k); if(item) openEditAuto(item); }
+  function toggleEnabled(item, enabled){
+    setAutos(prev => prev.map(p=> p.key===item.key ? { ...p, enabled } : p));
+    upsertAuto({ ...item, enabled }, selectedGuild).catch(()=>refresh());
   }
 
   // simple stats
   const totalEnabled = autos.filter(a=>a.enabled!==false).length;
   const totalDisabled = autos.length - totalEnabled;
 
-  function toggleSelect(key){
-    setSelectedKeys(prev => {
-      const n = new Set(prev);
-      if (n.has(key)) n.delete(key); else n.add(key);
-      return n;
-    });
-  }
-  function selectAllPage(){
-    setSelectedKeys(prev => {
-      const n = new Set(prev);
-      for (const a of pagedAutos) n.add(a.key);
-      return n;
-    });
-  }
-  function clearSelection(){ setSelectedKeys(new Set()); }
-  async function bulkEnable(disable=false){
-    const keys = Array.from(selectedKeys);
-    if(!keys.length) return; 
-    for (const k of keys){
-      const item = autos.find(x=>x.key===k);
-      if(!item) continue;
-      try { await upsertAuto({ ...item, enabled: !disable }, selectedGuild); } catch {}
-    }
-    pushToast('success', disable? 'Disabled selected':'Enabled selected');
-    refresh();
-    clearSelection();
-  }
-  async function bulkDelete(){
-    const keys = Array.from(selectedKeys);
-    if(!keys.length) return;
-    if(!window.confirm('Delete '+keys.length+' selected?')) return;
-    for (const k of keys){ try { await deleteAuto(k, selectedGuild); } catch {} }
-    pushToast('success','Deleted selected');
-    refresh();
-    clearSelection();
-  }
+  // (Legacy selection helpers removed in Option B)
 
   // Login view
   if(view==='login' && !token){
@@ -459,11 +486,11 @@ export default function App(){
     </div>
   </div>;
 
-  const autosContent = <div className="autos-section fade-in-soft">
+  const autosContent = <div className="autos-section fade-in-soft autos-section-wrapper">
     <div className="auto-head mb-3">
       <div className="section-title">Auto Responses</div>
       <div className="auto-head-search">
-  <input className="form-control form-control-sm search-input w-100" placeholder="Search..." value={search} onChange={e=>setSearch(e.target.value)} />
+        <input className="form-control form-control-sm search-input w-100" placeholder="Search..." value={search} onChange={e=>{ setSearch(e.target.value); setPage(1); }} />
       </div>
       <div className="auto-head-actions">
         <button className="btn btn-sm btn-outline-light" type="button" onClick={()=>setShowRegexTester(s=>!s)}>{showRegexTester? 'Close Tester':'Regex Tester'}</button>
@@ -498,82 +525,113 @@ export default function App(){
       <div className="stat-card"><h6>Enabled</h6><div className="value text-success">{totalEnabled}</div></div>
       <div className="stat-card"><h6>Disabled</h6><div className="value text-danger">{totalDisabled}</div></div>
     </div>
-    {selectedKeys.size>0 ? <div className="bulk-bar mb-2">
-      <strong className="small">{selectedKeys.size} selected</strong>
-      <button className="btn btn-sm btn-outline-light" onClick={()=>bulkEnable(false)}>Enable</button>
-      <button className="btn btn-sm btn-outline-light" onClick={()=>bulkEnable(true)}>Disable</button>
-      <button className="btn btn-sm btn-outline-danger" onClick={bulkDelete}>Delete</button>
-      <button className="btn btn-sm btn-outline-secondary" onClick={clearSelection}>Clear</button>
-    </div> : <div className="bulk-bar-placeholder mb-2" />}
-    <div className="table-responsive table-modern-shell dt-compact">
-      <div className="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2 dt-toolbar">
-        <div className="dt-status small text-muted">{sortedAutos.length} items • Sort: {sortRules.map(r=>r.col+':' + r.dir).join(', ')}</div>
-        <div className="d-flex align-items-center gap-2">
-          <label className="small text-muted">Rows</label>
-          <select className="form-select form-select-sm" style={{width:90}} value={pageSize} onChange={e=>setPageSize(parseInt(e.target.value)||15)}>
-            {[10,15,25,50,100].map(s=> <option key={s} value={s}>{s}</option>)}
-          </select>
-        </div>
+    <div className={"bulk-bar mb-2" + (isMobile? ' bulk-bar-mobile-sticky':'')}>
+      <div className="d-flex flex-wrap gap-2 align-items-center">
+        <strong className="small">Selected: {selectedKeys.size}</strong>
+        {!isMobile && <>
+          <button className="btn btn-sm btn-outline-light" onClick={()=>bulkEnable(false)}>Enable</button>
+          <button className="btn btn-sm btn-outline-light" onClick={()=>bulkEnable(true)}>Disable</button>
+          <button className="btn btn-sm btn-outline-danger" onClick={bulkDelete}>Delete</button>
+          <button className="btn btn-sm btn-outline-secondary" onClick={clearSelection} disabled={!selectedKeys.size}>Clear</button>
+        </>}
+        {isMobile && <>
+          <button className="btn btn-sm btn-outline-light" onClick={selectAllFiltered} disabled={allFilteredSelected}>All</button>
+          <button className="btn btn-sm btn-outline-light" onClick={()=>bulkEnable(false)} disabled={!selectedKeys.size}>On</button>
+          <button className="btn btn-sm btn-outline-light" onClick={()=>bulkEnable(true)} disabled={!selectedKeys.size}>Off</button>
+          <button className="btn btn-sm btn-outline-danger" onClick={bulkDelete} disabled={!selectedKeys.size}>Del</button>
+          <button className="btn btn-sm btn-outline-secondary" onClick={clearSelection} disabled={!selectedKeys.size}>Clear</button>
+        </>}
       </div>
-      <table className="table table-sm table-modern table-dt align-middle">
-        <thead><tr>
-          <th style={{width:28}}><input type="checkbox" title="Select page" onChange={e=> e.target.checked? selectAllPage(): clearSelection()} checked={pagedAutos.length>0 && pagedAutos.every(a=>selectedKeys.has(a.key))} /></th>
-          {['key','pattern','flags','enabled'].map(col => {
-            if(col==='enabled') return (
-              <th key={col} className={'sortable '+(getSortMeta(col).dir? 'sort-'+getSortMeta(col).dir:'')} onClick={(e)=>toggleSort(col,e)}>
-                On {getSortMeta(col).index!==null && <sup className="sort-order">{getSortMeta(col).index+1}</sup>}
-              </th>
-            );
-            const label = col==='key'? 'Key' : (col==='pattern'? 'Pattern': 'Flags');
-            const meta = getSortMeta(col);
-            return <th key={col} className={'sortable '+(meta.dir? 'sort-'+meta.dir:'')} onClick={(e)=>toggleSort(col,e)}>
-              {label} {meta.index!==null && <sup className="sort-order">{meta.index+1}</sup>}
-            </th>;
-          })}
-          <th>Replies</th>
-          <th style={{width:110}}>Actions</th>
-        </tr></thead>
+      <div className="ms-auto d-flex align-items-center gap-2">
+        <label className="small text-muted">Rows</label>
+        <select className="form-select form-select-sm" style={{width:90}} value={pageSize} onChange={e=>{ setPageSize(parseInt(e.target.value)||15); setPage(1); }}>
+          {[10,15,25,50,100].map(s=> <option key={s} value={s}>{s}</option>)}
+        </select>
+      </div>
+    </div>
+    {!isMobile && <div className="table-responsive table-modern-shell table-mobile-stack">
+      <table className="table table-sm table-modern align-middle" style={{minWidth:'900px'}}>
+        <thead>
+          <tr>
+            <th style={{width:34}}>
+              <input ref={headerSelectRef} type="checkbox" aria-label="Select all filtered" checked={allFilteredSelected} onChange={headerToggleSelect} />
+            </th>
+            {['key','pattern','flags','replies','enabled'].map(col => {
+              const labelMap = { key:'Key', pattern:'Pattern', flags:'Flags', replies:'Replies', enabled:'On' };
+              const active = sort.field===col;
+              const dir = active? sort.dir : null;
+              return <th key={col} onClick={()=> toggleSort(col)} style={{cursor:'pointer'}}>
+                {labelMap[col]} {active && (dir==='asc'? '▲':'▼')}
+              </th>;
+            })}
+            <th style={{width:110}}>Actions</th>
+          </tr>
+        </thead>
         <tbody>
-          {pagedAutos.map(a => {
-            const matchClass = testerResult && testerResult.ok && testerPattern ? (()=>{ try { return new RegExp(testerPattern, testerFlags).test(a.pattern)? 'match-highlight':'' } catch { return ''; } })() : '';
+          {pageAutos.map(a => {
+            const replies = Array.isArray(a.replies)? a.replies.join(' | '):'';
+            const matchHighlight = (()=>{ if(!testerPattern) return false; try { return new RegExp(testerPattern, testerFlags).test(a.pattern); } catch { return false; } })();
             const selected = selectedKeys.has(a.key);
-            const disabled = a.enabled===false;
-            const cls = [matchClass, selected? 'row-selected':'', disabled? 'row-disabled':''].filter(Boolean).join(' ');
-            return <tr key={a.key} className={cls}>
-            <td><input type="checkbox" checked={selectedKeys.has(a.key)} onChange={()=>toggleSelect(a.key)} /></td>
-            <td onClick={()=>openEditAuto(a)} className="text-primary" style={{cursor:'pointer'}}>{a.key}</td>
-            <td onClick={()=>openEditAuto(a)} style={{cursor:'pointer'}}>{a.pattern}</td>
-            <td onClick={()=>openEditAuto(a)} style={{cursor:'pointer'}}>{a.flags}</td>
-            <td onClick={()=>openEditAuto(a)} style={{cursor:'pointer'}}><small className="text-muted">{Array.isArray(a.replies)?a.replies.join(' | '):''}</small></td>
-            <td className="text-center">
-              <div className="form-check form-switch m-0 d-inline-flex">
-                <input className="form-check-input" type="checkbox" checked={a.enabled!==false} onChange={(e)=>{
-                  const updated = { ...a, enabled: e.target.checked };
-                  setAutos(prev => prev.map(p => p.key===a.key ? updated : p));
-                  upsertAuto({ key:a.key, pattern:a.pattern, flags:a.flags, replies:a.replies, enabled:e.target.checked }, selectedGuild).catch(()=>refresh());
-                }} />
-              </div>
-            </td>
-            <td>
-              <div className="btn-group btn-group-sm">
-                <button onClick={()=>openEditAuto(a)} className="btn btn-edit">Edit</button>
-                <button onClick={()=>removeAuto(a.key)} className="btn btn-outline-danger">Del</button>
-              </div>
-            </td>
-          </tr>})}
-          {pagedAutos.length===0 && <tr><td colSpan={7} className="text-center text-muted">No matches</td></tr>}
+            return <tr key={a.key} className={(a.enabled===false?'row-disabled ':'') + (matchHighlight? 'match-highlight ':'') + (selected? 'selected':'')}>
+              <td data-label="Select"><input type="checkbox" className="form-check-input" checked={selected} onChange={()=>toggleRowSelect(a.key)} /></td>
+              <td data-label="Key" className="text-primary" style={{cursor:'pointer'}} onClick={()=>editAutoByKey(a.key)}>{a.key}</td>
+              <td data-label="Pattern" style={{cursor:'pointer'}} onClick={()=>editAutoByKey(a.key)}>{a.pattern}</td>
+              <td data-label="Flags" style={{cursor:'pointer'}} onClick={()=>editAutoByKey(a.key)}>{a.flags}</td>
+              <td data-label="Replies" style={{cursor:'pointer'}} onClick={()=>editAutoByKey(a.key)}><small className="text-muted">{replies}</small></td>
+              <td data-label="On" className="text-center">
+                <div className="form-check form-switch m-0 d-inline-flex">
+                  <input className="form-check-input" type="checkbox" checked={a.enabled!==false} onChange={e=>toggleEnabled(a, e.target.checked)} />
+                </div>
+              </td>
+              <td data-label="Actions">
+                <div className="btn-group btn-group-sm">
+                  <button className="btn btn-edit" onClick={()=>editAutoByKey(a.key)}>Edit</button>
+                  <button className="btn btn-outline-danger" onClick={()=>removeAuto(a.key)}>Del</button>
+                </div>
+              </td>
+            </tr>;
+          })}
+          {pageAutos.length===0 && <tr><td colSpan={7} className="text-center text-muted small py-3">No auto responses match your search.</td></tr>}
         </tbody>
       </table>
-      <div className="d-flex justify-content-between align-items-center mt-2 gap-2 pagination-bar flex-nowrap">
-        <div className="small text-muted">Page {page} / {totalPages}</div>
-        <div className="pagination-modern d-flex gap-1">
-          <button className="btn btn-sm" disabled={page===1} onClick={()=>setPage(p=>Math.max(1,p-1))}>Prev</button>
-          {Array.from({length: totalPages}).slice(0,6).map((_,i)=>{
-            const p = i+1; return <button key={p} className={'btn btn-sm'+(p===page?' active':'')} onClick={()=>setPage(p)}>{p}</button>;
-          })}
-          {totalPages>6 && <button className="btn btn-sm" disabled>…</button>}
-          <button className="btn btn-sm" disabled={page===totalPages} onClick={()=>setPage(p=>Math.min(totalPages,p+1))}>Next</button>
-        </div>
+    </div>}
+    {isMobile && <div className="auto-cards-list">
+      {pageAutos.map(a => {
+        const repliesArr = Array.isArray(a.replies)? a.replies:[];
+        const replies = repliesArr.join(' | ');
+        const selected = selectedKeys.has(a.key);
+        const matchHighlight = (()=>{ if(!testerPattern) return false; try { return new RegExp(testerPattern, testerFlags).test(a.pattern); } catch { return false; } })();
+        return <div key={a.key} className={'auto-card card-glass ' + (selected? ' sel':'') + (a.enabled===false? ' disabled':'') + (matchHighlight? ' match':'')}>
+          <div className="auto-card-row top">
+            <div className="form-check m-0">
+              <input className="form-check-input" type="checkbox" checked={selected} onChange={()=>toggleRowSelect(a.key)} />
+            </div>
+            <button className="auto-key-btn" onClick={()=>editAutoByKey(a.key)}>{a.key}</button>
+            <div className="ms-auto form-check form-switch m-0">
+              <input className="form-check-input" type="checkbox" checked={a.enabled!==false} onChange={e=>toggleEnabled(a, e.target.checked)} />
+            </div>
+          </div>
+          <div className="auto-card-row pattern" onClick={()=>editAutoByKey(a.key)}>
+            <code className="pattern-text">{a.pattern}</code>
+            {a.flags && <span className="flags-badge">{a.flags}</span>}
+          </div>
+          {replies && <div className="auto-card-row replies" onClick={()=>editAutoByKey(a.key)}>
+            <div className="replies-preview">{replies.length>160? replies.slice(0,160)+'…': replies}</div>
+          </div>}
+          <div className="auto-card-row actions">
+            <button className="btn btn-sm btn-edit" onClick={()=>editAutoByKey(a.key)}>Edit</button>
+            <button className="btn btn-sm btn-outline-danger" onClick={()=>removeAuto(a.key)}>Del</button>
+          </div>
+        </div>;
+      })}
+      {pageAutos.length===0 && <div className="text-muted small py-3">No auto responses match your search.</div>}
+    </div>}
+    <div className="d-flex flex-wrap gap-2 align-items-center small mt-2">
+      <div>Showing <strong>{pageAutos.length}</strong> of <strong>{filteredAutos.length}</strong> filtered (total {autos.length})</div>
+      <div className="ms-auto d-flex gap-1 align-items-center">
+        <button className="btn btn-sm btn-outline-secondary" disabled={page<=1} onClick={()=>setPage(p=>Math.max(1,p-1))}>Prev</button>
+        <span className="px-2">Page {page} / {totalPages}</span>
+        <button className="btn btn-sm btn-outline-secondary" disabled={page>=totalPages} onClick={()=>setPage(p=>Math.min(totalPages,p+1))}>Next</button>
       </div>
     </div>
   </div>;

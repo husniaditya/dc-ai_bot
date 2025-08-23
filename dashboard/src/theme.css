@@ -99,7 +99,7 @@ body {
 .text-muted { color: var(--text-muted) !important; }
 .table-modern tbody tr.match-highlight { background: rgba(16,185,129,0.15); }
 .table-modern tbody tr.match-highlight:hover { background: rgba(16,185,129,0.22); }
-.table-modern-shell { position:relative; border:1px solid rgba(255,255,255,0.12); border-radius: var(--radius-sm); padding:.35rem .35rem .5rem; background: rgba(255,255,255,0.04); backdrop-filter: blur(8px) saturate(140%); }
+.table-modern-shell { position:relative; border:1px solid rgba(255,255,255,0.12); border-radius: var(--radius-sm); padding:.35rem .35rem .5rem; background: rgba(255,255,255,0.04); backdrop-filter: blur(8px) saturate(140%); max-height:60vh; overflow:auto; }
 .table-modern { margin-bottom:0; }
 .table-modern thead tr { background: linear-gradient(90deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02)); }
 .table-modern thead th { position:sticky; top:0; backdrop-filter: blur(6px); z-index:2; }
@@ -311,7 +311,8 @@ html.dark .form-check-input:checked { background-color: var(--accent); border-co
 
 /* DataTable theme enhancements */
 .table-dt { --dt-border: rgba(255,255,255,0.08); --dt-head-bg: linear-gradient(90deg,rgba(255,255,255,0.08),rgba(255,255,255,0.02)); --dt-row-alt: rgba(255,255,255,0.025); }
-.table-dt thead th { background: var(--dt-head-bg); position:sticky; top:0; z-index:4; font-weight:600; padding:.55rem .75rem; border-bottom:1px solid var(--dt-border) !important; }
+.table-dt thead th { background: linear-gradient(90deg,rgba(31,37,55,0.9),rgba(34,41,62,0.85)); position:sticky; top:0; z-index:4; font-weight:600; padding:.6rem .75rem; border-bottom:1px solid rgba(255,255,255,0.12) !important; color: #e9effa !important; border-right:1px solid rgba(255,255,255,0.1); letter-spacing:.6px; font-size:.63rem; text-transform:uppercase; }
+.table-dt thead th:last-child { border-right:none; }
 .table-dt thead th.sortable { cursor:pointer; user-select:none; transition: var(--transition); }
 .table-dt thead th.sortable:hover { background: linear-gradient(90deg, rgba(255,255,255,0.14), rgba(255,255,255,0.04)); }
 .table-dt thead th.sort-asc, .table-dt thead th.sort-desc { color:#fff; }
@@ -321,12 +322,81 @@ html.dark .form-check-input:checked { background-color: var(--accent); border-co
 .table-dt thead th .sort-order { font-size:.55rem; margin-left:2px; color: var(--accent); font-weight:600; }
 .table-dt tbody tr:nth-child(even) { background: var(--dt-row-alt); }
 .table-dt tbody tr:hover { background: linear-gradient(90deg, rgba(255,255,255,0.10), rgba(255,255,255,0.04)) !important; }
-.table-dt tbody td { padding:.55rem .75rem; border-top:1px solid var(--dt-border); font-size:.75rem; }
+.table-dt tbody td { padding:.5rem .65rem; border-top:1px solid var(--dt-border); font-size:.75rem; }
 .table-dt tbody tr.row-selected { background: linear-gradient(90deg, rgba(99,102,241,0.25), rgba(99,102,241,0.15)); }
 .table-dt tbody tr.row-selected:hover { background: linear-gradient(90deg, rgba(99,102,241,0.35), rgba(99,102,241,0.22)); }
 .dt-toolbar { display:flex; flex-wrap:wrap; gap:.75rem; align-items:center; margin-bottom:.75rem; }
 .dt-status { font-size:.65rem; letter-spacing:.5px; text-transform:uppercase; opacity:.75; }
-.dt-compact .table-dt tbody td { padding:.4rem .6rem; }
+.dt-compact .table-dt tbody td { padding:.4rem .55rem; }
+/* Scroll container adjustments */
+/* Ensure scroll both directions (X & Y) within constrained container */
+.table-modern-shell { overflow:auto; }
+/* Mobile stacked table pattern */
+@media (max-width: 720px){
+  .table-mobile-stack table.table-modern { min-width:600px; }
+  .table-mobile-stack table.table-modern thead { display:none; }
+  .table-mobile-stack table.table-modern tbody tr { display:grid; grid-template-columns: 1fr 1fr; padding:.55rem .65rem; border:1px solid rgba(255,255,255,0.12); margin-bottom:.65rem; border-radius:10px; background:rgba(255,255,255,0.05); }
+  .table-mobile-stack table.table-modern tbody tr.selected { box-shadow:0 0 0 2px var(--accent) inset; }
+  .table-mobile-stack table.table-modern tbody tr td { display:flex; align-items:flex-start; gap:.4rem; padding:.35rem .4rem !important; font-size:.75rem; border:none; background:none !important; }
+  .table-mobile-stack table.table-modern tbody tr td:first-child { width:auto; }
+  .table-mobile-stack table.table-modern tbody tr td:before { content: attr(data-label); font-weight:600; font-size:.6rem; letter-spacing:.5px; text-transform:uppercase; color: var(--text-muted); flex:0 0 70px; }
+  .table-mobile-stack table.table-modern tbody tr td[data-label='Actions'] { justify-content:flex-start; }
+  .table-mobile-stack .bulk-bar { position:sticky; top:0; z-index:10; }
+}
+
+/* Mobile card alternative (when JS chooses card mode) */
+@media (max-width: 720px){
+  .autos-section-wrapper { position:relative; }
+  .auto-cards-list { display:flex; flex-direction:column; gap:.75rem; }
+  .auto-card { padding:.75rem .8rem .85rem; border:1px solid rgba(255,255,255,0.12); border-radius:14px; background:linear-gradient(145deg, rgba(255,255,255,0.07), rgba(255,255,255,0.03)); position:relative; backdrop-filter: blur(8px) saturate(140%); }
+  .auto-card.sel { box-shadow:0 0 0 2px var(--accent),0 0 0 6px rgba(99,102,241,0.35); border-color: var(--accent); }
+  .auto-card.disabled { opacity:.6; }
+  .auto-card.match { background:linear-gradient(145deg, rgba(16,185,129,0.25), rgba(16,185,129,0.08)); }
+  .auto-card-row { display:flex; align-items:center; gap:.6rem; }
+  .auto-card-row.top { margin-bottom:.4rem; }
+  .auto-card-row.pattern { font-size:.7rem; letter-spacing:.3px; margin-bottom:.35rem; flex-wrap:wrap; }
+  .auto-card-row.pattern .pattern-text { background: rgba(0,0,0,0.4); padding:.2rem .45rem; border-radius:6px; font-size:.68rem; color:#bcd3ff; }
+  .auto-card-row.pattern .flags-badge { background: rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); padding:.15rem .45rem; border-radius:6px; font-size:.55rem; letter-spacing:.5px; text-transform:uppercase; }
+  .auto-card-row.replies { font-size:.65rem; color: var(--text-soft); margin-bottom:.5rem; }
+  .auto-card-row.replies .replies-preview { line-height:1.05rem; }
+  .auto-card-row.actions { gap:.5rem; }
+  .auto-key-btn { background:none; border:none; color:#fff; font-weight:600; font-size:.85rem; letter-spacing:.3px; padding:0; cursor:pointer; text-align:left; }
+  .auto-key-btn:hover { text-decoration:underline; }
+  .bulk-bar-mobile-sticky { position:sticky; top:0; z-index:50; }
+}
+.dataTables_wrapper .dataTables_scroll { border:1px solid rgba(255,255,255,0.08); border-radius: var(--radius-sm); }
+.dataTables_wrapper .dataTables_scrollHead { box-shadow: 0 2px 0 rgba(255,255,255,0.06); }
+.dataTables_wrapper .dataTables_scrollBody { scrollbar-color: rgba(255,255,255,0.25) transparent; }
+.dataTables_wrapper .dataTables_scrollBody::-webkit-scrollbar { height:10px; }
+.dataTables_wrapper .dataTables_scrollBody::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.22); }
+/* Highlight for DataTables selected rows */
+.table-dt tbody tr.selected { background: linear-gradient(90deg, rgba(99,102,241,0.30), rgba(99,102,241,0.18)) !important; }
+.table-dt tbody tr.selected:hover { background: linear-gradient(90deg, rgba(99,102,241,0.38), rgba(99,102,241,0.24)) !important; }
+/* Ensure select-checkbox pseudo element visible */
+table.dataTable td.select-checkbox:before, table.dataTable td.select-checkbox:after { border-color: var(--accent) !important; }
+
+/* Bulk bar page size select theming */
+.bulk-bar .form-select.form-select-sm {
+  background: rgba(255,255,255,0.08) !important;
+  border:1px solid rgba(255,255,255,0.22) !important;
+  color: var(--text-base) !important;
+  padding:.25rem .6rem .25rem .5rem;
+  font-size:.65rem;
+  letter-spacing:.5px;
+  height: calc(1.55rem + 2px);
+}
+.bulk-bar .form-select.form-select-sm:focus { box-shadow: 0 0 0 2px rgba(99,102,241,0.45) !important; }
+.bulk-bar .form-select.form-select-sm option { background:#1c2233; color: var(--text-base); }
+/* Generic select contrast (page size & any DataTables length control) */
+select.form-select, .dataTables_wrapper .dataTables_length select.form-select {
+  background: linear-gradient(135deg, rgba(255,255,255,0.10), rgba(255,255,255,0.04)) !important;
+  color: var(--text-base) !important;
+  border:1px solid rgba(255,255,255,0.25) !important;
+}
+select.form-select:focus, .dataTables_wrapper .dataTables_length select.form-select:focus {
+  box-shadow:0 0 0 2px rgba(99,102,241,0.5) !important;
+}
+select.form-select option, .dataTables_wrapper .dataTables_length select.form-select option { background:#1c2233; color: var(--text-base); }
 /* Page size selector themed */
 .dt-toolbar .form-select.form-select-sm { 
   background: rgba(255,255,255,0.08) !important;
@@ -385,3 +455,10 @@ body.login-mode { height:100vh; overflow:hidden; }
 .app-footer .footer-inner { opacity:.8; }
 .fade-in-soft { animation: fadeInSoft .8s ease; }
 @keyframes fadeInSoft { from { opacity:0; transform: translateY(4px);} to { opacity:1; transform: translateY(0);} }
+
+/* High contrast override for table headers (pure React table) */
+.table-modern thead th {
+  color: black !important; /* brighter for stronger contrast */
+  /* text-shadow: 0 0 2px rgba(0,0,0,0.4); */
+  font-weight: 600;
+}
