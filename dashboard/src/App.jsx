@@ -19,10 +19,79 @@ export default function App(){
   const [guilds, setGuilds] = useState([]);
   const [selectedGuild, setSelectedGuild] = useState(null);
   const [view, setView] = useState('login'); // login | guild | dashboard
-  const [guildSearch, setGuildSearch] = useState(''); // moved to top-level so hooks order stable
+  const [guildSearch, setGuildSearch] = useState('');
+  // Sidebar section
+  const [dashSection, setDashSection] = useState('overview'); // overview | autos | commands
   // Detect OAuth code immediately to avoid login flash
   const initialAuthCode = (typeof window !== 'undefined') ? new URLSearchParams(window.location.search).get('code') : null;
   const [authProcessing, setAuthProcessing] = useState(!!initialAuthCode && !token);
+
+  // --- Lifecycle / bootstrap ---
+  useEffect(()=>{
+    // If token already exists (persisted), go fetch guilds
+    if(token && view==='login'){
+      bootstrapGuilds();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token]);
+
+  // Handle OAuth code & state present in URL (Discord redirect)
+  useEffect(()=>{
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get('code');
+    const state = params.get('state');
+    if(!token && code && state){
+      (async()=>{
+        try {
+          if(!authProcessing) setAuthProcessing(true);
+          const resp = await fetch('/api/oauth/discord/exchange', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ code, state }) });
+          if(!resp.ok){ const j = await resp.json().catch(()=>({})); throw new Error(j.error || 'OAuth exchange failed'); }
+          const data = await resp.json();
+          if(data.token){ localStorage.setItem('token', data.token); setToken(data.token); }
+          if(Array.isArray(data.guilds)) setGuilds(data.guilds);
+          setView('guild');
+          const cleanUrl = window.location.origin + window.location.pathname; // strip params
+          window.history.replaceState({}, '', cleanUrl);
+        } catch(e){ setError(e.message); }
+        finally { setAuthProcessing(false); }
+      })();
+    }
+  }, [token, authProcessing]);
+
+  // If token exists (return visit) fetch user profile to restore selected guild automatically
+  useEffect(()=>{
+    if(token && view==='login'){
+      (async()=>{
+        try {
+          const resp = await fetch('/api/user/me', { headers:{ Authorization:'Bearer '+token }});
+          if(resp.ok){
+            const u = await resp.json();
+            if(u && u.selected_guild_id){
+              setSelectedGuild(u.selected_guild_id);
+              setView('dashboard');
+              refresh();
+            } else {
+              bootstrapGuilds();
+            }
+          }
+        } catch{}
+      })();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token]);
+
+  async function bootstrapGuilds(){
+    try {
+      setLoading(true);
+      // guild list endpoint piggybacked from settings API when guild not chosen yet? Fallback to /api/guilds via window.fetch
+      const res = await fetch('/api/guilds', { headers:{ Authorization: 'Bearer '+localStorage.getItem('token') }});
+      if(!res.ok) throw new Error('Failed to load guilds');
+      const data = await res.json();
+      setGuilds(data.guilds||data||[]);
+      setView('guild');
+    } catch(e){ setError(e.message); }
+    finally { setLoading(false); }
+  }
 
   useEffect(()=>{ if(token && view==='dashboard' && selectedGuild){ refresh(); } }, [token, view, selectedGuild]);
 
@@ -43,6 +112,57 @@ export default function App(){
   async function handleLogin(e){
     e.preventDefault();
     try { await login(loginForm.username, loginForm.password); setToken(localStorage.getItem('token')); setError(''); } catch(e){ setError(e.message); }
+  }
+
+  function startDiscordLogin(){
+    fetch('/api/oauth/discord/url')
+      .then(r=>r.json())
+      .then(d=>{ if(d.url) window.location.href = d.url; else throw new Error('No OAuth URL'); })
+      .catch(e=> setError(e.message));
+  }
+
+  function doLogout(){
+    localStorage.removeItem('token');
+    setToken(null);
+    setSelectedGuild(null);
+    setSettings(null);
+    setAutos([]);
+    setView('login');
+  }
+
+  function saveSelectedGuild(nextView){
+    if(!selectedGuild) return;
+    (async()=>{
+      try {
+        await fetch('/api/user/select-guild', { method:'POST', headers:{ 'Content-Type':'application/json', Authorization:'Bearer '+localStorage.getItem('token') }, body: JSON.stringify({ guildId: selectedGuild }) });
+      } catch(e){ /* non-fatal */ }
+      setView(nextView||'dashboard');
+      refresh();
+    })();
+  }
+
+  function openNewAuto(){
+    setModalAuto(emptyAuto);
+    setShowAutoModal(true);
+  }
+  function openEditAuto(a){
+    const replies = Array.isArray(a.replies)? a.replies.join('\n'): '';
+    setModalAuto({...a, replies });
+    setShowAutoModal(true);
+  }
+  function closeAutoModal(){
+    setShowAutoModal(false);
+    setModalAuto(emptyAuto);
+  }
+
+  function runTester(){
+    if(!testerPattern){ setTesterResult(null); return; }
+    try {
+      const reg = new RegExp(testerPattern, testerFlags);
+      const lines = testerSample.split(/\r?\n/);
+      const matches = lines.map(line => ({ line, match: reg.test(line) }));
+      setTesterResult({ ok:true, matches });
+    } catch(e){ setTesterResult({ ok:false, error: e.message }); }
   }
 
   async function saveSettings(){
@@ -115,7 +235,6 @@ export default function App(){
       for(const rule of sortRules){
         let av = a[rule.col];
         let bv = b[rule.col];
-        // Support enabled column which is boolean / undefined
         if(rule.col==='enabled') { av = a.enabled!==false; bv = b.enabled!==false; }
         av = (av===undefined||av===null)? '' : av.toString().toLowerCase();
         bv = (bv===undefined||bv===null)? '' : bv.toString().toLowerCase();
@@ -132,15 +251,13 @@ export default function App(){
   function toggleSort(col, evt){
     setSortRules(prev => {
       const isShift = evt && (evt.shiftKey || evt.metaKey || evt.ctrlKey);
-      // Cycle order: asc -> desc -> remove
       const idx = prev.findIndex(r=>r.col===col);
       if(!isShift){
         if(idx===-1) return [{ col, dir:'asc' }];
         const existing = prev[idx];
         if(existing.dir==='asc') return [{ col, dir:'desc' }];
-        if(existing.dir==='desc') return [{ col:'key', dir:'asc' }]; // fall back to default key asc
+        if(existing.dir==='desc') return [{ col:'key', dir:'asc' }];
       }
-      // Shift (multi) logic
       if(idx===-1) return [...prev, { col, dir:'asc' }];
       const copy = [...prev];
       if(copy[idx].dir==='asc') copy[idx] = { ...copy[idx], dir:'desc' };
@@ -196,87 +313,9 @@ export default function App(){
     clearSelection();
   }
 
-  function runTester(){
-    try {
-      const re = new RegExp(testerPattern, testerFlags);
-      const matches = testerSample.split(/\n/).map(line => ({ line, match: re.test(line) }));
-      setTesterResult({ ok:true, matches });
-    } catch(e){ setTesterResult({ ok:false, error:e.message }); }
-  }
-
-  function openNewAuto(){ setModalAuto(emptyAuto); setShowAutoModal(true); }
-  function openEditAuto(a){ setModalAuto({ key:a.key, pattern:a.pattern, flags:a.flags, replies:(Array.isArray(a.replies)?a.replies.join('\n'):'') , enabled: a.enabled!==false}); setShowAutoModal(true); }
-  function closeAutoModal(){ setModalAuto(emptyAuto); setShowAutoModal(false); }
-
-  useEffect(()=>{
-    if(!showAutoModal) return;
-    function onKey(e){ if(e.key==='Escape') closeAutoModal(); }
-    window.addEventListener('keydown', onKey);
-    return ()=> window.removeEventListener('keydown', onKey);
-  }, [showAutoModal]);
-
-  function doLogout(){
-    localStorage.removeItem('token');
-  setToken(null);
-  setSettings(null);
-  setAutos([]);
-  setView('login');
-  }
-
-  async function startDiscordLogin(){
-    try {
-      const resp = await fetch('/api/oauth/discord/url');
-      const data = await resp.json();
-      window.location.href = data.url; // redirect to Discord authorize
-    } catch(e){ setError('Failed building Discord auth URL'); }
-  }
-
-  // Handle OAuth callback code present in URL
-  useEffect(()=>{
-    if (!oauthMode) return;
-    const params = new URLSearchParams(window.location.search);
-    const code = params.get('code');
-    const state = params.get('state');
-    if (code && !token){
-      (async()=>{
-        try {
-          setAuthProcessing(true);
-          const r = await fetch('/api/oauth/discord/exchange', { method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify({ code, state }) });
-          if(!r.ok){ throw new Error('OAuth exchange failed'); }
-          const j = await r.json();
-            localStorage.setItem('token', j.token);
-            setToken(j.token);
-            setGuilds(j.guilds||[]);
-            setInfo('Logged in with Discord');
-            setView('guild');
-            // clean URL
-            const url = new URL(window.location.href); url.searchParams.delete('code'); url.searchParams.delete('state'); window.history.replaceState({}, '', url.toString());
-        } catch(err){ setError(err.message); }
-        finally { setAuthProcessing(false); }
-      })();
-    }
-  }, [oauthMode, token]);
-
-  // Fetch user profile (selected guild) after login
-  useEffect(()=>{ if(token){ (async()=>{ try{ const r=await fetch('/api/user/me',{ headers:{ Authorization:'Bearer '+token }}); if(r.ok){ const j=await r.json(); if(j && j.selected_guild_id){ setSelectedGuild(j.selected_guild_id); if(view==='login') setView('dashboard'); } else if(view==='login') { setView('guild'); } } }catch{} })(); } }, [token, view]);
-
-  // Fetch guild list after reload if token present (so banner can show name not ID)
-  useEffect(()=>{ if(token && guilds.length===0){ (async()=>{ try { const r = await fetch('/api/guilds',{ headers:{ Authorization:'Bearer '+token }}); if(r.ok){ const j = await r.json(); if(Array.isArray(j)) setGuilds(j); } } catch {} })(); } }, [token, guilds.length]);
-
-  async function saveSelectedGuild(nextView='dashboard'){
-    if(!selectedGuild) return;
-    try {
-      const r = await fetch('/api/user/select-guild', { method:'POST', headers:{ 'Content-Type':'application/json', Authorization:'Bearer '+token }, body: JSON.stringify({ guildId: selectedGuild }) });
-      if(!r.ok) throw new Error('Save guild failed');
-      setInfo('Guild saved'); setTimeout(()=>setInfo(''),2000);
-      setView(nextView);
-    } catch(e){ setError(e.message); }
-  }
-
-  // Views --------------------------------------------------
+  // Login view
   if(view==='login' && !token){
-  // prevent body scroll while on full-screen login
-  if(typeof document!=='undefined'){ document.body.classList.add('login-mode'); }
+    if(typeof document!=='undefined'){ document.body.classList.add('login-mode'); }
     const year = new Date().getFullYear();
     return <div className="login-viewport">
       <div className="login-center fade-in">
@@ -319,13 +358,12 @@ export default function App(){
         </div>
       </div>
     </div>;
-  }
-  else if(typeof document!=='undefined'){ document.body.classList.remove('login-mode'); }
+  } else if(typeof document!=='undefined'){ document.body.classList.remove('login-mode'); }
 
+  // Guild selection view
   if(view==='guild'){
-  // Guild selection modern grid ---------------------------------
-  const filteredGuilds = guilds.filter(g=> !guildSearch || g.name.toLowerCase().includes(guildSearch.toLowerCase()));
-  return <div className="container mt-4 fade-in" style={{maxWidth:960}}>
+    const filteredGuilds = guilds.filter(g=> !guildSearch || g.name.toLowerCase().includes(guildSearch.toLowerCase()));
+    return <div className="container mt-4 fade-in" style={{maxWidth:960}}>
       <div className="card card-glass shadow-sm p-2 p-md-3 guild-select-wrapper">
         <div className="card-body pt-3">
           <div className="d-flex flex-column flex-md-row justify-content-between gap-3 align-items-md-center mb-3">
@@ -382,158 +420,196 @@ export default function App(){
     </div>
   </div>;
 
-  const content = <div className="container-fluid py-4 fade-in">
-    {guildBanner}
-    <div className="d-flex flex-wrap gap-4">
-      <div className="flex-grow-1" style={{minWidth:320, maxWidth:380}}>
-        <div className="section-title">Settings</div>
-        {error && <div className="alert alert-danger py-2 mb-2">{error}</div>}
-        {info && <div className="alert alert-success py-2 mb-2">{info}</div>}
-        {loading && <div className="alert alert-info py-2 mb-2">Loading...</div>}
-  {settings && <div className="card card-glass shadow-sm mb-3"><div className="card-body vstack gap-3">
+  // --- Section contents ---
+  const overviewContent = <div className="overview-section fade-in-soft">
+    {error && <div className="alert alert-danger py-2 mb-2">{error}</div>}
+    {info && <div className="alert alert-success py-2 mb-2">{info}</div>}
+    {loading && <div className="alert alert-info py-2 mb-2">Loading...</div>}
+    <div className="row g-4">
+      <div className="col-12 col-lg-5">
+        {settings && <div className="card card-glass shadow-sm h-100"><div className="card-body vstack gap-3">
+          <h6 className="mb-1 text-muted" style={{letterSpacing:'.5px'}}>Bot Settings</h6>
           <div className="form-check form-switch">
             <input className="form-check-input" type="checkbox" id="autoReplySwitch" checked={settings.autoReplyEnabled} onChange={e=>setSettings({...settings, autoReplyEnabled:e.target.checked})} />
             <label className="form-check-label" htmlFor="autoReplySwitch">Auto Reply Enabled</label>
           </div>
           <div>
-            <label className="form-label">Cooldown (ms)</label>
+            <label className="form-label mb-1">Cooldown (ms)</label>
             <input type="number" className="form-control" value={settings.autoReplyCooldownMs} onChange={e=>setSettings({...settings, autoReplyCooldownMs:e.target.value})} />
           </div>
-          <button onClick={saveSettings} className="btn btn-primary">Save Settings</button>
+          <div className="d-flex"><button onClick={saveSettings} className="btn btn-brand ms-auto">Save</button></div>
         </div></div>}
       </div>
-      <div className="flex-grow-1" style={{minWidth:520}}>
-        <div className="auto-head mb-3">
-          <div className="section-title">Auto Responses</div>
-          <div className="auto-head-search">
-            <input className="form-control form-control-sm search-input w-100" placeholder="Search..." value={search} onChange={e=>setSearch(e.target.value)} />
-          </div>
-          <div className="auto-head-actions">
-            <button className="btn btn-sm btn-outline-light" type="button" onClick={()=>setShowRegexTester(s=>!s)}>{showRegexTester? 'Close Tester':'Regex Tester'}</button>
-            <button className="btn btn-sm btn-brand" onClick={openNewAuto}>Add</button>
-          </div>
-        </div>
-        {showRegexTester && <div className="card card-glass shadow-sm mb-3">
-          <div className="card-body row g-3">
-            <div className="col-md-4">
-              <label className="form-label small mb-1">Pattern</label>
-              <input className="form-control form-control-sm" placeholder="^hello" value={testerPattern} onChange={e=>setTesterPattern(e.target.value)} />
-            </div>
-            <div className="col-md-2 col-4">
-              <label className="form-label small mb-1">Flags</label>
-              <input className="form-control form-control-sm" placeholder="i" value={testerFlags} onChange={e=>setTesterFlags(e.target.value)} />
-            </div>
-            <div className="col-md-6">
-              <label className="form-label small mb-1">Sample Text (multi-line)</label>
-              <textarea className="form-control form-control-sm" rows={2} value={testerSample} onChange={e=>setTesterSample(e.target.value)} placeholder={'hello world\nHi there'} />
-            </div>
-            <div className="col-12 d-flex gap-2">
-              <button className="btn btn-sm btn-brand" type="button" onClick={runTester}>Run</button>
-              <button className="btn btn-sm btn-outline-light" type="button" onClick={()=>{setTesterPattern('');setTesterSample('');setTesterResult(null);}}>Clear</button>
-            </div>
-            {testerResult && <div className="col-12 small">
-              {testerResult.ok ? <div className="vstack gap-1">
-                {testerResult.matches.map((m,i) => <div key={i} className={m.match? 'text-success':'text-muted'}>{m.match? '✓':'✗'} {m.line || <em>(empty)</em>}</div>)}
-              </div> : <div className="text-danger">Regex error: {testerResult.error}</div>}
-            </div>}
-          </div>
-        </div>}
+      <div className="col-12 col-lg-7">
         <div className="stat-cards mb-3">
-          <div className="stat-card">
-            <h6>Total</h6>
-            <div className="value">{autos.length}</div>
-          </div>
-            <div className="stat-card">
-            <h6>Enabled</h6>
-            <div className="value text-success">{totalEnabled}</div>
-          </div>
-          <div className="stat-card">
-            <h6>Disabled</h6>
-            <div className="value text-danger">{totalDisabled}</div>
-          </div>
+          <div className="stat-card"><h6>Total Autos</h6><div className="value">{autos.length}</div></div>
+          <div className="stat-card"><h6>Enabled</h6><div className="value text-success">{totalEnabled}</div></div>
+          <div className="stat-card"><h6>Disabled</h6><div className="value text-danger">{totalDisabled}</div></div>
         </div>
-        {selectedKeys.size>0 ? <div className="bulk-bar mb-2">
-          <strong className="small">{selectedKeys.size} selected</strong>
-          <button className="btn btn-sm btn-outline-light" onClick={()=>bulkEnable(false)}>Enable</button>
-          <button className="btn btn-sm btn-outline-light" onClick={()=>bulkEnable(true)}>Disable</button>
-          <button className="btn btn-sm btn-outline-danger" onClick={bulkDelete}>Delete</button>
-          <button className="btn btn-sm btn-outline-secondary" onClick={clearSelection}>Clear</button>
-        </div> : <div className="bulk-bar-placeholder mb-2" />}
-        <div className="table-responsive table-modern-shell dt-compact">
-          <div className="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2 dt-toolbar">
-            <div className="dt-status small text-muted">{sortedAutos.length} items • Sort: {sortRules.map(r=>r.col+':' + r.dir).join(', ')}</div>
-            <div className="d-flex align-items-center gap-2">
-              <label className="small text-muted">Rows</label>
-              <select className="form-select form-select-sm" style={{width:90}} value={pageSize} onChange={e=>setPageSize(parseInt(e.target.value)||15)}>
-                {[10,15,25,50,100].map(s=> <option key={s} value={s}>{s}</option>)}
-              </select>
-            </div>
-          </div>
-          <table className="table table-sm table-modern table-dt align-middle">
-            <thead><tr>
-              <th style={{width:28}}><input type="checkbox" title="Select page" onChange={e=> e.target.checked? selectAllPage(): clearSelection()} checked={pagedAutos.length>0 && pagedAutos.every(a=>selectedKeys.has(a.key))} /></th>
-              {['key','pattern','flags','enabled'].map(col => {
-                if(col==='enabled') return (
-                  <th key={col} className={'sortable '+(getSortMeta(col).dir? 'sort-'+getSortMeta(col).dir:'')} onClick={(e)=>toggleSort(col,e)}>
-                    On {getSortMeta(col).index!==null && <sup className="sort-order">{getSortMeta(col).index+1}</sup>}
-                  </th>
-                );
-                const label = col==='key'? 'Key' : (col==='pattern'? 'Pattern': 'Flags');
-                const meta = getSortMeta(col);
-                return <th key={col} className={'sortable '+(meta.dir? 'sort-'+meta.dir:'')} onClick={(e)=>toggleSort(col,e)}>
-                  {label} {meta.index!==null && <sup className="sort-order">{meta.index+1}</sup>}
-                </th>;
-              })}
-              <th>Replies</th>
-              <th style={{width:110}}>Actions</th>
-            </tr></thead>
-            <tbody>
-              {pagedAutos.map(a => {
-                const matchClass = testerResult && testerResult.ok && testerPattern ? (()=>{ try { return new RegExp(testerPattern, testerFlags).test(a.pattern)? 'match-highlight':'' } catch { return ''; } })() : '';
-                const selected = selectedKeys.has(a.key);
-                const disabled = a.enabled===false;
-                const cls = [matchClass, selected? 'row-selected':'', disabled? 'row-disabled':''].filter(Boolean).join(' ');
-                return <tr key={a.key} className={cls}>
-                <td><input type="checkbox" checked={selectedKeys.has(a.key)} onChange={()=>toggleSelect(a.key)} /></td>
-                <td onClick={()=>openEditAuto(a)} className="text-primary" style={{cursor:'pointer'}}>{a.key}</td>
-                <td onClick={()=>openEditAuto(a)} style={{cursor:'pointer'}}>{a.pattern}</td>
-                <td onClick={()=>openEditAuto(a)} style={{cursor:'pointer'}}>{a.flags}</td>
-                <td onClick={()=>openEditAuto(a)} style={{cursor:'pointer'}}><small className="text-muted">{Array.isArray(a.replies)?a.replies.join(' | '):''}</small></td>
-                <td className="text-center">
-                  <div className="form-check form-switch m-0 d-inline-flex">
-                    <input className="form-check-input" type="checkbox" checked={a.enabled!==false} onChange={(e)=>{
-                      const updated = { ...a, enabled: e.target.checked };
-                      setAutos(prev => prev.map(p => p.key===a.key ? updated : p));
-                      upsertAuto({ key:a.key, pattern:a.pattern, flags:a.flags, replies:a.replies, enabled:e.target.checked }, selectedGuild).catch(()=>refresh());
-                    }} />
-                  </div>
-                </td>
-                <td>
-                  <div className="btn-group btn-group-sm">
-                    <button onClick={()=>openEditAuto(a)} className="btn btn-edit">Edit</button>
-                    <button onClick={()=>removeAuto(a.key)} className="btn btn-outline-danger">Del</button>
-                  </div>
-                </td>
-              </tr>})}
-              {pagedAutos.length===0 && <tr><td colSpan={7} className="text-center text-muted">No matches</td></tr>}
-              {/* Removed filler rows so table ends cleanly at last record */}
-            </tbody>
-          </table>
-          <div className="d-flex justify-content-between align-items-center mt-2 gap-2 pagination-bar flex-nowrap">
-            <div className="small text-muted">Page {page} / {totalPages}</div>
-            <div className="pagination-modern d-flex gap-1">
-              <button className="btn btn-sm" disabled={page===1} onClick={()=>setPage(p=>Math.max(1,p-1))}>Prev</button>
-              {Array.from({length: totalPages}).slice(0,6).map((_,i)=>{
-                const p = i+1; return <button key={p} className={'btn btn-sm'+(p===page?' active':'')} onClick={()=>setPage(p)}>{p}</button>;
-              })}
-              {totalPages>6 && <button className="btn btn-sm" disabled>…</button>}
-              <button className="btn btn-sm" disabled={page===totalPages} onClick={()=>setPage(p=>Math.min(totalPages,p+1))}>Next</button>
-            </div>
-          </div>
+        <div className="card card-glass shadow-sm mb-3"><div className="card-body small" style={{lineHeight:'1.15rem'}}>
+          <strong>Welcome!</strong> Use the sidebar to manage auto responses and (soon) commands. This overview summarizes key stats.
+        </div></div>
+      </div>
+    </div>
+  </div>;
+
+  const autosContent = <div className="autos-section fade-in-soft">
+    <div className="auto-head mb-3">
+      <div className="section-title">Auto Responses</div>
+      <div className="auto-head-search">
+        <input className="form-control form-control-sm search-input w-100" placeholder="Search..." value={search} onChange={e=>setSearch(e.target.value)} />
+      </div>
+      <div className="auto-head-actions">
+        <button className="btn btn-sm btn-outline-light" type="button" onClick={()=>setShowRegexTester(s=>!s)}>{showRegexTester? 'Close Tester':'Regex Tester'}</button>
+        <button className="btn btn-sm btn-brand" onClick={openNewAuto}>Add</button>
+      </div>
+    </div>
+    {showRegexTester && <div className="card card-glass shadow-sm mb-3">
+      <div className="card-body row g-3">
+        <div className="col-md-4">
+          <label className="form-label small mb-1">Pattern</label>
+          <input className="form-control form-control-sm" placeholder="^hello" value={testerPattern} onChange={e=>setTesterPattern(e.target.value)} />
+        </div>
+        <div className="col-md-2 col-4">
+          <label className="form-label small mb-1">Flags</label>
+          <input className="form-control form-control-sm" placeholder="i" value={testerFlags} onChange={e=>setTesterFlags(e.target.value)} />
+        </div>
+        <div className="col-md-6">
+          <label className="form-label small mb-1">Sample Text (multi-line)</label>
+          <textarea className="form-control form-control-sm" rows={2} value={testerSample} onChange={e=>setTesterSample(e.target.value)} placeholder={'hello world\nHi there'} />
+        </div>
+        <div className="col-12 d-flex gap-2">
+          <button className="btn btn-sm btn-brand" type="button" onClick={runTester}>Run</button>
+          <button className="btn btn-sm btn-outline-light" type="button" onClick={()=>{setTesterPattern('');setTesterSample('');setTesterResult(null);}}>Clear</button>
+        </div>
+        {testerResult && <div className="col-12 small">
+          {testerResult.ok ? <div className="vstack gap-1">{testerResult.matches.map((m,i) => <div key={i} className={m.match? 'text-success':'text-muted'}>{m.match? '✓':'✗'} {m.line || <em>(empty)</em>}</div>)}</div> : <div className="text-danger">Regex error: {testerResult.error}</div>}
+        </div>}
+      </div>
+    </div>}
+    <div className="stat-cards mb-3">
+      <div className="stat-card"><h6>Total</h6><div className="value">{autos.length}</div></div>
+      <div className="stat-card"><h6>Enabled</h6><div className="value text-success">{totalEnabled}</div></div>
+      <div className="stat-card"><h6>Disabled</h6><div className="value text-danger">{totalDisabled}</div></div>
+    </div>
+    {selectedKeys.size>0 ? <div className="bulk-bar mb-2">
+      <strong className="small">{selectedKeys.size} selected</strong>
+      <button className="btn btn-sm btn-outline-light" onClick={()=>bulkEnable(false)}>Enable</button>
+      <button className="btn btn-sm btn-outline-light" onClick={()=>bulkEnable(true)}>Disable</button>
+      <button className="btn btn-sm btn-outline-danger" onClick={bulkDelete}>Delete</button>
+      <button className="btn btn-sm btn-outline-secondary" onClick={clearSelection}>Clear</button>
+    </div> : <div className="bulk-bar-placeholder mb-2" />}
+    <div className="table-responsive table-modern-shell dt-compact">
+      <div className="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2 dt-toolbar">
+        <div className="dt-status small text-muted">{sortedAutos.length} items • Sort: {sortRules.map(r=>r.col+':' + r.dir).join(', ')}</div>
+        <div className="d-flex align-items-center gap-2">
+          <label className="small text-muted">Rows</label>
+          <select className="form-select form-select-sm" style={{width:90}} value={pageSize} onChange={e=>setPageSize(parseInt(e.target.value)||15)}>
+            {[10,15,25,50,100].map(s=> <option key={s} value={s}>{s}</option>)}
+          </select>
+        </div>
+      </div>
+      <table className="table table-sm table-modern table-dt align-middle">
+        <thead><tr>
+          <th style={{width:28}}><input type="checkbox" title="Select page" onChange={e=> e.target.checked? selectAllPage(): clearSelection()} checked={pagedAutos.length>0 && pagedAutos.every(a=>selectedKeys.has(a.key))} /></th>
+          {['key','pattern','flags','enabled'].map(col => {
+            if(col==='enabled') return (
+              <th key={col} className={'sortable '+(getSortMeta(col).dir? 'sort-'+getSortMeta(col).dir:'')} onClick={(e)=>toggleSort(col,e)}>
+                On {getSortMeta(col).index!==null && <sup className="sort-order">{getSortMeta(col).index+1}</sup>}
+              </th>
+            );
+            const label = col==='key'? 'Key' : (col==='pattern'? 'Pattern': 'Flags');
+            const meta = getSortMeta(col);
+            return <th key={col} className={'sortable '+(meta.dir? 'sort-'+meta.dir:'')} onClick={(e)=>toggleSort(col,e)}>
+              {label} {meta.index!==null && <sup className="sort-order">{meta.index+1}</sup>}
+            </th>;
+          })}
+          <th>Replies</th>
+          <th style={{width:110}}>Actions</th>
+        </tr></thead>
+        <tbody>
+          {pagedAutos.map(a => {
+            const matchClass = testerResult && testerResult.ok && testerPattern ? (()=>{ try { return new RegExp(testerPattern, testerFlags).test(a.pattern)? 'match-highlight':'' } catch { return ''; } })() : '';
+            const selected = selectedKeys.has(a.key);
+            const disabled = a.enabled===false;
+            const cls = [matchClass, selected? 'row-selected':'', disabled? 'row-disabled':''].filter(Boolean).join(' ');
+            return <tr key={a.key} className={cls}>
+            <td><input type="checkbox" checked={selectedKeys.has(a.key)} onChange={()=>toggleSelect(a.key)} /></td>
+            <td onClick={()=>openEditAuto(a)} className="text-primary" style={{cursor:'pointer'}}>{a.key}</td>
+            <td onClick={()=>openEditAuto(a)} style={{cursor:'pointer'}}>{a.pattern}</td>
+            <td onClick={()=>openEditAuto(a)} style={{cursor:'pointer'}}>{a.flags}</td>
+            <td onClick={()=>openEditAuto(a)} style={{cursor:'pointer'}}><small className="text-muted">{Array.isArray(a.replies)?a.replies.join(' | '):''}</small></td>
+            <td className="text-center">
+              <div className="form-check form-switch m-0 d-inline-flex">
+                <input className="form-check-input" type="checkbox" checked={a.enabled!==false} onChange={(e)=>{
+                  const updated = { ...a, enabled: e.target.checked };
+                  setAutos(prev => prev.map(p => p.key===a.key ? updated : p));
+                  upsertAuto({ key:a.key, pattern:a.pattern, flags:a.flags, replies:a.replies, enabled:e.target.checked }, selectedGuild).catch(()=>refresh());
+                }} />
+              </div>
+            </td>
+            <td>
+              <div className="btn-group btn-group-sm">
+                <button onClick={()=>openEditAuto(a)} className="btn btn-edit">Edit</button>
+                <button onClick={()=>removeAuto(a.key)} className="btn btn-outline-danger">Del</button>
+              </div>
+            </td>
+          </tr>})}
+          {pagedAutos.length===0 && <tr><td colSpan={7} className="text-center text-muted">No matches</td></tr>}
+        </tbody>
+      </table>
+      <div className="d-flex justify-content-between align-items-center mt-2 gap-2 pagination-bar flex-nowrap">
+        <div className="small text-muted">Page {page} / {totalPages}</div>
+        <div className="pagination-modern d-flex gap-1">
+          <button className="btn btn-sm" disabled={page===1} onClick={()=>setPage(p=>Math.max(1,p-1))}>Prev</button>
+          {Array.from({length: totalPages}).slice(0,6).map((_,i)=>{
+            const p = i+1; return <button key={p} className={'btn btn-sm'+(p===page?' active':'')} onClick={()=>setPage(p)}>{p}</button>;
+          })}
+          {totalPages>6 && <button className="btn btn-sm" disabled>…</button>}
+          <button className="btn btn-sm" disabled={page===totalPages} onClick={()=>setPage(p=>Math.min(totalPages,p+1))}>Next</button>
         </div>
       </div>
     </div>
-  {showAutoModal && <div className="modal d-block fade-in" tabIndex={-1} role="dialog" style={{background:'rgba(8,10,18,0.72)'}} onMouseDown={(e)=>{ if(e.target.classList.contains('modal')) closeAutoModal(); }}>
+  </div>;
+
+  const commandsContent = <div className="commands-section fade-in-soft">
+    <div className="section-title">Commands</div>
+    <div className="card card-glass shadow-sm mb-3"><div className="card-body small">
+      Command management UI coming soon. You will be able to enable/disable commands and tweak permissions here.
+    </div></div>
+  </div>;
+
+  const sectionMap = { overview: overviewContent, autos: autosContent, commands: commandsContent };
+
+  const content = <div className="container-fluid py-4 fade-in">
+    {guildBanner}
+    <div className="dashboard-flex">
+      <aside className="dash-sidebar">
+        <div className="guild-switcher card-glass mb-3 p-2">
+          <button type="button" className="guild-switcher-btn" onClick={()=>setView('guild')} title="Change server">
+            {(() => { const g = guilds.find(x=>x.id===selectedGuild); const iconUrl = g?.icon ? `https://cdn.discordapp.com/icons/${g.id}/${g.icon}.png?size=128` : null; return <>
+              <div className="gw-icon">{iconUrl ? <img src={iconUrl} alt={g?.name||'Guild'} /> : <span className="fallback">{(g?.name||'?').slice(0,2).toUpperCase()}</span>}</div>
+              <div className="gw-meta">
+                <div className="gw-name" title={g?.name}>{g?.name||'Select a Server'}</div>
+                <div className="gw-action">Change server ▾</div>
+              </div>
+            </>; })()}
+          </button>
+        </div>
+        <div className="dash-menu">
+          <button type="button" onClick={()=>setDashSection('overview')} className={'dash-menu-item'+(dashSection==='overview'? ' active':'')}>Overview</button>
+          <button type="button" onClick={()=>setDashSection('autos')} className={'dash-menu-item'+(dashSection==='autos'? ' active':'')}>Auto Responses</button>
+          <button type="button" onClick={()=>setDashSection('commands')} className={'dash-menu-item'+(dashSection==='commands'? ' active':'')}>Commands</button>
+        </div>
+        <div className="dash-sidebar-footer mt-4">
+          <button type="button" className="btn btn-sm btn-outline-danger w-100 logout-btn" onClick={doLogout}>Logout</button>
+        </div>
+      </aside>
+      <main className="dash-main">
+        {sectionMap[dashSection]}
+      </main>
+    </div>
+    {showAutoModal && dashSection==='autos' && <div className="modal d-block fade-in" tabIndex={-1} role="dialog" style={{background:'rgba(8,10,18,0.72)'}} onMouseDown={(e)=>{ if(e.target.classList.contains('modal')) closeAutoModal(); }}>
       <div className="modal-dialog modal-lg modal-dialog-centered" role="document" onMouseDown={e=>e.stopPropagation()}>
         <div className="modal-content">
           <div className="modal-header py-2">
