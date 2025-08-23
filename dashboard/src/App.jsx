@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 // Option B: removed DataTables – using pure React table implementation
-import { login, getSettings, updateSettings, listAuto, upsertAuto, deleteAuto, getApiBase, fetchJson } from './api';
+import { login, getSettings, updateSettings, listAuto, upsertAuto, deleteAuto, getApiBase, fetchJson, getCommandToggles, setCommandToggle } from './api';
 import AutosSection from './AutosSection';
 const API_BASE = getApiBase();
 
@@ -305,6 +305,38 @@ export default function App(){
   const totalEnabled = autos.filter(a=>a.enabled!==false).length;
   const totalDisabled = autos.length - totalEnabled;
 
+  // Command toggles state
+  const [commandTogglesState, setCommandTogglesState] = useState({}); // name -> enabled bool
+  const [commandMeta, setCommandMeta] = useState({}); // name -> {createdAt, createdBy, updatedAt, updatedBy}
+  useEffect(()=>{
+    if(dashSection==='commands' && selectedGuild){
+      (async()=>{
+        try {
+          const data = await getCommandToggles(selectedGuild);
+          if(data && Array.isArray(data.commands)){
+            const enabledMap = {}; const metaMap = {};
+            for (const c of data.commands){
+              enabledMap[c.name] = c.enabled !== false;
+              metaMap[c.name] = { createdAt: c.createdAt, createdBy: c.createdBy, updatedAt: c.updatedAt, updatedBy: c.updatedBy };
+            }
+            setCommandTogglesState(enabledMap);
+            setCommandMeta(metaMap);
+          } else if (data && data.toggles) { // fallback older shape
+            setCommandTogglesState(data.toggles);
+          }
+        } catch(e){ /* ignore */ }
+      })();
+    }
+  }, [dashSection, selectedGuild]);
+  function toggleCommand(name, enabled){
+    setCommandTogglesState(t => ({ ...t, [name]: enabled }));
+    setCommandToggle(name, enabled, selectedGuild).catch(()=>{
+      // revert on failure
+      setCommandTogglesState(t => ({ ...t, [name]: !enabled }));
+      pushToast('error', 'Failed to update '+name);
+    });
+  }
+
   // (Legacy selection helpers removed in Option B)
 
   // Login view
@@ -465,11 +497,80 @@ export default function App(){
     refresh={refresh}
   />;
 
+  const commandGroups = [
+    {
+      key: 'core', title: 'Core', icon: 'fa-gauge-high', accent: 'var(--accent)',
+      items: [
+        { name:'ping', usage:'/ping', desc:'Health check – replies with Pong.' },
+        { name:'uptime', usage:'/uptime', desc:'Shows bot process uptime.' },
+        { name:'whoami', usage:'/whoami', desc:'Shows your user tag & id.' },
+        { name:'echo', usage:'/echo <text>', desc:'Replies with the same text.' },
+        { name:'help', usage:'/help', desc:'Interactive category help menu.' }
+      ]
+    },
+    {
+      key: 'ai', title: 'AI & Language', icon: 'fa-robot', accent: '#8d90ff',
+      items: [
+        { name:'ask', usage:'/ask prompt:<text>', desc:'Ask AI a question (cached 3 min).' },
+        { name:'askfollow', usage:'/askfollow prompt:<text>', desc:'Follow-up using recent conversation context.' },
+        { name:'explain_image', usage:'/explain_image image(1-3) [prompt]', desc:'Explain up to 3 images with optional prompt.' },
+        { name:'summarize', usage:'/summarize [count]', desc:'Summarize last messages (default 30).' },
+        { name:'translate', usage:'/translate text target', desc:'Translate text into the target language.' }
+      ]
+    },
+    {
+      key: 'polls', title: 'Polls', icon: 'fa-square-poll-horizontal', accent: '#10b981',
+      items: [
+        { name:'poll create', usage:'/poll create question options', desc:'Create a poll (up to 5 options).' },
+        { name:'poll results', usage:'/poll results id', desc:'Show results for a poll id.' }
+      ]
+    },
+    {
+      key: 'utilities', title: 'Utilities', icon: 'fa-wrench', accent: '#f59e0b',
+      items: [
+        { name:'math', usage:'/math add|sub|mul|div a b', desc:'Basic arithmetic operations.' },
+        { name:'user info', usage:'/user info [target]', desc:'Lookup Discord user info.' },
+        { name:'remind', usage:'/remind minutes text', desc:'Schedule a reminder DM or channel.' }
+      ]
+    },
+    {
+      key: 'passive', title: 'Passive / Automation', icon: 'fa-bolt', accent: '#ef4444',
+      items: [
+        { name:'autoreply', usage:'(passive)', desc:'Automatic replies based on configured patterns.' }
+      ]
+    }
+  ];
   const commandsContent = <div className="commands-section fade-in-soft">
     <div className="section-title">Commands</div>
-    <div className="card card-glass shadow-sm mb-3"><div className="card-body small">
-      Command management UI coming soon. You will be able to enable/disable commands and tweak permissions here.
-    </div></div>
+    <div className="cmd-groups">
+      {commandGroups.map(gr => <div key={gr.key} className="cmd-group-card">
+        <div className="cmd-group-head" style={{'--grp-accent': gr.accent}}>
+          <div className="cmd-group-icon"><i className={'fa-solid '+gr.icon}></i></div>
+          <div className="cmd-group-meta">
+            <h6 className="cmd-group-title mb-0">{gr.title}</h6>
+            <div className="cmd-group-count small">{gr.items.length} command{gr.items.length!==1?'s':''}</div>
+          </div>
+        </div>
+        <div className="cmd-items">
+          { gr.items.map(it => <div key={it.name} className="cmd-item">
+            <div className="cmd-item-main">
+              <div className="cmd-item-name"><code>{it.name}</code></div>
+              <div className="cmd-item-usage"><code>{it.usage}</code></div>
+                <div className="ms-auto d-flex align-items-center">
+                  <div className="d-flex flex-column align-items-end">
+                    <label className="form-check form-switch m-0">
+                      <input type="checkbox" className="form-check-input" checked={commandTogglesState[it.name] !== false} onChange={e=>toggleCommand(it.name, e.target.checked)} />
+                    </label>
+                    {commandMeta[it.name]?.updatedAt && <div className="cmd-meta-hint small text-muted" title={`Updated by ${commandMeta[it.name]?.updatedBy||'unknown'}`}>{new Date(commandMeta[it.name].updatedAt).toLocaleDateString()}</div>}
+                  </div>
+                </div>
+            </div>
+            <div className="cmd-item-desc small text-muted">{it.desc}</div>
+          </div>)}
+        </div>
+      </div>)}
+    </div>
+    <div className="text-muted small mt-3" style={{opacity:.8}}>AI related calls may be rate limited. Image size limit 8MB each. Passive features run automatically.</div>
   </div>;
 
   const sectionMap = { overview: overviewContent, autos: autosContent, commands: commandsContent };

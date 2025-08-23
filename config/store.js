@@ -14,6 +14,10 @@ let sqlPool = null; // mysql2/promise pool
 const seedSettings = { autoReplyEnabled: process.env.AUTOREPLY_ENABLED === '1', autoReplyCooldownMs: parseInt(process.env.AUTOREPLY_COOLDOWN_MS || '30000', 10) };
 let settings = { ...seedSettings };
 let autoResponses = [];
+// Command enable/disable (global + per guild)
+// Command toggles now store metadata: { enabled, created_at, created_by, updated_at, updated_by }
+let commandToggles = {}; // name -> meta
+const guildCommandToggles = new Map(); // guildId -> { name -> meta }
 // Guild scoped caches
 const guildSettingsCache = new Map(); // guildId -> settings
 const guildAutoResponsesCache = new Map(); // guildId -> auto responses
@@ -123,6 +127,30 @@ async function initMaria() {
       enabled BOOLEAN NOT NULL DEFAULT 1,
       PRIMARY KEY (guild_id, \`key\`)
     ) ENGINE=InnoDB`);
+    await sqlPool.query(`CREATE TABLE IF NOT EXISTS guild_command_toggles (
+      guild_id VARCHAR(32) NOT NULL,
+      command_name VARCHAR(64) NOT NULL,
+      enabled BOOLEAN NOT NULL DEFAULT 1,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      created_by VARCHAR(64) NULL,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      updated_by VARCHAR(64) NULL,
+      PRIMARY KEY (guild_id, command_name)
+    ) ENGINE=InnoDB`);
+    // Migrations (silent) to add metadata columns if upgrading
+    const migCols = [
+      ['command_toggles','created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP'],
+      ['command_toggles','created_by VARCHAR(64) NULL'],
+      ['command_toggles','updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'],
+      ['command_toggles','updated_by VARCHAR(64) NULL'],
+      ['guild_command_toggles','created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP'],
+      ['guild_command_toggles','created_by VARCHAR(64) NULL'],
+      ['guild_command_toggles','updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'],
+      ['guild_command_toggles','updated_by VARCHAR(64) NULL']
+    ];
+    for (const [tbl,col] of migCols){
+      try { await sqlPool.query(`ALTER TABLE ${tbl} ADD COLUMN ${col}`); } catch(e){ /* ignore duplicate */ }
+    }
   // Attempt migration (ignore errors if column exists) with logging
   try { await sqlPool.query('ALTER TABLE auto_responses ADD COLUMN enabled BOOLEAN NOT NULL DEFAULT 1'); console.log('Migration: added enabled column to auto_responses'); } catch (e){ if(!/Duplicate column/i.test(e.message)) console.warn('Migration auto_responses.enabled skipped:', e.message); }
   try { await sqlPool.query('ALTER TABLE guild_auto_responses ADD COLUMN enabled BOOLEAN NOT NULL DEFAULT 1'); console.log('Migration: added enabled column to guild_auto_responses'); } catch (e){ if(!/Duplicate column/i.test(e.message)) console.warn('Migration guild_auto_responses.enabled skipped:', e.message); }
@@ -155,6 +183,29 @@ async function initMaria() {
     // Load all
   const [arRows] = await sqlPool.query('SELECT `key`, pattern, flags, replies, enabled FROM auto_responses');
   autoResponses = arRows.map(r => ({ key: r.key, pattern: r.pattern, flags: r.flags, replies: JSON.parse(r.replies || '[]'), enabled: r.enabled !== 0 }));
+    // Load command toggles
+    try {
+      const [ctRows] = await sqlPool.query('SELECT command_name, enabled, created_at, created_by, updated_at, updated_by FROM command_toggles');
+      commandToggles = {};
+      for (const r of ctRows) commandToggles[r.command_name] = {
+        enabled: r.enabled !== 0,
+        created_at: r.created_at,
+        created_by: r.created_by,
+        updated_at: r.updated_at,
+        updated_by: r.updated_by
+      };
+      const [gctRows] = await sqlPool.query('SELECT guild_id, command_name, enabled, created_at, created_by, updated_at, updated_by FROM guild_command_toggles');
+      for (const r of gctRows){
+        if(!guildCommandToggles.has(r.guild_id)) guildCommandToggles.set(r.guild_id, {});
+        guildCommandToggles.get(r.guild_id)[r.command_name] = {
+          enabled: r.enabled !== 0,
+          created_at: r.created_at,
+          created_by: r.created_by,
+          updated_at: r.updated_at,
+          updated_by: r.updated_by
+        };
+      }
+    } catch(e){ console.warn('Load command toggles failed', e.message); }
     mariaAvailable = true;
     console.log('Config store: MariaDB initialized');
     return true;
@@ -343,5 +394,79 @@ module.exports = {
     const idx = autoResponses.findIndex(r => r.key === key);
     if (idx >= 0) autoResponses.splice(idx, 1);
     await deleteAutoResponse(key);
+  },
+  getCommandToggles: () => {
+    // Return simple map name->enabled for legacy callers
+    const out = {};
+    for (const k of Object.keys(commandToggles)) out[k] = commandToggles[k].enabled !== false;
+    return out;
+  },
+  getAllCommandToggles: () => {
+    // Return full metadata structure
+    const out = {};
+    for (const k of Object.keys(commandToggles)) {
+      const meta = commandToggles[k];
+      out[k] = {
+        enabled: meta.enabled !== false,
+        createdAt: meta.created_at || null,
+        createdBy: meta.created_by || null,
+        updatedAt: meta.updated_at || null,
+        updatedBy: meta.updated_by || null
+      };
+    }
+    return out;
+  },
+  setCommandToggle: async (name, enabled, actor) => {
+    const nowMeta = commandToggles[name];
+    if (!nowMeta){
+      commandToggles[name] = { enabled: !!enabled, created_at: new Date(), created_by: actor||null, updated_at: new Date(), updated_by: actor||null };
+    } else {
+      nowMeta.enabled = !!enabled; nowMeta.updated_at = new Date(); nowMeta.updated_by = actor||null;
+    }
+    if (mariaAvailable && sqlPool){
+      await sqlPool.query('INSERT INTO command_toggles(command_name, enabled, created_by, updated_by) VALUES (?,?,?,?) ON DUPLICATE KEY UPDATE enabled=VALUES(enabled), updated_by=VALUES(updated_by)', [name, enabled ? 1 : 0, actor||null, actor||null]);
+    }
+    return commandToggles[name].enabled;
+  },
+  getGuildCommandToggles: async (guildId) => {
+    if(!guildId) return module.exports.getCommandToggles();
+    const existing = guildCommandToggles.get(guildId) || {};
+    const base = module.exports.getCommandToggles();
+    // Merge overriding enabled flag only
+    const merged = { ...base };
+    for (const k of Object.keys(existing)) merged[k] = existing[k].enabled !== false;
+    return merged;
+  },
+  getAllGuildCommandToggles: async (guildId) => {
+    if(!guildId) return module.exports.getAllCommandToggles();
+    const existing = guildCommandToggles.get(guildId) || {};
+    const base = module.exports.getAllCommandToggles();
+    const merged = { ...base };
+    for (const k of Object.keys(existing)) {
+      const meta = existing[k];
+      merged[k] = {
+        enabled: meta.enabled !== false,
+        createdAt: meta.created_at || null,
+        createdBy: meta.created_by || null,
+        updatedAt: meta.updated_at || null,
+        updatedBy: meta.updated_by || null
+      };
+    }
+    return merged;
+  },
+  setGuildCommandToggle: async (guildId, name, enabled, actor) => {
+    if(!guildId) throw new Error('guildId required');
+    const existing = guildCommandToggles.get(guildId) || {};
+    const meta = existing[name];
+    if (!meta){
+      existing[name] = { enabled: !!enabled, created_at: new Date(), created_by: actor||null, updated_at: new Date(), updated_by: actor||null };
+    } else {
+      meta.enabled = !!enabled; meta.updated_at = new Date(); meta.updated_by = actor||null;
+    }
+    guildCommandToggles.set(guildId, existing);
+    if (mariaAvailable && sqlPool){
+      await sqlPool.query('INSERT INTO guild_command_toggles(guild_id, command_name, enabled, created_by, updated_by) VALUES (?,?,?,?,?) ON DUPLICATE KEY UPDATE enabled=VALUES(enabled), updated_by=VALUES(updated_by)', [guildId, name, enabled ? 1 : 0, actor||null, actor||null]);
+    }
+    return existing[name].enabled;
   }
 };
