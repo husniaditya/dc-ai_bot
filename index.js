@@ -1,4 +1,4 @@
-const { Client, GatewayIntentBits, Partials } = require('discord.js');
+const { Client, GatewayIntentBits, Partials, ActivityType, PermissionsBitField } = require('discord.js');
 const express = require('express');
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
@@ -44,11 +44,79 @@ if (!token) {
   process.exit(0);
 }
 
-// Intents: include MessageContent (feature gated by settings at runtime)
+// Intents: make privileged intents optional (to avoid 'Disallowed intents' login error)
 const enableAutoReply = process.env.AUTOREPLY_ENABLED === '1';
-const intents = [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent];
+const intents = [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages];
+// Message Content intent (privileged) – required for reading message text for auto-replies & AI commands
+if (process.env.ENABLE_MESSAGE_CONTENT !== '0') intents.push(GatewayIntentBits.MessageContent);
+// Guild Members intent (privileged) – required for welcome join tracking & some member operations
+if (process.env.ENABLE_GUILD_MEMBERS === '1' || process.env.ENABLE_WELCOME === '1') intents.push(GatewayIntentBits.GuildMembers);
 const client = new Client({ intents, partials:[Partials.Channel, Partials.Message] });
 loadCommands(client);
+
+// --- Personalization runtime helpers ---
+const personalizationRuntime = {
+  lastAvatarHash: null,
+  lastAvatarUpdateTs: 0,
+  activityApplied: null
+};
+function hashString(str){
+  let h = 0, i, chr; if(!str) return 0; for(i=0;i<str.length;i++){ chr=str.charCodeAt(i); h=((h<<5)-h)+chr; h|=0; } return h;
+}
+async function applyGuildPersonalization(guildId){
+  try {
+    const p = await store.getGuildPersonalization(guildId);
+    const guild = client.guilds.cache.get(guildId);
+    if(!guild || !p) return;
+    // Nickname (guild specific)
+    if (p.nickname !== undefined && p.nickname !== null){
+      try { if (guild.members.me && guild.members.me.nickname !== p.nickname) await guild.members.me.setNickname(p.nickname).catch(()=>{}); } catch{}
+    }
+    // Activity (global) – we just apply last saved one encountered
+    if (p.activityType && p.activityText){
+      const typeMap = {
+        PLAYING: ActivityType.Playing,
+        LISTENING: ActivityType.Listening,
+        WATCHING: ActivityType.Watching,
+        COMPETING: ActivityType.Competing,
+        STREAMING: ActivityType.Streaming
+      };
+      const mappedType = typeMap[p.activityType.toUpperCase()] ?? ActivityType.Playing;
+      const key = `${mappedType}:${p.activityText}`;
+      if (personalizationRuntime.activityApplied !== key){
+        try { await client.user.setActivity(p.activityText, { type: mappedType }); personalizationRuntime.activityApplied = key; } catch(e){ console.warn('Set activity failed', e.message); }
+      }
+    }
+    // Status (online/dnd/idle/invisible)
+    if (p.status){
+      const valid = ['online','dnd','idle','invisible'];
+      if (valid.includes(p.status)){
+        try { await client.user.setStatus(p.status); } catch(e){ console.warn('Set status failed', e.message); }
+      }
+    }
+    // Avatar (global) – apply only if changed & not rate limited
+    if (p.avatarBase64){
+      const b64 = p.avatarBase64.includes(',') ? p.avatarBase64.split(',').pop() : p.avatarBase64; // strip data URI
+      if (b64 && b64.length < 15_000_000){ // ~11MB raw -> 15MB b64
+        const h = hashString(b64);
+        const now = Date.now();
+        const intervalMs = 10*60*1000; // 10 minutes
+        if (h !== personalizationRuntime.lastAvatarHash && (now - personalizationRuntime.lastAvatarUpdateTs) > intervalMs){
+          try {
+            const buf = Buffer.from(b64, 'base64');
+            if (buf.length <= 8_000_000){ // Discord hard limit 8MB
+              await client.user.setAvatar(buf);
+              personalizationRuntime.lastAvatarHash = h;
+              personalizationRuntime.lastAvatarUpdateTs = now;
+            } else {
+              console.warn('Avatar too large, skipping apply');
+            }
+          } catch(e){ console.warn('Set avatar failed', e.message); }
+        }
+      }
+    }
+  } catch(e){ /* silent */ }
+}
 
 // --- Settings / Dashboard API (basic) ---
 const store = require('./config/store');
@@ -233,6 +301,83 @@ app.put('/api/settings', authMiddleware, async (req,res)=>{
   } catch(e){ res.status(500).json({ error:'persist_failed' }); }
 });
 
+// Bot personalization (per guild)
+app.get('/api/personalization', authMiddleware, async (req,res)=>{
+  try {
+    const guildId = req.query.guildId || (req.user.type==='discord' ? (await store.getUser(req.user.userId))?.selected_guild_id : null);
+    if(!guildId) return res.status(400).json({ error:'guild_required' });
+    const p = await store.getGuildPersonalization(guildId);
+    res.json(p);
+  } catch(e){ res.status(500).json({ error:'load_failed' }); }
+});
+app.put('/api/personalization', authMiddleware, async (req,res)=>{
+  try {
+    const guildId = req.query.guildId || (req.user.type==='discord' ? (await store.getUser(req.user.userId))?.selected_guild_id : null);
+    if(!guildId) return res.status(400).json({ error:'guild_required' });
+    // Permission check: require MANAGE_GUILD if user is discord auth
+    if (req.user.type === 'discord'){
+      try {
+        const guild = client.guilds.cache.get(guildId);
+        if (!guild) return res.status(400).json({ error:'bot_not_in_guild' });
+        const member = await guild.members.fetch(req.user.userId).catch(()=>null);
+        if (!member) return res.status(403).json({ error:'not_in_guild' });
+        const hasPerm = member.permissions.has(PermissionsBitField.Flags.ManageGuild);
+        if (!hasPerm) return res.status(403).json({ error:'insufficient_permissions' });
+      } catch { return res.status(403).json({ error:'permission_check_failed' }); }
+    }
+    const allowed = {
+      nickname: req.body.nickname,
+      activityType: req.body.activityType,
+      activityText: req.body.activityText,
+  avatarBase64: req.body.avatarBase64,
+  status: req.body.status
+    };
+    // Basic validation
+    if (allowed.nickname && allowed.nickname.length > 32) return res.status(400).json({ error:'nickname_too_long' });
+    if (allowed.activityText && allowed.activityText.length > 128) return res.status(400).json({ error:'activity_text_too_long' });
+    const updated = await store.setGuildPersonalization(guildId, allowed);
+    audit(req, { action:'update-personalization', guildId });
+    // Fire & forget apply (do not await full completion to keep API snappy)
+    applyGuildPersonalization(guildId);
+    res.json({ ...updated, applied:true });
+  } catch(e){ res.status(500).json({ error:'persist_failed' }); }
+});
+
+// Welcome config endpoints
+app.get('/api/welcome', authMiddleware, async (req,res)=>{
+  try {
+    const guildId = req.query.guildId || (req.user.type==='discord' ? (await store.getUser(req.user.userId))?.selected_guild_id : null);
+    if(!guildId) return res.status(400).json({ error:'guild_required' });
+    const cfg = await store.getGuildWelcome(guildId);
+    res.json(cfg);
+  } catch(e){ res.status(500).json({ error:'load_failed' }); }
+});
+app.put('/api/welcome', authMiddleware, async (req,res)=>{
+  try {
+    const guildId = req.query.guildId || (req.user.type==='discord' ? (await store.getUser(req.user.userId))?.selected_guild_id : null);
+    if(!guildId) return res.status(400).json({ error:'guild_required' });
+    if (req.user.type==='discord'){
+      try {
+        const guild = client.guilds.cache.get(guildId);
+        if(!guild) return res.status(400).json({ error:'bot_not_in_guild' });
+        const member = await guild.members.fetch(req.user.userId).catch(()=>null);
+        if(!member) return res.status(403).json({ error:'not_in_guild' });
+        if(!member.permissions.has(PermissionsBitField.Flags.ManageGuild)) return res.status(403).json({ error:'insufficient_permissions' });
+      } catch { return res.status(403).json({ error:'permission_check_failed' }); }
+    }
+    const allowed = {
+      channelId: req.body.channelId,
+      messageType: req.body.messageType,
+      messageText: req.body.messageText,
+      cardEnabled: req.body.cardEnabled
+    };
+    if (allowed.messageText && allowed.messageText.length > 2000) return res.status(400).json({ error:'message_too_long' });
+    const updated = await store.setGuildWelcome(guildId, allowed);
+    audit(req, { action:'update-welcome', guildId });
+    res.json(updated);
+  } catch(e){ res.status(500).json({ error:'persist_failed' }); }
+});
+
 // Command toggles (returns merged command metadata list)
 app.get('/api/commands', authMiddleware, async (req,res)=>{
   try {
@@ -280,6 +425,22 @@ app.get('/api/guilds', authMiddleware, (req,res)=>{
     res.json(list);
   } catch(e){ res.status(500).json({ error:'load_failed' }); }
 });
+// List channels (text-based) for current guild
+app.get('/api/channels', authMiddleware, async (req,res)=>{
+  try {
+    const guildId = req.query.guildId || (req.user.type==='discord' ? (await store.getUser(req.user.userId))?.selected_guild_id : null);
+    if(!guildId) return res.status(400).json({ error:'guild_required' });
+    const guild = client.guilds.cache.get(guildId);
+    if(!guild) return res.status(400).json({ error:'bot_not_in_guild' });
+    // Fetch to ensure cache population
+    try { await guild.channels.fetch(); } catch {}
+    const channels = guild.channels.cache
+      .filter(c => c && c.isTextBased && typeof c.isTextBased === 'function' ? c.isTextBased() : (c.type && /text|forum|news/i.test(String(c.type))))
+      .map(c => ({ id: c.id, name: c.name, type: c.type, parentId: c.parentId || null, position: c.rawPosition || c.position || 0 }))
+      .sort((a,b)=> a.position - b.position);
+    res.json({ guildId, channels });
+  } catch(e){ res.status(500).json({ error:'load_failed' }); }
+});
 app.post('/api/auto-responses', authMiddleware, async (req,res)=>{
   const { key, pattern, flags, replies, enabled } = req.body || {};
   if (!key || !pattern) return res.status(400).json({ error: 'key and pattern required' });
@@ -323,6 +484,37 @@ const pollModule = commandMap.get('poll');
 
 client.once('ready', () => {
   console.log(`Logged in as ${client.user.tag}`);
+  // On startup apply personalization for all guilds (best effort)
+  for (const g of client.guilds.cache.values()) applyGuildPersonalization(g.id);
+});
+
+// Welcome event
+client.on('guildMemberAdd', async (member) => {
+  try {
+    const guildId = member.guild.id;
+    const cfg = await store.getGuildWelcome(guildId);
+    if (!cfg || !cfg.channelId) return;
+    const ch = member.guild.channels.cache.get(cfg.channelId);
+    if(!ch || !ch.isTextBased()) return;
+    const msgText = (cfg.messageText && cfg.messageText.trim()) ? cfg.messageText
+      .replace(/\{user\}/g, `<@${member.id}>`)
+      .replace(/\{server\}/g, member.guild.name)
+      : `Welcome <@${member.id}>!`;
+    if (cfg.messageType === 'embed'){
+      const embed = { title: 'Welcome!', description: msgText, color: 0x5865F2 };
+      if (cfg.cardEnabled){
+        embed.thumbnail = { url: member.user.displayAvatarURL({ size:128 }) };
+        embed.footer = { text: `Member #${member.guild.memberCount}` };
+      }
+      await ch.send({ embeds:[embed] });
+    } else {
+      if (cfg.cardEnabled){
+        await ch.send({ content: msgText, files: [] }); // placeholder for future generated card image
+      } else {
+        await ch.send(msgText);
+      }
+    }
+  } catch(e){ /* silent */ }
 });
 
 // Message context menus: Explain Image, Summarize
@@ -488,4 +680,21 @@ client.on('interactionCreate', async (interaction) => {
   }
 });
 
-client.login(token).catch(err => { console.error('Failed to login:', err); process.exit(1); });
+client.login(token).catch(err => {
+  if (String(err).includes('Disallowed intents') || String(err).includes('Used disallowed intents')) {
+    console.error('Failed to login due to disallowed intents. Adjusting to safe intents and retrying...');
+    // Remove privileged intents and retry once
+    try { client.destroy(); } catch {}
+    const safeIntents = [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages];
+    const safeClient = new Client({ intents: safeIntents, partials:[Partials.Channel, Partials.Message] });
+    loadCommands(safeClient);
+    // Re-bind minimal events needed
+    safeClient.once('ready', () => {
+      console.warn('Logged in with reduced intents (welcome & content-dependent features disabled). Enable intents in Developer Portal for full features.');
+    });
+    safeClient.login(token).catch(e2 => { console.error('Retry login failed:', e2); process.exit(1); });
+  } else {
+    console.error('Failed to login:', err);
+    process.exit(1);
+  }
+});

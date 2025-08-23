@@ -51,4 +51,9 @@ export async function upsertAuto(entry, guildId){ return authFetch('/api/auto-re
 export async function deleteAuto(key, guildId){ return authFetch('/api/auto-responses/' + encodeURIComponent(key) + (guildId?`?guildId=${guildId}`:''), { method:'DELETE' }); }
 export async function getCommandToggles(guildId){ return authFetch('/api/commands' + (guildId?`?guildId=${guildId}`:'')); }
 export async function setCommandToggle(name, enabled, guildId){ return authFetch('/api/commands/toggle' + (guildId?`?guildId=${guildId}`:''), { method:'POST', body: JSON.stringify({ name, enabled }) }); }
+export async function getPersonalization(guildId){ return authFetch('/api/personalization' + (guildId?`?guildId=${guildId}`:'')); }
+export async function updatePersonalization(p, guildId){ return authFetch('/api/personalization' + (guildId?`?guildId=${guildId}`:''), { method:'PUT', body: JSON.stringify(p) }); }
+export async function getWelcome(guildId){ return authFetch('/api/welcome' + (guildId?`?guildId=${guildId}`:'')); }
+export async function updateWelcome(p, guildId){ return authFetch('/api/welcome' + (guildId?`?guildId=${guildId}`:''), { method:'PUT', body: JSON.stringify(p) }); }
+export async function getChannels(guildId){ return authFetch('/api/channels' + (guildId?`?guildId=${guildId}`:'')); }
 export { login };

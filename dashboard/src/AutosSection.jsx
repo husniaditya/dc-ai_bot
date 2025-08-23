@@ -52,8 +52,9 @@ export default function AutosSection({
   function runTester(){ if(!testerPattern){ setTesterResult(null); return; } try { const reg=new RegExp(testerPattern, testerFlags); const lines=testerSample.split(/\r?\n/); const matches=lines.map(line=>({ line, match: reg.test(line)})); setTesterResult({ ok:true, matches }); } catch(e){ setTesterResult({ ok:false, error:e.message }); } }
 
   return <div className="autos-section fade-in-soft autos-section-wrapper">
+    <h5 className="mb-3">Auto Responses</h5>
     <div className="auto-head mb-3">
-      <div className="section-title">Auto Responses</div>
+      <div className="section-title visually-hidden">Auto Responses</div>
       <div className="auto-head-search"><input className="form-control form-control-sm search-input w-100" placeholder="Search..." value={search} onChange={e=>{ setSearch(e.target.value); setPage(1); }} /></div>
       <div className="auto-head-actions">
         <button className="btn btn-sm btn-outline-light d-inline-flex align-items-center gap-1" type="button" onClick={()=>setShowRegexTester(s=>!s)}>

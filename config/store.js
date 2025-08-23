@@ -21,6 +21,10 @@ const guildCommandToggles = new Map(); // guildId -> { name -> meta }
 // Guild scoped caches
 const guildSettingsCache = new Map(); // guildId -> settings
 const guildAutoResponsesCache = new Map(); // guildId -> auto responses
+// Guild personalization cache { nickname, activity_type, activity_text, avatar_base64 }
+const guildPersonalizationCache = new Map();
+// Guild welcome config cache { channelId, messageType, messageText, cardEnabled }
+const guildWelcomeCache = new Map();
 
 // Load seed auto responses from existing JS file and convert regex -> {pattern, flags}
 function loadSeedAutoResponses() {
@@ -136,6 +140,26 @@ async function initMaria() {
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
       updated_by VARCHAR(64) NULL,
       PRIMARY KEY (guild_id, command_name)
+    ) ENGINE=InnoDB`);
+    await sqlPool.query(`CREATE TABLE IF NOT EXISTS guild_personalization (
+      guild_id VARCHAR(32) PRIMARY KEY,
+      nickname VARCHAR(100) NULL,
+      activity_type VARCHAR(24) NULL,
+      activity_text VARCHAR(128) NULL,
+      avatar_base64 MEDIUMTEXT NULL,
+      status VARCHAR(16) NULL,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB`);
+    // Migration: add status column if upgrading
+    try { await sqlPool.query('ALTER TABLE guild_personalization ADD COLUMN status VARCHAR(16) NULL'); } catch(e){ /* ignore if exists */ }
+    // Welcome configuration table
+    await sqlPool.query(`CREATE TABLE IF NOT EXISTS guild_welcome (
+      guild_id VARCHAR(32) PRIMARY KEY,
+      channel_id VARCHAR(32) NULL,
+      message_type VARCHAR(10) NOT NULL DEFAULT 'text',
+      message_text TEXT NULL,
+      card_enabled BOOLEAN NOT NULL DEFAULT 0,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
     ) ENGINE=InnoDB`);
     // Migrations (silent) to add metadata columns if upgrading
     const migCols = [
@@ -389,6 +413,71 @@ module.exports = {
     if (idx >= 0) autoResponses[idx] = cleaned; else autoResponses.push(cleaned);
     await saveAutoResponse(cleaned);
     return cleaned;
+  },
+  // Guild personalization
+  getGuildPersonalization: async (guildId) => {
+    if(!guildId) return null;
+    if (guildPersonalizationCache.has(guildId)) return { ...guildPersonalizationCache.get(guildId) };
+    if (mariaAvailable && sqlPool){
+      const [rows] = await sqlPool.query('SELECT nickname, activity_type, activity_text, avatar_base64, status FROM guild_personalization WHERE guild_id=?', [guildId]);
+      if(rows.length){
+        const rec = { nickname: rows[0].nickname || null, activityType: rows[0].activity_type || null, activityText: rows[0].activity_text || null, avatarBase64: rows[0].avatar_base64 || null, status: rows[0].status || null };
+        guildPersonalizationCache.set(guildId, rec);
+        return { ...rec };
+      }
+    }
+    const empty = { nickname:null, activityType:null, activityText:null, avatarBase64:null, status:null };
+    guildPersonalizationCache.set(guildId, empty);
+    return { ...empty };
+  },
+  setGuildPersonalization: async (guildId, data) => {
+    if(!guildId) throw new Error('guildId required');
+    const current = await module.exports.getGuildPersonalization(guildId);
+    const next = { ...current };
+    if(data.nickname !== undefined) next.nickname = data.nickname || null;
+    if(data.activityType !== undefined) next.activityType = data.activityType || null;
+    if(data.activityText !== undefined) next.activityText = data.activityText || null;
+    if(data.avatarBase64 !== undefined) next.avatarBase64 = data.avatarBase64 || null;
+    if(data.status !== undefined) next.status = data.status || null;
+    guildPersonalizationCache.set(guildId, next);
+    if (mariaAvailable && sqlPool){
+      await sqlPool.query('REPLACE INTO guild_personalization(guild_id, nickname, activity_type, activity_text, avatar_base64, status) VALUES (?,?,?,?,?,?)', [
+        guildId, next.nickname, next.activityType, next.activityText, next.avatarBase64, next.status
+      ]);
+    }
+    return { ...next };
+  },
+  // Guild welcome config
+  getGuildWelcome: async (guildId) => {
+    if(!guildId) return null;
+    if (guildWelcomeCache.has(guildId)) return { ...guildWelcomeCache.get(guildId) };
+    if (mariaAvailable && sqlPool){
+      const [rows] = await sqlPool.query('SELECT channel_id, message_type, message_text, card_enabled FROM guild_welcome WHERE guild_id=?', [guildId]);
+      if (rows.length){
+        const rec = { channelId: rows[0].channel_id || null, messageType: rows[0].message_type || 'text', messageText: rows[0].message_text || '', cardEnabled: rows[0].card_enabled === 1 };
+        guildWelcomeCache.set(guildId, rec);
+        return { ...rec };
+      }
+    }
+    const empty = { channelId:null, messageType:'text', messageText:'', cardEnabled:false };
+    guildWelcomeCache.set(guildId, empty);
+    return { ...empty };
+  },
+  setGuildWelcome: async (guildId, data) => {
+    if(!guildId) throw new Error('guildId required');
+    const current = await module.exports.getGuildWelcome(guildId);
+    const next = { ...current };
+    if (data.channelId !== undefined) next.channelId = data.channelId || null;
+    if (data.messageType !== undefined) next.messageType = (data.messageType === 'embed') ? 'embed' : 'text';
+    if (data.messageText !== undefined) next.messageText = data.messageText || '';
+    if (data.cardEnabled !== undefined) next.cardEnabled = !!data.cardEnabled;
+    guildWelcomeCache.set(guildId, next);
+    if (mariaAvailable && sqlPool){
+      await sqlPool.query('REPLACE INTO guild_welcome(guild_id, channel_id, message_type, message_text, card_enabled) VALUES (?,?,?,?,?)', [
+        guildId, next.channelId, next.messageType, next.messageText, next.cardEnabled ? 1 : 0
+      ]);
+    }
+    return { ...next };
   },
   removeAutoResponse: async (key) => {
     const idx = autoResponses.findIndex(r => r.key === key);
