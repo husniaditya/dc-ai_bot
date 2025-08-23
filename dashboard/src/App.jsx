@@ -22,6 +22,21 @@ export default function App(){
   const [guildSearch, setGuildSearch] = useState('');
   // Sidebar section
   const [dashSection, setDashSection] = useState('overview'); // overview | autos | commands
+  // Sidebar UI state
+  const [sidebarOpen, setSidebarOpen] = useState(false); // mobile overlay
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false); // desktop collapse
+  // Effect: lock body scroll when mobile sidebar open
+  useEffect(()=>{
+    if(sidebarOpen) { document.body.classList.add('sidebar-open'); }
+    else { document.body.classList.remove('sidebar-open'); }
+  }, [sidebarOpen]);
+  // Effect: close sidebar on Escape
+  useEffect(()=>{
+    if(!sidebarOpen) return;
+    const handler = (e)=>{ if(e.key==='Escape') setSidebarOpen(false); };
+    window.addEventListener('keydown', handler);
+    return ()=> window.removeEventListener('keydown', handler);
+  }, [sidebarOpen]);
   // Detect OAuth code immediately to avoid login flash
   const initialAuthCode = (typeof window !== 'undefined') ? new URLSearchParams(window.location.search).get('code') : null;
   const [authProcessing, setAuthProcessing] = useState(!!initialAuthCode && !token);
@@ -409,16 +424,7 @@ export default function App(){
   if(view!=='dashboard') return null; // safety
 
   const resolvedGuildName = guilds.find(g=>g.id===selectedGuild)?.name || (selectedGuild && selectedGuild.length>4 ? 'Server '+selectedGuild.slice(0,6)+'…' : selectedGuild) || 'Unknown';
-  const guildBanner = <div className="card card-glass py-2 px-3 d-flex flex-row justify-content-between align-items-center mb-3 fade-in" style={{border:'1px solid rgba(255,255,255,0.15)'}}>
-    <div>
-      <span className="badge-soft me-2">Server</span>{resolvedGuildName}
-    </div>
-    <div className="d-flex gap-2">
-      <button className="btn btn-sm btn-outline-light" onClick={()=>setView('guild')}>Change</button>
-      <button className="btn btn-sm btn-outline-light" onClick={()=>refresh()}>Reload</button>
-      <button onClick={doLogout} className="btn btn-sm btn-outline-danger">Logout</button>
-    </div>
-  </div>;
+  const guildBanner = guilds.find(g=>g.id===selectedGuild)?.banner ? `https://cdn.discordapp.com/banners/${selectedGuild}/${guilds.find(g=>g.id===selectedGuild).banner}.png?size=512` : null;
 
   // --- Section contents ---
   const overviewContent = <div className="overview-section fade-in-soft">
@@ -457,7 +463,7 @@ export default function App(){
     <div className="auto-head mb-3">
       <div className="section-title">Auto Responses</div>
       <div className="auto-head-search">
-        <input className="form-control form-control-sm search-input w-100" placeholder="Search..." value={search} onChange={e=>setSearch(e.target.value)} />
+  <input className="form-control form-control-sm search-input w-100" placeholder="Search..." value={search} onChange={e=>setSearch(e.target.value)} />
       </div>
       <div className="auto-head-actions">
         <button className="btn btn-sm btn-outline-light" type="button" onClick={()=>setShowRegexTester(s=>!s)}>{showRegexTester? 'Close Tester':'Regex Tester'}</button>
@@ -584,7 +590,14 @@ export default function App(){
   const content = <div className="container-fluid py-4 fade-in">
     {guildBanner}
     <div className="dashboard-flex">
-      <aside className="dash-sidebar">
+      <aside className={"dash-sidebar" + (sidebarCollapsed? ' collapsed':'') + (sidebarOpen? ' open':'')}>
+        <div className="sidebar-inner">
+        <div className="sidebar-top-controls d-flex justify-content-between align-items-center mb-2">
+          <button type="button" className="btn btn-sm btn-outline-secondary d-lg-none" onClick={()=>setSidebarOpen(false)} title="Close menu"><i className="fa-solid fa-xmark"></i></button>
+          <button type="button" className="btn btn-sm btn-outline-secondary d-none d-lg-inline-flex collapse-toggle" onClick={()=>setSidebarCollapsed(c=>!c)} title={sidebarCollapsed? 'Expand sidebar':'Collapse sidebar'}>
+            <i className={'fa-solid ' + (sidebarCollapsed? 'fa-chevron-right':'fa-chevron-left')}></i>
+          </button>
+        </div>
         <div className="guild-switcher card-glass mb-3 p-2">
           <button type="button" className="guild-switcher-btn" onClick={()=>setView('guild')} title="Change server">
             {(() => { const g = guilds.find(x=>x.id===selectedGuild); const iconUrl = g?.icon ? `https://cdn.discordapp.com/icons/${g.id}/${g.icon}.png?size=128` : null; return <>
@@ -597,18 +610,37 @@ export default function App(){
           </button>
         </div>
         <div className="dash-menu">
-          <button type="button" onClick={()=>setDashSection('overview')} className={'dash-menu-item'+(dashSection==='overview'? ' active':'')}>Overview</button>
-          <button type="button" onClick={()=>setDashSection('autos')} className={'dash-menu-item'+(dashSection==='autos'? ' active':'')}>Auto Responses</button>
-          <button type="button" onClick={()=>setDashSection('commands')} className={'dash-menu-item'+(dashSection==='commands'? ' active':'')}>Commands</button>
+          <button type="button" onClick={()=>{setDashSection('overview'); setSidebarOpen(false);}} className={'dash-menu-item'+(dashSection==='overview'? ' active':'')}>
+            <i className="fa-solid fa-gauge-high menu-ico"></i>
+            <span className="menu-label">Overview</span>
+          </button>
+          <button type="button" onClick={()=>{setDashSection('autos'); setSidebarOpen(false);}} className={'dash-menu-item'+(dashSection==='autos'? ' active':'')}>
+            <i className="fa-solid fa-bolt menu-ico"></i>
+            <span className="menu-label">Auto Responses</span>
+          </button>
+          <button type="button" onClick={()=>{setDashSection('commands'); setSidebarOpen(false);}} className={'dash-menu-item'+(dashSection==='commands'? ' active':'')}>
+            <i className="fa-solid fa-terminal menu-ico"></i>
+            <span className="menu-label">Commands</span>
+          </button>
         </div>
         <div className="dash-sidebar-footer mt-4">
-          <button type="button" className="btn btn-sm btn-outline-danger w-100 logout-btn" onClick={doLogout}>Logout</button>
+          <button type="button" className="btn btn-sm btn-outline-danger w-100 logout-btn" onClick={()=>{ doLogout(); setSidebarOpen(false); }}>
+            <i className="fa-solid fa-right-from-bracket"></i>
+            <span className="menu-label ms-1">Logout</span>
+          </button>
+        </div>
         </div>
       </aside>
       <main className="dash-main">
         {sectionMap[dashSection]}
       </main>
     </div>
+    {/* Floating action button & backdrop for mobile */}
+    {!sidebarOpen && <button type="button" className="fab-toggle d-lg-none" onClick={()=>setSidebarOpen(true)} aria-label="Open menu">
+      <span className="fab-ripple"></span>
+      <i className="fa-solid fa-bars"></i>
+    </button>}
+    {sidebarOpen && <div className="sidebar-backdrop d-lg-none" onClick={()=>setSidebarOpen(false)} />}
     {showAutoModal && dashSection==='autos' && <div className="modal d-block fade-in" tabIndex={-1} role="dialog" style={{background:'rgba(8,10,18,0.72)'}} onMouseDown={(e)=>{ if(e.target.classList.contains('modal')) closeAutoModal(); }}>
       <div className="modal-dialog modal-lg modal-dialog-centered" role="document" onMouseDown={e=>e.stopPropagation()}>
         <div className="modal-content">
