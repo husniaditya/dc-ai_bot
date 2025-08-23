@@ -1,4 +1,5 @@
-const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:3001';
+// Point to backend API (proxy handles /api during dev; fallback direct port)
+const API_BASE = import.meta.env.VITE_API_BASE || '';
 
 function getToken(){ return localStorage.getItem('token'); }
 function setToken(t){ localStorage.setItem('token', t); }
@@ -14,10 +15,33 @@ async function login(username, password){
 async function authFetch(path, opts={}){
   const token = getToken();
   const headers = Object.assign({}, opts.headers||{}, { 'Content-Type':'application/json', Authorization: 'Bearer ' + token });
-  const r = await fetch(API_BASE + path, { ...opts, headers });
-  if(r.status === 401) throw new Error('Unauthorized');
-  const text = await r.text();
-  try { return JSON.parse(text); } catch { return text; }
+  const res = await fetch(API_BASE + path, { ...opts, headers });
+  if(res.status === 401) throw new Error('Unauthorized');
+  let text;
+  try { text = await res.text(); } catch { text = ''; }
+  if(!text) return null; // allow empty 204 responses
+  try { return JSON.parse(text); } catch(e){ throw new Error('Bad JSON response'); }
+}
+
+export function getApiBase(){ return API_BASE || ''; }
+
+// Generic unauthenticated JSON fetch with fallback to localhost:3001 if proxy/base missing
+export async function fetchJson(path){
+  const bases = API_BASE ? [API_BASE] : ['', 'http://localhost:3001'];
+  let lastErr;
+  for(const b of bases){
+    try {
+      const res = await fetch(b + path, { headers:{ 'Accept':'application/json' } });
+      if(!res.ok){
+        const txt = await res.text().catch(()=>'');
+        try { const j = txt? JSON.parse(txt):{}; throw new Error(j.error || ('HTTP '+res.status)); } catch(e){ if(e.message.startsWith('HTTP ')) throw e; }
+      }
+      const txt = await res.text();
+      if(!txt) return null;
+      try { return JSON.parse(txt); } catch { throw new Error('Bad JSON'); }
+    } catch(e){ lastErr = e; }
+  }
+  throw lastErr || new Error('Network error');
 }
 
 export async function getSettings(guildId){ return authFetch('/api/settings' + (guildId?`?guildId=${guildId}`:'')); }

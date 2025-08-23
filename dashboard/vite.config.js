@@ -4,6 +4,17 @@ import path from 'path';
 export default defineConfig({
   root: '.',
   publicDir: 'public',
+  server: {
+    port: 5173,
+    proxy: {
+      '/api': {
+        target: 'http://localhost:3001', // backend API dev server
+        changeOrigin: true,
+        ws: false
+      }
+    }
+  },
+  preview: { port: 5173 },
   build: {
     outDir: 'dist',
     emptyOutDir: true

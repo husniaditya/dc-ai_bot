@@ -1,7 +1,9 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 // Option B: removed DataTables – using pure React table implementation
-import { login, getSettings, updateSettings, listAuto, upsertAuto, deleteAuto } from './api';
+import { login, getSettings, updateSettings, listAuto, upsertAuto, deleteAuto, getApiBase, fetchJson } from './api';
+import AutosSection from './AutosSection';
+const API_BASE = getApiBase();
 
 export default function App(){
   const [token, setToken] = useState(localStorage.getItem('token'));
@@ -17,15 +19,68 @@ export default function App(){
   const [toasts, setToasts] = useState([]); // {id,type,message}
   const [loading, setLoading] = useState(false);
   const [oauthMode, setOauthMode] = useState(true); // new flag
-  const [guilds, setGuilds] = useState([]);
-  const [selectedGuild, setSelectedGuild] = useState(null);
-  const [view, setView] = useState('login'); // login | guild | dashboard
+  const [guilds, setGuilds] = useState(()=>{
+    try {
+      const raw = localStorage.getItem('guildsCache');
+      if(raw) return JSON.parse(raw) || [];
+    } catch {}
+    return [];
+  });
+  // Persist selected guild & view so refresh keeps current location
+  const [selectedGuild, setSelectedGuild] = useState(()=>{
+    try { return localStorage.getItem('selectedGuild') || null; } catch { return null; }
+  });
+  const [view, setView] = useState(()=>{
+    try {
+      const tok = localStorage.getItem('token');
+      const sg = localStorage.getItem('selectedGuild');
+      // If we have both token + selectedGuild assume dashboard; guild list will refresh async
+      if(tok && sg) return 'dashboard';
+      return 'login';
+    } catch { return 'login'; }
+  }); // login | guild | dashboard
   const [guildSearch, setGuildSearch] = useState('');
   // Sidebar section
-  const [dashSection, setDashSection] = useState('overview'); // overview | autos | commands
+  const [dashSection, setDashSection] = useState(()=>{
+    try { return localStorage.getItem('dashSection') || 'overview'; } catch { return 'overview'; }
+  }); // overview | autos | commands
   // Sidebar UI state
   const [sidebarOpen, setSidebarOpen] = useState(false); // mobile overlay
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false); // desktop collapse
+  // Sidebar modes: full (240px) | mini (70px) – persisted
+  const [sidebarMode, setSidebarMode] = useState(()=> (typeof window!=='undefined' && localStorage.getItem('sidebarMode')==='mini') ? 'mini' : 'full');
+  const sidebarRef = useRef(null);
+  function cycleSidebarMode(){
+    setSidebarMode(m => {
+      const next = (m==='full') ? 'mini' : 'full';
+      if(sidebarRef.current){
+        sidebarRef.current.classList.add('animating');
+        setTimeout(()=> sidebarRef.current && sidebarRef.current.classList.remove('animating'), 360);
+      }
+      return next;
+    });
+  }
+  useEffect(()=>{ try { localStorage.setItem('sidebarMode', sidebarMode); } catch(_){} }, [sidebarMode]);
+  useEffect(()=>{ try { localStorage.setItem('guildsCache', JSON.stringify(guilds)); } catch(_){} }, [guilds]);
+  // Persist selected guild & dash section
+  useEffect(()=>{ try { if(selectedGuild) localStorage.setItem('selectedGuild', selectedGuild); } catch(_){} }, [selectedGuild]);
+  useEffect(()=>{ try { localStorage.setItem('dashSection', dashSection); } catch(_){} }, [dashSection]);
+  // Persist view mainly for guild vs dashboard (login recalculated from token presence)
+  useEffect(()=>{ try { localStorage.setItem('lastView', view); } catch(_){} }, [view]);
+  // On reload when we jumped straight to dashboard but guilds list empty, fetch guild metadata silently so logo appears
+  useEffect(()=>{
+    if(token && selectedGuild && guilds.length===0){
+      (async()=>{
+        try {
+          const res = await fetch(API_BASE + '/api/guilds', { headers:{ Authorization: 'Bearer '+localStorage.getItem('token') }});
+          if(!res.ok) return;
+          const txt = await res.text();
+            let data={}; try { data = txt? JSON.parse(txt):{}; } catch { return; }
+          if(Array.isArray(data.guilds)) setGuilds(data.guilds);
+          else if(Array.isArray(data)) setGuilds(data);
+        } catch {}
+      })();
+    }
+  }, [token, selectedGuild, guilds.length]);
   // Effect: lock body scroll when mobile sidebar open
   useEffect(()=>{
     if(sidebarOpen) { document.body.classList.add('sidebar-open'); }
@@ -69,9 +124,10 @@ export default function App(){
       (async()=>{
         try {
           if(!authProcessing) setAuthProcessing(true);
-          const resp = await fetch('/api/oauth/discord/exchange', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ code, state }) });
-          if(!resp.ok){ const j = await resp.json().catch(()=>({})); throw new Error(j.error || 'OAuth exchange failed'); }
-          const data = await resp.json();
+          const resp = await fetch(API_BASE + '/api/oauth/discord/exchange', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ code, state }) });
+          const text = await resp.text();
+          let data; try { data = text? JSON.parse(text):{}; } catch { throw new Error('OAuth exchange failed (bad JSON)'); }
+          if(!resp.ok){ throw new Error(data.error || 'OAuth exchange failed'); }
           if(data.token){ localStorage.setItem('token', data.token); setToken(data.token); }
           if(Array.isArray(data.guilds)) setGuilds(data.guilds);
           setView('guild');
@@ -88,9 +144,10 @@ export default function App(){
     if(token && view==='login'){
       (async()=>{
         try {
-          const resp = await fetch('/api/user/me', { headers:{ Authorization:'Bearer '+token }});
+          const resp = await fetch(API_BASE + '/api/user/me', { headers:{ Authorization:'Bearer '+token }});
           if(resp.ok){
-            const u = await resp.json();
+            const t = await resp.text();
+            let u={}; try { u = t? JSON.parse(t):{}; } catch {}
             if(u && u.selected_guild_id){
               setSelectedGuild(u.selected_guild_id);
               setView('dashboard');
@@ -109,9 +166,9 @@ export default function App(){
     try {
       setLoading(true);
       // guild list endpoint piggybacked from settings API when guild not chosen yet? Fallback to /api/guilds via window.fetch
-      const res = await fetch('/api/guilds', { headers:{ Authorization: 'Bearer '+localStorage.getItem('token') }});
+  const res = await fetch(API_BASE + '/api/guilds', { headers:{ Authorization: 'Bearer '+localStorage.getItem('token') }});
       if(!res.ok) throw new Error('Failed to load guilds');
-      const data = await res.json();
+  const txt = await res.text(); let data={}; try { data = txt? JSON.parse(txt):{}; } catch { throw new Error('Guilds JSON parse failed'); }
       setGuilds(data.guilds||data||[]);
       setView('guild');
     } catch(e){ setError(e.message); }
@@ -140,14 +197,18 @@ export default function App(){
   }
 
   function startDiscordLogin(){
-    fetch('/api/oauth/discord/url')
-      .then(r=>r.json())
-      .then(d=>{ if(d.url) window.location.href = d.url; else throw new Error('No OAuth URL'); })
-      .catch(e=> setError(e.message));
+    fetchJson('/api/oauth/discord/url')
+      .then(d=>{ if(d && d.url) window.location.href = d.url; else throw new Error('No OAuth URL'); })
+      .catch(e=> setError('OAuth URL error: '+e.message+' (is backend running on 3001?)'));
   }
 
   function doLogout(){
     localStorage.removeItem('token');
+    try {
+      localStorage.removeItem('selectedGuild');
+      localStorage.removeItem('dashSection');
+      localStorage.removeItem('lastView');
+    } catch(_){}
     setToken(null);
     setSelectedGuild(null);
     setSettings(null);
@@ -159,7 +220,7 @@ export default function App(){
     if(!selectedGuild) return;
     (async()=>{
       try {
-        await fetch('/api/user/select-guild', { method:'POST', headers:{ 'Content-Type':'application/json', Authorization:'Bearer '+localStorage.getItem('token') }, body: JSON.stringify({ guildId: selectedGuild }) });
+  await fetch(API_BASE + '/api/user/select-guild', { method:'POST', headers:{ 'Content-Type':'application/json', Authorization:'Bearer '+localStorage.getItem('token') }, body: JSON.stringify({ guildId: selectedGuild }) });
       } catch(e){ /* non-fatal */ }
       setView(nextView||'dashboard');
       refresh();
@@ -180,15 +241,7 @@ export default function App(){
     setModalAuto(emptyAuto);
   }
 
-  function runTester(){
-    if(!testerPattern){ setTesterResult(null); return; }
-    try {
-      const reg = new RegExp(testerPattern, testerFlags);
-      const lines = testerSample.split(/\r?\n/);
-      const matches = lines.map(line => ({ line, match: reg.test(line) }));
-      setTesterResult({ ok:true, matches });
-    } catch(e){ setTesterResult({ ok:false, error: e.message }); }
-  }
+  // (regex tester + table logic moved into AutosSection)
 
   async function saveSettings(){
     try {
@@ -231,21 +284,7 @@ export default function App(){
     setTimeout(()=> setToasts(t => t.filter(x=>x.id!==id)), 3500);
   }
 
-  // search/filter
-  const [search, setSearch] = useState('');
-  // Manual selection state (keys)
-  const [selectedKeys, setSelectedKeys] = useState(new Set());
-  const [showRegexTester, setShowRegexTester] = useState(false);
-  const [testerPattern, setTesterPattern] = useState('');
-  const [testerFlags, setTesterFlags] = useState('i');
-  const [testerSample, setTesterSample] = useState('');
-  const [testerResult, setTesterResult] = useState(null);
-  // Pagination + sorting (pure React table for autos)
-  const [pageSize, setPageSize] = useState(15);
-  const [page, setPage] = useState(1);
-  const [sort, setSort] = useState({ field: 'key', dir: 'asc' }); // dir: asc|desc
-  const headerSelectRef = useRef(null);
-  // Responsive breakpoint detection for mobile optimized UI
+  // Responsive breakpoint detection for mobile optimized UI (used for sidebar behavior only now)
   const [isMobile, setIsMobile] = useState(false);
   useEffect(()=>{
     function handleResize(){ setIsMobile(window.innerWidth < 720); }
@@ -253,101 +292,6 @@ export default function App(){
     window.addEventListener('resize', handleResize);
     return ()=> window.removeEventListener('resize', handleResize);
   }, []);
-
-  // Filtered list
-  const filteredAutos = useMemo(()=>{
-    if(!search) return autos;
-    const q = search.toLowerCase();
-    return autos.filter(a =>
-      a.key.toLowerCase().includes(q) ||
-      a.pattern.toLowerCase().includes(q) ||
-      (a.flags||'').toLowerCase().includes(q) ||
-      (Array.isArray(a.replies)? a.replies.join(' | ') : '').toLowerCase().includes(q)
-    );
-  }, [autos, search]);
-
-  // Sort
-  const sortedAutos = useMemo(()=>{
-    const arr = [...filteredAutos];
-    const { field, dir } = sort;
-    if(!field) return arr;
-    arr.sort((a,b)=>{
-      let av = a[field];
-      let bv = b[field];
-      if(Array.isArray(av)) av = av.join(' ');
-      if(Array.isArray(bv)) bv = bv.join(' ');
-      if(typeof av === 'boolean') av = av?1:0;
-      if(typeof bv === 'boolean') bv = bv?1:0;
-      av = (av ?? '').toString().toLowerCase();
-      bv = (bv ?? '').toString().toLowerCase();
-      if(av < bv) return dir==='asc'? -1: 1;
-      if(av > bv) return dir==='asc'? 1: -1;
-      return 0;
-    });
-    return arr;
-  }, [filteredAutos, sort]);
-
-  // Pagination boundaries
-  const totalPages = Math.max(1, Math.ceil(sortedAutos.length / pageSize));
-  useEffect(()=>{ if(page > totalPages) setPage(totalPages); }, [totalPages, page]);
-  const pageAutos = useMemo(()=>{
-    const start = (page-1)*pageSize;
-    return sortedAutos.slice(start, start+pageSize);
-  }, [sortedAutos, page, pageSize]);
-
-  // Select all (filtered)
-  const allFilteredKeys = useMemo(()=> filteredAutos.map(a=>a.key), [filteredAutos]);
-  const selectedInFilterCount = useMemo(()=> allFilteredKeys.reduce((acc,k)=> acc + (selectedKeys.has(k)?1:0), 0), [allFilteredKeys, selectedKeys]);
-  const allFilteredSelected = allFilteredKeys.length>0 && selectedInFilterCount === allFilteredKeys.length;
-  const someFilteredSelected = selectedInFilterCount>0 && !allFilteredSelected;
-  useEffect(()=>{ if(headerSelectRef.current) headerSelectRef.current.indeterminate = someFilteredSelected; }, [someFilteredSelected, allFilteredSelected]);
-
-  function toggleSort(field){
-    setSort(prev => {
-      if(prev.field !== field) return { field, dir:'asc' };
-      if(prev.dir === 'asc') return { field, dir:'desc' };
-      return { field:null, dir:'asc' }; // third click removes sorting
-    });
-  }
-
-  function toggleRowSelect(key){
-    setSelectedKeys(prev => { const n = new Set(prev); if(n.has(key)) n.delete(key); else n.add(key); return n; });
-  }
-  function headerToggleSelect(e){
-    const checked = e.target.checked;
-    setSelectedKeys(prev => {
-      if(checked){ return new Set([...prev, ...allFilteredKeys]); }
-      // remove all filtered keys
-      const n = new Set(prev);
-      allFilteredKeys.forEach(k=> n.delete(k));
-      return n;
-    });
-  }
-  function clearSelection(){ setSelectedKeys(new Set()); }
-  function selectAllFiltered(){
-    setSelectedKeys(new Set(allFilteredKeys));
-  }
-  async function bulkEnable(disable=false){
-    const keys = Array.from(selectedKeys);
-    if(!keys.length) return;
-    for(const k of keys){ const item = autos.find(x=>x.key===k); if(!item) continue; try { await upsertAuto({ ...item, enabled: !disable }, selectedGuild); } catch {} }
-    pushToast('success', disable? 'Disabled selected':'Enabled selected');
-    refresh();
-  }
-  async function bulkDelete(){
-    const keys = Array.from(selectedKeys);
-    if(!keys.length) return;
-    if(!window.confirm('Delete '+keys.length+' selected?')) return;
-    for(const k of keys){ try { await deleteAuto(k, selectedGuild); } catch {} }
-    pushToast('success','Deleted selected');
-    refresh();
-    clearSelection();
-  }
-  function editAutoByKey(k){ const item = autos.find(a=>a.key===k); if(item) openEditAuto(item); }
-  function toggleEnabled(item, enabled){
-    setAutos(prev => prev.map(p=> p.key===item.key ? { ...p, enabled } : p));
-    upsertAuto({ ...item, enabled }, selectedGuild).catch(()=>refresh());
-  }
 
   // simple stats
   const totalEnabled = autos.filter(a=>a.enabled!==false).length;
@@ -380,7 +324,7 @@ export default function App(){
             </div> : oauthMode ? <div className="vstack gap-3">
                 <p className="text-muted small m-0">Authenticate with your Discord account to access your servers and manage bot settings.</p>
                 <button onClick={startDiscordLogin} className="btn btn-discord-cta"><span className="ico">🡪</span> Login with Discord</button>
-                {!process.env.DISABLE_LEGACY_LOGIN && <button type="button" className="btn btn-link p-0 small" onClick={()=>setOauthMode(false)}>Use legacy admin login</button>}
+                {!(typeof import.meta!=='undefined' && import.meta.env && import.meta.env.VITE_DISABLE_LEGACY_LOGIN) && <button type="button" className="btn btn-link p-0 small" onClick={()=>setOauthMode(false)}>Use legacy admin login</button>}
               </div> : <form onSubmit={handleLogin} className="vstack gap-3">
                 <div>
                   <label className="form-label small mb-1">Username</label>
@@ -486,155 +430,19 @@ export default function App(){
     </div>
   </div>;
 
-  const autosContent = <div className="autos-section fade-in-soft autos-section-wrapper">
-    <div className="auto-head mb-3">
-      <div className="section-title">Auto Responses</div>
-      <div className="auto-head-search">
-        <input className="form-control form-control-sm search-input w-100" placeholder="Search..." value={search} onChange={e=>{ setSearch(e.target.value); setPage(1); }} />
-      </div>
-      <div className="auto-head-actions">
-        <button className="btn btn-sm btn-outline-light" type="button" onClick={()=>setShowRegexTester(s=>!s)}>{showRegexTester? 'Close Tester':'Regex Tester'}</button>
-        <button className="btn btn-sm btn-brand" onClick={openNewAuto}>Add</button>
-      </div>
-    </div>
-    {showRegexTester && <div className="card card-glass shadow-sm mb-3">
-      <div className="card-body row g-3">
-        <div className="col-md-4">
-          <label className="form-label small mb-1">Pattern</label>
-          <input className="form-control form-control-sm" placeholder="^hello" value={testerPattern} onChange={e=>setTesterPattern(e.target.value)} />
-        </div>
-        <div className="col-md-2 col-4">
-          <label className="form-label small mb-1">Flags</label>
-          <input className="form-control form-control-sm" placeholder="i" value={testerFlags} onChange={e=>setTesterFlags(e.target.value)} />
-        </div>
-        <div className="col-md-6">
-          <label className="form-label small mb-1">Sample Text (multi-line)</label>
-          <textarea className="form-control form-control-sm" rows={2} value={testerSample} onChange={e=>setTesterSample(e.target.value)} placeholder={'hello world\nHi there'} />
-        </div>
-        <div className="col-12 d-flex gap-2">
-          <button className="btn btn-sm btn-brand" type="button" onClick={runTester}>Run</button>
-          <button className="btn btn-sm btn-outline-light" type="button" onClick={()=>{setTesterPattern('');setTesterSample('');setTesterResult(null);}}>Clear</button>
-        </div>
-        {testerResult && <div className="col-12 small">
-          {testerResult.ok ? <div className="vstack gap-1">{testerResult.matches.map((m,i) => <div key={i} className={m.match? 'text-success':'text-muted'}>{m.match? '✓':'✗'} {m.line || <em>(empty)</em>}</div>)}</div> : <div className="text-danger">Regex error: {testerResult.error}</div>}
-        </div>}
-      </div>
-    </div>}
-    <div className="stat-cards mb-3">
-      <div className="stat-card"><h6>Total</h6><div className="value">{autos.length}</div></div>
-      <div className="stat-card"><h6>Enabled</h6><div className="value text-success">{totalEnabled}</div></div>
-      <div className="stat-card"><h6>Disabled</h6><div className="value text-danger">{totalDisabled}</div></div>
-    </div>
-    <div className={"bulk-bar mb-2" + (isMobile? ' bulk-bar-mobile-sticky':'')}>
-      <div className="d-flex flex-wrap gap-2 align-items-center">
-        <strong className="small">Selected: {selectedKeys.size}</strong>
-        {!isMobile && <>
-          <button className="btn btn-sm btn-outline-light" onClick={()=>bulkEnable(false)}>Enable</button>
-          <button className="btn btn-sm btn-outline-light" onClick={()=>bulkEnable(true)}>Disable</button>
-          <button className="btn btn-sm btn-outline-danger" onClick={bulkDelete}>Delete</button>
-          <button className="btn btn-sm btn-outline-secondary" onClick={clearSelection} disabled={!selectedKeys.size}>Clear</button>
-        </>}
-        {isMobile && <>
-          <button className="btn btn-sm btn-outline-light" onClick={selectAllFiltered} disabled={allFilteredSelected}>All</button>
-          <button className="btn btn-sm btn-outline-light" onClick={()=>bulkEnable(false)} disabled={!selectedKeys.size}>On</button>
-          <button className="btn btn-sm btn-outline-light" onClick={()=>bulkEnable(true)} disabled={!selectedKeys.size}>Off</button>
-          <button className="btn btn-sm btn-outline-danger" onClick={bulkDelete} disabled={!selectedKeys.size}>Del</button>
-          <button className="btn btn-sm btn-outline-secondary" onClick={clearSelection} disabled={!selectedKeys.size}>Clear</button>
-        </>}
-      </div>
-      <div className="ms-auto d-flex align-items-center gap-2">
-        <label className="small text-muted">Rows</label>
-        <select className="form-select form-select-sm" style={{width:90}} value={pageSize} onChange={e=>{ setPageSize(parseInt(e.target.value)||15); setPage(1); }}>
-          {[10,15,25,50,100].map(s=> <option key={s} value={s}>{s}</option>)}
-        </select>
-      </div>
-    </div>
-    {!isMobile && <div className="table-responsive table-modern-shell table-mobile-stack">
-      <table className="table table-sm table-modern align-middle" style={{minWidth:'900px'}}>
-        <thead>
-          <tr>
-            <th style={{width:34}}>
-              <input ref={headerSelectRef} type="checkbox" aria-label="Select all filtered" checked={allFilteredSelected} onChange={headerToggleSelect} />
-            </th>
-            {['key','pattern','flags','replies','enabled'].map(col => {
-              const labelMap = { key:'Key', pattern:'Pattern', flags:'Flags', replies:'Replies', enabled:'On' };
-              const active = sort.field===col;
-              const dir = active? sort.dir : null;
-              return <th key={col} onClick={()=> toggleSort(col)} style={{cursor:'pointer'}}>
-                {labelMap[col]} {active && (dir==='asc'? '▲':'▼')}
-              </th>;
-            })}
-            <th style={{width:110}}>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {pageAutos.map(a => {
-            const replies = Array.isArray(a.replies)? a.replies.join(' | '):'';
-            const matchHighlight = (()=>{ if(!testerPattern) return false; try { return new RegExp(testerPattern, testerFlags).test(a.pattern); } catch { return false; } })();
-            const selected = selectedKeys.has(a.key);
-            return <tr key={a.key} className={(a.enabled===false?'row-disabled ':'') + (matchHighlight? 'match-highlight ':'') + (selected? 'selected':'')}>
-              <td data-label="Select"><input type="checkbox" className="form-check-input" checked={selected} onChange={()=>toggleRowSelect(a.key)} /></td>
-              <td data-label="Key" className="text-primary" style={{cursor:'pointer'}} onClick={()=>editAutoByKey(a.key)}>{a.key}</td>
-              <td data-label="Pattern" style={{cursor:'pointer'}} onClick={()=>editAutoByKey(a.key)}>{a.pattern}</td>
-              <td data-label="Flags" style={{cursor:'pointer'}} onClick={()=>editAutoByKey(a.key)}>{a.flags}</td>
-              <td data-label="Replies" style={{cursor:'pointer'}} onClick={()=>editAutoByKey(a.key)}><small className="text-muted">{replies}</small></td>
-              <td data-label="On" className="text-center">
-                <div className="form-check form-switch m-0 d-inline-flex">
-                  <input className="form-check-input" type="checkbox" checked={a.enabled!==false} onChange={e=>toggleEnabled(a, e.target.checked)} />
-                </div>
-              </td>
-              <td data-label="Actions">
-                <div className="btn-group btn-group-sm">
-                  <button className="btn btn-edit" onClick={()=>editAutoByKey(a.key)}>Edit</button>
-                  <button className="btn btn-outline-danger" onClick={()=>removeAuto(a.key)}>Del</button>
-                </div>
-              </td>
-            </tr>;
-          })}
-          {pageAutos.length===0 && <tr><td colSpan={7} className="text-center text-muted small py-3">No auto responses match your search.</td></tr>}
-        </tbody>
-      </table>
-    </div>}
-    {isMobile && <div className="auto-cards-list">
-      {pageAutos.map(a => {
-        const repliesArr = Array.isArray(a.replies)? a.replies:[];
-        const replies = repliesArr.join(' | ');
-        const selected = selectedKeys.has(a.key);
-        const matchHighlight = (()=>{ if(!testerPattern) return false; try { return new RegExp(testerPattern, testerFlags).test(a.pattern); } catch { return false; } })();
-        return <div key={a.key} className={'auto-card card-glass ' + (selected? ' sel':'') + (a.enabled===false? ' disabled':'') + (matchHighlight? ' match':'')}>
-          <div className="auto-card-row top">
-            <div className="form-check m-0">
-              <input className="form-check-input" type="checkbox" checked={selected} onChange={()=>toggleRowSelect(a.key)} />
-            </div>
-            <button className="auto-key-btn" onClick={()=>editAutoByKey(a.key)}>{a.key}</button>
-            <div className="ms-auto form-check form-switch m-0">
-              <input className="form-check-input" type="checkbox" checked={a.enabled!==false} onChange={e=>toggleEnabled(a, e.target.checked)} />
-            </div>
-          </div>
-          <div className="auto-card-row pattern" onClick={()=>editAutoByKey(a.key)}>
-            <code className="pattern-text">{a.pattern}</code>
-            {a.flags && <span className="flags-badge">{a.flags}</span>}
-          </div>
-          {replies && <div className="auto-card-row replies" onClick={()=>editAutoByKey(a.key)}>
-            <div className="replies-preview">{replies.length>160? replies.slice(0,160)+'…': replies}</div>
-          </div>}
-          <div className="auto-card-row actions">
-            <button className="btn btn-sm btn-edit" onClick={()=>editAutoByKey(a.key)}>Edit</button>
-            <button className="btn btn-sm btn-outline-danger" onClick={()=>removeAuto(a.key)}>Del</button>
-          </div>
-        </div>;
-      })}
-      {pageAutos.length===0 && <div className="text-muted small py-3">No auto responses match your search.</div>}
-    </div>}
-    <div className="d-flex flex-wrap gap-2 align-items-center small mt-2">
-      <div>Showing <strong>{pageAutos.length}</strong> of <strong>{filteredAutos.length}</strong> filtered (total {autos.length})</div>
-      <div className="ms-auto d-flex gap-1 align-items-center">
-        <button className="btn btn-sm btn-outline-secondary" disabled={page<=1} onClick={()=>setPage(p=>Math.max(1,p-1))}>Prev</button>
-        <span className="px-2">Page {page} / {totalPages}</span>
-        <button className="btn btn-sm btn-outline-secondary" disabled={page>=totalPages} onClick={()=>setPage(p=>Math.min(totalPages,p+1))}>Next</button>
-      </div>
-    </div>
-  </div>;
+  const autosContent = <AutosSection
+    autos={autos}
+    setAutos={setAutos}
+    totalEnabled={totalEnabled}
+    totalDisabled={totalDisabled}
+    selectedGuild={selectedGuild}
+    openEditAuto={openEditAuto}
+    openNewAuto={openNewAuto}
+    upsertAuto={upsertAuto}
+    deleteAuto={deleteAuto}
+    pushToast={pushToast}
+    refresh={refresh}
+  />;
 
   const commandsContent = <div className="commands-section fade-in-soft">
     <div className="section-title">Commands</div>
@@ -645,19 +453,14 @@ export default function App(){
 
   const sectionMap = { overview: overviewContent, autos: autosContent, commands: commandsContent };
 
+  const effectiveSidebarMode = isMobile ? 'full' : sidebarMode; // force full on mobile
   const content = <div className="container-fluid py-4 fade-in">
     {guildBanner}
-    <div className="dashboard-flex">
-      <aside className={"dash-sidebar" + (sidebarCollapsed? ' collapsed':'') + (sidebarOpen? ' open':'')}>
+    <div className={"dashboard-flex sidebar-"+effectiveSidebarMode}>
+      <aside ref={sidebarRef} className={"dash-sidebar mode-"+effectiveSidebarMode + (sidebarOpen? ' open':'')}>
         <div className="sidebar-inner">
-        <div className="sidebar-top-controls d-flex justify-content-between align-items-center mb-2">
-          <button type="button" className="btn btn-sm btn-outline-secondary d-lg-none" onClick={()=>setSidebarOpen(false)} title="Close menu"><i className="fa-solid fa-xmark"></i></button>
-          <button type="button" className="btn btn-sm btn-outline-secondary d-none d-lg-inline-flex collapse-toggle" onClick={()=>setSidebarCollapsed(c=>!c)} title={sidebarCollapsed? 'Expand sidebar':'Collapse sidebar'}>
-            <i className={'fa-solid ' + (sidebarCollapsed? 'fa-chevron-right':'fa-chevron-left')}></i>
-          </button>
-        </div>
-        <div className="guild-switcher card-glass mb-3 p-2">
-          <button type="button" className="guild-switcher-btn" onClick={()=>setView('guild')} title="Change server">
+        <div className="guild-switcher card-glass mb-3 p-2 d-flex align-items-center gap-2">
+          <button type="button" className="guild-switcher-btn flex-grow-1" onClick={()=>setView('guild')} title="Change server">
             {(() => { const g = guilds.find(x=>x.id===selectedGuild); const iconUrl = g?.icon ? `https://cdn.discordapp.com/icons/${g.id}/${g.icon}.png?size=128` : null; return <>
               <div className="gw-icon">{iconUrl ? <img src={iconUrl} alt={g?.name||'Guild'} /> : <span className="fallback">{(g?.name||'?').slice(0,2).toUpperCase()}</span>}</div>
               <div className="gw-meta">
@@ -666,23 +469,26 @@ export default function App(){
               </div>
             </>; })()}
           </button>
+          {!isMobile && <button type="button" className="collapse-toggle" onClick={cycleSidebarMode} title={effectiveSidebarMode==='full'? 'Collapse sidebar':'Expand sidebar'}>
+            <i className={'fa-solid chev '+ (effectiveSidebarMode==='full'? 'fa-chevron-left':'fa-chevron-right')}></i>
+          </button>}
         </div>
         <div className="dash-menu">
-          <button type="button" onClick={()=>{setDashSection('overview'); setSidebarOpen(false);}} className={'dash-menu-item'+(dashSection==='overview'? ' active':'')}>
+          <button type="button" data-label="Overview" onClick={()=>{setDashSection('overview'); setSidebarOpen(false);}} className={'dash-menu-item'+(dashSection==='overview'? ' active':'')}>
             <i className="fa-solid fa-gauge-high menu-ico"></i>
             <span className="menu-label">Overview</span>
           </button>
-          <button type="button" onClick={()=>{setDashSection('autos'); setSidebarOpen(false);}} className={'dash-menu-item'+(dashSection==='autos'? ' active':'')}>
+          <button type="button" data-label="Auto Responses" onClick={()=>{setDashSection('autos'); setSidebarOpen(false);}} className={'dash-menu-item'+(dashSection==='autos'? ' active':'')}>
             <i className="fa-solid fa-bolt menu-ico"></i>
             <span className="menu-label">Auto Responses</span>
           </button>
-          <button type="button" onClick={()=>{setDashSection('commands'); setSidebarOpen(false);}} className={'dash-menu-item'+(dashSection==='commands'? ' active':'')}>
+          <button type="button" data-label="Commands" onClick={()=>{setDashSection('commands'); setSidebarOpen(false);}} className={'dash-menu-item'+(dashSection==='commands'? ' active':'')}>
             <i className="fa-solid fa-terminal menu-ico"></i>
             <span className="menu-label">Commands</span>
           </button>
         </div>
         <div className="dash-sidebar-footer mt-4">
-          <button type="button" className="btn btn-sm btn-outline-danger w-100 logout-btn" onClick={()=>{ doLogout(); setSidebarOpen(false); }}>
+          <button type="button" data-label="Logout" className="btn btn-sm btn-outline-danger w-100 logout-btn" onClick={()=>{ doLogout(); setSidebarOpen(false); }}>
             <i className="fa-solid fa-right-from-bracket"></i>
             <span className="menu-label ms-1">Logout</span>
           </button>
@@ -747,7 +553,9 @@ export default function App(){
   // Toasts container
   const year = new Date().getFullYear();
   const footer = <footer className="app-footer fade-in-soft"><div className="footer-inner">© {year} Choco Maid • Bot dashboard – Not affiliated with Discord</div></footer>;
+  const header = null; // undo navbar per request
   return <>
+  {header}
     {content}
     {footer}
     <div className="toast-holder">

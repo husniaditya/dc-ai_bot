@@ -95,7 +95,7 @@ const ADMIN_PASS = process.env.DASHBOARD_ADMIN_PASS || 'password';
 // Discord OAuth config
 const OAUTH_CLIENT_ID = process.env.CLIENT_ID; // already in .env
 const OAUTH_CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET; // new secret
-const OAUTH_REDIRECT_URI = process.env.DASHBOARD_OAUTH_REDIRECT || 'http://localhost:3001/oauth/callback';
+const OAUTH_REDIRECT_URI = process.env.DASHBOARD_OAUTH_REDIRECT || 'http://localhost:5173/oauth/callback';
 const OAUTH_SCOPES = ['identify', 'guilds'];
 // In-memory OAuth state store (anti-CSRF). Key: state -> timestamp
 const oauthStateStore = new Map();
@@ -281,6 +281,7 @@ if (fs.existsSync(distPath)) {
   });
 }
 
+// Use a distinct API port (front-end dev server runs on 5173)
 const DASHBOARD_PORT = process.env.DASHBOARD_PORT || 3001;
 app.listen(DASHBOARD_PORT, ()=>console.log('Dashboard API listening on :' + DASHBOARD_PORT));
 

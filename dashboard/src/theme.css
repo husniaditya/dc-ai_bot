@@ -31,6 +31,11 @@ body {
   scrollbar-gutter: stable;
 }
 
+/* Top bar */
+.collapse-toggle-header { margin-left:.35rem; height:30px; padding:0 .6rem; }
+.collapse-toggle-header .chev { font-size:.75rem; }
+.container-fluid { padding-top:1rem !important; }
+
 .app-shell {
   min-height: 100vh;
   display: flex;
@@ -250,6 +255,22 @@ html.dark .form-check-input:checked { background-color: var(--accent); border-co
 .dash-sidebar { width:220px; flex:0 0 220px; position:sticky; top:74px; align-self:flex-start; }
 @media (max-width: 900px){ .dash-sidebar { width:100%; position:static; } }
 .dash-sidebar .sidebar-inner { position:relative; }
+/* Multi-mode widths */
+.dash-sidebar.mode-full { width:260px; flex:0 0 260px; }
+.dash-sidebar.mode-mini { width:90px; flex:0 0 90px; }
+.dashboard-flex.sidebar-full { grid-template-columns:260px 1fr; }
+.dashboard-flex.sidebar-mini { grid-template-columns:90px 1fr; }
+.dash-sidebar.animating { transition: width .36s cubic-bezier(.5,.2,.2,1), background .3s; }
+.dash-sidebar.mode-mini .menu-label, .dash-sidebar.mode-mini .gw-meta, .dash-sidebar.mode-mini .logout-btn .menu-label { display:none; }
+.dash-sidebar.mode-mini .dash-menu-item, .dash-sidebar.mode-mini .logout-btn { justify-content:center; }
+.dash-sidebar.mode-mini .dash-menu-item .menu-ico { margin-right:0; }
+@media (min-width:992px){
+  .dash-sidebar.mode-mini .dash-menu-item,
+  .dash-sidebar.mode-mini .logout-btn { position:relative; }
+  .dash-sidebar.mode-mini .dash-menu-item:hover::after,
+  .dash-sidebar.mode-mini .logout-btn:hover::after { content: attr(data-label); position:absolute; left:100%; top:50%; transform:translateY(-50%); background:linear-gradient(135deg,#141b27,#0d121b); color:#fff; font-size:.65rem; padding:4px 8px 5px; border-radius:6px; margin-left:12px; letter-spacing:.5px; box-shadow:0 6px 18px -6px rgba(0,0,0,.7), 0 0 0 1px rgba(255,255,255,0.08); white-space:nowrap; pointer-events:none; animation:sbTipIn .18s ease; z-index:5000; }
+  @keyframes sbTipIn{ from{opacity:0; transform:translateY(-50%) translateX(-4px);} to{opacity:1; transform:translateY(-50%) translateX(0);} }
+}
 .dash-sidebar.collapsed { width:70px; flex:0 0 70px; }
 .dash-sidebar.collapsed .guild-switcher-btn .gw-meta { display:none; }
 .dash-sidebar.collapsed .dash-menu-item { justify-content:center; }
@@ -274,6 +295,19 @@ html.dark .form-check-input:checked { background-color: var(--accent); border-co
 .sidebar-top-controls .btn { font-size:.65rem; letter-spacing:.5px; text-transform:uppercase; }
 .collapse-toggle { transition: var(--transition); }
 .dash-sidebar.collapsed .collapse-toggle { transform: rotate(180deg); }
+/* Modern collapse toggle */
+.collapse-toggle { background:linear-gradient(145deg,rgba(255,255,255,0.12),rgba(255,255,255,0.04)); border:1px solid rgba(255,255,255,0.18); height:34px; padding:0 .85rem; border-radius:10px; font-size:.75rem; letter-spacing:.5px; font-weight:600; color:var(--text-soft); gap:.45rem; align-items:center; justify-content:center; cursor:pointer; position:relative; overflow:hidden; backdrop-filter: blur(10px) saturate(160%); box-shadow:0 4px 14px -6px rgba(0,0,0,.55); }
+.collapse-toggle .chev { transition:transform .38s cubic-bezier(.5,.2,.2,1); }
+.collapse-toggle:hover { color:#fff; border-color:rgba(255,255,255,0.4); background:linear-gradient(145deg,rgba(255,255,255,0.18),rgba(255,255,255,0.06)); }
+.collapse-toggle:active { transform:translateY(1px); }
+.collapse-toggle:focus-visible { outline:2px solid var(--accent); outline-offset:3px; }
+.dash-sidebar.mode-mini .collapse-toggle .chev { transform:rotate(180deg); }
+.dash-sidebar.mode-mini .guild-switcher { display:flex; flex-direction:row; align-items:center; gap:.4rem; padding:.35rem .35rem !important; }
+.dash-sidebar.mode-mini .guild-switcher-btn { padding:0; justify-content:center; width:42px; }
+.dash-sidebar.mode-mini .guild-switcher-btn .gw-meta { display:none; }
+.dash-sidebar.mode-mini .guild-switcher .collapse-toggle { width:42px; height:42px; padding:0; display:flex !important; }
+/* Override chevron rotation when using directional icon classes */
+.dash-sidebar.mode-mini .guild-switcher .collapse-toggle .chev { transform:none !important; }
 .dash-menu { display:flex; flex-direction:column; gap:.4rem; }
 .dash-menu-item { text-align:left; border:1px solid rgba(255,255,255,0.18); background: rgba(255,255,255,0.05); padding:.65rem .85rem; border-radius: var(--radius-sm); font-size:.8rem; letter-spacing:.5px; font-weight:500; color:var(--text-soft); cursor:pointer; transition: var(--transition); position:relative; }
 .dash-menu-item:before { content:""; position:absolute; inset:0; background: radial-gradient(circle at 110% -10%, rgba(99,102,241,0.38), transparent 65%); opacity:0; transition:var(--transition); }
@@ -299,6 +333,18 @@ html.dark .form-check-input:checked { background-color: var(--accent); border-co
 .dash-sidebar-footer { margin-top:auto; }
 .dash-sidebar .logout-btn { border:1px solid rgba(255,255,255,0.25) !important; background: rgba(255,255,255,0.05); font-size:.7rem; letter-spacing:.5px; font-weight:600; text-transform:uppercase; }
 .dash-sidebar .logout-btn:hover { background: rgba(239,68,68,0.15); border-color: rgba(239,68,68,0.55) !important; color:#fff !important; }
+.guild-switcher .collapse-toggle { height:42px; padding:0 .75rem; border-radius:12px; }
+.dash-sidebar.mode-mini .guild-switcher .collapse-toggle { width:50px; height:50px; padding:0; display:flex; align-items:center; justify-content:center; }
+.dash-sidebar.mode-mini .guild-switcher .collapse-toggle .chev { font-size:1rem; }
+/* Mobile: hide collapse button and force full menu width */
+@media (max-width: 900px){
+  .dash-sidebar .collapse-toggle { display:none !important; }
+  .dash-sidebar.mode-mini { width:100% !important; flex:0 0 100% !important; }
+  .dash-sidebar.mode-mini .dash-menu-item .menu-label,
+  .dash-sidebar.mode-mini .guild-switcher-btn .gw-meta,
+  .dash-sidebar.mode-mini .logout-btn .menu-label { display:inline-flex !important; }
+  .dash-sidebar.mode-mini .dash-menu-item { justify-content:flex-start; }
+}
 
 .overview-section .stat-cards { margin-top:.25rem; }
 .commands-section .card { max-width:640px; }
