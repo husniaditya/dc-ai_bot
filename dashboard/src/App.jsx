@@ -293,6 +293,14 @@ export default function App(){
     return ()=> window.removeEventListener('resize', handleResize);
   }, []);
 
+  // Add body padding to accommodate fixed footer
+  useEffect(()=>{
+    if(typeof document !== 'undefined'){
+      document.body.classList.add('has-fixed-footer');
+      return () => document.body.classList.remove('has-fixed-footer');
+    }
+  }, []);
+
   // simple stats
   const totalEnabled = autos.filter(a=>a.enabled!==false).length;
   const totalDisabled = autos.length - totalEnabled;
@@ -309,7 +317,7 @@ export default function App(){
           <div className="login-card-inner">
             <div className="login-hero mb-3">
               <div className="logo-orb">
-                <img src="/logo.svg" alt="Choco Maid" className="logo-img" onError={(e)=>{ e.currentTarget.style.display='none'; }} />
+                <img src="/images.jpg" alt="Choco Maid" className="logo-img" onError={(e)=>{ e.currentTarget.style.display='none'; }} />
                 <span className="orb-text">CM</span>
               </div>
               <div>
@@ -323,7 +331,10 @@ export default function App(){
               <div className="small text-muted">Completing Discord sign‑in…</div>
             </div> : oauthMode ? <div className="vstack gap-3">
                 <p className="text-muted small m-0">Authenticate with your Discord account to access your servers and manage bot settings.</p>
-                <button onClick={startDiscordLogin} className="btn btn-discord-cta"><span className="ico">🡪</span> Login with Discord</button>
+                <button onClick={startDiscordLogin} className="btn btn-discord-cta">
+                  <span className="ico me-1"><i className="fa-brands fa-discord" /></span>
+                  <span>Login with Discord</span>
+                </button>
                 {!(typeof import.meta!=='undefined' && import.meta.env && import.meta.env.VITE_DISABLE_LEGACY_LOGIN) && <button type="button" className="btn btn-link p-0 small" onClick={()=>setOauthMode(false)}>Use legacy admin login</button>}
               </div> : <form onSubmit={handleLogin} className="vstack gap-3">
                 <div>
@@ -335,7 +346,10 @@ export default function App(){
                   <input className="form-control" type="password" placeholder="••••••" value={loginForm.password} onChange={e=>setLoginForm({...loginForm, password:e.target.value})} />
                 </div>
                 <div className="d-flex justify-content-between align-items-center mt-1">
-                  <button type="submit" className="btn btn-brand flex-grow-1">Login</button>
+                  <button type="submit" className="btn btn-brand flex-grow-1">
+                    <i className="fa-solid fa-right-to-bracket me-2" />
+                    Login
+                  </button>
                   <button type="button" className="btn btn-link p-0 small ms-3" onClick={()=>setOauthMode(true)}>Discord login</button>
                 </div>
               </form>}
@@ -354,12 +368,13 @@ export default function App(){
         <div className="card-body pt-3">
           <div className="d-flex flex-column flex-md-row justify-content-between gap-3 align-items-md-center mb-3">
             <div>
-              <h4 className="mb-1 fw-semibold">Choose a Server</h4>
+              <div className="d-flex align-items-center gap-2 mb-1">
+                <h4 className="mb-0 fw-semibold">Choose a Server</h4>
+              </div>
               <p className="text-muted small mb-0">Select the Discord server you want to manage. You can change this later in the dashboard.</p>
             </div>
             <div className="d-flex gap-2 align-items-center w-100 w-md-auto">
               <input className="form-control form-control-sm guild-search" placeholder="Search servers..." value={guildSearch} onChange={e=>setGuildSearch(e.target.value)} />
-              <button className="btn btn-outline-secondary btn-sm" onClick={doLogout}>Logout</button>
             </div>
           </div>
           {error && <div className="alert alert-danger py-2 mb-2">{error}</div>}
@@ -382,8 +397,14 @@ export default function App(){
           <div className="d-flex flex-wrap gap-2 justify-content-between align-items-center">
             <div className="small text-muted">{selectedGuild ? 'Selected: '+(guilds.find(g=>g.id===selectedGuild)?.name || selectedGuild) : guilds.length+ ' servers'}</div>
             <div className="d-flex gap-2">
-              <button disabled={!selectedGuild} onClick={()=>saveSelectedGuild('dashboard')} className="btn btn-brand px-4">Continue to Dashboard</button>
-              <button onClick={()=>{ setSelectedGuild(null); doLogout(); }} className="btn btn-outline-secondary">Logout</button>
+              <button disabled={!selectedGuild} onClick={()=>saveSelectedGuild('dashboard')} className="btn btn-brand px-4">
+                <i className="fa-solid fa-gauge-high me-2" />
+                Continue to Dashboard
+              </button>
+              <button onClick={()=>{ setSelectedGuild(null); doLogout(); }} className="btn btn-outline-secondary">
+                <i className="fa-solid fa-right-from-bracket me-2" />
+                Logout
+              </button>
             </div>
           </div>
         </div>
@@ -488,9 +509,15 @@ export default function App(){
           </button>
         </div>
         <div className="dash-sidebar-footer mt-4">
-          <button type="button" data-label="Logout" className="btn btn-sm btn-outline-danger w-100 logout-btn" onClick={()=>{ doLogout(); setSidebarOpen(false); }}>
-            <i className="fa-solid fa-right-from-bracket"></i>
-            <span className="menu-label ms-1">Logout</span>
+          <button
+            type="button"
+            data-label="Logout"
+            className="dash-menu-item logout-btn"
+            onClick={()=>{ doLogout(); setSidebarOpen(false); }}
+            title="Sign out"
+          >
+            <i className="fa-solid fa-right-from-bracket menu-ico"></i>
+            <span className="menu-label">Logout</span>
           </button>
         </div>
         </div>
