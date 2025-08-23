@@ -415,7 +415,13 @@ client.on('interactionCreate', async (interaction) => {
     await interaction.deferReply();
     try {
       const target = interaction.targetMessage;
-      const content = (target.cleanContent || '').trim();
+      let content = (target.cleanContent || '').trim();
+      // If no raw text content, attempt to extract from first embed description
+      if (!content && Array.isArray(target.embeds) && target.embeds.length){
+        for (const emb of target.embeds){
+          if (emb && emb.description){ content = (emb.description || '').trim(); if (content) break; }
+        }
+      }
       if (!content) { await interaction.editReply('No text content to translate.'); return; }
       // Simple heuristic: let model auto-detect source. Default target language can be English.
       const targetLang = 'ID';

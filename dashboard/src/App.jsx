@@ -530,7 +530,8 @@ export default function App(){
       items: [
         { name:'math', usage:'/math add|sub|mul|div a b', desc:'Basic arithmetic operations.' },
         { name:'user info', usage:'/user info [target]', desc:'Lookup Discord user info.' },
-        { name:'remind', usage:'/remind minutes text', desc:'Schedule a reminder DM or channel.' }
+  { name:'remind', usage:'/remind minutes text', desc:'Schedule a reminder DM or channel.' },
+  { name:'meme', usage:'/meme', desc:'Random meme image from meme-api.com.' }
       ]
     },
     {

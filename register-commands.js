@@ -122,6 +122,13 @@ const commands = [
     description: 'Show help (ephemeral)'
   },
   {
+    name: 'meme',
+    description: 'Send a random meme image (optionally search topic)',
+    options: [
+      { name: 'query', description: 'Optional topic / keyword to search', type: 3, required: false }
+    ]
+  },
+  {
     name: 'Explain Image',
     type: 3 // MESSAGE context menu
   },
