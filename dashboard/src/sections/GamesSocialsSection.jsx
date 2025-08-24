@@ -1,0 +1,363 @@
+import React, { useEffect, useState, useRef } from 'react';
+import { getYouTubeConfig, updateYouTubeConfig, getChannels, getRoles, resolveYouTubeChannel } from '../api';
+
+// icon retained only as a fallback if an image asset is missing
+const SERVICES = [
+  { key:'youtube', label:'YouTube', image:'youtube.png', icon:'fa-brands fa-youtube', color:'#FF0000', desc:'Video uploads & live notifications.' },
+  { key:'twitch', label:'Twitch', image:'twitch.png', icon:'fa-brands fa-twitch', color:'#9146FF', desc:'Streamer live alerts (coming soon).' },
+  { key:'pubg', label:'PUBG', image:'pubg.png', icon:'fa-solid fa-crosshairs', color:'#f59e0b', desc:'Player / match stats (planned).' },
+  { key:'valorant', label:'Valorant', image:'valorant.png', icon:'fa-solid fa-bullseye', color:'#e11d48', desc:'Match & agent stats (planned).' },
+  { key:'apex', label:'Apex', image:'apexlegends.png', icon:'fa-solid fa-mountain', color:'#7c3aed', desc:'Legend stats & map rotation (planned).' },
+  { key:'mobilelegends', label:'Mobile Legends', image:'mobilelegends.png', icon:'fa-solid fa-mobile-screen-button', color:'#0ea5e9', desc:'Hero stats & live matches (planned).' },
+  { key:'clashofclans', label:'Clash of Clans', image:'clashofclans.png', icon:'fa-solid fa-shield', color:'#16a34a', desc:'Clan & war stats (planned).' },
+  { key:'fortnite', label:'Fortnite', image:'fornite.png', icon:'fa-solid fa-flag', color:'#6366f1', desc:'Player stats & shop rotation (planned).' },
+  { key:'genshin', label:'Genshin Impact', image:'genshinimpact.png', icon:'fa-solid fa-flag', color:'#6366f1', desc:'Player details & showcases (planned).' },
+];
+
+export default function GamesSocialsSection({ guildId, pushToast }){
+  const [active, setActive] = useState('youtube');
+  const [ytCfg, setYtCfg] = useState(null);
+  const [ytOrig, setYtOrig] = useState(null);
+  const [ytLoading, setYtLoading] = useState(false);
+  const [ytSaving, setYtSaving] = useState(false);
+  const [discordChannels, setDiscordChannels] = useState([]);
+  const [newChannelId, setNewChannelId] = useState('');
+  const [resolving, setResolving] = useState(false);
+  const [guildRoles, setGuildRoles] = useState([]);
+  const [editingChannel, setEditingChannel] = useState(null);
+
+  // Helper to build a preview string from a template
+  function buildPreview(tpl, channelId){
+    if(!tpl) return '';
+    const sampleVideoId = 'VIDEO12345';
+    const channelNames = ytCfg?.channelNames || {};
+    const channelTitle = channelId ? (channelNames[channelId] || 'Channel Name') : (channelNames[ytCfg?.channels?.[0]] || 'Channel Name');
+    const videoTitle = 'Amazing New Upload';
+    const url = `https://youtu.be/${sampleVideoId}`;
+    const thumbnail = `https://img.youtube.com/vi/${sampleVideoId}/hqdefault.jpg`;
+    const list = ytCfg?.mentionTargets && ytCfg.mentionTargets.length? ytCfg.mentionTargets : (ytCfg?.mentionRoleId? [ytCfg.mentionRoleId]:[]);
+    const roleMention = list.map(id=> id==='everyone'? '@everyone' : id==='here'? '@here' : (/^[0-9]{5,32}$/.test(id)? `<@&${id}>` : id)).join(' ');
+    const rolesById = Object.fromEntries((guildRoles||[]).map(r=> [r.id, r.name]));
+    const roleNames = list.map(id=>{
+      if(id==='everyone') return '@everyone';
+      if(id==='here') return '@here';
+      if(rolesById[id]) {
+        const n = rolesById[id];
+        return n.startsWith('@') ? n : '@'+n;
+      }
+      return id.startsWith('@') ? id : '@'+id;
+    }).join(', ');
+    return tpl
+      .replace(/\{channelTitle\}/g, channelTitle)
+      .replace(/\{title\}/g, videoTitle)
+      .replace(/\{url\}/g, url)
+      .replace(/\{roleMention\}/g, roleMention)
+      .replace(/\{roleNames\}/g, roleNames)
+      .replace(/\{thumbnail\}/g, thumbnail);
+  }
+  function TemplatePreview({ template, channelId, size }){
+    const result = buildPreview(template, channelId);
+    const cls = 'template-preview'+(size? ' size-'+size:'');
+    if(!template) return <div className={cls+" empty"}>No template set.</div>;
+    return <div className={cls}><div className="preview-label small text-muted">Preview</div><div className="preview-body">{result}</div></div>;
+  }
+
+  // Load YouTube config only when guildId and active is youtube
+  useEffect(()=>{
+    if(!guildId) return;
+    if(active !== 'youtube') return;
+    (async() => {
+      try {
+        setYtLoading(true);
+        const [cfg, ch, roles] = await Promise.all([
+          getYouTubeConfig(guildId).catch(()=>null),
+          getChannels(guildId).catch(()=>null),
+          getRoles(guildId).catch(()=>null)
+        ]);
+        if(cfg){ setYtCfg(cfg); setYtOrig(cfg); }
+        if(ch && Array.isArray(ch.channels)) setDiscordChannels(ch.channels);
+        if(roles && Array.isArray(roles.roles)) setGuildRoles(roles.roles);
+      } finally { setYtLoading(false); }
+    })();
+  }, [guildId, active]);
+
+  function ytDirty(){ if(!ytCfg||!ytOrig) return false; return JSON.stringify(ytCfg) !== JSON.stringify(ytOrig); }
+  function ytReset(){ if(ytOrig) setYtCfg(ytOrig); }
+  async function ytSave(){
+    if(!ytCfg) return;
+    try { setYtSaving(true); const updated = await updateYouTubeConfig(ytCfg, guildId); const safe = {
+        channels: Array.isArray(updated?.channels)? updated.channels : [],
+        mentionTargets: Array.isArray(updated?.mentionTargets)? updated.mentionTargets : (updated?.mentionRoleId ? [updated.mentionRoleId] : []),
+        channelMessages: updated?.channelMessages || {},
+        channelNames: updated?.channelNames || {},
+        ...updated
+      }; setYtCfg(safe); setYtOrig(safe); pushToast && pushToast('success','YouTube config saved'); }
+    catch(e){ pushToast && pushToast('error','Save failed'); }
+    finally { setYtSaving(false); }
+  }
+  async function addChannel(){
+    const raw = newChannelId.trim(); if(!raw) return;
+    let cid = null;
+    let resolvedName = null;
+    if(/^UC[0-9A-Za-z_-]{21,}$/.test(raw)) cid = raw; else {
+      setResolving(true);
+      try {
+        const r = await resolveYouTubeChannel(raw);
+        cid = r?.channelId || null;
+        resolvedName = r?.title || null;
+        if(!cid) throw new Error('not resolved');
+        pushToast && pushToast('success', `Resolved to ${cid}`);
+      } catch(e){
+        pushToast && pushToast('error','Could not resolve channel');
+      } finally { setResolving(false); }
+    }
+    if(cid){
+      setYtCfg(c => ({ ...c, channels: c.channels.includes(cid)? c.channels : [...c.channels, cid], channelNames: resolvedName ? { ...(c.channelNames||{}), [cid]: resolvedName } : (c.channelNames||{}) }));
+      setNewChannelId('');
+    }
+  }
+  function removeChannel(cid){ setYtCfg(c => ({ ...c, channels: c.channels.filter(x=>x!==cid) })); }
+
+  function renderYouTube(){
+    if(ytLoading || !ytCfg){ return <div className="text-muted small">Loading YouTube config…</div>; }
+    return <>
+      <div className="yt-config-grid mt-2">
+        {/* MAIN CONFIG */}
+        <div className="yt-config-block">
+          <div className="d-flex justify-content-between align-items-start mb-2">
+            <div>
+              <div className="small text-uppercase text-muted fw-semibold mb-1">Announcement</div>
+              <div className="form-check form-switch m-0">
+                <input className="form-check-input" type="checkbox" checked={ytCfg.enabled} onChange={e=> setYtCfg(c=> ({ ...c, enabled: e.target.checked }))} />
+                <label className="form-check-label ms-2">{ytCfg.enabled? 'Enabled':'Disabled'}</label>
+              </div>
+            </div>
+          </div>
+          <div className="mb-3">
+            <label className="form-label small fw-semibold mb-1">Announce Channel</label>
+            <select className="form-select form-select-sm" value={ytCfg.announceChannelId||''} onChange={e=> setYtCfg(c=> ({ ...c, announceChannelId: e.target.value || null }))}>
+              <option value="">Select…</option>
+              {discordChannels.map(ch=> <option key={ch.id} value={ch.id}>{ch.name}</option>)}
+            </select>
+          </div>
+          <div className="mb-3">
+            <label className="form-label small fw-semibold d-flex align-items-center gap-2 mb-1">Mention Targets {ytCfg.mentionTargets?.length ? <span className="badge-soft" style={{fontSize:'.55rem'}}>{ytCfg.mentionTargets.length}</span>: null}</label>
+            <MentionTargetsPicker
+              value={ytCfg.mentionTargets && ytCfg.mentionTargets.length? ytCfg.mentionTargets : (ytCfg.mentionRoleId? [ytCfg.mentionRoleId] : [])}
+              roles={guildRoles}
+              onChange={(list)=> setYtCfg(c=> ({ ...c, mentionTargets:list, mentionRoleId: (list.length===1 && /^[0-9]{5,32}$/.test(list[0])) ? list[0] : null }))}
+            />
+            <div className="form-text tiny text-muted mt-1">Enter to add • Backspace to remove • Order preserved</div>
+          </div>
+          <div className="mb-3">
+            <div>
+              <label className="form-label small fw-semibold mb-1">Interval (sec)</label>
+              <input type="number" min={30} className="form-control form-control-sm" style={{width:110}} value={ytCfg.intervalSec} onChange={e=> setYtCfg(c=> ({ ...c, intervalSec: Math.max(30, parseInt(e.target.value)||300) }))} />
+            </div>
+          </div>
+          <div className="mb-3">
+            <div>
+              <label className="form-label small fw-semibold mb-1">Embeds</label>
+              <div className="form-check form-switch m-0">
+                <input className="form-check-input" type="checkbox" checked={ytCfg.embedEnabled!==false} onChange={e=> setYtCfg(c=> ({ ...c, embedEnabled: e.target.checked }))} />
+                <label className="form-check-label ms-2">{ytCfg.embedEnabled!==false ? 'Enabled':'Plain'}</label>
+              </div>
+            </div>
+          </div>
+        </div>
+        {/* GLOBAL TEMPLATES */}
+        <div className="yt-config-block">
+          <div className="small text-uppercase text-muted fw-semibold mb-2">Global Templates</div>
+          <div className="mb-2">
+            <label className="form-label small fw-semibold mb-1">Upload</label>
+            <textarea rows={7} className="form-control form-control-sm" value={ytCfg.uploadTemplate||''} onChange={e=> setYtCfg(c=> ({ ...c, uploadTemplate: e.target.value }))}></textarea>
+          </div>
+          <div>
+            <label className="form-label small fw-semibold mb-1">Live</label>
+            <textarea rows={7} className="form-control form-control-sm" value={ytCfg.liveTemplate||''} onChange={e=> setYtCfg(c=> ({ ...c, liveTemplate: e.target.value }))}></textarea>
+          </div>
+          <div className="form-text tiny mt-2">Placeholders: {'{channelTitle} {title} {url} {roleNames} {thumbnail}'}</div>
+        </div>
+        {/* TEMPLATE PREVIEW */}
+        <div className="yt-config-block">
+          <div className="small text-uppercase text-muted fw-semibold mb-2">Template Preview</div>
+          <div className="mb-2">
+            <TemplatePreview template={ytCfg.uploadTemplate} size="lg" />
+          </div>
+            <TemplatePreview template={ytCfg.liveTemplate} size="lg" />
+          <div className="form-text tiny mt-2">Placeholders: {'{channelTitle} {title} {url} {roleNames} {thumbnail}'}</div>
+        </div>
+      </div>
+      <div className="yt-config-block mt-3">
+        <div className="d-flex flex-wrap align-items-end gap-2 mb-3">
+          <div style={{flex:'1 1 260px'}}>
+            <label className="form-label small fw-semibold mb-1">Add Channel (ID / URL / @handle)</label>
+            <input className="form-control form-control-sm" placeholder="UC..., https://youtube.com/@handle" value={newChannelId} onChange={e=> setNewChannelId(e.target.value)} onKeyDown={e=> { if(e.key==='Enter'){ e.preventDefault(); addChannel(); } }} />
+          </div>
+          <button type="button" className="btn btn-sm btn-accent" onClick={addChannel} disabled={!newChannelId.trim()||resolving}><i className="fa-solid fa-plus" /> {resolving? 'Resolving...':'Add'}</button>
+        </div>
+        <ul className="yt-channel-list list-unstyled m-0 p-0">
+          {(!Array.isArray(ytCfg.channels) || ytCfg.channels.length===0) && <li className="text-muted small py-2">No channels added yet.</li>}
+          {Array.isArray(ytCfg.channels) && ytCfg.channels.map(cid => {
+            const override = (ytCfg.channelMessages||{})[cid] || {};
+            const name = (ytCfg.channelNames||{})[cid] || '';
+            const isEditing = editingChannel===cid;
+            return <li key={cid} className={"yt-channel-item "+(isEditing? 'editing':'')}>
+              <div className="yt-channel-row">
+                <div className="flex-grow-1">
+                  <div className="d-flex align-items-center gap-2 flex-wrap">
+                    <code className="small text-muted">{cid}</code>
+                    <input className="form-control form-control-sm flex-grow-1" placeholder="Name" value={name} onChange={e=> setYtCfg(c=> ({ ...c, channelNames: { ...(c.channelNames||{}), [cid]: e.target.value.slice(0,120) } }))} />
+                  </div>
+                </div>
+                <div className="d-flex align-items-center gap-2 ms-2">
+                  <button type="button" className="btn btn-icon btn-xs" title="Edit per-channel templates" onClick={()=> setEditingChannel(p=> p===cid? null: cid)}><i className="fa-solid fa-pen" /></button>
+                  {(!name || name.trim()==='') && <button type="button" className="btn btn-icon btn-xs" title="Fetch channel name" onClick={async ()=>{ try { setResolving(true); const r = await resolveYouTubeChannel(cid); if(r?.channelId){ setYtCfg(c=> ({ ...c, channelNames: { ...(c.channelNames||{}), [cid]: r.title || c.channelNames?.[cid] || '' } })); } } catch{} finally { setResolving(false); } }} disabled={resolving}><i className="fa-solid fa-download" /></button>}
+                  <button type="button" className="btn btn-icon btn-xs text-danger" title="Remove" onClick={()=> removeChannel(cid)}><i className="fa-solid fa-trash" /></button>
+                </div>
+              </div>
+              {isEditing && <div className="yt-channel-edit mt-2">
+                <div className="row g-2">
+                  <div className="col-md-6">
+                    <label className="form-label tiny fw-semibold mb-1">Upload Template</label>
+                    <textarea rows={2} className="form-control form-control-sm" value={override.uploadTemplate||''} onChange={e=> setYtCfg(c=> ({ ...c, channelMessages: { ...(c.channelMessages||{}), [cid]: { ...(c.channelMessages?.[cid]||{}), uploadTemplate: e.target.value } } }))}></textarea>
+                    <TemplatePreview template={override.uploadTemplate || ytCfg.uploadTemplate} channelId={cid} />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label tiny fw-semibold mb-1">Live Template</label>
+                    <textarea rows={2} className="form-control form-control-sm" value={override.liveTemplate||''} onChange={e=> setYtCfg(c=> ({ ...c, channelMessages: { ...(c.channelMessages||{}), [cid]: { ...(c.channelMessages?.[cid]||{}), liveTemplate: e.target.value } } }))}></textarea>
+                    <TemplatePreview template={override.liveTemplate || ytCfg.liveTemplate} channelId={cid} />
+                  </div>
+                </div>
+                <div className="d-flex gap-2 mt-2">
+                  <button type="button" className="btn btn-sm btn-outline-secondary" onClick={()=> setYtCfg(c=> { const cm = { ...(c.channelMessages||{}) }; delete cm[cid]; return { ...c, channelMessages: cm }; })}>Clear Overrides</button>
+                  <button type="button" className="btn btn-sm btn-outline-light" onClick={()=> setEditingChannel(null)}>Close</button>
+                </div>
+              </div>}
+            </li>;
+          })}
+        </ul>
+      </div>
+      <div className="d-flex gap-2 mt-3">
+        <button className="btn btn-outline-secondary" disabled={!ytDirty()||ytSaving} onClick={ytReset}><i className="fa-solid fa-rotate-left me-2"/>Reset</button>
+        <button className="btn btn-primary" disabled={!ytDirty()||ytSaving} onClick={ytSave}><i className="fa-solid fa-floppy-disk me-2"/>{ytSaving? 'Saving…':'Save'}</button>
+      </div>
+    </>;
+  }
+
+  function renderPlaceholder(service){
+    return <div className="text-muted small p-3">
+      <p className="mb-1"><strong>{service.label}</strong> integration is not configured yet.</p>
+      <p className="mb-2">Planned features: {service.desc}</p>
+      <p className="mb-0">If you need this sooner, let us know.</p>
+    </div>;
+  }
+
+  const showOverlay = active==='youtube' && (ytLoading || (!ytCfg && guildId));
+  return <div className="p-4 games-socials-wrapper position-relative">
+    {showOverlay && <div className="loading-overlay">
+      <div className="spinner" />
+      <div className="loading-text small mt-3 text-muted">Loading configuration…</div>
+    </div>}
+    <h5 className="mb-3">Games & Socials</h5>
+    <div className="services-grid d-flex flex-wrap gap-3 mb-3">
+      {SERVICES.map(s => {
+        const activeCls = s.key===active? 'active':'';
+        const isYouTube = s.key==='youtube';
+        // Determine enabled state (only YouTube implemented)
+        const enabled = isYouTube ? (ytCfg?.enabled ?? false) : false;
+        function toggleEnabled(e){
+          e.stopPropagation();
+          if(!isYouTube) return;
+          if(!ytCfg) return;
+          const prev = ytCfg;
+          const newVal = !prev.enabled;
+          setYtCfg(c=> ({ ...c, enabled: newVal }));
+          // Auto-save for quick toggle
+      (async()=>{
+            try {
+        await updateYouTubeConfig({ ...prev, enabled: newVal }, guildId);
+        // Fetch again to ensure DB flag authoritative
+        const fresh = await getYouTubeConfig(guildId);
+        setYtCfg(fresh); setYtOrig(fresh);
+              pushToast && pushToast('success', 'YouTube '+(newVal? 'enabled':'disabled'));
+            } catch(err){
+              pushToast && pushToast('error','Toggle failed');
+              setYtCfg(prev); // revert
+            }
+          })();
+        }
+  return <button key={s.key} type="button" className={'service-card card-glass p-3 pt-4 text-start position-relative '+activeCls} onClick={()=> setActive(s.key)} style={{width:170, border: s.key===active? '2px solid var(--accent)': '1px solid rgba(255,255,255,0.08)'}}>
+          <div className="position-absolute top-0 end-0 p-1" onClick={e=> e.stopPropagation()}>
+            <div className="form-check form-switch m-0">
+              <input className="form-check-input" style={{cursor: isYouTube? 'pointer':'not-allowed'}} disabled={!isYouTube || !ytCfg} type="checkbox" checked={enabled} onChange={toggleEnabled} />
+            </div>
+          </div>
+          <div className="d-flex align-items-center gap-2 mb-2">
+            {s.image ? (
+              <img src={`/images/${s.image}`} alt={s.label} style={{height:44, width:44, objectFit:'contain', borderRadius:8}} />
+            ) : (
+              <span className="service-icon" style={{color:s.color, fontSize: '1.4rem'}}><i className={s.icon}></i></span>
+            )}
+            <span className="fw-semibold" style={{fontSize:'0.85rem'}}>{s.label}</span>
+          </div>
+          <div className="small text-muted" style={{fontSize:'0.65rem', lineHeight:1.1}}>{s.desc}</div>
+        </button>;
+      })}
+    </div>
+    <hr />
+    {(() => { const svc = SERVICES.find(s=> s.key===active); if(!svc) return null; return (
+      <div className="app-config-header d-flex align-items-center gap-3 mb-3">
+        {svc.image ? <img src={`/images/${svc.image}`} alt={svc.label} className="app-config-icon" /> : <span className="service-icon" style={{color:svc.color}}><i className={svc.icon}></i></span>}
+        <div className="flex-grow-1">
+          <div className="fw-semibold" style={{fontSize:'.9rem'}}>{svc.label} Configuration</div>
+          {active==='youtube' && ytCfg && <div className="small text-muted" style={{fontSize:'.6rem'}}>{ytCfg.enabled? 'Announcements enabled':'Announcements disabled'}</div>}
+        </div>
+        {active==='youtube' && ytCfg && <span className={`status-dot ${ytCfg.enabled? 'on':'off'}`}></span>}
+      </div> ); })()}
+    {active==='youtube' ? renderYouTube() : renderPlaceholder(SERVICES.find(s=>s.key===active))}
+  </div>;
+}
+
+function MentionTargetsPicker({ value, onChange, roles }){
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState('');
+  const boxRef = useRef(null);
+  const inputRef = useRef(null);
+  const list = value || [];
+  useEffect(()=>{
+    function onDoc(e){ if(!boxRef.current) return; if(!boxRef.current.contains(e.target)) setOpen(false); }
+    document.addEventListener('mousedown', onDoc);
+    return ()=> document.removeEventListener('mousedown', onDoc);
+  },[]);
+  const baseOptions = [
+    { id:'everyone', label:'@everyone', type:'meta' },
+    { id:'here', label:'@here', type:'meta' },
+    ...((roles||[]).map(r=> ({ id:r.id, label:r.name, type:'role' })))
+  ];
+  const filtered = baseOptions.filter(o=> !query || o.label.toLowerCase().includes(query.toLowerCase())).filter(o=> !list.includes(o.id));
+  const [activeIdx, setActiveIdx] = useState(0);
+  useEffect(()=>{ setActiveIdx(0); }, [query, open]);
+  function add(id){ if(!list.includes(id)) onChange([ ...list, id ]); setQuery(''); setOpen(false); setTimeout(()=> inputRef.current && inputRef.current.focus(), 0); }
+  function remove(id){ onChange(list.filter(x=> x!==id)); }
+  function handleKey(e){
+    if(e.key==='Backspace' && !query){ onChange(list.slice(0,-1)); }
+    else if(e.key==='Enter') { e.preventDefault(); if(open && filtered[activeIdx]) add(filtered[activeIdx].id); }
+    else if(e.key==='ArrowDown'){ e.preventDefault(); setOpen(true); setActiveIdx(i=> Math.min(filtered.length-1, i+1)); }
+    else if(e.key==='ArrowUp'){ e.preventDefault(); setActiveIdx(i=> Math.max(0, i-1)); }
+  }
+  return <div className="mention-targets-picker" ref={boxRef}>
+    <div className="mention-targets-box" onClick={()=> { setOpen(true); inputRef.current && inputRef.current.focus(); }}>
+      {list.map(id=> {
+        const opt = baseOptions.find(o=> o.id===id);
+        const label = opt ? opt.label : (id.startsWith('@')? id : `<@&${id}>`);
+        return <span key={id} className={"mention-chip "+(opt?.type==='role'? 'role':'')}>{label}<button type="button" onClick={e=> { e.stopPropagation(); remove(id); }}>&times;</button></span>;
+      })}
+      <input ref={inputRef} value={query} placeholder={list.length? '' : 'Add @everyone, @here or role…'} onFocus={()=> setOpen(true)} onChange={e=> { setQuery(e.target.value); setOpen(true); }} onKeyDown={handleKey} />
+    </div>
+    {open && filtered.length>0 && <div className="mention-targets-suggestions">
+      {filtered.slice(0,40).map((o,idx)=> <button type="button" key={o.id} className={idx===activeIdx? 'active':''} onMouseEnter={()=> setActiveIdx(idx)} onClick={()=> add(o.id)}>{o.label}<span className="meta">{o.type}</span></button>)}
+    </div>}
+    {open && filtered.length===0 && <div className="mention-targets-suggestions"><div className="text-muted small p-2" style={{fontSize:'.55rem'}}>No matches</div></div>}
+  </div>;
+}

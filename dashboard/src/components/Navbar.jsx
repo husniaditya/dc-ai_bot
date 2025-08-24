@@ -10,7 +10,7 @@ export default function Navbar(){
     <nav className="navbar nav-glass navbar-expand px-3 py-2" style={{position:'sticky', top:0, zIndex:1030}}>
       <span className="navbar-brand brand-title me-auto d-flex align-items-center gap-2">
         <img src="/images.jpg" alt="Choco Maid Logo" className="brand-logo" />
-        <span>Choco Maid</span>
+        <span>Choco Maid • Discord AI Bot</span>
       </span>
       <div className="d-flex align-items-center gap-3">
         <label className="theme-toggle mb-0" title="Toggle light / dark theme">

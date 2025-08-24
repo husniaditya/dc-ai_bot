@@ -129,6 +129,17 @@ const commands = [
     ]
   },
   {
+    name: 'ytwatch',
+    description: 'Manage YouTube notifications (Manage Server required)',
+    options: [
+      { name: 'action', description: 'enable|disable|addchannel|removechannel|announcechannel|mentionrole|interval|status', type:3, required:false },
+      { name: 'channel_id', description: 'YouTube channel ID for add/remove', type:3, required:false },
+      { name: 'discord_channel', description: 'Discord channel to announce in', type:7, required:false },
+      { name: 'role', description: 'Role to mention', type:8, required:false },
+      { name: 'seconds', description: 'Polling interval seconds (>=30)', type:4, required:false }
+    ]
+  },
+  {
     name: 'Explain Image',
     type: 3 // MESSAGE context menu
   },

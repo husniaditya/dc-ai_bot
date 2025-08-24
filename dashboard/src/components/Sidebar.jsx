@@ -29,6 +29,7 @@ export default function Sidebar({
             {key:'commands', label:'Commands', icon:'fa-terminal'},
             {key:'personal', label:'Bot Personalization', icon:'fa-user-gear'},
             {key:'welcome', label:'Welcome', icon:'fa-door-open'},
+            {key:'games', label:'Games & Socials', icon:'fa-gamepad'},
             {key:'settings', label:'Settings', icon:'fa-sliders'}
           ].map(item => (
             <button

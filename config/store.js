@@ -25,6 +25,10 @@ const guildAutoResponsesCache = new Map(); // guildId -> auto responses
 const guildPersonalizationCache = new Map();
 // Guild welcome config cache { channelId, messageType, messageText, cardEnabled }
 const guildWelcomeCache = new Map();
+// Guild YouTube watcher configuration cache
+// Shape: { channels:[], announceChannelId:null, mentionTargets:[], enabled:false, intervalSec:300, uploadTemplate:string, liveTemplate:string, embedEnabled:true, channelMessages:{}, channelNames:{} }
+const guildYouTubeConfigCache = new Map();
+let youtubeHasConfigJsonColumn = null; // lazy detection
 
 // Load seed auto responses from existing JS file and convert regex -> {pattern, flags}
 function loadSeedAutoResponses() {
@@ -177,6 +181,34 @@ async function initMaria() {
       card_enabled BOOLEAN NOT NULL DEFAULT 0,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
     ) ENGINE=InnoDB`);
+    // YouTube watcher per-guild configuration
+    await sqlPool.query(`CREATE TABLE IF NOT EXISTS guild_youtube_watch (
+      guild_id VARCHAR(32) PRIMARY KEY,
+      channels TEXT NULL,
+      announce_channel_id VARCHAR(32) NULL,
+      mention_target VARCHAR(512) NULL,
+      enabled BOOLEAN NOT NULL DEFAULT 0,
+      interval_sec INT NOT NULL DEFAULT 300,
+      upload_template TEXT NULL,
+      live_template TEXT NULL,
+      embed_enabled BOOLEAN NOT NULL DEFAULT 1,
+      channel_messages MEDIUMTEXT NULL,
+      channel_names MEDIUMTEXT NULL,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB`);
+    // Silent migrations expanding mention_target length / adding columns if older version
+    try { await sqlPool.query('ALTER TABLE guild_youtube_watch ADD COLUMN mention_target VARCHAR(512) NULL'); } catch(e){ /* ignore */ }
+    try { await sqlPool.query('ALTER TABLE guild_youtube_watch ADD COLUMN channel_messages MEDIUMTEXT NULL'); } catch(e){ /* ignore */ }
+    try { await sqlPool.query('ALTER TABLE guild_youtube_watch ADD COLUMN channel_names MEDIUMTEXT NULL'); } catch(e){ /* ignore */ }
+    try { await sqlPool.query('ALTER TABLE guild_youtube_watch ADD COLUMN embed_enabled BOOLEAN NOT NULL DEFAULT 1'); } catch(e){ /* ignore */ }
+    try { await sqlPool.query('ALTER TABLE guild_youtube_watch ADD COLUMN upload_template TEXT NULL'); } catch(e){ /* ignore */ }
+    try { await sqlPool.query('ALTER TABLE guild_youtube_watch ADD COLUMN live_template TEXT NULL'); } catch(e){ /* ignore */ }
+    try { await sqlPool.query('ALTER TABLE guild_youtube_watch ADD COLUMN interval_sec INT NOT NULL DEFAULT 300'); } catch(e){ /* ignore */ }
+    try { await sqlPool.query('ALTER TABLE guild_youtube_watch ADD COLUMN enabled BOOLEAN NOT NULL DEFAULT 0'); } catch(e){ /* ignore */ }
+  // Ensure legacy tables missing channels / announce_channel_id get them
+  try { await sqlPool.query('ALTER TABLE guild_youtube_watch ADD COLUMN channels TEXT NULL'); } catch(e){ /* ignore */ }
+  try { await sqlPool.query('ALTER TABLE guild_youtube_watch ADD COLUMN announce_channel_id VARCHAR(32) NULL'); } catch(e){ /* ignore */ }
+  try { await sqlPool.query('ALTER TABLE guild_youtube_watch ADD COLUMN updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'); } catch(e){ /* ignore */ }
     // Migrations (silent) to add metadata columns if upgrading
     const migCols = [
       ['command_toggles','created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP'],
@@ -520,6 +552,141 @@ module.exports = {
     }
     return { ...next };
   },
+  // --- Guild YouTube Watcher Config ---
+  getGuildYouTubeConfig: async (guildId) => {
+    if(!guildId) throw new Error('guildId required');
+    if (guildYouTubeConfigCache.has(guildId)) return { ...guildYouTubeConfigCache.get(guildId) };
+    const defaults = {
+      channels: [],
+      announceChannelId: null,
+      mentionRoleId: null, // legacy single value for backward compatibility
+      mentionTargets: [], // new multi-select list, values: 'everyone','here', role IDs
+      enabled: false,
+      intervalSec: 300,
+      uploadTemplate: '🎥 New upload from {channelTitle}: **{title}**\n{url} {roleMention}',
+      liveTemplate: '🔴 LIVE {channelTitle} is now LIVE: **{title}**\n{url} {roleMention}',
+      embedEnabled: true,
+      channelMessages: {}, // per-channel override templates maybe
+      channelNames: {}
+    };
+    if (mariaAvailable && sqlPool){
+      try {
+  const [rows] = await sqlPool.query('SELECT channels, announce_channel_id, mention_target, enabled, interval_sec, upload_template, live_template, embed_enabled, channel_messages, channel_names FROM guild_youtube_watch WHERE guild_id=?', [guildId]);
+        if(rows.length){
+          const r = rows[0];
+            const cfg = { ...defaults };
+            try { if(r.channels) cfg.channels = JSON.parse(r.channels); } catch { cfg.channels = []; }
+            cfg.announceChannelId = r.announce_channel_id || null;
+            const rawMention = (r.mention_target || '').trim();
+            let mt = [];
+            if(rawMention){
+              // split by comma and sanitize allowed tokens
+              mt = rawMention.split(',').map(s=>s.trim()).filter(Boolean).filter(x=> x==='everyone' || x==='here' || /^[0-9]{5,32}$/.test(x));
+            }
+            cfg.mentionTargets = mt;
+            cfg.mentionRoleId = mt.length === 1 && /^[0-9]{5,32}$/.test(mt[0]) ? mt[0] : null;
+            cfg.enabled = r.enabled === 1 || r.enabled === true;
+            cfg.intervalSec = r.interval_sec || defaults.intervalSec;
+            cfg.uploadTemplate = r.upload_template || defaults.uploadTemplate;
+            cfg.liveTemplate = r.live_template || defaults.liveTemplate;
+            cfg.embedEnabled = r.embed_enabled === 0 ? false : true;
+            try { if(r.channel_messages) cfg.channelMessages = JSON.parse(r.channel_messages); } catch { cfg.channelMessages = {}; }
+            try { if(r.channel_names) cfg.channelNames = JSON.parse(r.channel_names); } catch { cfg.channelNames = {}; }
+            guildYouTubeConfigCache.set(guildId, cfg);
+            return { ...cfg };
+        }
+        // No row -> insert defaults (disabled); handle legacy schema with config_json NOT NULL
+        try {
+          if (youtubeHasConfigJsonColumn === null){
+            try { await sqlPool.query('SELECT config_json FROM guild_youtube_watch LIMIT 1'); youtubeHasConfigJsonColumn = true; } catch { youtubeHasConfigJsonColumn = false; }
+          }
+          if (youtubeHasConfigJsonColumn){
+            await sqlPool.query('INSERT INTO guild_youtube_watch(guild_id, channels, enabled, config_json) VALUES (?,?,0,?)', [guildId, JSON.stringify([]), JSON.stringify(defaults)]);
+          } else {
+            await sqlPool.query('INSERT INTO guild_youtube_watch(guild_id, channels, enabled) VALUES (?,?,0)', [guildId, JSON.stringify([])]);
+          }
+          console.log('[YouTubeCfg] inserted default row for guild', guildId, 'legacyCfgJson=', youtubeHasConfigJsonColumn);
+        } catch(e){ console.error('[YouTubeCfg] failed inserting default row', guildId, e.message); }
+        guildYouTubeConfigCache.set(guildId, defaults);
+        return { ...defaults };
+      } catch(e){
+        console.error('[YouTubeCfg] load error guild', guildId, e.message);
+        return { ...defaults };
+      }
+    }
+    return { ...defaults }; // memory fallback (not persisted)
+  },
+  setGuildYouTubeConfig: async (guildId, partial) => {
+    if(!guildId) throw new Error('guildId required');
+    const current = await module.exports.getGuildYouTubeConfig(guildId);
+    const next = { ...current };
+    if (Array.isArray(partial.channels)) next.channels = partial.channels.slice(0, 25); // reasonable cap
+    if (partial.announceChannelId !== undefined) next.announceChannelId = partial.announceChannelId || null;
+    // Multi-role logic: prefer mentionTargets if provided else fallback to mentionRoleId
+    if (Array.isArray(partial.mentionTargets)) {
+      const cleaned = partial.mentionTargets
+        .map(s=> String(s||'').trim())
+        .filter(Boolean)
+        .filter((v,i,a)=> a.indexOf(v)===i)
+        .filter(x=> x==='everyone' || x==='here' || /^[0-9]{5,32}$/.test(x))
+        .slice(0, 10); // cap to avoid excessive pings
+      next.mentionTargets = cleaned;
+      next.mentionRoleId = cleaned.length === 1 && /^[0-9]{5,32}$/.test(cleaned[0]) ? cleaned[0] : null;
+    } else if (partial.mentionRoleId !== undefined) {
+      const mr = partial.mentionRoleId ? String(partial.mentionRoleId) : null;
+      next.mentionRoleId = mr;
+      next.mentionTargets = mr ? [mr] : [];
+    }
+    if (partial.enabled !== undefined) next.enabled = !!partial.enabled;
+    if (partial.intervalSec !== undefined) {
+      const iv = parseInt(partial.intervalSec,10);
+      if(!isNaN(iv) && iv >= 60 && iv <= 3600) next.intervalSec = iv; // clamp 1min - 1h
+    }
+    if (partial.uploadTemplate !== undefined) next.uploadTemplate = (partial.uploadTemplate || '').slice(0, 4000) || current.uploadTemplate;
+    if (partial.liveTemplate !== undefined) next.liveTemplate = (partial.liveTemplate || '').slice(0, 4000) || current.liveTemplate;
+    if (partial.embedEnabled !== undefined) next.embedEnabled = !!partial.embedEnabled;
+    if (partial.channelMessages && typeof partial.channelMessages === 'object') next.channelMessages = { ...partial.channelMessages };
+    if (partial.channelNames && typeof partial.channelNames === 'object') next.channelNames = { ...partial.channelNames };
+    guildYouTubeConfigCache.set(guildId, next);
+    if (mariaAvailable && sqlPool){
+      const row = {
+        channels: JSON.stringify(next.channels||[]),
+        announce_channel_id: next.announceChannelId,
+        mention_target: next.mentionTargets.join(','),
+        enabled: next.enabled ? 1 : 0,
+        interval_sec: next.intervalSec,
+        upload_template: next.uploadTemplate,
+        live_template: next.liveTemplate,
+        embed_enabled: next.embedEnabled ? 1:0,
+        channel_messages: JSON.stringify(next.channelMessages||{}),
+        channel_names: JSON.stringify(next.channelNames||{})
+      };
+      try {
+        if (youtubeHasConfigJsonColumn === null){
+          try { await sqlPool.query('SELECT config_json FROM guild_youtube_watch LIMIT 1'); youtubeHasConfigJsonColumn = true; } catch { youtubeHasConfigJsonColumn = false; }
+        }
+        if (youtubeHasConfigJsonColumn){
+          await sqlPool.query(`INSERT INTO guild_youtube_watch (guild_id, channels, announce_channel_id, mention_target, enabled, interval_sec, upload_template, live_template, embed_enabled, channel_messages, channel_names, config_json)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?)
+            ON DUPLICATE KEY UPDATE channels=VALUES(channels), announce_channel_id=VALUES(announce_channel_id), mention_target=VALUES(mention_target), enabled=VALUES(enabled), interval_sec=VALUES(interval_sec), upload_template=VALUES(upload_template), live_template=VALUES(live_template), embed_enabled=VALUES(embed_enabled), channel_messages=VALUES(channel_messages), channel_names=VALUES(channel_names), config_json=VALUES(config_json)`,
+            [guildId, row.channels, row.announce_channel_id, row.mention_target, row.enabled, row.interval_sec, row.upload_template, row.live_template, row.embed_enabled, row.channel_messages, row.channel_names, JSON.stringify(next)]
+          );
+        } else {
+          await sqlPool.query(`INSERT INTO guild_youtube_watch (guild_id, channels, announce_channel_id, mention_target, enabled, interval_sec, upload_template, live_template, embed_enabled, channel_messages, channel_names)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?)
+            ON DUPLICATE KEY UPDATE channels=VALUES(channels), announce_channel_id=VALUES(announce_channel_id), mention_target=VALUES(mention_target), enabled=VALUES(enabled), interval_sec=VALUES(interval_sec), upload_template=VALUES(upload_template), live_template=VALUES(live_template), embed_enabled=VALUES(embed_enabled), channel_messages=VALUES(channel_messages), channel_names=VALUES(channel_names)`,
+            [guildId, row.channels, row.announce_channel_id, row.mention_target, row.enabled, row.interval_sec, row.upload_template, row.live_template, row.embed_enabled, row.channel_messages, row.channel_names]
+          );
+        }
+        console.log('[YouTubeCfg] saved guild', guildId, 'targets=', next.mentionTargets.length, 'channels=', next.channels.length, 'legacyCfgJson=', youtubeHasConfigJsonColumn);
+      } catch(e){
+        console.error('YouTube config save failed for guild', guildId, e.message);
+        throw e; // let caller surface persist_failed
+      }
+    }
+    return { ...next };
+  },
+  invalidateGuildYouTubeConfig: (guildId) => { guildYouTubeConfigCache.delete(guildId); },
   removeAutoResponse: async (key) => {
     const idx = autoResponses.findIndex(r => r.key === key);
     if (idx >= 0) autoResponses.splice(idx, 1);

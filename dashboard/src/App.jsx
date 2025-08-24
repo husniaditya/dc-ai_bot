@@ -7,6 +7,7 @@ const OverviewSection = React.lazy(()=> import('./sections/OverviewSection.jsx')
 const CommandsSection = React.lazy(()=> import('./sections/CommandsSection.jsx'));
 const PersonalizationSection = React.lazy(()=> import('./sections/PersonalizationSection.jsx'));
 const WelcomeSection = React.lazy(()=> import('./sections/WelcomeSection.jsx'));
+const GamesSocialsSection = React.lazy(()=> import('./sections/GamesSocialsSection.jsx'));
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './theme.css';
 import '@fortawesome/fontawesome-free/css/all.min.css';
@@ -63,6 +64,7 @@ export default function App(){
   const [dashSection, setDashSection] = useState(()=>{
     try { return localStorage.getItem('dashSection') || 'overview'; } catch { return 'overview'; }
   }); // overview | autos | commands | personal | welcome | settings
+  // Add youtube section key soon
   // Sidebar UI state
   const [sidebarOpen, setSidebarOpen] = useState(false); // mobile overlay
   // Sidebar modes: full (240px) | mini (70px) – persisted
@@ -645,7 +647,10 @@ export default function App(){
   const settingsContent = <React.Suspense fallback={<div className="text-muted small p-3">Loading settings…</div>}>
     <SettingsSection guildId={selectedGuild} pushToast={pushToast} />
   </React.Suspense>;
-  const sectionMap = { overview: overviewContent, autos: autosContent, commands: commandsContent, personal: personalizationContent, welcome: welcomeContent, settings: settingsContent };
+  const gamesContent = <React.Suspense fallback={<div className="text-muted small p-3">Loading Games & Socials…</div>}>
+    <GamesSocialsSection guildId={selectedGuild} pushToast={pushToast} />
+  </React.Suspense>;
+  const sectionMap = { overview: overviewContent, autos: autosContent, commands: commandsContent, personal: personalizationContent, welcome: welcomeContent, games: gamesContent, settings: settingsContent };
 
   // Preload lazily loaded sections to reduce Suspense flashes
   function preloadSection(key){
@@ -658,6 +663,7 @@ export default function App(){
       case 'welcome': import('./sections/WelcomeSection.jsx'); break;
   case 'settings': import('./sections/SettingsSection.jsx'); break;
   case 'autos': import('./sections/AutosSection.jsx'); break;
+  case 'games': import('./sections/GamesSocialsSection.jsx'); break;
       default: break;
     }
   }
