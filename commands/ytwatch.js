@@ -11,7 +11,8 @@ module.exports = (client) => ({
       await interaction.reply({ content:'Manage Server permission required.', flags:64 }); return;
     }
     const store = require('../config/store');
-    await interaction.deferReply({ ephemeral:true });
+  // Use flags for ephemeral (64) instead of deprecated ephemeral:true
+  await interaction.deferReply({ flags:64 });
     const cfg = await store.getGuildYouTubeConfig(guild.id);
     const action = interaction.options.getString('action');
     if(!action){
@@ -55,7 +56,8 @@ function formatConfig(cfg){
   return 'YouTube Watch Config:\n'
     + `Enabled: ${cfg.enabled}\n`
     + `AnnounceChannel: ${cfg.announceChannelId || 'unset'}\n`
-    + `MentionRole: ${cfg.mentionRoleId || 'none'}\n`
+    + `MentionRoleID: ${cfg.mentionRoleId || 'none'}\n`
+    + `MentionRoleName: ${cfg.mentionRoleName || 'none'}\n`
     + `IntervalSec: ${cfg.intervalSec}\n`
     + `Channels(${cfg.channels.length}): ${cfg.channels.join(', ') || 'none'}\n`
     + 'Actions: use /ytwatch with options (action, channel_id, discord_channel, role, seconds).';

@@ -501,11 +501,6 @@ export default function App(){
       <LoginView
         error={error}
         authProcessing={authProcessing}
-        oauthMode={oauthMode}
-        setOauthMode={setOauthMode}
-        loginForm={loginForm}
-        setLoginForm={setLoginForm}
-        handleLogin={handleLogin}
         startDiscordLogin={startDiscordLogin}
       />
       <Footer />
@@ -591,7 +586,7 @@ export default function App(){
         { name:'math', usage:'/math add|sub|mul|div a b', desc:'Basic arithmetic operations.' },
         { name:'user info', usage:'/user info [target]', desc:'Lookup Discord user info.' },
   { name:'remind', usage:'/remind minutes text', desc:'Schedule a reminder DM or channel.' },
-  { name:'meme', usage:'/meme', desc:'Random meme image from meme-api.com.' }
+	{ name:'meme', usage:'/meme', desc:'Random meme image from meme-api.com.' }
       ]
     },
     {
@@ -599,9 +594,19 @@ export default function App(){
       items: [
         { name:'autoreply', usage:'(passive)', desc:'Automatic replies based on configured patterns.' }
       ]
+    },
+    // YouTube group (conditionally shown if user has Manage Server permission in guild)
+    {
+      key: 'youtube', title: 'YouTube', icon: 'fa-brands fa-youtube', accent: '#FF0000',
+      items: [
+    { name:'ytwatch', usage:'/ytwatch action:<enable|disable|addchannel|removechannel|announcechannel|mentionrole|interval|status>', desc:'Manage YouTube notifications (requires Manage Server).', requiresManage:true },
+    { name:'ytstats', usage:'/ytstats', desc:'Show YouTube watcher cache & quota stats.', requiresManage:true }
+      ]
     }
   ];
-  const commandsContent = <CommandsSection commandGroups={commandGroups} commandTogglesState={commandTogglesState} commandMeta={commandMeta} toggleCommand={toggleCommand} />;
+  const selectedGuildObj = guilds.find(g=> g.id===selectedGuild);
+  const hasManageGuild = selectedGuildObj ? !!selectedGuildObj.canManage : false;
+  const commandsContent = <CommandsSection hasManageGuild={hasManageGuild} commandGroups={commandGroups} commandTogglesState={commandTogglesState} commandMeta={commandMeta} toggleCommand={toggleCommand} />;
 
   function handleAvatarFile(e){
     const file = e.target.files?.[0]; if(!file) return;

@@ -53,7 +53,9 @@ export default function GamesSocialsSection({ guildId, pushToast }){
       .replace(/\{url\}/g, url)
       .replace(/\{roleMention\}/g, roleMention)
       .replace(/\{roleNames\}/g, roleNames)
-      .replace(/\{thumbnail\}/g, thumbnail);
+  .replace(/\{thumbnail\}/g, thumbnail)
+  .replace(/\{publishedAt\}/g, new Date().toISOString())
+  .replace(/\{publishedAtRelative\}/g, 'just now');
   }
   function TemplatePreview({ template, channelId, size }){
     const result = buildPreview(template, channelId);
@@ -176,7 +178,7 @@ export default function GamesSocialsSection({ guildId, pushToast }){
             <label className="form-label small fw-semibold mb-1">Live</label>
             <textarea rows={7} className="form-control form-control-sm" value={ytCfg.liveTemplate||''} onChange={e=> setYtCfg(c=> ({ ...c, liveTemplate: e.target.value }))}></textarea>
           </div>
-          <div className="form-text tiny mt-2">Placeholders: {'{channelTitle} {title} {url} {roleNames} {thumbnail}'}</div>
+          <div className="form-text tiny mt-2">Placeholders: {'{channelTitle} {title} {url} {roleNames} {thumbnail} {publishedAt} {publishedAtRelative}'}</div>
         </div>
         {/* TEMPLATE PREVIEW */}
         <div className="yt-config-block">
@@ -185,7 +187,7 @@ export default function GamesSocialsSection({ guildId, pushToast }){
             <TemplatePreview template={ytCfg.uploadTemplate} size="lg" />
           </div>
             <TemplatePreview template={ytCfg.liveTemplate} size="lg" />
-          <div className="form-text tiny mt-2">Placeholders: {'{channelTitle} {title} {url} {roleNames} {thumbnail}'}</div>
+          <div className="form-text tiny mt-2">Placeholders: {'{channelTitle} {title} {url} {roleNames} {thumbnail} {publishedAt} {publishedAtRelative}'}</div>
         </div>
       </div>
       <div className="yt-config-block mt-3">

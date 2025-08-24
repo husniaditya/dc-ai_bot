@@ -140,6 +140,10 @@ const commands = [
     ]
   },
   {
+    name: 'ytstats',
+    description: 'Show YouTube watcher cache & quota stats'
+  },
+  {
     name: 'Explain Image',
     type: 3 // MESSAGE context menu
   },
