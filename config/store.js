@@ -120,8 +120,24 @@ async function initMaria() {
       guild_id VARCHAR(32) PRIMARY KEY,
       auto_reply_enabled BOOLEAN NOT NULL DEFAULT 0,
       auto_reply_cooldown_ms INT NOT NULL DEFAULT 30000,
+      language VARCHAR(8) NULL,
+      timezone VARCHAR(64) NULL,
+      hour_format TINYINT NULL,
+      embed_color VARCHAR(9) NULL,
+      prefix VARCHAR(16) NULL,
+      slash_enabled BOOLEAN NULL,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
     ) ENGINE=InnoDB`);
+    // Attempt migrations for new settings columns if upgrading from older schema
+    const guildSettingMigs = [
+      'ALTER TABLE guild_settings ADD COLUMN language VARCHAR(8) NULL',
+      'ALTER TABLE guild_settings ADD COLUMN timezone VARCHAR(64) NULL',
+      'ALTER TABLE guild_settings ADD COLUMN hour_format TINYINT NULL',
+      'ALTER TABLE guild_settings ADD COLUMN embed_color VARCHAR(9) NULL',
+      'ALTER TABLE guild_settings ADD COLUMN prefix VARCHAR(16) NULL',
+      'ALTER TABLE guild_settings ADD COLUMN slash_enabled BOOLEAN NULL'
+    ];
+    for (const sql of guildSettingMigs){ try { await sqlPool.query(sql); } catch(e){ /* ignore */ } }
     await sqlPool.query(`CREATE TABLE IF NOT EXISTS guild_auto_responses (
       guild_id VARCHAR(32) NOT NULL,
       \`key\` VARCHAR(100) NOT NULL,
@@ -263,8 +279,16 @@ async function saveAutoResponse(ar) {
 
 async function saveGuildSettings(guildId, data){
   if (mariaAvailable && sqlPool){
-    await sqlPool.query('REPLACE INTO guild_settings(guild_id, auto_reply_enabled, auto_reply_cooldown_ms) VALUES (?,?,?)', [
-      guildId, data.autoReplyEnabled ? 1 : 0, data.autoReplyCooldownMs
+    await sqlPool.query('REPLACE INTO guild_settings(guild_id, auto_reply_enabled, auto_reply_cooldown_ms, language, timezone, hour_format, embed_color, prefix, slash_enabled) VALUES (?,?,?,?,?,?,?,?,?)', [
+      guildId,
+      data.autoReplyEnabled ? 1 : 0,
+      data.autoReplyCooldownMs,
+      data.language || 'en',
+      data.timezone || 'UTC',
+      data.hourFormat === 12 ? 12 : 24,
+      data.embedColor || '#5865F2',
+      data.prefix || '!',
+      data.slashCommandsEnabled === false ? 0 : 1
     ]);
   }
 }
@@ -317,27 +341,44 @@ module.exports = {
   getCompiledAutoResponses: compileAutoResponses,
   // Guild-scoped API
   getGuildSettings: async (guildId) => {
-    if (!guildId) return { ...seedSettings };
+    const defaults = { ...seedSettings, language:'en', timezone:'UTC', hourFormat:24, embedColor:'#5865F2', prefix:'!', slashCommandsEnabled:true };
+    if (!guildId) return { ...defaults };
     if (guildSettingsCache.has(guildId)) return { ...guildSettingsCache.get(guildId) };
     if (mariaAvailable && sqlPool){
-      const [rows] = await sqlPool.query('SELECT auto_reply_enabled, auto_reply_cooldown_ms FROM guild_settings WHERE guild_id=?', [guildId]);
+      const [rows] = await sqlPool.query('SELECT auto_reply_enabled, auto_reply_cooldown_ms, language, timezone, hour_format, embed_color, prefix, slash_enabled FROM guild_settings WHERE guild_id=?', [guildId]);
       let gs;
       if (rows.length === 0){
-        gs = { ...seedSettings };
+        gs = { ...defaults };
         await saveGuildSettings(guildId, gs);
       } else {
-        gs = { autoReplyEnabled: !!rows[0].auto_reply_enabled, autoReplyCooldownMs: rows[0].auto_reply_cooldown_ms };
+        const r = rows[0];
+        gs = {
+          autoReplyEnabled: !!r.auto_reply_enabled,
+            autoReplyCooldownMs: r.auto_reply_cooldown_ms,
+            language: r.language || 'en',
+            timezone: r.timezone || 'UTC',
+            hourFormat: r.hour_format === 12 ? 12 : 24,
+            embedColor: r.embed_color || '#5865F2',
+            prefix: r.prefix || '!',
+            slashCommandsEnabled: r.slash_enabled === 0 ? false : true
+        };
       }
       guildSettingsCache.set(guildId, gs);
       return { ...gs };
     }
-    return { ...seedSettings };
+    return { ...defaults };
   },
   setGuildSettings: async (guildId, partial) => {
     if (!guildId) throw new Error('guildId required');
     const current = await module.exports.getGuildSettings(guildId);
     if (partial.autoReplyEnabled !== undefined) current.autoReplyEnabled = !!partial.autoReplyEnabled;
     if (partial.autoReplyCooldownMs !== undefined) current.autoReplyCooldownMs = parseInt(partial.autoReplyCooldownMs,10) || current.autoReplyCooldownMs;
+    if (partial.language !== undefined) current.language = (partial.language || 'en').slice(0,8);
+    if (partial.timezone !== undefined) current.timezone = (partial.timezone || 'UTC').slice(0,64);
+    if (partial.hourFormat !== undefined) current.hourFormat = (parseInt(partial.hourFormat,10) === 12) ? 12 : 24;
+    if (partial.embedColor !== undefined) current.embedColor = (partial.embedColor || '#5865F2').slice(0,9);
+    if (partial.prefix !== undefined) current.prefix = (partial.prefix || '!').slice(0,16);
+    if (partial.slashCommandsEnabled !== undefined) current.slashCommandsEnabled = !!partial.slashCommandsEnabled;
     guildSettingsCache.set(guildId, current);
     await saveGuildSettings(guildId, current);
     return { ...current };

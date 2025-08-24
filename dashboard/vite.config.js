@@ -17,6 +17,15 @@ export default defineConfig({
   preview: { port: 5173 },
   build: {
     outDir: 'dist',
-    emptyOutDir: true
+    emptyOutDir: true,
+    chunkSizeWarningLimit: 900,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react','react-dom'],
+          charts: ['highcharts','highcharts-react-official']
+        }
+      }
+    }
   }
 });

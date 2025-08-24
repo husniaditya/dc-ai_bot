@@ -120,7 +120,8 @@ async function applyGuildPersonalization(guildId){
 
 // --- Settings / Dashboard API (basic) ---
 const store = require('./config/store');
-store.initPersistence().then(mode => console.log('Persistence mode:', mode));
+const persistenceModeRef = { mode:null };
+store.initPersistence().then(mode => { persistenceModeRef.mode = mode; console.log('Persistence mode:', mode); });
 const app = express();
 app.use(express.json());
 
@@ -293,7 +294,16 @@ app.get('/api/settings', authMiddleware, async (req,res)=>{
 app.put('/api/settings', authMiddleware, async (req,res)=>{
   try {
     const guildId = req.query.guildId || (req.user.type==='discord' ? (await store.getUser(req.user.userId))?.selected_guild_id : null);
-    const allowed = { autoReplyEnabled: req.body.autoReplyEnabled, autoReplyCooldownMs: req.body.autoReplyCooldownMs };
+    const allowed = {
+      autoReplyEnabled: req.body.autoReplyEnabled,
+      autoReplyCooldownMs: req.body.autoReplyCooldownMs,
+      language: req.body.language,
+      timezone: req.body.timezone,
+      hourFormat: req.body.hourFormat,
+      embedColor: req.body.embedColor,
+      prefix: req.body.prefix,
+      slashCommandsEnabled: req.body.slashCommandsEnabled
+    };
     let updated;
     if (guildId) updated = await store.setGuildSettings(guildId, allowed); else updated = await store.setSettings(allowed);
     audit(req, { action: guildId ? 'update-guild-settings':'update-settings', guildId, data:allowed });
@@ -417,6 +427,42 @@ app.get('/api/auto-responses', authMiddleware, async (req,res)=>{
     if (guildId) return res.json(await store.getGuildAutoResponses(guildId));
     return res.json(store.getAutoResponses());
   } catch(e){ return res.status(500).json({ error:'load_failed' }); }
+});
+// Simple analytics snapshot for dashboard charts
+app.get('/api/analytics/overview', authMiddleware, async (req,res)=>{
+  try {
+    const guildId = req.query.guildId || (req.user.type==='discord' ? (await store.getUser(req.user.userId))?.selected_guild_id : null);
+  let autos = guildId ? await store.getGuildAutoResponses(guildId) : store.getAutoResponses();
+  if (!Array.isArray(autos)) autos = [];
+  const autoEnabled = autos.filter(a=>a && a.enabled!==false).length;
+    const cmdList = Array.from(commandMap.values()).map(c=>c.name);
+    let toggles = {};
+    try { toggles = guildId ? await store.getGuildCommandToggles(guildId) : store.getCommandToggles(); } catch {}
+    const commandsEnabled = cmdList.filter(n => toggles[n] !== false).length;
+    const commandsDisabled = cmdList.length - commandsEnabled;
+    // Rough category breakdown for autos by first letter bucket (demo purpose)
+    const autoBuckets = autos.reduce((acc,a)=>{ const k = (a.key||'').charAt(0).toUpperCase() || '#'; acc[k]=(acc[k]||0)+1; return acc; }, {});
+    res.json({
+      guildId,
+      totals: { autos: autos.length, autosEnabled: autoEnabled, commands: cmdList.length, commandsEnabled, commandsDisabled },
+      autoBuckets
+    });
+  } catch(e){ res.status(500).json({ error:'load_failed' }); }
+});
+// Simple API status (Gemini availability)
+app.get('/api/status', authMiddleware, (req,res)=>{
+  const geminiEnabled = !!(process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY);
+  const discordReady = !!client.readyAt;
+  const ping = typeof client.ws?.ping === 'number' ? Math.round(client.ws.ping) : null;
+  const uptimeSeconds = Math.floor((Date.now() - startTimestamp)/1000);
+  const dbMode = persistenceModeRef.mode || 'unknown';
+  const dbConnected = dbMode !== 'memory' ? true : true; // memory still functions for dashboard
+  res.json({
+    gemini: { enabled: geminiEnabled },
+    discord: { ready: discordReady, ping },
+    database: { mode: dbMode, connected: dbConnected },
+    uptime: { seconds: uptimeSeconds, startedAt: new Date(startTimestamp).toISOString() }
+  });
 });
 // Lightweight guild list (names/icons) for dashboard refresh so we can render selected guild name after page reload
 app.get('/api/guilds', authMiddleware, (req,res)=>{
@@ -634,12 +680,21 @@ client.on('interactionCreate', async (interaction) => {
   if (interaction.isChatInputCommand()){
     const cmd = commandMap.get(interaction.commandName);
   if (!cmd) return interaction.reply({ content: 'Unknown command (not loaded).', flags: 64 });
+    // Guild-level slash command master toggle
+    try {
+      const guildId = interaction.guildId;
+      if (guildId) {
+        const gs = await store.getGuildSettings(guildId);
+        if (gs && gs.slashCommandsEnabled === false) {
+          return interaction.reply({ content: 'Slash commands are disabled for this server by an administrator.', flags: 64 });
+        }
+      }
+    } catch {}
     try {
       // Check command toggle
       const guildId = interaction.guildId;
       let enabled = true;
       try {
-        const store = require('./config/store');
         if (guildId && store.getGuildCommandToggles){
           const toggles = await store.getGuildCommandToggles(guildId);
           if (toggles[interaction.commandName] === false) enabled = false;

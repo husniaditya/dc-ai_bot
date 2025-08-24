@@ -1,15 +1,19 @@
 import React, { useState, useEffect, useRef } from 'react';
+// Lazy loaded sections (code splitting)
+const SettingsPanel = React.lazy(()=> import('./Settings.jsx'));
+const AutosSectionLazy = React.lazy(()=> import('./AutosSection'));
 import 'bootstrap/dist/css/bootstrap.min.css';
+// Highcharts libs will be loaded dynamically (not via React.lazy because they export objects, not components)
+// We'll load them when the Overview section is first viewed
 // Option B: removed DataTables – using pure React table implementation
 import { login, getSettings, updateSettings, listAuto, upsertAuto, deleteAuto, getApiBase, fetchJson, getCommandToggles, setCommandToggle, getPersonalization, updatePersonalization, getWelcome, updateWelcome, getChannels } from './api';
-import AutosSection from './AutosSection';
 const API_BASE = getApiBase();
 
 export default function App(){
   const [token, setToken] = useState(localStorage.getItem('token'));
   const [loginForm, setLoginForm] = useState({ username:'', password:'' });
   const [settings, setSettings] = useState(null);
-  const [autos, setAutos] = useState([]);
+  const [autos, setAutos] = useState([]); // always array
   // Modal editing state
   const emptyAuto = { key:'', pattern:'', flags:'i', replies:'', enabled:true };
   const [modalAuto, setModalAuto] = useState(emptyAuto);
@@ -43,7 +47,7 @@ export default function App(){
   // Sidebar section
   const [dashSection, setDashSection] = useState(()=>{
     try { return localStorage.getItem('dashSection') || 'overview'; } catch { return 'overview'; }
-  }); // overview | autos | commands | personal | welcome
+  }); // overview | autos | commands | personal | welcome | settings
   // Sidebar UI state
   const [sidebarOpen, setSidebarOpen] = useState(false); // mobile overlay
   // Sidebar modes: full (240px) | mini (70px) – persisted
@@ -181,9 +185,9 @@ export default function App(){
     if(!selectedGuild) return;
     try {
       setLoading(true);
-      const [s, a] = await Promise.all([getSettings(selectedGuild), listAuto(selectedGuild)]);
-      setSettings(s);
-      setAutos(a);
+  const [s, a] = await Promise.all([getSettings(selectedGuild), listAuto(selectedGuild)]);
+  setSettings(s || {});
+  setAutos(Array.isArray(a) ? a : []);
       setError('');
     } catch(e){
       if (e.message.toLowerCase().includes('unauthorized')) { doLogout(); }
@@ -302,8 +306,47 @@ export default function App(){
   }, []);
 
   // simple stats
-  const totalEnabled = autos.filter(a=>a.enabled!==false).length;
-  const totalDisabled = autos.length - totalEnabled;
+  const totalEnabled = Array.isArray(autos) ? autos.filter(a=>a && a.enabled!==false).length : 0;
+  const totalDisabled = (Array.isArray(autos)? autos.length:0) - totalEnabled;
+  // Analytics snapshot state
+  const [analytics, setAnalytics] = useState(null);
+  const [apiStatus, setApiStatus] = useState(null); // shape { gemini:{enabled}, discord:{ready,ping}, database:{mode,connected}, uptime:{seconds,startedAt} }
+  // Highcharts dynamic modules
+  const [Highcharts, setHighcharts] = useState(null);
+  const [HighchartsReact, setHighchartsReact] = useState(null);
+  const [chartsReady, setChartsReady] = useState(false);
+  // Load chart libs only when overview section is viewed & analytics needed
+  useEffect(()=>{
+    let cancelled = false;
+    if(dashSection==='overview' && !Highcharts){
+      (async()=>{
+        try {
+          const [hc, hcr] = await Promise.all([
+            import(/* webpackChunkName: 'charts-hc' */ 'highcharts'),
+            import(/* webpackChunkName: 'charts-hcr' */ 'highcharts-react-official')
+          ]);
+          if(!cancelled){
+            setHighcharts(hc.default || hc);
+            setHighchartsReact(hcr.default || hcr);
+            setChartsReady(true);
+          }
+        } catch(e){ /* ignore failed chart load */ }
+      })();
+    }
+    return ()=>{ cancelled=true; };
+  }, [dashSection, Highcharts]);
+  useEffect(()=>{
+    if(view==='dashboard' && selectedGuild){
+      fetch(getApiBase() + '/api/analytics/overview?guildId='+selectedGuild, { headers:{ Authorization:'Bearer '+localStorage.getItem('token') }} )
+        .then(r=>r.json().catch(()=>null))
+        .then(d=>{ if(d && d.totals) setAnalytics(d); })
+        .catch(()=>{});
+      fetch(getApiBase() + '/api/status', { headers:{ Authorization:'Bearer '+localStorage.getItem('token') }} )
+        .then(r=>r.json().catch(()=>null))
+        .then(d=>{ if(d && d.uptime) setApiStatus(d); })
+        .catch(()=>{});
+    }
+  }, [view, selectedGuild, autos.length]);
 
   // Command toggles state
   const [commandTogglesState, setCommandTogglesState] = useState({}); // name -> enabled bool
@@ -488,18 +531,78 @@ export default function App(){
     {loading && <div className="alert alert-info py-2 mb-2">Loading...</div>}
     <div className="row g-4">
       <div className="col-12 col-lg-5">
-        {settings && <div className="card card-glass shadow-sm h-100"><div className="card-body vstack gap-3">
-          <h6 className="mb-1 text-muted" style={{letterSpacing:'.5px'}}>Bot Settings</h6>
-          <div className="form-check form-switch">
-            <input className="form-check-input" type="checkbox" id="autoReplySwitch" checked={settings.autoReplyEnabled} onChange={e=>setSettings({...settings, autoReplyEnabled:e.target.checked})} />
-            <label className="form-check-label" htmlFor="autoReplySwitch">Auto Reply Enabled</label>
+        {analytics && <div className="card card-glass shadow-sm h-100"><div className="card-body d-flex flex-column">
+          <h6 className="mb-3 text-muted" style={{letterSpacing:'.5px'}}>Quick Statistics</h6>
+          <div className="row g-3 mb-3">
+            <div className="col-6">
+              <div className="mini-stat">
+                <div className="mini-label">Autos Enabled</div>
+                <div className="mini-value text-accent">{analytics.totals.autosEnabled}</div>
+                <div className="mini-sub text-muted">of {analytics.totals.autos}</div>
+              </div>
+            </div>
+            <div className="col-6">
+              <div className="mini-stat">
+                <div className="mini-label">Cmds Enabled</div>
+                <div className="mini-value text-success">{analytics.totals.commandsEnabled}</div>
+                <div className="mini-sub text-muted">of {analytics.totals.commands}</div>
+              </div>
+            </div>
+            <div className="col-6">
+              <div className="mini-stat">
+                <div className="mini-label">Autos Disabled</div>
+                <div className="mini-value text-danger">{analytics.totals.autos - analytics.totals.autosEnabled}</div>
+              </div>
+            </div>
+            <div className="col-6">
+              <div className="mini-stat">
+                <div className="mini-label">Cmds Disabled</div>
+                <div className="mini-value text-danger">{analytics.totals.commandsDisabled}</div>
+              </div>
+            </div>
+            {apiStatus && <div className="col-12">
+              <div className="mini-stat api-status-grid small" style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(120px,1fr))',gap:'12px'}}>
+                <div className="api-pill">
+                  <div className="mini-label">Gemini AI</div>
+                  <div className={'mini-value '+(apiStatus.gemini.enabled ? 'text-success':'text-danger')}>{apiStatus.gemini.enabled ? 'On':'Off'}</div>
+                </div>
+                <div className="api-pill">
+                  <div className="mini-label">Discord</div>
+                  <div className={'mini-value '+(apiStatus.discord.ready ? 'text-success':'text-danger')}>{apiStatus.discord.ready ? 'Ready':'Down'}</div>
+                  {apiStatus.discord.ping!=null && <div className="mini-sub text-muted">{apiStatus.discord.ping} ms</div>}
+                </div>
+                <div className="api-pill">
+                  <div className="mini-label">Database</div>
+                  <div className={'mini-value '+(apiStatus.database.connected ? 'text-success':'text-danger')}>{apiStatus.database.mode}</div>
+                </div>
+                <div className="api-pill">
+                  <div className="mini-label">Uptime</div>
+                  <div className="mini-value text-accent">{Math.floor(apiStatus.uptime.seconds/3600)}h</div>
+                  <div className="mini-sub text-muted">{Math.floor((apiStatus.uptime.seconds%3600)/60)}m</div>
+                </div>
+              </div>
+            </div>}
           </div>
-          <div>
-            <label className="form-label mb-1">Cooldown (ms)</label>
-            <input type="number" className="form-control" value={settings.autoReplyCooldownMs} onChange={e=>setSettings({...settings, autoReplyCooldownMs:e.target.value})} />
+          <div className="flex-grow-1 d-flex flex-column">
+            {!chartsReady && dashSection==='overview' && <div className="text-muted small">Loading charts…</div>}
+            {chartsReady && HighchartsReact && Highcharts && <HighchartsReact highcharts={Highcharts} options={{
+              chart:{ type:'bar', backgroundColor:'transparent', height:260, styledMode:false },
+              title:{ text:null },
+              xAxis:{ categories:['Autos','Commands'], labels:{ style:{ color:'#9ca3af' } } },
+              yAxis:{ min:0, title:{ text:'Count' }, gridLineColor:'rgba(255,255,255,0.08)', labels:{ style:{ color:'#9ca3af' } } },
+              legend:{ reversed:true },
+              plotOptions:{ series:{ stacking:'normal', borderWidth:0 } },
+              series:[
+                { name:'Disabled', data:[analytics.totals.autos - analytics.totals.autosEnabled, analytics.totals.commandsDisabled], color:'#4b5563' },
+                { name:'Enabled', data:[analytics.totals.autosEnabled, analytics.totals.commandsEnabled], color:'#6366f1' }
+              ],
+              credits:{ enabled:false },
+              tooltip:{ shared:true, backgroundColor:'#111827', borderColor:'#374151', style:{ color:'#f9fafb' } }
+            }} />}
+            <div className="small text-muted mt-2" style={{opacity:.75}}>Stacked bar compares enabled vs disabled for autos and commands.</div>
           </div>
-          <div className="d-flex"><button onClick={saveSettings} className="btn btn-brand ms-auto">Save</button></div>
         </div></div>}
+        {!analytics && <div className="card card-glass shadow-sm h-100"><div className="card-body d-flex align-items-center justify-content-center text-muted small">Loading analytics…</div></div>}
       </div>
       <div className="col-12 col-lg-7">
         <div className="stat-cards mb-3">
@@ -510,11 +613,62 @@ export default function App(){
         <div className="card card-glass shadow-sm mb-3"><div className="card-body small" style={{lineHeight:'1.15rem'}}>
           <strong>Welcome!</strong> Use the sidebar to manage auto responses and (soon) commands. This overview summarizes key stats.
         </div></div>
+        {analytics && <div className="card card-glass shadow-sm mb-3"><div className="card-body">
+          <h6 className="text-muted mb-2" style={{letterSpacing:'.5px'}}>Autos by First Letter</h6>
+          {!chartsReady && dashSection==='overview' && <div className="text-muted small">Loading chart…</div>}
+          {chartsReady && HighchartsReact && Highcharts && <HighchartsReact highcharts={Highcharts} options={{
+            chart:{ type:'column', backgroundColor:'transparent', height:240 },
+            title:{ text:null },
+            xAxis:{ categories:Object.keys(analytics.autoBuckets), labels:{ style:{ color:'#9ca3af' } } },
+            yAxis:{ title:{ text:'Count' }, gridLineColor:'rgba(255,255,255,0.08)', labels:{ style:{ color:'#9ca3af' } } },
+            legend:{ enabled:false },
+            series:[{ name:'Autos', data:Object.values(analytics.autoBuckets), color:'#5865F2' }],
+            credits:{ enabled:false },
+            tooltip:{ backgroundColor:'#111827', borderColor:'#374151', style:{ color:'#f9fafb' } }
+          }} />}
+        </div></div>}
+        {analytics && <div className="row g-3">
+          <div className="col-md-6">
+            <div className="card card-glass shadow-sm h-100"><div className="card-body">
+              <h6 className="text-muted mb-2" style={{letterSpacing:'.5px'}}>Commands Enabled vs Disabled</h6>
+              {!chartsReady && dashSection==='overview' && <div className="text-muted small">Loading…</div>}
+              {chartsReady && HighchartsReact && Highcharts && <HighchartsReact highcharts={Highcharts} options={{
+                chart:{ type:'pie', backgroundColor:'transparent', height:220 },
+                title:{ text:null },
+                tooltip:{ pointFormat:'<b>{point.y}</b> ({point.percentage:.1f}%)' },
+                plotOptions:{ pie:{ innerSize:'55%', dataLabels:{ style:{ color:'#e5e7eb', textOutline:'none', fontSize:'11px' } } } },
+                series:[{ name:'Commands', data:[
+                  { name:'Enabled', y:analytics.totals.commandsEnabled, color:'#10b981' },
+                  { name:'Disabled', y:analytics.totals.commandsDisabled, color:'#ef4444' }
+                ]}],
+                credits:{ enabled:false }
+              }} />}
+            </div></div>
+          </div>
+          <div className="col-md-6">
+            <div className="card card-glass shadow-sm h-100"><div className="card-body">
+              <h6 className="text-muted mb-2" style={{letterSpacing:'.5px'}}>Auto Response Enablement</h6>
+              {!chartsReady && dashSection==='overview' && <div className="text-muted small">Loading…</div>}
+              {chartsReady && HighchartsReact && Highcharts && <HighchartsReact highcharts={Highcharts} options={{
+                chart:{ type:'pie', backgroundColor:'transparent', height:220 },
+                title:{ text:null },
+                plotOptions:{ pie:{ innerSize:'55%', dataLabels:{ style:{ color:'#e5e7eb', textOutline:'none', fontSize:'11px' } } } },
+                tooltip:{ pointFormat:'<b>{point.y}</b> ({point.percentage:.1f}%)' },
+                series:[{ name:'Autos', data:[
+                  { name:'Enabled', y:analytics.totals.autosEnabled, color:'#6366f1' },
+                  { name:'Disabled', y:analytics.totals.autos - analytics.totals.autosEnabled, color:'#4b5563' }
+                ]}],
+                credits:{ enabled:false }
+              }} />}
+            </div></div>
+          </div>
+        </div>}
       </div>
     </div>
   </div>;
 
-  const autosContent = <AutosSection
+  const autosContent = <React.Suspense fallback={<div className="text-muted small p-3">Loading auto responses…</div>}>
+    <AutosSectionLazy
     autos={autos}
     setAutos={setAutos}
     totalEnabled={totalEnabled}
@@ -526,7 +680,8 @@ export default function App(){
     deleteAuto={deleteAuto}
     pushToast={pushToast}
     refresh={refresh}
-  />;
+  />
+  </React.Suspense>;
 
   const commandGroups = [
     {
@@ -804,7 +959,10 @@ export default function App(){
     </div>}
   </div>;
 
-  const sectionMap = { overview: overviewContent, autos: autosContent, commands: commandsContent, personal: personalizationContent, welcome: welcomeContent };
+  const settingsContent = <React.Suspense fallback={<div className="text-muted small p-3">Loading settings…</div>}>
+    <SettingsPanel guildId={selectedGuild} pushToast={pushToast} />
+  </React.Suspense>;
+  const sectionMap = { overview: overviewContent, autos: autosContent, commands: commandsContent, personal: personalizationContent, welcome: welcomeContent, settings: settingsContent };
 
   const effectiveSidebarMode = isMobile ? 'full' : sidebarMode; // force full on mobile
   const content = <div className="container-fluid py-4 fade-in">
@@ -846,6 +1004,10 @@ export default function App(){
           <button type="button" data-label="Welcome" onClick={()=>{setDashSection('welcome'); setSidebarOpen(false);}} className={'dash-menu-item'+(dashSection==='welcome'? ' active':'')}>
             <i className="fa-solid fa-door-open menu-ico"></i>
             <span className="menu-label">Welcome</span>
+          </button>
+          <button type="button" data-label="Settings" onClick={()=>{setDashSection('settings'); setSidebarOpen(false);}} className={'dash-menu-item'+(dashSection==='settings'? ' active':'')}>
+            <i className="fa-solid fa-sliders menu-ico"></i>
+            <span className="menu-label">Settings</span>
           </button>
         </div>
         <div className="dash-sidebar-footer mt-4">

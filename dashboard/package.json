@@ -16,7 +16,9 @@
   "datatables.net": "^2.1.4",
   "datatables.net-bs5": "^2.1.4",
   "datatables.net-select": "^2.0.3",
-  "datatables.net-select-bs5": "^2.0.3"
+  "datatables.net-select-bs5": "^2.0.3",
+  "highcharts": "^11.4.0",
+  "highcharts-react-official": "^3.2.1"
   },
   "devDependencies": {
     "vite": "^5.3.4"
