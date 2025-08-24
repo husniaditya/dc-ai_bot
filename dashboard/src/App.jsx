@@ -1,8 +1,23 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, startTransition } from 'react';
+import { createRoot } from 'react-dom/client';
 // Lazy loaded sections (code splitting)
-const SettingsPanel = React.lazy(()=> import('./Settings.jsx'));
-const AutosSectionLazy = React.lazy(()=> import('./AutosSection'));
+const SettingsSection = React.lazy(()=> import('./sections/SettingsSection.jsx'));
+const AutosSectionLazy = React.lazy(()=> import('./sections/AutosSection.jsx'));
+const OverviewSection = React.lazy(()=> import('./sections/OverviewSection.jsx'));
+const CommandsSection = React.lazy(()=> import('./sections/CommandsSection.jsx'));
+const PersonalizationSection = React.lazy(()=> import('./sections/PersonalizationSection.jsx'));
+const WelcomeSection = React.lazy(()=> import('./sections/WelcomeSection.jsx'));
 import 'bootstrap/dist/css/bootstrap.min.css';
+import './theme.css';
+import '@fortawesome/fontawesome-free/css/all.min.css';
+// Layout & structural components
+import Sidebar from './components/Sidebar.jsx';
+import AutoResponseModal from './components/AutoResponseModal.jsx';
+import Footer from './components/Footer.jsx';
+import Navbar from './components/Navbar.jsx';
+import LoginView from './components/LoginView.jsx';
+import GuildSelectionView from './components/GuildSelectionView.jsx';
+import Toasts from './components/Toasts.jsx';
 // Highcharts libs will be loaded dynamically (not via React.lazy because they export objects, not components)
 // We'll load them when the Overview section is first viewed
 // Option B: removed DataTables – using pure React table implementation
@@ -53,6 +68,8 @@ export default function App(){
   // Sidebar modes: full (240px) | mini (70px) – persisted
   const [sidebarMode, setSidebarMode] = useState(()=> (typeof window!=='undefined' && localStorage.getItem('sidebarMode')==='mini') ? 'mini' : 'full');
   const sidebarRef = useRef(null);
+  // Preloaded section tracking ref must be declared before any conditional early returns
+  const preloaded = useRef({});
   function cycleSidebarMode(){
     setSidebarMode(m => {
       const next = (m==='full') ? 'mini' : 'full';
@@ -348,6 +365,27 @@ export default function App(){
     }
   }, [view, selectedGuild, autos.length]);
 
+  function refreshAnalytics(){
+    if(!(view==='dashboard' && selectedGuild)) return;
+    fetch(getApiBase() + '/api/analytics/overview?guildId='+selectedGuild, { headers:{ Authorization:'Bearer '+localStorage.getItem('token') }} )
+      .then(r=>r.json().catch(()=>null))
+      .then(d=>{ if(d && d.totals) setAnalytics(d); })
+      .catch(()=>{});
+  }
+
+  function adjustAutosEnabled(delta){
+    if(!delta) return;
+    setAnalytics(a => {
+      if(!a || !a.totals) return a;
+      const totals = { ...a.totals };
+      if(typeof totals.autosEnabled === 'number'){
+        const autosTotal = totals.autos ?? Math.max(totals.autosEnabled, 0);
+        totals.autosEnabled = Math.max(0, Math.min(autosTotal, totals.autosEnabled + delta));
+      }
+      return { ...a, totals };
+    });
+  }
+
   // Command toggles state
   const [commandTogglesState, setCommandTogglesState] = useState({}); // name -> enabled bool
   const [commandMeta, setCommandMeta] = useState({}); // name -> {createdAt, createdBy, updatedAt, updatedBy}
@@ -372,10 +410,51 @@ export default function App(){
     }
   }, [dashSection, selectedGuild]);
   function toggleCommand(name, enabled){
-    setCommandTogglesState(t => ({ ...t, [name]: enabled }));
-    setCommandToggle(name, enabled, selectedGuild).catch(()=>{
-      // revert on failure
-      setCommandTogglesState(t => ({ ...t, [name]: !enabled }));
+    // Optimistic toggle update + adjust analytics counters so Overview updates immediately
+    setCommandTogglesState(prev => {
+      const prevEnabled = prev[name] !== false; // treat undefined as enabled (default true) ? existing logic: enabled !== false
+      if(prevEnabled !== enabled){
+        setAnalytics(a => {
+          if(!a || !a.totals) return a;
+          const totals = { ...a.totals };
+          if(enabled){
+            totals.commandsEnabled = Math.min((totals.commandsEnabled||0) + 1, totals.commands||totals.commandsEnabled||0);
+            if(typeof totals.commandsDisabled === 'number') totals.commandsDisabled = Math.max(totals.commandsDisabled - 1, 0);
+          } else {
+            totals.commandsEnabled = Math.max((totals.commandsEnabled||0) - 1, 0);
+            if(typeof totals.commandsDisabled === 'number') totals.commandsDisabled = Math.min((totals.commandsDisabled||0) + 1, totals.commands|| (totals.commandsEnabled||0));
+          }
+          return { ...a, totals };
+        });
+      }
+      return { ...prev, [name]: enabled };
+    });
+    setCommandToggle(name, enabled, selectedGuild).then(()=>{
+      // fetch authoritative analytics snapshot
+      refreshAnalytics();
+    }).catch(()=>{
+      // Revert on failure (both toggle state & analytics counters)
+      setCommandTogglesState(prev => {
+        const currentEnabled = prev[name] !== false;
+        if(currentEnabled === enabled){
+          setAnalytics(a => {
+            if(!a || !a.totals) return a;
+            const totals = { ...a.totals };
+            if(enabled){
+              // we attempted enabling; revert to disabled
+              totals.commandsEnabled = Math.max((totals.commandsEnabled||0) - 1, 0);
+              if(typeof totals.commandsDisabled === 'number') totals.commandsDisabled = Math.min((totals.commandsDisabled||0) + 1, totals.commands|| (totals.commandsEnabled||0));
+            } else {
+              // attempted disabling; revert to enabled
+              totals.commandsEnabled = Math.min((totals.commandsEnabled||0) + 1, totals.commands|| (totals.commandsEnabled||0));
+              if(typeof totals.commandsDisabled === 'number') totals.commandsDisabled = Math.max((totals.commandsDisabled||0) - 1, 0);
+            }
+            return { ...a, totals };
+          });
+          return { ...prev, [name]: !enabled };
+        }
+        return prev;
+      });
       pushToast('error', 'Failed to update '+name);
     });
   }
@@ -415,106 +494,38 @@ export default function App(){
   // Login view
   if(view==='login' && !token){
     if(typeof document!=='undefined'){ document.body.classList.add('login-mode'); }
-    const year = new Date().getFullYear();
-    return <div className="login-viewport">
-      <div className="login-center fade-in">
-        <div className="login-card card-glass">
-          <div className="login-card-inner">
-            <div className="login-hero mb-3">
-              <div className="logo-orb">
-                <img src="/images.jpg" alt="Choco Maid" className="logo-img" onError={(e)=>{ e.currentTarget.style.display='none'; }} />
-                <span className="orb-text">CM</span>
-              </div>
-              <div>
-                <h1 className="login-title mb-1">Choco Maid</h1>
-                <div className="login-subtitle">Smart assistant & auto‑response manager</div>
-              </div>
-            </div>
-            {error && <div className="alert alert-danger py-2 mb-3">{error}</div>}
-            {authProcessing ? <div className="auth-processing vstack gap-3 text-center py-4">
-              <div className="spinner-border text-light mx-auto" style={{width:'2.5rem', height:'2.5rem'}} role="status"><span className="visually-hidden">Loading...</span></div>
-              <div className="small text-muted">Completing Discord sign‑in…</div>
-            </div> : oauthMode ? <div className="vstack gap-3">
-                <p className="text-muted small m-0">Authenticate with your Discord account to access your servers and manage bot settings.</p>
-                <button onClick={startDiscordLogin} className="btn btn-discord-cta">
-                  <span className="ico me-1"><i className="fa-brands fa-discord" /></span>
-                  <span>Login with Discord</span>
-                </button>
-                {!(typeof import.meta!=='undefined' && import.meta.env && import.meta.env.VITE_DISABLE_LEGACY_LOGIN) && <button type="button" className="btn btn-link p-0 small" onClick={()=>setOauthMode(false)}>Use legacy admin login</button>}
-              </div> : <form onSubmit={handleLogin} className="vstack gap-3">
-                <div>
-                  <label className="form-label small mb-1">Username</label>
-                  <input className="form-control" placeholder="admin" value={loginForm.username} onChange={e=>setLoginForm({...loginForm, username:e.target.value})} />
-                </div>
-                <div>
-                  <label className="form-label small mb-1">Password</label>
-                  <input className="form-control" type="password" placeholder="••••••" value={loginForm.password} onChange={e=>setLoginForm({...loginForm, password:e.target.value})} />
-                </div>
-                <div className="d-flex justify-content-between align-items-center mt-1">
-                  <button type="submit" className="btn btn-brand flex-grow-1">
-                    <i className="fa-solid fa-right-to-bracket me-2" />
-                    Login
-                  </button>
-                  <button type="button" className="btn btn-link p-0 small ms-3" onClick={()=>setOauthMode(true)}>Discord login</button>
-                </div>
-              </form>}
-            <div className="login-footer small text-muted mt-4">© {year} Choco Maid • Not affiliated with Discord</div>
-          </div>
-        </div>
-      </div>
-    </div>;
+    return <>
+      <Navbar />
+      <LoginView
+        error={error}
+        authProcessing={authProcessing}
+        oauthMode={oauthMode}
+        setOauthMode={setOauthMode}
+        loginForm={loginForm}
+        setLoginForm={setLoginForm}
+        handleLogin={handleLogin}
+        startDiscordLogin={startDiscordLogin}
+      />
+      <Footer />
+    </>;
   } else if(typeof document!=='undefined'){ document.body.classList.remove('login-mode'); }
 
   // Guild selection view
   if(view==='guild'){
-    const filteredGuilds = guilds.filter(g=> !guildSearch || g.name.toLowerCase().includes(guildSearch.toLowerCase()));
-    return <div className="container mt-4 fade-in" style={{maxWidth:960}}>
-      <div className="card card-glass shadow-sm p-2 p-md-3 guild-select-wrapper">
-        <div className="card-body pt-3">
-          <div className="d-flex flex-column flex-md-row justify-content-between gap-3 align-items-md-center mb-3">
-            <div>
-              <div className="d-flex align-items-center gap-2 mb-1">
-                <h4 className="mb-0 fw-semibold">Choose a Server</h4>
-              </div>
-              <p className="text-muted small mb-0">Select the Discord server you want to manage. You can change this later in the dashboard.</p>
-            </div>
-            <div className="d-flex gap-2 align-items-center w-100 w-md-auto">
-              <input className="form-control form-control-sm guild-search" placeholder="Search servers..." value={guildSearch} onChange={e=>setGuildSearch(e.target.value)} />
-            </div>
-          </div>
-          {error && <div className="alert alert-danger py-2 mb-2">{error}</div>}
-          <div className="guild-grid mb-3">
-            {filteredGuilds.map(g => {
-              const active = selectedGuild===g.id;
-              const iconUrl = g.icon ? `https://cdn.discordapp.com/icons/${g.id}/${g.icon}.png?size=128` : null;
-              return <button key={g.id} type="button" onClick={()=>setSelectedGuild(g.id)} className={'guild-card' + (active?' active':'')}>
-                <div className="guild-icon-wrap">{iconUrl ? <img src={iconUrl} alt={g.name} loading="lazy" /> : <div className="guild-icon-fallback">{g.name.slice(0,2).toUpperCase()}</div>}</div>
-                <div className="guild-meta">
-                  <div className="guild-name" title={g.name}>{g.name}</div>
-                  <div className="guild-tags">{g.canManage && <span className="badge-perm">Manage</span>}</div>
-                </div>
-                {active && <div className="checkmark">✓</div>}
-              </button>;
-            })}
-            {filteredGuilds.length===0 && guilds.length>0 && <div className="text-muted small p-4">No servers match your search.</div>}
-            {guilds.length===0 && <div className="text-muted small p-4">No servers found that the bot is in. Invite the bot to a server, then refresh this page.</div>}
-          </div>
-          <div className="d-flex flex-wrap gap-2 justify-content-between align-items-center">
-            <div className="small text-muted">{selectedGuild ? 'Selected: '+(guilds.find(g=>g.id===selectedGuild)?.name || selectedGuild) : guilds.length+ ' servers'}</div>
-            <div className="d-flex gap-2">
-              <button disabled={!selectedGuild} onClick={()=>saveSelectedGuild('dashboard')} className="btn btn-brand px-4">
-                <i className="fa-solid fa-gauge-high me-2" />
-                Continue to Dashboard
-              </button>
-              <button onClick={()=>{ setSelectedGuild(null); doLogout(); }} className="btn btn-outline-secondary">
-                <i className="fa-solid fa-right-from-bracket me-2" />
-                Logout
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>;
+    return <>
+      <Navbar />
+      <GuildSelectionView
+        guilds={guilds}
+        guildSearch={guildSearch}
+        setGuildSearch={setGuildSearch}
+        selectedGuild={selectedGuild}
+        setSelectedGuild={setSelectedGuild}
+        error={error}
+        saveSelectedGuild={saveSelectedGuild}
+        doLogout={doLogout}
+      />
+      <Footer />
+    </>;
   }
 
   // Dashboard view --------------------------------------------------
@@ -524,148 +535,7 @@ export default function App(){
   const guildBanner = guilds.find(g=>g.id===selectedGuild)?.banner ? `https://cdn.discordapp.com/banners/${selectedGuild}/${guilds.find(g=>g.id===selectedGuild).banner}.png?size=512` : null;
 
   // --- Section contents ---
-  const overviewContent = <div className="overview-section fade-in-soft">
-    <h5 className="mb-3">Overview</h5>
-    {error && <div className="alert alert-danger py-2 mb-2">{error}</div>}
-    {info && <div className="alert alert-success py-2 mb-2">{info}</div>}
-    {loading && <div className="alert alert-info py-2 mb-2">Loading...</div>}
-    <div className="row g-4">
-      <div className="col-12 col-lg-5">
-        {analytics && <div className="card card-glass shadow-sm h-100"><div className="card-body d-flex flex-column">
-          <h6 className="mb-3 text-muted" style={{letterSpacing:'.5px'}}>Quick Statistics</h6>
-          <div className="row g-3 mb-3">
-            <div className="col-6">
-              <div className="mini-stat">
-                <div className="mini-label">Autos Enabled</div>
-                <div className="mini-value text-accent">{analytics.totals.autosEnabled}</div>
-                <div className="mini-sub text-muted">of {analytics.totals.autos}</div>
-              </div>
-            </div>
-            <div className="col-6">
-              <div className="mini-stat">
-                <div className="mini-label">Cmds Enabled</div>
-                <div className="mini-value text-success">{analytics.totals.commandsEnabled}</div>
-                <div className="mini-sub text-muted">of {analytics.totals.commands}</div>
-              </div>
-            </div>
-            <div className="col-6">
-              <div className="mini-stat">
-                <div className="mini-label">Autos Disabled</div>
-                <div className="mini-value text-danger">{analytics.totals.autos - analytics.totals.autosEnabled}</div>
-              </div>
-            </div>
-            <div className="col-6">
-              <div className="mini-stat">
-                <div className="mini-label">Cmds Disabled</div>
-                <div className="mini-value text-danger">{analytics.totals.commandsDisabled}</div>
-              </div>
-            </div>
-            {apiStatus && <div className="col-12">
-              <div className="mini-stat api-status-grid small" style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(120px,1fr))',gap:'12px'}}>
-                <div className="api-pill">
-                  <div className="mini-label">Gemini AI</div>
-                  <div className={'mini-value '+(apiStatus.gemini.enabled ? 'text-success':'text-danger')}>{apiStatus.gemini.enabled ? 'On':'Off'}</div>
-                </div>
-                <div className="api-pill">
-                  <div className="mini-label">Discord</div>
-                  <div className={'mini-value '+(apiStatus.discord.ready ? 'text-success':'text-danger')}>{apiStatus.discord.ready ? 'Ready':'Down'}</div>
-                  {apiStatus.discord.ping!=null && <div className="mini-sub text-muted">{apiStatus.discord.ping} ms</div>}
-                </div>
-                <div className="api-pill">
-                  <div className="mini-label">Database</div>
-                  <div className={'mini-value '+(apiStatus.database.connected ? 'text-success':'text-danger')}>{apiStatus.database.mode}</div>
-                </div>
-                <div className="api-pill">
-                  <div className="mini-label">Uptime</div>
-                  <div className="mini-value text-accent">{Math.floor(apiStatus.uptime.seconds/3600)}h</div>
-                  <div className="mini-sub text-muted">{Math.floor((apiStatus.uptime.seconds%3600)/60)}m</div>
-                </div>
-              </div>
-            </div>}
-          </div>
-          <div className="flex-grow-1 d-flex flex-column">
-            {!chartsReady && dashSection==='overview' && <div className="text-muted small">Loading charts…</div>}
-            {chartsReady && HighchartsReact && Highcharts && <HighchartsReact highcharts={Highcharts} options={{
-              chart:{ type:'bar', backgroundColor:'transparent', height:260, styledMode:false },
-              title:{ text:null },
-              xAxis:{ categories:['Autos','Commands'], labels:{ style:{ color:'#9ca3af' } } },
-              yAxis:{ min:0, title:{ text:'Count' }, gridLineColor:'rgba(255,255,255,0.08)', labels:{ style:{ color:'#9ca3af' } } },
-              legend:{ reversed:true },
-              plotOptions:{ series:{ stacking:'normal', borderWidth:0 } },
-              series:[
-                { name:'Disabled', data:[analytics.totals.autos - analytics.totals.autosEnabled, analytics.totals.commandsDisabled], color:'#4b5563' },
-                { name:'Enabled', data:[analytics.totals.autosEnabled, analytics.totals.commandsEnabled], color:'#6366f1' }
-              ],
-              credits:{ enabled:false },
-              tooltip:{ shared:true, backgroundColor:'#111827', borderColor:'#374151', style:{ color:'#f9fafb' } }
-            }} />}
-            <div className="small text-muted mt-2" style={{opacity:.75}}>Stacked bar compares enabled vs disabled for autos and commands.</div>
-          </div>
-        </div></div>}
-        {!analytics && <div className="card card-glass shadow-sm h-100"><div className="card-body d-flex align-items-center justify-content-center text-muted small">Loading analytics…</div></div>}
-      </div>
-      <div className="col-12 col-lg-7">
-        <div className="stat-cards mb-3">
-          <div className="stat-card"><h6>Total Autos</h6><div className="value">{autos.length}</div></div>
-          <div className="stat-card"><h6>Enabled</h6><div className="value text-success">{totalEnabled}</div></div>
-          <div className="stat-card"><h6>Disabled</h6><div className="value text-danger">{totalDisabled}</div></div>
-        </div>
-        <div className="card card-glass shadow-sm mb-3"><div className="card-body small" style={{lineHeight:'1.15rem'}}>
-          <strong>Welcome!</strong> Use the sidebar to manage auto responses and (soon) commands. This overview summarizes key stats.
-        </div></div>
-        {analytics && <div className="card card-glass shadow-sm mb-3"><div className="card-body">
-          <h6 className="text-muted mb-2" style={{letterSpacing:'.5px'}}>Autos by First Letter</h6>
-          {!chartsReady && dashSection==='overview' && <div className="text-muted small">Loading chart…</div>}
-          {chartsReady && HighchartsReact && Highcharts && <HighchartsReact highcharts={Highcharts} options={{
-            chart:{ type:'column', backgroundColor:'transparent', height:240 },
-            title:{ text:null },
-            xAxis:{ categories:Object.keys(analytics.autoBuckets), labels:{ style:{ color:'#9ca3af' } } },
-            yAxis:{ title:{ text:'Count' }, gridLineColor:'rgba(255,255,255,0.08)', labels:{ style:{ color:'#9ca3af' } } },
-            legend:{ enabled:false },
-            series:[{ name:'Autos', data:Object.values(analytics.autoBuckets), color:'#5865F2' }],
-            credits:{ enabled:false },
-            tooltip:{ backgroundColor:'#111827', borderColor:'#374151', style:{ color:'#f9fafb' } }
-          }} />}
-        </div></div>}
-        {analytics && <div className="row g-3">
-          <div className="col-md-6">
-            <div className="card card-glass shadow-sm h-100"><div className="card-body">
-              <h6 className="text-muted mb-2" style={{letterSpacing:'.5px'}}>Commands Enabled vs Disabled</h6>
-              {!chartsReady && dashSection==='overview' && <div className="text-muted small">Loading…</div>}
-              {chartsReady && HighchartsReact && Highcharts && <HighchartsReact highcharts={Highcharts} options={{
-                chart:{ type:'pie', backgroundColor:'transparent', height:220 },
-                title:{ text:null },
-                tooltip:{ pointFormat:'<b>{point.y}</b> ({point.percentage:.1f}%)' },
-                plotOptions:{ pie:{ innerSize:'55%', dataLabels:{ style:{ color:'#e5e7eb', textOutline:'none', fontSize:'11px' } } } },
-                series:[{ name:'Commands', data:[
-                  { name:'Enabled', y:analytics.totals.commandsEnabled, color:'#10b981' },
-                  { name:'Disabled', y:analytics.totals.commandsDisabled, color:'#ef4444' }
-                ]}],
-                credits:{ enabled:false }
-              }} />}
-            </div></div>
-          </div>
-          <div className="col-md-6">
-            <div className="card card-glass shadow-sm h-100"><div className="card-body">
-              <h6 className="text-muted mb-2" style={{letterSpacing:'.5px'}}>Auto Response Enablement</h6>
-              {!chartsReady && dashSection==='overview' && <div className="text-muted small">Loading…</div>}
-              {chartsReady && HighchartsReact && Highcharts && <HighchartsReact highcharts={Highcharts} options={{
-                chart:{ type:'pie', backgroundColor:'transparent', height:220 },
-                title:{ text:null },
-                plotOptions:{ pie:{ innerSize:'55%', dataLabels:{ style:{ color:'#e5e7eb', textOutline:'none', fontSize:'11px' } } } },
-                tooltip:{ pointFormat:'<b>{point.y}</b> ({point.percentage:.1f}%)' },
-                series:[{ name:'Autos', data:[
-                  { name:'Enabled', y:analytics.totals.autosEnabled, color:'#6366f1' },
-                  { name:'Disabled', y:analytics.totals.autos - analytics.totals.autosEnabled, color:'#4b5563' }
-                ]}],
-                credits:{ enabled:false }
-              }} />}
-            </div></div>
-          </div>
-        </div>}
-      </div>
-    </div>
-  </div>;
+  const overviewContent = <OverviewSection analytics={analytics} apiStatus={apiStatus} autos={autos} totalEnabled={totalEnabled} totalDisabled={totalDisabled} error={error} info={info} loading={loading} dashSection={dashSection} chartsReady={chartsReady} Highcharts={Highcharts} HighchartsReact={HighchartsReact} />;
 
   const autosContent = <React.Suspense fallback={<div className="text-muted small p-3">Loading auto responses…</div>}>
     <AutosSectionLazy
@@ -680,6 +550,8 @@ export default function App(){
     deleteAuto={deleteAuto}
     pushToast={pushToast}
     refresh={refresh}
+  refreshAnalytics={refreshAnalytics}
+  adjustAutosEnabled={adjustAutosEnabled}
   />
   </React.Suspense>;
 
@@ -727,38 +599,7 @@ export default function App(){
       ]
     }
   ];
-  const commandsContent = <div className="commands-section fade-in-soft">
-    <h5 className="mb-3">Commands</h5>
-    <div className="cmd-groups">
-      {commandGroups.map(gr => <div key={gr.key} className="cmd-group-card">
-        <div className="cmd-group-head" style={{'--grp-accent': gr.accent}}>
-          <div className="cmd-group-icon"><i className={'fa-solid '+gr.icon}></i></div>
-          <div className="cmd-group-meta">
-            <h6 className="cmd-group-title mb-0">{gr.title}</h6>
-            <div className="cmd-group-count small">{gr.items.length} command{gr.items.length!==1?'s':''}</div>
-          </div>
-        </div>
-        <div className="cmd-items">
-          { gr.items.map(it => <div key={it.name} className="cmd-item">
-            <div className="cmd-item-main">
-              <div className="cmd-item-name"><code>{it.name}</code></div>
-              <div className="cmd-item-usage"><code>{it.usage}</code></div>
-                <div className="ms-auto d-flex align-items-center">
-                  <div className="d-flex flex-column align-items-end">
-                    <label className="form-check form-switch m-0">
-                      <input type="checkbox" className="form-check-input" checked={commandTogglesState[it.name] !== false} onChange={e=>toggleCommand(it.name, e.target.checked)} />
-                    </label>
-                    {commandMeta[it.name]?.updatedAt && <div className="cmd-meta-hint small text-muted" title={`Updated by ${commandMeta[it.name]?.updatedBy||'unknown'}`}>{new Date(commandMeta[it.name].updatedAt).toLocaleDateString()}</div>}
-                  </div>
-                </div>
-            </div>
-            <div className="cmd-item-desc small text-muted">{it.desc}</div>
-          </div>)}
-        </div>
-      </div>)}
-    </div>
-    <div className="text-muted small mt-3" style={{opacity:.8}}>AI related calls may be rate limited. Image size limit 8MB each. Passive features run automatically.</div>
-  </div>;
+  const commandsContent = <CommandsSection commandGroups={commandGroups} commandTogglesState={commandTogglesState} commandMeta={commandMeta} toggleCommand={toggleCommand} />;
 
   function handleAvatarFile(e){
     const file = e.target.files?.[0]; if(!file) return;
@@ -795,237 +636,57 @@ export default function App(){
     const color = map[st] || '#16a34a';
     return <span style={{display:'inline-block',width:10,height:10,borderRadius:'50%',background:color,marginRight:6,boxShadow:'0 0 0 2px rgba(255,255,255,0.1)'}}></span>;
   }
-  const personalizationContent = <div className="fade-in-soft personalization-section-wrapper position-relative">
-    <div className="d-flex align-items-center gap-2 mb-3">
-      <h5 className="mb-0">Bot Personalization</h5>
-      {personalizationDirty() && <span className="dirty-badge">Unsaved</span>}
-    </div>
-    {personalization && <div className="row g-4">
-      <div className="col-lg-6">
-        <div className="card card-glass shadow-sm"><div className="card-body vstack gap-3 position-relative">
-          <div>
-            <label className="form-label mb-1">Bot Nickname (guild only)</label>
-            <input className="form-control" value={personalization.nickname||''} onChange={e=>setPersonalization(p=>({...p,nickname:e.target.value}))} placeholder="Leave blank to keep current" />
-          </div>
-          <div>
-            <label className="form-label mb-1">Activity Type</label>
-            <select className="form-select" value={personalization.activityType||''} onChange={e=>setPersonalization(p=>({...p,activityType:e.target.value||null}))}>
-              <option value="">(none)</option>
-              <option value="PLAYING">Playing</option>
-              <option value="LISTENING">Listening</option>
-              <option value="WATCHING">Watching</option>
-              <option value="COMPETING">Competing</option>
-            </select>
-          </div>
-          <div>
-            <label className="form-label mb-1">Activity Text</label>
-            <input className="form-control" value={personalization.activityText||''} onChange={e=>setPersonalization(p=>({...p,activityText:e.target.value}))} placeholder="e.g. with your messages" />
-          </div>
-            <div>
-              <label className="form-label mb-1">Status</label>
-              <select className="form-select" value={personalization.status||''} onChange={e=>setPersonalization(p=>({...p,status:e.target.value||null}))}>
-                <option value="">(default)</option>
-                <option value="online">Online</option>
-                <option value="idle">Idle</option>
-                <option value="dnd">Do Not Disturb</option>
-                <option value="invisible">Invisible</option>
-              </select>
-            </div>
-          <div>
-            <label className="form-label mb-1">Avatar Image</label>
-            <input className="form-control" type="file" accept="image/png,image/jpeg" onChange={handleAvatarFile} />
-            {personalization.avatarBase64 && <div className="mt-2"><img src={personalization.avatarBase64} alt="avatar preview" style={{maxWidth:120,borderRadius:'12px'}} /></div>}
-          </div>
-          <div className="d-flex gap-2 justify-content-end">
-            {personalizationDirty() && <button type="button" className="btn btn-outline-secondary btn-sm" onClick={resetPersonalization}><i className="fa-solid fa-rotate-left me-1"/>Reset</button>}
-            <button className="btn btn-brand" disabled={!personalizationDirty()} onClick={savePersonalization}><i className="fa-solid fa-floppy-disk me-2" />Save</button>
-          </div>
-          <div className="small text-muted">Nickname & avatar require bot permissions; activity applies globally per shard if implemented.</div>
-          {personalizationLoading && <div className="section-loading-overlay">
-            <div className="spinner-border text-light" role="status" style={{width:'2.5rem',height:'2.5rem'}}><span className="visually-hidden">Loading…</span></div>
-            <div className="mt-3 small text-muted">Loading bot profile…</div>
-          </div>}
-        </div></div>
-      </div>
-      {/* Live Preview Column */}
-      <div className="col-lg-6">
-        <div className="card card-glass shadow-sm h-100"><div className="card-body d-flex flex-column live-preview-card">
-          <div className="d-flex align-items-center justify-content-between mb-3">
-            <h6 className="mb-0 text-muted" style={{letterSpacing:'.5px'}}>Live Preview</h6>
-            {personalizationDirty() && <span className="badge bg-warning-subtle text-warning-emphasis">Unsaved</span>}
-          </div>
-          <div className="d-flex align-items-center mb-3">
-            <div style={{width:72,height:72,borderRadius:'18px',overflow:'hidden',background:'rgba(255,255,255,0.05)',display:'flex',alignItems:'center',justifyContent:'center',position:'relative'}}>
-              {personalization.avatarBase64 ? <img src={personalization.avatarBase64} alt="avatar" style={{width:'100%',height:'100%',objectFit:'cover'}} /> : <i className="fa-solid fa-robot fa-2x text-muted"></i>}
-              {personalization.status && <span style={{position:'absolute',bottom:6,right:6,width:18,height:18,borderRadius:'50%',background:'#1f2937',display:'flex',alignItems:'center',justifyContent:'center'}}>{renderStatusDot(personalization.status)}</span>}
-            </div>
-            <div className="ms-3 flex-grow-1">
-              <div className="fw-semibold" style={{fontSize:'1.05rem'}}>{personalization.nickname?.trim() || 'Current Bot Name'}</div>
-              <div className="small text-muted">{personalization.status ? (personalization.status.charAt(0).toUpperCase()+personalization.status.slice(1)) : 'Default status'}</div>
-            </div>
-          </div>
-          {(personalization.activityType && personalization.activityText) ? <div className="mb-2 small"><strong>{personalization.activityType.charAt(0)+personalization.activityType.slice(1).toLowerCase()}</strong> {personalization.activityText}</div> : <div className="mb-2 small text-muted">No activity set</div>}
-          <div className="mt-auto small text-muted" style={{opacity:.75}}>This preview updates instantly with your unsaved changes.</div>
-        </div></div>
-      </div>
-    </div>}
-    {!personalization && personalizationLoading && <div className="section-loading-standalone">
-      <div className="spinner-border text-light" role="status" style={{width:'2.75rem',height:'2.75rem'}}><span className="visually-hidden">Loading…</span></div>
-      <div className="mt-3 small text-muted">Loading bot profile…</div>
-    </div>}
-  </div>;
+  const personalizationContent = <PersonalizationSection personalization={personalization} personalizationLoading={personalizationLoading} personalizationDirty={personalizationDirty} resetPersonalization={resetPersonalization} savePersonalization={savePersonalization} handleAvatarFile={handleAvatarFile} renderStatusDot={renderStatusDot} setPersonalization={setPersonalization} />;
 
   // saveWelcome redefined above with dirty tracking
   // Channel selection placeholder (requires channel list API future). For now free text.
-  const welcomeContent = <div className="fade-in-soft welcome-section-wrapper position-relative">
-    <div className="d-flex align-items-center gap-2 mb-3">
-      <h5 className="mb-0">Welcome Messages</h5>
-      {welcomeDirty() && <span className="dirty-badge">Unsaved</span>}
-    </div>
-    {welcomeCfg && <div className="row g-4">
-      <div className="col-lg-7">
-        <div className="card card-glass shadow-sm"><div className="card-body vstack gap-3 position-relative">
-          <div>
-            <label className="form-label mb-1">Channel</label>
-            <select className="form-select" value={welcomeCfg.channelId||''} onChange={e=>setWelcomeCfg(w=>({...w,channelId:e.target.value||null}))}>
-              <option value="">(none)</option>
-              {welcomeChannels.map(c => <option key={c.id} value={c.id}>#{c.name}</option>)}
-            </select>
-            <div className="form-text">Select the channel to send welcome messages.</div>
-          </div>
-          <div>
-            <label className="form-label mb-1">Message Type</label>
-            <select className="form-select" value={welcomeCfg.messageType||'text'} onChange={e=>setWelcomeCfg(w=>({...w,messageType:e.target.value}))}>
-              <option value="text">Plain Text</option>
-              <option value="embed">Embed</option>
-            </select>
-          </div>
-          <div>
-            <label className="form-label mb-1">Message Content</label>
-            <textarea className="form-control" rows={4} value={welcomeCfg.messageText||''} onChange={e=>setWelcomeCfg(w=>({...w,messageText:e.target.value}))} placeholder="Welcome {user} to {server}!" />
-            <div className="form-text">Tokens: {'{user}'} mention, {'{server}'} name.</div>
-          </div>
-          <div className="form-check form-switch">
-            <input className="form-check-input" type="checkbox" id="welcomeCardSwitch" checked={welcomeCfg.cardEnabled} onChange={e=>setWelcomeCfg(w=>({...w,cardEnabled:e.target.checked}))} />
-            <label className="form-check-label" htmlFor="welcomeCardSwitch">Enable Welcome Card (embed thumbnail / future image)</label>
-          </div>
-          <div className="d-flex gap-2 justify-content-end">
-            <button className="btn btn-outline-secondary btn-sm" disabled={!welcomeDirty()} onClick={resetWelcome}><i className="fa-solid fa-rotate-left me-1"/>Reset</button>
-            <button className="btn btn-brand" disabled={!welcomeDirty()} onClick={saveWelcome}><i className="fa-solid fa-floppy-disk me-2"/>Save</button>
-          </div>
-          <div className="small text-muted">A message is sent when a new member joins. Ensure the bot can view & send to the channel.</div>
-          {welcomeLoading && <div className="welcome-loading-overlay">
-            <div className="spinner-border text-light" role="status" style={{width:'2.75rem', height:'2.75rem'}}>
-              <span className="visually-hidden">Loading…</span>
-            </div>
-            <div className="mt-3 small text-muted">Loading welcome settings…</div>
-          </div>}
-        </div></div>
-      </div>
-      {/* Live Preview Column */}
-      <div className="col-lg-5">
-        <div className="card card-glass shadow-sm h-100"><div className="card-body d-flex flex-column live-preview-card">
-          <div className="d-flex align-items-center justify-content-between mb-3">
-            <h6 className="mb-0 text-muted" style={{letterSpacing:'.5px'}}>Live Preview</h6>
-            {welcomeDirty() && <span className="badge bg-warning-subtle text-warning-emphasis">Unsaved</span>}
-          </div>
-          {(() => {
-            const sampleUser = '@NewUser';
-            const guildName = resolvedGuildName || '{server}';
-            const msgRaw = (welcomeCfg.messageText||'').trim() || 'Welcome {user} to {server}!';
-            const substituted = msgRaw.replace(/\{user\}/g, sampleUser).replace(/\{server\}/g, guildName);
-            if(welcomeCfg.messageType==='embed'){
-              return <div className="welcome-preview-embed" style={{background:'rgba(255,255,255,0.04)',borderRadius:'12px',padding:'12px 14px',position:'relative',border:'1px solid rgba(255,255,255,0.08)'}}>
-                <div style={{position:'absolute',left:0,top:0,bottom:0,width:4,background:'var(--accent,#5865f2)',borderTopLeftRadius:12,borderBottomLeftRadius:12}}></div>
-                <div className="small" style={{whiteSpace:'pre-wrap'}}>{substituted}</div>
-                {welcomeCfg.cardEnabled && <div className="mt-3 d-flex align-items-center gap-2 small text-muted" style={{opacity:.85}}>
-                  <div style={{width:40,height:40,borderRadius:'8px',background:'linear-gradient(135deg,#5865f2,#8b5cf6)',display:'flex',alignItems:'center',justifyContent:'center',color:'#fff',fontWeight:600}}>CM</div>
-                  <span>Welcome card thumbnail</span>
-                </div>}
-              </div>;
-            }
-            return <div className="welcome-preview-text" style={{background:'rgba(255,255,255,0.04)',borderRadius:'12px',padding:'12px 14px',border:'1px solid rgba(255,255,255,0.08)'}}>
-              <span style={{whiteSpace:'pre-wrap'}}>{substituted}</span>
-              {welcomeCfg.cardEnabled && <div className="mt-2 small text-muted">(Card thumbnail enabled)</div>}
-            </div>;
-          })()}
-          <div className="mt-auto small text-muted" style={{opacity:.75}}>Preview updates instantly. Save to apply to real join events.</div>
-        </div></div>
-      </div>
-    </div>}
-    {!welcomeCfg && welcomeLoading && <div className="welcome-loading-standalone">
-      <div className="spinner-border text-light" role="status" style={{width:'2.75rem', height:'2.75rem'}}><span className="visually-hidden">Loading…</span></div>
-      <div className="mt-3 small text-muted">Loading welcome settings…</div>
-    </div>}
-  </div>;
+  const welcomeContent = <WelcomeSection welcomeCfg={welcomeCfg} welcomeChannels={welcomeChannels} welcomeDirty={welcomeDirty} resetWelcome={resetWelcome} saveWelcome={saveWelcome} welcomeLoading={welcomeLoading} resolvedGuildName={resolvedGuildName} setWelcomeCfg={setWelcomeCfg} />;
 
   const settingsContent = <React.Suspense fallback={<div className="text-muted small p-3">Loading settings…</div>}>
-    <SettingsPanel guildId={selectedGuild} pushToast={pushToast} />
+    <SettingsSection guildId={selectedGuild} pushToast={pushToast} />
   </React.Suspense>;
   const sectionMap = { overview: overviewContent, autos: autosContent, commands: commandsContent, personal: personalizationContent, welcome: welcomeContent, settings: settingsContent };
+
+  // Preload lazily loaded sections to reduce Suspense flashes
+  function preloadSection(key){
+    if(preloaded.current[key]) return;
+    preloaded.current[key] = true;
+    switch(key){
+      case 'overview': import('./sections/OverviewSection.jsx'); break;
+      case 'commands': import('./sections/CommandsSection.jsx'); break;
+      case 'personal': import('./sections/PersonalizationSection.jsx'); break;
+      case 'welcome': import('./sections/WelcomeSection.jsx'); break;
+  case 'settings': import('./sections/SettingsSection.jsx'); break;
+  case 'autos': import('./sections/AutosSection.jsx'); break;
+      default: break;
+    }
+  }
 
   const effectiveSidebarMode = isMobile ? 'full' : sidebarMode; // force full on mobile
   const content = <div className="container-fluid py-4 fade-in">
     {guildBanner}
     <div className={"dashboard-flex sidebar-"+effectiveSidebarMode}>
-      <aside ref={sidebarRef} className={"dash-sidebar mode-"+effectiveSidebarMode + (sidebarOpen? ' open':'')}>
-        <div className="sidebar-inner">
-        <div className="guild-switcher card-glass mb-3 p-2 d-flex align-items-center gap-2">
-          <button type="button" className="guild-switcher-btn flex-grow-1" onClick={()=>setView('guild')} title="Change server">
-            {(() => { const g = guilds.find(x=>x.id===selectedGuild); const iconUrl = g?.icon ? `https://cdn.discordapp.com/icons/${g.id}/${g.icon}.png?size=128` : null; return <>
-              <div className="gw-icon">{iconUrl ? <img src={iconUrl} alt={g?.name||'Guild'} /> : <span className="fallback">{(g?.name||'?').slice(0,2).toUpperCase()}</span>}</div>
-              <div className="gw-meta">
-                <div className="gw-name" title={g?.name}>{g?.name||'Select a Server'}</div>
-                <div className="gw-action">Change server ▾</div>
-              </div>
-            </>; })()}
-          </button>
-          {!isMobile && <button type="button" className="collapse-toggle" onClick={cycleSidebarMode} title={effectiveSidebarMode==='full'? 'Collapse sidebar':'Expand sidebar'}>
-            <i className={'fa-solid chev '+ (effectiveSidebarMode==='full'? 'fa-chevron-left':'fa-chevron-right')}></i>
-          </button>}
-        </div>
-        <div className="dash-menu">
-          <button type="button" data-label="Overview" onClick={()=>{setDashSection('overview'); setSidebarOpen(false);}} className={'dash-menu-item'+(dashSection==='overview'? ' active':'')}>
-            <i className="fa-solid fa-gauge-high menu-ico"></i>
-            <span className="menu-label">Overview</span>
-          </button>
-          <button type="button" data-label="Auto Responses" onClick={()=>{setDashSection('autos'); setSidebarOpen(false);}} className={'dash-menu-item'+(dashSection==='autos'? ' active':'')}>
-            <i className="fa-solid fa-bolt menu-ico"></i>
-            <span className="menu-label">Auto Responses</span>
-          </button>
-          <button type="button" data-label="Commands" onClick={()=>{setDashSection('commands'); setSidebarOpen(false);}} className={'dash-menu-item'+(dashSection==='commands'? ' active':'')}>
-            <i className="fa-solid fa-terminal menu-ico"></i>
-            <span className="menu-label">Commands</span>
-          </button>
-          <button type="button" data-label="Bot Personalization" onClick={()=>{setDashSection('personal'); setSidebarOpen(false);}} className={'dash-menu-item'+(dashSection==='personal'? ' active':'')}>
-            <i className="fa-solid fa-user-gear menu-ico"></i>
-            <span className="menu-label">Bot Personalization</span>
-          </button>
-          <button type="button" data-label="Welcome" onClick={()=>{setDashSection('welcome'); setSidebarOpen(false);}} className={'dash-menu-item'+(dashSection==='welcome'? ' active':'')}>
-            <i className="fa-solid fa-door-open menu-ico"></i>
-            <span className="menu-label">Welcome</span>
-          </button>
-          <button type="button" data-label="Settings" onClick={()=>{setDashSection('settings'); setSidebarOpen(false);}} className={'dash-menu-item'+(dashSection==='settings'? ' active':'')}>
-            <i className="fa-solid fa-sliders menu-ico"></i>
-            <span className="menu-label">Settings</span>
-          </button>
-        </div>
-        <div className="dash-sidebar-footer mt-4">
-          <button
-            type="button"
-            data-label="Logout"
-            className="dash-menu-item logout-btn"
-            onClick={()=>{ doLogout(); setSidebarOpen(false); }}
-            title="Sign out"
-          >
-            <i className="fa-solid fa-right-from-bracket menu-ico"></i>
-            <span className="menu-label">Logout</span>
-          </button>
-        </div>
-        </div>
-      </aside>
+      <Sidebar
+        guilds={guilds}
+        selectedGuild={selectedGuild}
+        setSelectedGuild={setSelectedGuild}
+        setView={setView}
+        isMobile={isMobile}
+        cycleSidebarMode={cycleSidebarMode}
+        effectiveSidebarMode={effectiveSidebarMode}
+        dashSection={dashSection}
+        setDashSection={setDashSection}
+        startTransition={startTransition}
+        preloadSection={preloadSection}
+        sidebarOpen={sidebarOpen}
+        setSidebarOpen={setSidebarOpen}
+        doLogout={doLogout}
+        sidebarRef={sidebarRef}
+      />
       <main className="dash-main">
-        {sectionMap[dashSection]}
+        <React.Suspense fallback={<div className="p-4 text-muted small">Loading section…</div>}>
+          {sectionMap[dashSection]}
+        </React.Suspense>
       </main>
     </div>
     {/* Floating action button & backdrop for mobile */}
@@ -1034,64 +695,30 @@ export default function App(){
       <i className="fa-solid fa-bars"></i>
     </button>}
     {sidebarOpen && <div className="sidebar-backdrop d-lg-none" onClick={()=>setSidebarOpen(false)} />}
-    {showAutoModal && dashSection==='autos' && <div className="modal d-block fade-in" tabIndex={-1} role="dialog" style={{background:'rgba(8,10,18,0.72)'}} onMouseDown={(e)=>{ if(e.target.classList.contains('modal')) closeAutoModal(); }}>
-      <div className="modal-dialog modal-lg modal-dialog-centered" role="document" onMouseDown={e=>e.stopPropagation()}>
-        <div className="modal-content">
-          <div className="modal-header py-2">
-            <h5 className="modal-title mb-0">{modalAuto.key ? 'Edit Auto Response' : 'Add Auto Response'}</h5>
-            <button type="button" className="btn-close" onClick={closeAutoModal}></button>
-          </div>
-          <div className="modal-body">
-            <div className="row g-3">
-              <div className="col-12 col-md-4">
-                <label className="form-label mb-1">Key <span className="text-muted small">(unique id)</span></label>
-                <input className="form-control" disabled={!!(autos.find(a=>a.key===modalAuto.key))} placeholder="greet" value={modalAuto.key} onChange={e=>setModalAuto({...modalAuto, key:e.target.value})} />
-                <div className="form-text">No spaces.</div>
-              </div>
-              <div className="col-12 col-md-5">
-                <label className="form-label mb-1">Regex Pattern</label>
-                <input className="form-control" placeholder="^hello|hi" value={modalAuto.pattern} onChange={e=>setModalAuto({...modalAuto, pattern:e.target.value})} />
-              </div>
-              <div className="col-6 col-md-2">
-                <label className="form-label mb-1">Flags</label>
-                <input className="form-control" placeholder="i" value={modalAuto.flags} onChange={e=>setModalAuto({...modalAuto, flags:e.target.value})} />
-              </div>
-              <div className="col-12">
-                <label className="form-label mb-1">Replies <span className="text-muted small">(one per line)</span></label>
-                <textarea className="form-control" rows={4} placeholder={"Hello there!\nHi!"} value={modalAuto.replies} onChange={e=>setModalAuto({...modalAuto, replies:e.target.value})} />
-              </div>
-              <div className="col-12">
-                <div className="form-check form-switch">
-                  <input className="form-check-input" type="checkbox" id="modalEnabledSwitch" checked={modalAuto.enabled} onChange={e=>setModalAuto({...modalAuto, enabled:e.target.checked})} />
-                  <label className="form-check-label" htmlFor="modalEnabledSwitch">Enabled</label>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div className="modal-footer py-2 d-flex justify-content-between">
-            <div className="small text-muted">Bot picks one reply randomly.</div>
-            <div className="d-flex gap-2">
-              <button type="button" className="btn btn-outline-secondary" onClick={closeAutoModal}>Cancel</button>
-              <button type="button" className="btn btn-success" onClick={addOrUpdateAuto}>Save</button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>}
+    <AutoResponseModal
+      show={showAutoModal}
+      modalAuto={modalAuto}
+      autos={autos}
+      setModalAuto={setModalAuto}
+      closeAutoModal={closeAutoModal}
+      addOrUpdateAuto={addOrUpdateAuto}
+      dashSection={dashSection}
+    />
   </div>;
   // Toasts container
-  const year = new Date().getFullYear();
-  const footer = <footer className="app-footer fade-in-soft"><div className="footer-inner">© {year} Choco Maid • Bot dashboard – Not affiliated with Discord</div></footer>;
-  const header = null; // undo navbar per request
+  const header = <Navbar />;
   return <>
   {header}
     {content}
-    {footer}
-    <div className="toast-holder">
-      {toasts.map(t => <div key={t.id} className={"toast-item toast-"+t.type}>
-        <div className="flex-grow-1">{t.message}</div>
-        <button className="toast-close" onClick={()=>setToasts(ts=>ts.filter(x=>x.id!==t.id))}>×</button>
-      </div>)}
-    </div>
+    <Footer />
+    <Toasts toasts={toasts} setToasts={setToasts} />
   </>;
+}
+
+// Self-mount when imported directly as entry (allows removal of main.jsx)
+if (typeof document !== 'undefined') {
+  const mountEl = document.getElementById('root');
+  if (mountEl && !mountEl._reactRootContainer) {
+    createRoot(mountEl).render(<App />);
+  }
 }

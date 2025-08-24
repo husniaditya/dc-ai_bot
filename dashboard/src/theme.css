@@ -551,7 +551,10 @@ select.form-select option, .dataTables_wrapper .dataTables_length select.form-se
 @media (max-width: 600px){ .guild-grid { grid-template-columns: repeat(auto-fill,minmax(150px,1fr)); } .guild-search { max-width:100%; } }
 
 /* Login modern layout */
+/* Centered by default; when in login mode we shift form slightly upward for better visual balance */
 .login-viewport { min-height: 100vh; display:flex; align-items:center; justify-content:center; padding:3.5rem 1rem 2rem; position:relative; overflow:hidden; }
+body.login-mode .login-viewport { justify-content:center; align-items:flex-start; padding-top:4.75rem; }
+@media (max-height:700px){ body.login-mode .login-viewport { padding-top:3.75rem; } }
 body.login-mode { height:100vh; overflow:hidden; }
 .login-center { width:100%; max-width:520px; }
 .login-card { position:relative; overflow:hidden; border-radius: var(--radius); }

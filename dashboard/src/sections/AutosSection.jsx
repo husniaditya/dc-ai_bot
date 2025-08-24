@@ -11,7 +11,9 @@ export default function AutosSection({
   upsertAuto,
   deleteAuto,
   pushToast,
-  refresh
+  refresh,
+  refreshAnalytics,
+  adjustAutosEnabled
 }) {
   const [search, setSearch] = useState('');
   const [selectedKeys, setSelectedKeys] = useState(new Set());
@@ -44,10 +46,41 @@ export default function AutosSection({
   function headerToggleSelect(e){ const checked=e.target.checked; setSelectedKeys(prev => { if(checked) return new Set([...prev, ...allFilteredKeys]); const n=new Set(prev); allFilteredKeys.forEach(k=>n.delete(k)); return n; }); }
   function clearSelection(){ setSelectedKeys(new Set()); }
   function selectAllFiltered(){ setSelectedKeys(new Set(allFilteredKeys)); }
-  async function bulkEnable(disable=false){ const keys=[...selectedKeys]; if(!keys.length) return; for(const k of keys){ const item=autos.find(x=>x.key===k); if(!item) continue; try { await upsertAuto({ ...item, enabled: !disable }, selectedGuild); } catch {} } pushToast('success', disable? 'Disabled selected':'Enabled selected'); refresh(); }
+  async function bulkEnable(disable=false){
+    const keys=[...selectedKeys]; if(!keys.length) return;
+    // Optimistic state update
+    setAutos(prev => prev.map(a => keys.includes(a.key)? { ...a, enabled: !disable }: a));
+    // Adjust analytics counts optimistically
+    if(adjustAutosEnabled){
+      const affected = keys.map(k => autos.find(a=>a.key===k)).filter(Boolean);
+      const delta = affected.reduce((acc,a)=>{
+        const currentlyEnabled = a.enabled !== false;
+        if(disable && currentlyEnabled) return acc - 1;
+        if(!disable && !currentlyEnabled) return acc + 1;
+        return acc;
+      },0);
+      if(delta) adjustAutosEnabled(delta);
+    }
+    for(const k of keys){
+      const item=autos.find(x=>x.key===k); if(!item) continue;
+      try { await upsertAuto({ ...item, enabled: !disable }, selectedGuild); }
+      catch {/* ignore per-item; final refresh fallback below */}
+    }
+    pushToast('success', disable? 'Disabled selected':'Enabled selected');
+    refreshAnalytics && refreshAnalytics();
+    refresh();
+  }
   async function bulkDelete(){ const keys=[...selectedKeys]; if(!keys.length) return; if(!window.confirm('Delete '+keys.length+' selected?')) return; for(const k of keys){ try { await deleteAuto(k, selectedGuild); } catch {} } pushToast('success','Deleted selected'); refresh(); clearSelection(); }
   function editAutoByKey(k){ const item=autos.find(a=>a.key===k); if(item) openEditAuto(item); }
-  function toggleEnabled(item, enabled){ setAutos(prev => prev.map(p=> p.key===item.key? { ...p, enabled }: p)); upsertAuto({ ...item, enabled }, selectedGuild).catch(()=>refresh()); }
+  function toggleEnabled(item, enabled){
+    const prevEnabled = item.enabled !== false;
+    if(prevEnabled === enabled) return;
+    setAutos(prev => prev.map(p=> p.key===item.key? { ...p, enabled }: p));
+    if(adjustAutosEnabled){ adjustAutosEnabled(enabled ? 1 : -1); }
+    upsertAuto({ ...item, enabled }, selectedGuild)
+      .then(()=>{ refreshAnalytics && refreshAnalytics(); })
+      .catch(()=>{ refresh(); adjustAutosEnabled && adjustAutosEnabled(enabled ? -1 : 1); });
+  }
   function removeAuto(key){ if(!window.confirm('Delete '+key+'?')) return; const prev=autos; setAutos(autos.filter(a=>a.key!==key)); deleteAuto(key, selectedGuild).then(()=>pushToast('success','Deleted')).catch(e=>{ pushToast('error', e.message); setAutos(prev); }); }
   function runTester(){ if(!testerPattern){ setTesterResult(null); return; } try { const reg=new RegExp(testerPattern, testerFlags); const lines=testerSample.split(/\r?\n/); const matches=lines.map(line=>({ line, match: reg.test(line)})); setTesterResult({ ok:true, matches }); } catch(e){ setTesterResult({ ok:false, error:e.message }); } }
 
