@@ -118,6 +118,56 @@ async function applyGuildPersonalization(guildId){
   } catch(e){ /* silent */ }
 }
 
+// Apply the most recent global personalization (activity/status/avatar) across all guilds
+async function applyGlobalPersonalization(){
+  if(!store.getAllGuildPersonalizations) return;
+  try {
+    const all = await store.getAllGuildPersonalizations();
+    let latest = null; let latestTs = 0;
+    for(const [gid, rec] of Object.entries(all)){
+      const hasGlobal = (rec.activityType && rec.activityText) || rec.status || rec.avatarBase64;
+      if(!hasGlobal) continue;
+      const ts = rec.updatedAt ? new Date(rec.updatedAt).getTime() : 0;
+      if(ts >= latestTs){ latestTs = ts; latest = { guildId: gid, ...rec }; }
+    }
+    if(!latest){
+      console.log('[GlobalPersonalization] No global fields found to apply');
+      return;
+    }
+    const p = latest;
+    // Activity + status together for better reliability
+    try {
+      if(p.activityType && p.activityText){
+        const typeMap = { PLAYING: ActivityType.Playing, LISTENING: ActivityType.Listening, WATCHING: ActivityType.Watching, COMPETING: ActivityType.Competing, STREAMING: ActivityType.Streaming };
+        const mappedType = typeMap[p.activityType.toUpperCase()] ?? ActivityType.Playing;
+        client.user.setPresence({ activities:[{ name: p.activityText, type: mappedType }], status: p.status || 'online' });
+        personalizationRuntime.activityApplied = mappedType+':'+p.activityText;
+      } else if(p.status){
+        await client.user.setStatus(p.status);
+      }
+    } catch(e){ console.warn('[GlobalPersonalization] presence/status failed', e.message); }
+    // Avatar (rate-limited) reuse existing logic
+    if(p.avatarBase64){
+      try {
+        const b64 = p.avatarBase64.includes(',') ? p.avatarBase64.split(',').pop() : p.avatarBase64;
+        if(b64){
+          const h = hashString(b64);
+            const now = Date.now();
+            const intervalMs = 10*60*1000;
+            if(h !== personalizationRuntime.lastAvatarHash && (now - personalizationRuntime.lastAvatarUpdateTs) > intervalMs){
+              const buf = Buffer.from(b64, 'base64');
+              if(buf.length <= 8_000_000){
+                await client.user.setAvatar(buf);
+                personalizationRuntime.lastAvatarHash = h;
+                personalizationRuntime.lastAvatarUpdateTs = now;
+              }
+            }
+        }
+      } catch(e){ console.warn('[GlobalPersonalization] avatar failed', e.message); }
+    }
+  } catch(e){ console.warn('[GlobalPersonalization] Failed to gather/apply', e.message); }
+}
+
 // --- Settings / Dashboard API (basic) ---
 const store = require('./config/store');
 const persistenceModeRef = { mode:null };
@@ -363,6 +413,27 @@ app.put('/api/personalization', authMiddleware, async (req,res)=>{
     applyGuildPersonalization(guildId);
     res.json({ ...updated, applied:true });
   } catch(e){ res.status(500).json({ error:'persist_failed' }); }
+});
+
+// Debug / manual cache invalidation for personalization (not exposed in UI; use only for troubleshooting)
+app.post('/api/personalization/invalidate', authMiddleware, async (req,res)=>{
+  try {
+    const guildId = req.body && req.body.guildId;
+    if(!guildId) return res.status(400).json({ error:'guildId required' });
+    if(store.invalidateGuildPersonalization) store.invalidateGuildPersonalization(guildId);
+    res.json({ ok:true });
+  } catch(e){ res.status(500).json({ error:'invalidate_failed' }); }
+});
+
+// Debug endpoint: returns cached personalization + fresh DB row
+app.get('/api/personalization/debug', authMiddleware, async (req,res)=>{
+  try {
+    const guildId = req.query.guildId;
+    if(!guildId) return res.status(400).json({ error:'guildId required' });
+    const cached = await store.getGuildPersonalization(guildId);
+    const fresh = await store.getGuildPersonalizationFresh ? await store.getGuildPersonalizationFresh(guildId) : null;
+    res.json({ guildId, cached, fresh, different: JSON.stringify(cached) !== JSON.stringify({ ...(fresh||{}) , updatedAt: undefined }) });
+  } catch(e){ res.status(500).json({ error:'debug_failed' }); }
 });
 
 // Welcome config endpoints
@@ -715,8 +786,18 @@ const pollModule = commandMap.get('poll');
 
 client.once('ready', () => {
   console.log(`Logged in as ${client.user.tag}`);
-  // On startup apply personalization for all guilds (best effort)
-  for (const g of client.guilds.cache.values()) applyGuildPersonalization(g.id);
+  // On startup apply personalization (nicknames per guild + latest global status/activity/avatar)
+  async function applyStartupPersonalizations(){
+    try {
+      console.log('[StartupPersonalization] Applying per-guild nicknames…');
+      for (const g of client.guilds.cache.values()) await applyGuildPersonalization(g.id);
+      await applyGlobalPersonalization();
+    } catch(e){ console.warn('[StartupPersonalization] Failed', e.message); }
+  }
+  applyStartupPersonalizations();
+  // Re-apply after delays to overcome any initial gateway race conditions
+  setTimeout(()=> applyGlobalPersonalization().catch(()=>{}), 5000);
+  setTimeout(()=> applyGlobalPersonalization().catch(()=>{}), 15000);
   // Start YouTube watcher (announces new uploads & live streams if env configured)
   try {
     const { startYouTubeWatcher } = require('./youtube-watcher');

@@ -194,6 +194,7 @@ export default function GamesSocialsSection({ guildId, pushToast }){
         <div className="d-flex flex-wrap align-items-end gap-2 mb-3">
           <div style={{flex:'1 1 260px'}}>
             <label className="form-label small fw-semibold mb-1">Add Channel (ID / URL / @handle)</label>
+            &nbsp;{active==='youtube' && ytCfg && ytOrig && ytCfg && (JSON.stringify(ytCfg)!==JSON.stringify(ytOrig)) && <span className="dirty-badge">Unsaved</span>}
             <input className="form-control form-control-sm" placeholder="UC..., https://youtube.com/@handle" value={newChannelId} onChange={e=> setNewChannelId(e.target.value)} onKeyDown={e=> { if(e.key==='Enter'){ e.preventDefault(); addChannel(); } }} />
           </div>
           <button type="button" className="btn btn-sm btn-accent" onClick={addChannel} disabled={!newChannelId.trim()||resolving}><i className="fa-solid fa-plus" /> {resolving? 'Resolving...':'Add'}</button>
@@ -261,7 +262,10 @@ export default function GamesSocialsSection({ guildId, pushToast }){
       <div className="spinner" />
       <div className="loading-text small mt-3 text-muted">Loading configuration…</div>
     </div>}
-    <h5 className="mb-3">Games & Socials</h5>
+    <div className="d-flex align-items-center gap-2 mb-3">
+      <h5 className="mb-0">Games & Socials</h5>
+      {active==='youtube' && ytCfg && ytOrig && ytCfg && (JSON.stringify(ytCfg)!==JSON.stringify(ytOrig)) && <span className="dirty-badge">Unsaved</span>}
+    </div>
     <div className="services-grid d-flex flex-wrap gap-3 mb-3">
       {SERVICES.map(s => {
         const activeCls = s.key===active? 'active':'';

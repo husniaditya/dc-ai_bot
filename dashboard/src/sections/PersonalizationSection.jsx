@@ -1,7 +1,12 @@
 import React from 'react';
 
 export default function PersonalizationSection({ personalization, personalizationLoading, personalizationDirty, resetPersonalization, savePersonalization, handleAvatarFile, renderStatusDot, setPersonalization }) {
+  const showOverlay = personalizationLoading; // full overlay like Games & Socials
   return <div className="fade-in-soft personalization-section-wrapper position-relative">
+    {showOverlay && <div className="loading-overlay">
+      <div className="spinner" />
+      <div className="loading-text small mt-3 text-muted">Loading personalization…</div>
+    </div>}
     <div className="d-flex align-items-center gap-2 mb-3">
       <h5 className="mb-0">Bot Personalization</h5>
       {personalizationDirty() && <span className="dirty-badge">Unsaved</span>}
@@ -47,10 +52,6 @@ export default function PersonalizationSection({ personalization, personalizatio
             <button className="btn btn-brand" disabled={!personalizationDirty()} onClick={savePersonalization}><i className="fa-solid fa-floppy-disk me-2" />Save</button>
           </div>
           <div className="small text-muted">Nickname & avatar require bot permissions; activity applies globally per shard if implemented.</div>
-          {personalizationLoading && <div className="section-loading-overlay">
-            <div className="spinner-border text-light" role="status" style={{width:'2.5rem',height:'2.5rem'}}><span className="visually-hidden">Loading…</span></div>
-            <div className="mt-3 small text-muted">Loading bot profile…</div>
-          </div>}
         </div></div>
       </div>
       <div className="col-lg-6">
@@ -74,9 +75,6 @@ export default function PersonalizationSection({ personalization, personalizatio
         </div></div>
       </div>
     </div>}
-    {!personalization && personalizationLoading && <div className="section-loading-standalone">
-      <div className="spinner-border text-light" role="status" style={{width:'2.75rem',height:'2.75rem'}}><span className="visually-hidden">Loading…</span></div>
-      <div className="mt-3 small text-muted">Loading bot profile…</div>
-    </div>}
+  {/* Standalone fallback removed in favor of full overlay */}
   </div>;
 }

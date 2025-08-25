@@ -490,19 +490,65 @@ module.exports = {
   // Guild personalization
   getGuildPersonalization: async (guildId) => {
     if(!guildId) return null;
-    if (guildPersonalizationCache.has(guildId)) return { ...guildPersonalizationCache.get(guildId) };
+    if (guildPersonalizationCache.has(guildId)) {
+      if (process.env.DEBUG_PERSONALIZATION==='1') console.log('[PERSONALIZATION] cache hit', guildId);
+      const cached = guildPersonalizationCache.get(guildId);
+      // If this is an empty placeholder with TTL expired, force DB re-query
+      if (cached && cached.__emptyTs) {
+        const ttlMs = parseInt(process.env.PERSONALIZATION_EMPTY_TTL_MS || '30000',10); // 30s default
+        if (Date.now() - cached.__emptyTs > ttlMs) {
+          guildPersonalizationCache.delete(guildId);
+        } else {
+          return { ...cached };
+        }
+      } else {
+        return { ...cached };
+      }
+    }
     if (mariaAvailable && sqlPool){
       const [rows] = await sqlPool.query('SELECT nickname, activity_type, activity_text, avatar_base64, status FROM guild_personalization WHERE guild_id=?', [guildId]);
       if(rows.length){
         const rec = { nickname: rows[0].nickname || null, activityType: rows[0].activity_type || null, activityText: rows[0].activity_text || null, avatarBase64: rows[0].avatar_base64 || null, status: rows[0].status || null };
+        if (process.env.DEBUG_PERSONALIZATION==='1') console.log('[PERSONALIZATION] DB load', guildId, Object.keys(rec).filter(k=>rec[k]).join(','));
         guildPersonalizationCache.set(guildId, rec);
         return { ...rec };
       }
     }
     const empty = { nickname:null, activityType:null, activityText:null, avatarBase64:null, status:null };
-    guildPersonalizationCache.set(guildId, empty);
+    if (process.env.DEBUG_PERSONALIZATION==='1') console.log('[PERSONALIZATION] no row, seeding empty', guildId);
+    // Mark empty with timestamp so we can re-query after TTL
+    guildPersonalizationCache.set(guildId, { ...empty, __emptyTs: Date.now() });
     return { ...empty };
   },
+  // Bypass cache for diagnostics – always hits DB if available
+  getGuildPersonalizationFresh: async (guildId) => {
+    if(!guildId) return null;
+    if (mariaAvailable && sqlPool){
+      try {
+        const [rows] = await sqlPool.query('SELECT nickname, activity_type, activity_text, avatar_base64, status, updated_at FROM guild_personalization WHERE guild_id=?', [guildId]);
+        if(rows.length){
+          return { nickname: rows[0].nickname || null, activityType: rows[0].activity_type || null, activityText: rows[0].activity_text || null, avatarBase64: rows[0].avatar_base64 || null, status: rows[0].status || null, updatedAt: rows[0].updated_at };
+        }
+        return null;
+      } catch { return null; }
+    }
+    return null;
+  },
+  // Return map of all guild personalizations (Maria only). Used at startup to re-apply last saved global avatar/activity.
+  getAllGuildPersonalizations: async () => {
+    if (mariaAvailable && sqlPool){
+      try {
+        const [rows] = await sqlPool.query('SELECT guild_id, nickname, activity_type, activity_text, avatar_base64, status, updated_at FROM guild_personalization');
+        const out = {};
+        for (const r of rows){
+          out[r.guild_id] = { nickname:r.nickname||null, activityType:r.activity_type||null, activityText:r.activity_text||null, avatarBase64:r.avatar_base64||null, status:r.status||null, updatedAt: r.updated_at };
+        }
+        return out;
+      } catch { return {}; }
+    }
+    return {};
+  },
+  invalidateGuildPersonalization: (guildId) => { if(guildId) guildPersonalizationCache.delete(guildId); },
   setGuildPersonalization: async (guildId, data) => {
     if(!guildId) throw new Error('guildId required');
     const current = await module.exports.getGuildPersonalization(guildId);
