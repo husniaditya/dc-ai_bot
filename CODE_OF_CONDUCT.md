@@ -31,7 +31,7 @@ This Code of Conduct applies within all project spaces, and also applies when an
 ## Enforcement
 Instances of abusive, harassing, or otherwise unacceptable behavior may be reported to the maintainers via:
 - GitHub: open a confidential Security Advisory (preferred for vulnerabilities)
-- Email: security@replace-with-your-domain.example (replace before publishing)
+- Email: support_choco@chocomaid.xyz
 
 All complaints will be reviewed and investigated promptly and fairly.
 

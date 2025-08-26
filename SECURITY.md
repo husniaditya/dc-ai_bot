@@ -12,7 +12,7 @@ Security updates will generally be applied to the latest `main` branch. Older ta
 If you discover a security vulnerability, please DO NOT open a public issue.
 
 Instead:
-1. Email: security@replace-with-your-domain.example (replace before publishing)
+1. Email: support_choco@chocomaid.xyz
 2. (Optional) Create a private GitHub Security Advisory (if repository settings allow)
 
 Provide (as applicable):

@@ -691,6 +691,11 @@ html:not(.dark) .app-footer { background: rgba(255,255,255,0.85); border-top:1px
 .cmd-item:before { content:""; position:absolute; inset:0; background: radial-gradient(circle at 100% 0%, var(--grp-accent, var(--accent)) 0%, transparent 70%); opacity:0; transition: var(--transition); pointer-events:none; }
 .cmd-item:hover { border-color: var(--grp-accent, var(--accent)); box-shadow:0 0 0 1px rgba(255,255,255,0.1),0 0 0 4px rgba(99,102,241,0.2); }
 .cmd-item:hover:before { opacity:.28; }
+.cmd-item-locked { opacity:0.6; pointer-events:none; }
+.cmd-item-locked:hover { border-color: rgba(255,255,255,0.14) !important; box-shadow:none !important; }
+.cmd-item-locked:hover:before { opacity:0 !important; }
+.cmd-item-locked .cmd-item-name { color:var(--text-muted) !important; }
+.cmd-item-locked .cmd-item-usage { background: rgba(0,0,0,0.2) !important; color:var(--text-muted) !important; }
 .cmd-item-name { font-weight:600; margin-right:.35rem; font-size:.7rem; text-transform:uppercase; letter-spacing:.6px; color:#fff; }
 .cmd-item-usage { font-size:.65rem; letter-spacing:.5px; background: rgba(0,0,0,0.35); padding:.15rem .4rem; border-radius:6px; display:inline-block; color:#cdd6eb; }
 .cmd-item-main { display:flex; flex-wrap:wrap; align-items:center; gap:.4rem; margin-bottom:.15rem; }
@@ -698,6 +703,10 @@ html:not(.dark) .cmd-group-card { background:#ffffff; border-color: rgba(0,0,0,0
 html:not(.dark) .cmd-group-card:before { opacity:.12; }
 html:not(.dark) .cmd-item { background:#f5f7fb; border-color: rgba(0,0,0,0.08); }
 html:not(.dark) .cmd-item:hover { border-color: var(--grp-accent, var(--accent)); background:#fff; }
+html:not(.dark) .cmd-item-locked { opacity:0.5; }
+html:not(.dark) .cmd-item-locked:hover { border-color: rgba(0,0,0,0.08) !important; background:#f5f7fb !important; }
+html:not(.dark) .cmd-item-locked .cmd-item-name { color:var(--text-muted) !important; }
+html:not(.dark) .cmd-item-locked .cmd-item-usage { background: rgba(0,0,0,0.1) !important; color:var(--text-muted) !important; }
 html:not(.dark) .cmd-item-name { color:#1f2530; }
 html:not(.dark) .cmd-item-usage { background:#e7ecf5; color:#344152; }
 

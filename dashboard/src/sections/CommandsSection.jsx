@@ -15,20 +15,26 @@ export default function CommandsSection({ commandGroups, commandTogglesState, co
         <div className="cmd-items">
           { gr.items.map(it => {
             const locked = it.requiresManage && !hasManageGuild;
-            return <div key={it.name} className={"cmd-item" + (locked ? ' cmd-item-locked':'' )}>
+            const isPassive = gr.key === 'passive';
+            const isReadOnly = locked || isPassive;
+            return <div key={it.name} className={"cmd-item" + (isReadOnly ? ' cmd-item-locked':'' )}>
             <div className="cmd-item-main">
               <div className="cmd-item-name"><code>{it.name}</code></div>
               <div className="cmd-item-usage"><code>{it.usage}</code></div>
               <div className="ms-auto d-flex align-items-center">
                 <div className="d-flex flex-column align-items-end">
-                  <label className="form-check form-switch m-0" title={locked ? 'Requires Manage Server permission' : ''}>
-                    <input type="checkbox" className="form-check-input" disabled={locked} checked={commandTogglesState[it.name] !== false} onChange={e=>toggleCommand(it.name, e.target.checked)} />
-                  </label>
+                  {!isPassive ? (
+                    <label className="form-check form-switch m-0" title={locked ? 'Requires Manage Server permission' : ''}>
+                      <input type="checkbox" className="form-check-input" disabled={locked} checked={commandTogglesState[it.name] !== false} onChange={e=>toggleCommand(it.name, e.target.checked)} />
+                    </label>
+                  ) : (
+                    <span className="badge bg-info">Always Active</span>
+                  )}
                   {commandMeta[it.name]?.updatedAt && <div className="cmd-meta-hint small text-muted" title={`Updated by ${commandMeta[it.name]?.updatedBy||'unknown'}`}>{new Date(commandMeta[it.name].updatedAt).toLocaleDateString()}</div>}
                 </div>
               </div>
             </div>
-            <div className="cmd-item-desc small text-muted">{it.desc}{locked && <span className="ms-2 badge bg-secondary">read-only</span>}</div>
+            <div className="cmd-item-desc small text-muted">{it.desc}{locked && <span className="ms-2 badge bg-secondary">read-only</span>}{isPassive && <span className="ms-2 badge bg-secondary">passive</span>}</div>
           </div>; })}
         </div>
       </div>)}
