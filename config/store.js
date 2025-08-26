@@ -172,15 +172,18 @@ async function initMaria() {
     ) ENGINE=InnoDB`);
     // Migration: add status column if upgrading
     try { await sqlPool.query('ALTER TABLE guild_personalization ADD COLUMN status VARCHAR(16) NULL'); } catch(e){ /* ignore if exists */ }
-    // Welcome configuration table
+    // Welcome configuration table (with enabled flag)
     await sqlPool.query(`CREATE TABLE IF NOT EXISTS guild_welcome (
       guild_id VARCHAR(32) PRIMARY KEY,
       channel_id VARCHAR(32) NULL,
       message_type VARCHAR(10) NOT NULL DEFAULT 'text',
       message_text TEXT NULL,
       card_enabled BOOLEAN NOT NULL DEFAULT 0,
+      enabled BOOLEAN NOT NULL DEFAULT 1,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
     ) ENGINE=InnoDB`);
+    // Migration: add enabled column if upgrading from older version
+    try { await sqlPool.query('ALTER TABLE guild_welcome ADD COLUMN enabled BOOLEAN NOT NULL DEFAULT 1'); } catch(e){ /* ignore if exists */ }
     // YouTube watcher per-guild configuration
     await sqlPool.query(`CREATE TABLE IF NOT EXISTS guild_youtube_watch (
       guild_id VARCHAR(32) PRIMARY KEY,
@@ -571,14 +574,14 @@ module.exports = {
     if(!guildId) return null;
     if (guildWelcomeCache.has(guildId)) return { ...guildWelcomeCache.get(guildId) };
     if (mariaAvailable && sqlPool){
-      const [rows] = await sqlPool.query('SELECT channel_id, message_type, message_text, card_enabled FROM guild_welcome WHERE guild_id=?', [guildId]);
+      const [rows] = await sqlPool.query('SELECT channel_id, message_type, message_text, card_enabled, enabled FROM guild_welcome WHERE guild_id=?', [guildId]);
       if (rows.length){
-        const rec = { channelId: rows[0].channel_id || null, messageType: rows[0].message_type || 'text', messageText: rows[0].message_text || '', cardEnabled: rows[0].card_enabled === 1 };
+        const rec = { channelId: rows[0].channel_id || null, messageType: rows[0].message_type || 'text', messageText: rows[0].message_text || '', cardEnabled: rows[0].card_enabled === 1, enabled: rows[0].enabled === undefined ? true : (rows[0].enabled === 1 || rows[0].enabled === true) };
         guildWelcomeCache.set(guildId, rec);
         return { ...rec };
       }
     }
-    const empty = { channelId:null, messageType:'text', messageText:'', cardEnabled:false };
+    const empty = { channelId:null, messageType:'text', messageText:'', cardEnabled:false, enabled:true };
     guildWelcomeCache.set(guildId, empty);
     return { ...empty };
   },
@@ -590,10 +593,11 @@ module.exports = {
     if (data.messageType !== undefined) next.messageType = (data.messageType === 'embed') ? 'embed' : 'text';
     if (data.messageText !== undefined) next.messageText = data.messageText || '';
     if (data.cardEnabled !== undefined) next.cardEnabled = !!data.cardEnabled;
+    if (data.enabled !== undefined) next.enabled = !!data.enabled;
     guildWelcomeCache.set(guildId, next);
     if (mariaAvailable && sqlPool){
-      await sqlPool.query('REPLACE INTO guild_welcome(guild_id, channel_id, message_type, message_text, card_enabled) VALUES (?,?,?,?,?)', [
-        guildId, next.channelId, next.messageType, next.messageText, next.cardEnabled ? 1 : 0
+      await sqlPool.query('REPLACE INTO guild_welcome(guild_id, channel_id, message_type, message_text, card_enabled, enabled) VALUES (?,?,?,?,?,?)', [
+        guildId, next.channelId, next.messageType, next.messageText, next.cardEnabled ? 1 : 0, next.enabled ? 1 : 0
       ]);
     }
     return { ...next };

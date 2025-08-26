@@ -629,13 +629,29 @@ export default function App(){
   function resetPersonalization(){ if(personalizationOriginal) setPersonalization(personalizationOriginal); }
   function welcomeDirty(){
     if(!welcomeCfg || !welcomeOriginal) return false;
-    const keys=['channelId','messageType','messageText','cardEnabled'];
+  // Exclude 'enabled' (auto-saved immediately when toggled)
+  const keys=['channelId','messageType','messageText','cardEnabled'];
     return keys.some(k => (welcomeCfg[k]??'') !== (welcomeOriginal[k]??''));
   }
   function resetWelcome(){ if(welcomeOriginal) setWelcomeCfg(welcomeOriginal); }
   async function saveWelcome(){
     if(!welcomeCfg) return;
     try { const res = await updateWelcome(welcomeCfg, selectedGuild); setWelcomeCfg(res); setWelcomeOriginal(res); pushToast('success','Welcome settings saved'); } catch(e){ pushToast('error','Save failed'); }
+  }
+  async function toggleWelcomeEnabled(on){
+    if(!welcomeCfg) return;
+    // Optimistic update
+    setWelcomeCfg(c => ({ ...(c||{}), enabled: on }));
+    setWelcomeOriginal(o => o ? { ...o, enabled: on } : o);
+    try {
+      await updateWelcome({ enabled: on }, selectedGuild);
+      pushToast('success', 'Welcome messages ' + (on? 'enabled':'disabled'));
+    } catch(e){
+      pushToast('error','Failed to update toggle');
+      // revert
+      setWelcomeCfg(c => ({ ...(c||{}), enabled: !on }));
+      setWelcomeOriginal(o => o ? { ...o, enabled: !on } : o);
+    }
   }
   // --- Personalization Preview helpers ---
   function renderStatusDot(st){
@@ -647,7 +663,7 @@ export default function App(){
 
   // saveWelcome redefined above with dirty tracking
   // Channel selection placeholder (requires channel list API future). For now free text.
-  const welcomeContent = <WelcomeSection welcomeCfg={welcomeCfg} welcomeChannels={welcomeChannels} welcomeDirty={welcomeDirty} resetWelcome={resetWelcome} saveWelcome={saveWelcome} welcomeLoading={welcomeLoading} resolvedGuildName={resolvedGuildName} setWelcomeCfg={setWelcomeCfg} />;
+  const welcomeContent = <WelcomeSection welcomeCfg={welcomeCfg} welcomeChannels={welcomeChannels} welcomeDirty={welcomeDirty} resetWelcome={resetWelcome} saveWelcome={saveWelcome} welcomeLoading={welcomeLoading} resolvedGuildName={resolvedGuildName} setWelcomeCfg={setWelcomeCfg} toggleWelcomeEnabled={toggleWelcomeEnabled} />;
 
   const settingsContent = <React.Suspense fallback={<div className="text-muted small p-3">Loading settings…</div>}>
     <SettingsSection guildId={selectedGuild} pushToast={pushToast} />

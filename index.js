@@ -462,7 +462,8 @@ app.put('/api/welcome', authMiddleware, async (req,res)=>{
       channelId: req.body.channelId,
       messageType: req.body.messageType,
       messageText: req.body.messageText,
-      cardEnabled: req.body.cardEnabled
+  cardEnabled: req.body.cardEnabled,
+  enabled: req.body.enabled
     };
     if (allowed.messageText && allowed.messageText.length > 2000) return res.status(400).json({ error:'message_too_long' });
     const updated = await store.setGuildWelcome(guildId, allowed);
@@ -810,7 +811,7 @@ client.on('guildMemberAdd', async (member) => {
   try {
     const guildId = member.guild.id;
     const cfg = await store.getGuildWelcome(guildId);
-    if (!cfg || !cfg.channelId) return;
+  if (!cfg || cfg.enabled === false || !cfg.channelId) return;
     const ch = member.guild.channels.cache.get(cfg.channelId);
     if(!ch || !ch.isTextBased()) return;
     const msgText = (cfg.messageText && cfg.messageText.trim()) ? cfg.messageText

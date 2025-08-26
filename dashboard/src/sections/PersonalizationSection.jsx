@@ -62,7 +62,7 @@ export default function PersonalizationSection({ personalization, personalizatio
           </div>
           <div className="d-flex align-items-center mb-3">
             <div style={{width:72,height:72,borderRadius:'18px',overflow:'hidden',background:'rgba(255,255,255,0.05)',display:'flex',alignItems:'center',justifyContent:'center',position:'relative'}}>
-              {personalization.avatarBase64 ? <img src={personalization.avatarBase64} alt="avatar" style={{width:'100%',height:'100%',objectFit:'cover'}} /> : <i className="fa-solid fa-robot fa-2x text-muted"></i>}
+              {personalization.avatarBase64 ? <img src={personalization.avatarBase64} alt="avatar" style={{width:'100%',height:'100%',objectFit:'cover'}} /> : <img src="/images.jpg" alt="avatar" style={{width:'100%',height:'100%',objectFit:'cover'}} />}
               {personalization.status && <span style={{position:'absolute',bottom:6,right:6,width:18,height:18,borderRadius:'50%',background:'#1f2937',display:'flex',alignItems:'center',justifyContent:'center'}}>{renderStatusDot(personalization.status)}</span>}
             </div>
             <div className="ms-3 flex-grow-1">

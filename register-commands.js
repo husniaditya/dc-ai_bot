@@ -144,6 +144,10 @@ const commands = [
     description: 'Show YouTube watcher cache & quota stats'
   },
   {
+    name: 'ytdebug',
+    description: 'Show recent YouTube watcher debug events (Manage Server)'
+  },
+  {
     name: 'Explain Image',
     type: 3 // MESSAGE context menu
   },
