@@ -16,7 +16,9 @@ function createAuthRoutes(client, store) {
   const OAUTH_SCOPES = ['identify', 'guilds'];
   
   // JWT and admin config
-  const JWT_SECRET = process.env.DASHBOARD_JWT_SECRET || 'changeme_dev_secret';
+  const JWT_SECRET_RAW = process.env.DASHBOARD_JWT_SECRET || 'changeme_dev_secret';
+  const JWT_SECRETS = JWT_SECRET_RAW.split(',').map(s => s.trim()).filter(s => s.length > 0);
+  const PRIMARY_JWT_SECRET = JWT_SECRETS[0]; // Use first secret for signing new tokens
   const ADMIN_USER = process.env.DASHBOARD_ADMIN_USER || 'admin';
   const ADMIN_PASS = process.env.DASHBOARD_ADMIN_PASS || 'password';
 
@@ -111,7 +113,7 @@ function createAuthRoutes(client, store) {
         userId: user.id, 
         username: user.username, 
         type: 'discord' 
-      }, JWT_SECRET, { expiresIn: '6h' });
+      }, PRIMARY_JWT_SECRET, { expiresIn: '6h' });
       
       audit(req, { action: 'oauth-login', user: user.id });
       res.json({ token: jwtToken, user, guilds });
@@ -176,7 +178,7 @@ function createAuthRoutes(client, store) {
           user: username, 
           role: 'admin', 
           type: 'legacy' 
-        }, JWT_SECRET, { expiresIn: '6h' });
+        }, PRIMARY_JWT_SECRET, { expiresIn: '6h' });
         
         audit(req, { action: 'login-success', user: username });
         return res.json({ token });

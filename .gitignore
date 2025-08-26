@@ -6,3 +6,11 @@ dist/
 dashboard/dist/
 youtube-watcher2.js
 backup/
+.env.backups/
+*.env.backup
+*.env.bak
+jwt-secrets-*.json
+jwt-rotation-*.log
+jwt-*.backup
+logs/jwt-*
+*.jwt.log
