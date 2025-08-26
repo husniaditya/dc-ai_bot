@@ -18,13 +18,21 @@ module.exports = (client) => {
     if (!content) return;
     for (const def of compiled) {
       if (def.pattern.test(content)) {
-  // Cooldown key: per-user (all patterns share one cooldown window per user)
-  const key = 'u:' + msg.author.id;
+        // Cooldown key: per-user (all patterns share one cooldown window per user)
+        const key = 'u:' + msg.author.id;
         const now = Date.now();
-  const last = lastSent.get(key) || 0;
-  if (last && now - last < autoReplyCooldownMs) return; // still cooling down
+        const last = lastSent.get(key) || 0;
+        if (last && now - last < autoReplyCooldownMs) return; // still cooling down
         lastSent.set(key, now);
-  if (process.env.AUTOREPLY_DEBUG === '1') console.log('[autoreply] matched', def.key, 'cooldown ms', autoReplyCooldownMs);
+        if (process.env.AUTOREPLY_DEBUG === '1') console.log('[autoreply] matched', def.key, 'cooldown ms', autoReplyCooldownMs);
+        
+        // Track auto-response usage
+        try {
+          store.trackAutoResponse(guildId, def.key);
+        } catch(trackErr) {
+          console.warn('Failed to track auto-response:', trackErr);
+        }
+        
         let reply = def.replies[Math.floor(Math.random()*def.replies.length)];
         try {
           if (typeof reply === 'function') reply = await Promise.resolve(reply(msg));

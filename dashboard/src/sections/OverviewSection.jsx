@@ -1,8 +1,36 @@
 import React from 'react';
 
-export default function OverviewSection({ analytics, apiStatus, autos, totalEnabled, totalDisabled, error, info, loading, dashSection, chartsReady, Highcharts, HighchartsReact }) {
+export default function OverviewSection({ analytics, apiStatus, autos, totalEnabled, totalDisabled, error, info, loading, dashSection, chartsReady, Highcharts, HighchartsReact, refreshAnalytics }) {
+  const [lastUpdate, setLastUpdate] = React.useState(new Date());
+  
+  // Update last update time when analytics data changes
+  React.useEffect(() => {
+    if (analytics) {
+      setLastUpdate(new Date());
+    }
+  }, [analytics]);
+
   return <div className="overview-section fade-in-soft">
-    <h5 className="mb-3">Overview</h5>
+    <h5 className="mb-3 d-flex justify-content-between align-items-center">
+      <span>
+        Overview
+        {analytics?.totals?.guildName && <small className="text-muted ms-2">- {analytics.totals.guildName}</small>}
+      </span>
+      <div className="d-flex align-items-center">
+        <small className="text-muted me-2">
+          Last updated: {lastUpdate.toLocaleTimeString()}
+        </small>
+        {refreshAnalytics && (
+          <button 
+            className="btn btn-sm btn-outline-secondary" 
+            onClick={refreshAnalytics}
+            title="Refresh analytics data"
+          >
+            <i className="fas fa-sync-alt"></i>
+          </button>
+        )}
+      </div>
+    </h5>
     {error && <div className="alert alert-danger py-2 mb-2">{error}</div>}
     {info && <div className="alert alert-success py-2 mb-2">{info}</div>}
     {loading && <div className="alert alert-info py-2 mb-2">Loading...</div>}
@@ -37,11 +65,26 @@ export default function OverviewSection({ analytics, apiStatus, autos, totalEnab
                 <div className="mini-value text-danger">{analytics.totals.commandsDisabled}</div>
               </div>
             </div>
+          </div>
+          <div className="row">
+            <div className="col-6">
+              <div className="mini-stat">
+                <div className="mini-label">Guild Members</div>
+                <div className="mini-value text-info">{analytics.totals.members || 'N/A'}</div>
+              </div>
+            </div>
+            <div className="col-6">
+              <div className="mini-stat">
+                <div className="mini-label">Commands Today</div>
+                <div className="mini-value text-accent">{analytics?.commands?.today || 0}</div>
+              </div>
+            </div>
             {apiStatus && <div className="col-12">
               <div className="mini-stat api-status-grid small" style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(120px,1fr))',gap:'12px'}}>
                 <div className="api-pill">
                   <div className="mini-label">Gemini AI</div>
                   <div className={'mini-value '+(apiStatus.gemini.enabled ? 'text-success':'text-danger')}>{apiStatus.gemini.enabled ? 'On':'Off'}</div>
+                  {apiStatus.gemini.model && <div className="mini-sub text-muted">{apiStatus.gemini.model}</div>}
                 </div>
                 <div className="api-pill">
                   <div className="mini-label">Discord</div>
@@ -51,12 +94,28 @@ export default function OverviewSection({ analytics, apiStatus, autos, totalEnab
                 <div className="api-pill">
                   <div className="mini-label">Database</div>
                   <div className={'mini-value '+(apiStatus.database.connected ? 'text-success':'text-danger')}>{apiStatus.database.mode}</div>
+                  {apiStatus.database.responseTime && <div className="mini-sub text-muted">{apiStatus.database.responseTime} ms</div>}
                 </div>
                 <div className="api-pill">
                   <div className="mini-label">Uptime</div>
                   <div className="mini-value text-accent">{Math.floor(apiStatus.uptime.seconds/3600)}h</div>
                   <div className="mini-sub text-muted">{Math.floor((apiStatus.uptime.seconds%3600)/60)}m</div>
                 </div>
+                {apiStatus.system?.memory && <div className="api-pill">
+                  <div className="mini-label">Memory</div>
+                  <div className="mini-value text-warning">{apiStatus.system.memory.used} MB</div>
+                  <div className="mini-sub text-muted">{apiStatus.system.memory.percentage}% used</div>
+                </div>}
+                {apiStatus.system?.performance && <div className="api-pill">
+                  <div className="mini-label">Errors/Hour</div>
+                  <div className={'mini-value '+(apiStatus.system.performance.errorsLastHour > 10 ? 'text-danger' : apiStatus.system.performance.errorsLastHour > 5 ? 'text-warning' : 'text-success')}>{apiStatus.system.performance.errorsLastHour || 0}</div>
+                  <div className="mini-sub text-muted">last hour</div>
+                </div>}
+                {apiStatus.cache && <div className="api-pill">
+                  <div className="mini-label">Cache Hit</div>
+                  <div className="mini-value text-accent">{Math.round(apiStatus.cache.hitRate * 100)}%</div>
+                  <div className="mini-sub text-muted">{apiStatus.cache.entries} entries</div>
+                </div>}
               </div>
             </div>}
           </div>
@@ -140,5 +199,119 @@ export default function OverviewSection({ analytics, apiStatus, autos, totalEnab
         </div>}
       </div>
     </div>
+    
+    {/* Additional Dashboard Information Section */}
+    {analytics && <div className="row g-4 mt-2">
+      <div className="col-12">
+        <div className="card card-glass shadow-sm">
+          <div className="card-body">
+            <h6 className="text-muted mb-3" style={{letterSpacing:'.5px'}}>System Health & Activity</h6>
+            <div className="row g-3">
+              <div className="col-md-4">
+                <div className="health-metric">
+                  <div className="d-flex justify-content-between align-items-center mb-2">
+                    <span className="small text-muted">API Response Time</span>
+                    <span className={`badge ${(apiStatus?.system?.performance?.avgResponseTime || 0) < 100 ? 'bg-success' : (apiStatus?.system?.performance?.avgResponseTime || 0) < 300 ? 'bg-warning' : 'bg-danger'}`}>
+                      {apiStatus?.system?.performance?.avgResponseTime || 'N/A'} ms
+                    </span>
+                  </div>
+                  <div className="progress" style={{height: '6px'}}>
+                    <div 
+                      className={`progress-bar ${(apiStatus?.system?.performance?.avgResponseTime || 0) < 100 ? 'bg-success' : (apiStatus?.system?.performance?.avgResponseTime || 0) < 300 ? 'bg-warning' : 'bg-danger'}`}
+                      style={{width: `${Math.min((apiStatus?.system?.performance?.avgResponseTime || 0) / 5, 100)}%`}}
+                    ></div>
+                  </div>
+                </div>
+              </div>
+              <div className="col-md-4">
+                <div className="health-metric">
+                  <div className="d-flex justify-content-between align-items-center mb-2">
+                    <span className="small text-muted">Success Rate</span>
+                    <span className={`badge ${(apiStatus?.system?.performance?.successRate || 0) > 95 ? 'bg-success' : (apiStatus?.system?.performance?.successRate || 0) > 90 ? 'bg-warning' : 'bg-danger'}`}>
+                      {Math.round(apiStatus?.system?.performance?.successRate || 100)}%
+                    </span>
+                  </div>
+                  <div className="progress" style={{height: '6px'}}>
+                    <div 
+                      className={`progress-bar ${(apiStatus?.system?.performance?.successRate || 0) > 95 ? 'bg-success' : (apiStatus?.system?.performance?.successRate || 0) > 90 ? 'bg-warning' : 'bg-danger'}`}
+                      style={{width: `${apiStatus?.system?.performance?.successRate || 100}%`}}
+                    ></div>
+                  </div>
+                </div>
+              </div>
+              <div className="col-md-4">
+                <div className="health-metric">
+                  <div className="d-flex justify-content-between align-items-center mb-2">
+                    <span className="small text-muted">CPU Usage</span>
+                    <span className={`badge ${(apiStatus?.system?.cpu?.usage || 0) < 50 ? 'bg-success' : (apiStatus?.system?.cpu?.usage || 0) < 80 ? 'bg-warning' : 'bg-danger'}`}>
+                      {Math.round(apiStatus?.system?.cpu?.usage || 0)}%
+                    </span>
+                  </div>
+                  <div className="progress" style={{height: '6px'}}>
+                    <div 
+                      className={`progress-bar ${(apiStatus?.system?.cpu?.usage || 0) < 50 ? 'bg-success' : (apiStatus?.system?.cpu?.usage || 0) < 80 ? 'bg-warning' : 'bg-danger'}`}
+                      style={{width: `${apiStatus?.system?.cpu?.usage || 0}%`}}
+                    ></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div className="col-md-6">
+        <div className="card card-glass shadow-sm h-100">
+          <div className="card-body">
+            <h6 className="text-muted mb-3" style={{letterSpacing:'.5px'}}>Recent Activity</h6>
+            <div className="activity-list">
+              {analytics?.activity?.recent ? analytics.activity.recent.slice(0, 5).map((activity, idx) => (
+                <div key={idx} className="activity-item d-flex justify-content-between align-items-center py-2">
+                  <div className="d-flex align-items-center">
+                    <div className={`activity-indicator me-2 ${activity.type === 'command' ? 'bg-primary' : activity.type === 'auto' ? 'bg-info' : 'bg-secondary'}`}></div>
+                    <div>
+                      <div className="small fw-medium">{activity.action}</div>
+                      <div className="extra-small text-muted">{activity.guild || 'Unknown Guild'}</div>
+                    </div>
+                  </div>
+                  <div className="small text-muted">{activity.timestamp ? new Date(activity.timestamp).toLocaleTimeString() : 'N/A'}</div>
+                </div>
+              )) : (
+                <div className="text-muted small text-center py-3">No recent activity data available</div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div className="col-md-6">
+        <div className="card card-glass shadow-sm h-100">
+          <div className="card-body">
+            <h6 className="text-muted mb-3" style={{letterSpacing:'.5px'}}>Top Commands (24h)</h6>
+            <div className="command-stats">
+              {analytics?.commands?.top ? analytics.commands.top.slice(0, 5).map((cmd, idx) => (
+                <div key={idx} className="command-stat d-flex justify-content-between align-items-center py-2">
+                  <div className="d-flex align-items-center">
+                    <span className="badge bg-secondary me-2">{idx + 1}</span>
+                    <span className="small fw-medium">/{cmd.name}</span>
+                  </div>
+                  <div className="d-flex align-items-center">
+                    <span className="small text-muted me-2">{cmd.count} uses</span>
+                    <div className="mini-progress" style={{width: '40px', height: '4px', backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: '2px'}}>
+                      <div 
+                        className="progress-bar bg-primary" 
+                        style={{width: `${(cmd.count / (analytics.commands.top[0]?.count || 1)) * 100}%`, height: '100%', borderRadius: '2px'}}
+                      ></div>
+                    </div>
+                  </div>
+                </div>
+              )) : (
+                <div className="text-muted small text-center py-3">No command statistics available</div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>}
   </div>;
 }

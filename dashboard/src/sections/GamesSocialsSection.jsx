@@ -104,9 +104,45 @@ export default function GamesSocialsSection({ guildId, pushToast }){
   }
 
   // Load configuration only when guildId and active service changes
+  // Load configurations when guildId changes or component mounts
   useEffect(()=>{
     if(!guildId) return;
-    if(active === 'youtube') {
+    
+    // Load both YouTube and Twitch configs on mount
+    (async() => {
+      try {
+        setYtLoading(true);
+        setTwitchLoading(true);
+        
+        const [ytCfg, twitchCfg, ch, roles] = await Promise.all([
+          getYouTubeConfig(guildId).catch(()=>null),
+          getTwitchConfig(guildId).catch(()=>null),
+          getChannels(guildId).catch(()=>null),
+          getRoles(guildId).catch(()=>null)
+        ]);
+        
+        // Set YouTube config
+        if(ytCfg){ setYtCfg(ytCfg); setYtOrig(ytCfg); }
+        
+        // Set Twitch config
+        if(twitchCfg){ setTwitchCfg(twitchCfg); setTwitchOrig(twitchCfg); }
+        
+        // Set shared data
+        if(ch && Array.isArray(ch.channels)) setDiscordChannels(ch.channels);
+        if(roles && Array.isArray(roles.roles)) setGuildRoles(roles.roles);
+        
+      } finally { 
+        setYtLoading(false); 
+        setTwitchLoading(false);
+      }
+    })();
+  }, [guildId]);
+
+  // Load individual config when switching services (if not already loaded)
+  useEffect(()=>{
+    if(!guildId) return;
+    
+    if(active === 'youtube' && !ytCfg) {
       (async() => {
         try {
           setYtLoading(true);
@@ -120,7 +156,7 @@ export default function GamesSocialsSection({ guildId, pushToast }){
           if(roles && Array.isArray(roles.roles)) setGuildRoles(roles.roles);
         } finally { setYtLoading(false); }
       })();
-    } else if(active === 'twitch') {
+    } else if(active === 'twitch' && !twitchCfg) {
       (async() => {
         try {
           setTwitchLoading(true);

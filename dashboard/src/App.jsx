@@ -367,6 +367,27 @@ export default function App(){
     }
   }, [view, selectedGuild, autos.length]);
 
+  // Auto-refresh analytics and status every 30 seconds
+  useEffect(() => {
+    if (view === 'dashboard' && selectedGuild) {
+      const refreshInterval = setInterval(() => {
+        // Refresh analytics data
+        fetch(getApiBase() + '/api/analytics/overview?guildId='+selectedGuild, { headers:{ Authorization:'Bearer '+localStorage.getItem('token') }} )
+          .then(r=>r.json().catch(()=>null))
+          .then(d=>{ if(d && d.totals) setAnalytics(d); })
+          .catch(()=>{});
+        
+        // Refresh status data  
+        fetch(getApiBase() + '/api/status', { headers:{ Authorization:'Bearer '+localStorage.getItem('token') }} )
+          .then(r=>r.json().catch(()=>null))
+          .then(d=>{ if(d && d.uptime) setApiStatus(d); })
+          .catch(()=>{});
+      }, 5000); // Refresh every 30 seconds
+
+      return () => clearInterval(refreshInterval);
+    }
+  }, [view, selectedGuild]);
+
   function refreshAnalytics(){
     if(!(view==='dashboard' && selectedGuild)) return;
     fetch(getApiBase() + '/api/analytics/overview?guildId='+selectedGuild, { headers:{ Authorization:'Bearer '+localStorage.getItem('token') }} )
@@ -532,7 +553,7 @@ export default function App(){
   const guildBanner = guilds.find(g=>g.id===selectedGuild)?.banner ? `https://cdn.discordapp.com/banners/${selectedGuild}/${guilds.find(g=>g.id===selectedGuild).banner}.png?size=512` : null;
 
   // --- Section contents ---
-  const overviewContent = <OverviewSection analytics={analytics} apiStatus={apiStatus} autos={autos} totalEnabled={totalEnabled} totalDisabled={totalDisabled} error={error} info={info} loading={loading} dashSection={dashSection} chartsReady={chartsReady} Highcharts={Highcharts} HighchartsReact={HighchartsReact} />;
+  const overviewContent = <OverviewSection analytics={analytics} apiStatus={apiStatus} autos={autos} totalEnabled={totalEnabled} totalDisabled={totalDisabled} error={error} info={info} loading={loading} dashSection={dashSection} chartsReady={chartsReady} Highcharts={Highcharts} HighchartsReact={HighchartsReact} refreshAnalytics={refreshAnalytics} />;
 
   const autosContent = <React.Suspense fallback={<div className="text-muted small p-3">Loading auto responses…</div>}>
     <AutosSectionLazy

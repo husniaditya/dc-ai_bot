@@ -125,8 +125,16 @@ Dashboard → Auto Responses:
 
 Cooldown is per user (configurable at Settings panel). Disabled entries remain stored but skipped.
 
+## 🧭 Project Governance
+| Document | Purpose |
+|----------|---------|
+| [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) | Community expectations & enforcement |
+| [CONTRIBUTING.md](CONTRIBUTING.md) | How to set up dev env, propose changes |
+| [SECURITY.md](SECURITY.md) | Vulnerability reporting & hardening roadmap |
+| [LICENSE](LICENSE) | MIT license terms |
+
 ## 📝 License
-MIT
+This project is licensed under the [MIT License](LICENSE).
 
 ---
 Feel free to extend with moderation, analytics, observability, and advanced permission controls.

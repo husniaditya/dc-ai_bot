@@ -35,6 +35,25 @@ let youtubeHasConfigJsonColumn = null; // lazy detection
 const guildTwitchConfigCache = new Map();
 let twitchHasConfigJsonColumn = null; // lazy detection
 
+// Analytics tracking
+const commandUsageStats = new Map(); // command -> { daily: count, hourly: count, lastHour: timestamp }
+const activityLog = []; // { type, action, guild, timestamp, userId }
+const errorLog = []; // { timestamp, error, context }
+const systemStats = {
+  startTime: Date.now(),
+  commandsToday: 0,
+  errorsThisHour: 0,
+  lastHourReset: Date.now(),
+  responseTimeSum: 0,
+  responseTimeCount: 0,
+  successCount: 0,
+  totalRequests: 0
+};
+
+// Cache for system metrics
+let cachedSystemMetrics = null;
+let lastMetricsUpdate = 0;
+
 // Load seed auto responses from existing JS file and convert regex -> {pattern, flags}
 function loadSeedAutoResponses() {
   try {
@@ -949,5 +968,183 @@ module.exports = {
       await sqlPool.query('INSERT INTO guild_command_toggles(guild_id, command_name, enabled, created_by, updated_by) VALUES (?,?,?,?,?) ON DUPLICATE KEY UPDATE enabled=VALUES(enabled), updated_by=VALUES(updated_by)', [guildId, name, enabled ? 1 : 0, actor||null, actor||null]);
     }
     return existing[name].enabled;
+  },
+  
+  // Analytics & Monitoring Functions
+  trackCommandUsage: (commandName, guildId) => {
+    const now = Date.now();
+    const key = commandName;
+    
+    // Update daily counter
+    if (!commandUsageStats.has(key)) {
+      commandUsageStats.set(key, { daily: 0, hourly: 0, lastHour: now });
+    }
+    
+    const stats = commandUsageStats.get(key);
+    stats.daily++;
+    
+    // Reset hourly counter if it's been an hour
+    if (now - stats.lastHour > 3600000) { // 1 hour
+      stats.hourly = 0;
+      stats.lastHour = now;
+    }
+    stats.hourly++;
+    
+    // Update system stats
+    systemStats.commandsToday++;
+    
+    // Add to activity log
+    activityLog.push({
+      type: 'command',
+      action: `/${commandName} used`,
+      guild: guildId || 'DM',
+      timestamp: new Date().toISOString(),
+      userId: null
+    });
+    
+    // Keep activity log limited to last 100 entries
+    if (activityLog.length > 100) {
+      activityLog.splice(0, activityLog.length - 100);
+    }
+  },
+  
+  trackAutoResponse: (guildId, key) => {
+    activityLog.push({
+      type: 'auto',
+      action: `Auto response: ${key}`,
+      guild: guildId || 'Unknown',
+      timestamp: new Date().toISOString(),
+      userId: null
+    });
+    
+    if (activityLog.length > 100) {
+      activityLog.splice(0, activityLog.length - 100);
+    }
+  },
+  
+  trackError: (error, context = '') => {
+    const now = Date.now();
+    
+    // Reset error counter if it's been an hour
+    if (now - systemStats.lastHourReset > 3600000) {
+      systemStats.errorsThisHour = 0;
+      systemStats.lastHourReset = now;
+    }
+    
+    systemStats.errorsThisHour++;
+    errorLog.push({
+      timestamp: new Date().toISOString(),
+      error: error.message || String(error),
+      context
+    });
+    
+    // Keep error log limited
+    if (errorLog.length > 50) {
+      errorLog.splice(0, errorLog.length - 50);
+    }
+  },
+  
+  trackApiResponse: (responseTime, success = true) => {
+    systemStats.responseTimeSum += responseTime;
+    systemStats.responseTimeCount++;
+    systemStats.totalRequests++;
+    
+    if (success) {
+      systemStats.successCount++;
+    }
+  },
+  
+  getSystemMetrics: () => {
+    const now = Date.now();
+    
+    // Cache metrics for 5 seconds to avoid excessive calculations
+    if (cachedSystemMetrics && (now - lastMetricsUpdate) < 5000) {
+      return cachedSystemMetrics;
+    }
+    
+    const uptime = now - systemStats.startTime;
+    const avgResponseTime = systemStats.responseTimeCount > 0 
+      ? Math.round(systemStats.responseTimeSum / systemStats.responseTimeCount) 
+      : 0;
+    
+    const successRate = systemStats.totalRequests > 0 
+      ? (systemStats.successCount / systemStats.totalRequests) * 100 
+      : 100;
+    
+    // Get memory usage
+    const memUsage = process.memoryUsage();
+    
+    // Calculate CPU usage (simplified approach using process.hrtime)
+    const cpuUsage = process.cpuUsage();
+    const totalTime = (cpuUsage.user + cpuUsage.system) / 1000; // Convert to milliseconds
+    const uptimeMs = uptime;
+    let cpuPercent = 0;
+    
+    if (uptimeMs > 0) {
+      // Calculate CPU percentage (this is an approximation)
+      cpuPercent = Math.min(Math.round((totalTime / uptimeMs) * 100), 100);
+    }
+    
+    cachedSystemMetrics = {
+      memory: {
+        used: memUsage.heapUsed,
+        total: memUsage.heapTotal
+      },
+      cpu: {
+        usage: Math.max(0, cpuPercent)
+      },
+      responseTime: {
+        avg: avgResponseTime
+      },
+      successRate: Math.round(successRate * 100) / 100,
+      commands: {
+        daily: systemStats.commandsToday
+      },
+      errors: {
+        hourly: systemStats.errorsThisHour
+      }
+    };
+    
+    lastMetricsUpdate = now;
+    return cachedSystemMetrics;
+  },
+  
+  getTopCommands: (guildId = null) => {
+    return Array.from(commandUsageStats.entries())
+      .map(([name, stats]) => ({ name, count: stats.daily }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 10);
+  },
+  
+  getRecentActivity: (guildId = null) => {
+    let activities = activityLog.slice(-50); // Get more to filter from
+    
+    // Filter by guild if specified
+    if (guildId) {
+      activities = activities.filter(activity => 
+        activity.guild === guildId || activity.guild === 'DM'
+      );
+    }
+    
+    return activities.slice(-20).reverse(); // Last 20 activities, newest first
+  },
+  
+  getBotStats: (client) => {
+    if (!client) return { guilds: 0, users: 0 };
+    
+    const guildCount = client.guilds.cache.size;
+    const userCount = client.guilds.cache.reduce((total, guild) => total + guild.memberCount, 0);
+    
+    return {
+      guilds: guildCount,
+      users: userCount
+    };
+  },
+  
+  // Reset daily stats (should be called once per day)
+  resetDailyStats: () => {
+    systemStats.commandsToday = 0;
+    commandUsageStats.clear();
+    console.log('Daily stats reset');
   }
 };

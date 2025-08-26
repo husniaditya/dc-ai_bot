@@ -217,6 +217,33 @@ app.use(cors({ origin: (origin, cb) => {
   return cb(new Error('Not allowed by CORS'));
 }, credentials: false }));
 
+// API Response tracking middleware
+app.use((req, res, next) => {
+  const startTime = Date.now();
+  
+  // Override res.json and res.send to track response
+  const originalJson = res.json;
+  const originalSend = res.send;
+  
+  const trackResponse = () => {
+    const responseTime = Date.now() - startTime;
+    const success = res.statusCode < 400;
+    store.trackApiResponse(responseTime, success);
+  };
+  
+  res.json = function(data) {
+    trackResponse();
+    return originalJson.call(this, data);
+  };
+  
+  res.send = function(data) {
+    trackResponse();
+    return originalSend.call(this, data);
+  };
+  
+  next();
+});
+
 // Auth helpers
 const JWT_SECRET = process.env.DASHBOARD_JWT_SECRET || 'changeme_dev_secret';
 // Legacy single admin creds (kept for fallback if DISABLE_LEGACY_LOGIN not set)
@@ -512,41 +539,132 @@ app.get('/api/auto-responses', authMiddleware, async (req,res)=>{
     return res.json(store.getAutoResponses());
   } catch(e){ return res.status(500).json({ error:'load_failed' }); }
 });
-// Simple analytics snapshot for dashboard charts
+// Enhanced analytics snapshot for dashboard
 app.get('/api/analytics/overview', authMiddleware, async (req,res)=>{
   try {
     const guildId = req.query.guildId || (req.user.type==='discord' ? (await store.getUser(req.user.userId))?.selected_guild_id : null);
-  let autos = guildId ? await store.getGuildAutoResponses(guildId) : store.getAutoResponses();
-  if (!Array.isArray(autos)) autos = [];
-  const autoEnabled = autos.filter(a=>a && a.enabled!==false).length;
+    
+    // Original data
+    let autos = guildId ? await store.getGuildAutoResponses(guildId) : store.getAutoResponses();
+    if (!Array.isArray(autos)) autos = [];
+    const autoEnabled = autos.filter(a=>a && a.enabled!==false).length;
     const cmdList = Array.from(commandMap.values()).map(c=>c.name);
     let toggles = {};
     try { toggles = guildId ? await store.getGuildCommandToggles(guildId) : store.getCommandToggles(); } catch {}
     const commandsEnabled = cmdList.filter(n => toggles[n] !== false).length;
     const commandsDisabled = cmdList.length - commandsEnabled;
-    // Rough category breakdown for autos by first letter bucket (demo purpose)
     const autoBuckets = autos.reduce((acc,a)=>{ const k = (a.key||'').charAt(0).toUpperCase() || '#'; acc[k]=(acc[k]||0)+1; return acc; }, {});
+    
+    // New analytics data - make it guild-specific
+    const botStats = store.getBotStats(client);
+    const topCommands = store.getTopCommands(guildId);
+    const recentActivity = store.getRecentActivity(guildId);
+    const systemMetrics = store.getSystemMetrics();
+    
+    // Guild-specific stats
+    let guildStats = { members: 0, name: 'Unknown Guild' };
+    if (guildId && client.guilds.cache.has(guildId)) {
+      const guild = client.guilds.cache.get(guildId);
+      guildStats = {
+        members: guild.memberCount || 0,
+        name: guild.name || 'Unknown Guild',
+        id: guild.id
+      };
+    }
+    
     res.json({
       guildId,
-      totals: { autos: autos.length, autosEnabled: autoEnabled, commands: cmdList.length, commandsEnabled, commandsDisabled },
-      autoBuckets
+      // Original data
+      totals: { 
+        autos: autos.length, 
+        autosEnabled: autoEnabled, 
+        commands: cmdList.length, 
+        commandsEnabled, 
+        commandsDisabled,
+        // Guild-specific stats instead of global
+        members: guildStats.members,
+        guildName: guildStats.name
+      },
+      autoBuckets,
+      // New data for enhanced dashboard
+      guild: {
+        members: guildStats.members,
+        name: guildStats.name,
+        id: guildStats.id || guildId
+      },
+      commands: {
+        today: systemMetrics.commands.daily,
+        top: topCommands
+      },
+      activity: {
+        recent: recentActivity
+      }
     });
-  } catch(e){ res.status(500).json({ error:'load_failed' }); }
+  } catch(e){ 
+    console.error('Analytics overview error:', e);
+    res.status(500).json({ error:'load_failed' }); 
+  }
 });
-// Simple API status (Gemini availability)
+// Enhanced API status with system health metrics
 app.get('/api/status', authMiddleware, (req,res)=>{
-  const geminiEnabled = !!(process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY);
-  const discordReady = !!client.readyAt;
-  const ping = typeof client.ws?.ping === 'number' ? Math.round(client.ws.ping) : null;
-  const uptimeSeconds = Math.floor((Date.now() - startTimestamp)/1000);
-  const dbMode = persistenceModeRef.mode || 'unknown';
-  const dbConnected = dbMode !== 'memory' ? true : true; // memory still functions for dashboard
-  res.json({
-    gemini: { enabled: geminiEnabled },
-    discord: { ready: discordReady, ping },
-    database: { mode: dbMode, connected: dbConnected },
-    uptime: { seconds: uptimeSeconds, startedAt: new Date(startTimestamp).toISOString() }
-  });
+  try {
+    const geminiEnabled = !!(process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY);
+    const discordReady = !!client.readyAt;
+    const ping = typeof client.ws?.ping === 'number' ? Math.round(client.ws.ping) : null;
+    const uptimeSeconds = Math.floor((Date.now() - startTimestamp)/1000);
+    const dbMode = persistenceModeRef.mode || 'unknown';
+    const dbConnected = dbMode !== 'memory' ? true : true;
+    
+    // Get system metrics
+    const systemMetrics = store.getSystemMetrics();
+    
+    // Calculate health status
+    const health = {
+      status: 'healthy',
+      checks: {
+        discord: discordReady ? 'healthy' : 'unhealthy',
+        database: dbConnected ? 'healthy' : 'unhealthy',
+        gemini: geminiEnabled ? 'healthy' : 'disabled',
+        memory: systemMetrics.memory.used / systemMetrics.memory.total < 0.9 ? 'healthy' : 'warning',
+        responseTime: systemMetrics.responseTime.avg < 1000 ? 'healthy' : 'warning'
+      }
+    };
+    
+    // Overall health based on critical services
+    if (!discordReady || !dbConnected) {
+      health.status = 'unhealthy';
+    } else if (systemMetrics.memory.used / systemMetrics.memory.total > 0.9 || systemMetrics.responseTime.avg > 1000) {
+      health.status = 'warning';
+    }
+    
+    res.json({
+      // Original status data
+      gemini: { enabled: geminiEnabled },
+      discord: { ready: discordReady, ping },
+      database: { mode: dbMode, connected: dbConnected },
+      uptime: { seconds: uptimeSeconds, startedAt: new Date(startTimestamp).toISOString() },
+      // New system health data
+      health,
+      system: {
+        memory: {
+          used: Math.round(systemMetrics.memory.used / 1024 / 1024), // MB
+          total: Math.round(systemMetrics.memory.total / 1024 / 1024), // MB
+          percentage: Math.round((systemMetrics.memory.used / systemMetrics.memory.total) * 100)
+        },
+        cpu: {
+          usage: systemMetrics.cpu.usage
+        },
+        performance: {
+          avgResponseTime: systemMetrics.responseTime.avg,
+          successRate: systemMetrics.successRate,
+          errorsLastHour: systemMetrics.errors.hourly
+        }
+      }
+    });
+  } catch(e) {
+    console.error('Status endpoint error:', e);
+    res.status(500).json({ error: 'status_check_failed' });
+  }
 });
 // Lightweight guild list (names/icons) for dashboard refresh so we can render selected guild name after page reload
 app.get('/api/guilds', authMiddleware, (req,res)=>{
@@ -897,6 +1015,17 @@ const pollModule = commandMap.get('poll');
 
 client.once('ready', () => {
   console.log(`Logged in as ${client.user.tag}`);
+  
+  // Add some initial analytics data for demo purposes
+  try {
+    store.trackCommandUsage('ping', null);
+    store.trackCommandUsage('help', null);
+    store.trackAutoResponse(null, 'welcome');
+    console.log('[Analytics] Seeded initial demo data');
+  } catch(e) {
+    console.warn('[Analytics] Failed to seed demo data:', e.message);
+  }
+  
   // On startup apply personalization (nicknames per guild + latest global status/activity/avatar)
   async function applyStartupPersonalizations(){
     try {
@@ -920,6 +1049,27 @@ client.once('ready', () => {
     const { startTwitchWatcher } = require('./twitch-watcher');
     startTwitchWatcher(client);
   } catch(e){ console.warn('Twitch watcher failed to start', e.message); }
+  
+  // Set up daily stats reset (every 24 hours at midnight UTC)
+  const scheduleStatsReset = () => {
+    const now = new Date();
+    const nextMidnight = new Date(now);
+    nextMidnight.setUTCHours(24, 0, 0, 0); // Next midnight UTC
+    
+    const msUntilMidnight = nextMidnight.getTime() - now.getTime();
+    
+    setTimeout(() => {
+      store.resetDailyStats();
+      // Schedule next reset
+      setInterval(() => {
+        store.resetDailyStats();
+      }, 24 * 60 * 60 * 1000); // Every 24 hours
+    }, msUntilMidnight);
+    
+    console.log(`[Analytics] Daily stats reset scheduled for ${nextMidnight.toISOString()}`);
+  };
+  
+  scheduleStatsReset();
 });
 
 // Welcome event
@@ -1095,10 +1245,26 @@ client.on('interactionCreate', async (interaction) => {
         return interaction.reply({ content: 'This command is disabled.', flags: 64 });
       }
     } catch {}
-    try { await cmd.execute(interaction, client); } catch (e){
+    
+    // Track command usage
+    try {
+      store.trackCommandUsage(interaction.commandName, interaction.guildId);
+    } catch(trackErr) {
+      console.warn('Failed to track command usage:', trackErr);
+    }
+    
+    try { 
+      await cmd.execute(interaction, client); 
+    } catch (e){
       console.error('Command error', interaction.commandName, e);
+      // Track command errors
+      try {
+        store.trackError(e, `Command: ${interaction.commandName}`);
+      } catch(trackErr) {
+        console.warn('Failed to track command error:', trackErr);
+      }
       if (interaction.deferred || interaction.replied) { try { await interaction.editReply('Command failed.'); } catch {} }
-  else { try { await interaction.reply({ content:'Command failed.', flags:64 }); } catch {} }
+      else { try { await interaction.reply({ content:'Command failed.', flags:64 }); } catch {} }
     }
   } else if (interaction.isStringSelectMenu() && interaction.customId==='help_select') {
     const value = interaction.values[0];

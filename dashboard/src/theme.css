@@ -735,3 +735,18 @@ html:not(.dark) .preview-block { background:rgba(0,0,0,0.04); border-color:rgba(
 html:not(.dark) .section-loading-overlay { background:rgba(255,255,255,0.55); }
 .section-loading-overlay .spinner-border { filter: drop-shadow(0 4px 14px rgba(0,0,0,0.5)); }
 .section-loading-standalone { min-height:220px; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+
+/* Enhanced Overview Section Styles */
+.health-metric { position: relative; }
+.health-metric .progress { background: rgba(255,255,255,0.1); border-radius: 3px; }
+.activity-item { border-bottom: 1px solid rgba(255,255,255,0.06); }
+.activity-item:last-child { border-bottom: none; }
+.activity-indicator { width: 8px; height: 8px; border-radius: 50%; }
+.command-stat { border-bottom: 1px solid rgba(255,255,255,0.06); }
+.command-stat:last-child { border-bottom: none; }
+.mini-progress { background: rgba(255,255,255,0.1); border-radius: 2px; }
+.extra-small { font-size: 0.65rem; }
+html:not(.dark) .health-metric .progress { background: rgba(0,0,0,0.1); }
+html:not(.dark) .activity-item { border-bottom-color: rgba(0,0,0,0.06); }
+html:not(.dark) .command-stat { border-bottom-color: rgba(0,0,0,0.06); }
+html:not(.dark) .mini-progress { background: rgba(0,0,0,0.1); }
