@@ -1,8 +1,8 @@
 <div align="center">
 
-# Discord AI Bot (Node.js + discord.js v14)
+# Choco Maid – Discord AI Bot & Modern Dashboard (discord.js v14)
 
-Lightweight Discord bot with modular slash commands, multi‑image AI explanation, conversational follow‑ups, message context menu image explainer powered by Google Gemini, polls (with live updates + results), reminders, math & utility commands, summarization, translation, and more.
+Smart assistant bot with AI image explanation, Q&A, translation, summarization, polls, reminders, math & utility slash commands **plus a glass‑morphism React dashboard** featuring Discord OAuth login, per‑guild auto‑response management, regex tester, bulk actions, dark / light themes, and persistence via MariaDB.
 
 </div>
 
@@ -13,29 +13,40 @@ Use this OAuth2 URL to add the bot to a server (requires "Manage Server" permiss
 https://discord.com/oauth2/authorize?client_id=951335667756072981&scope=bot%20applications.commands
 
 
-## ✨ Features
-* Modular slash commands (guild‑scoped for rapid iteration)
-* Message context menu: **Explain Image** (right‑click → Apps → Explain Image)
-* AI text Q&A via Gemini (`/ask`) with short‑term response caching (3 min)
-* Conversation follow‑ups (`/askfollow`) – keeps last turns (in‑memory)
-* Multi‑image explanation (1–3 images) via `/explain_image` + optional prompt
-* Channel summarization (`/summarize [count]`)
-* Translation (`/translate text target`)
-* Poll creation + live vote buttons + `/poll results id` snapshot
-* Reminders via DM with channel fallback
-* Basic user + math utilities
-* Long outputs auto‑chunked (2,000 char safe slicing)
-* Select‑menu driven help (`/help`) with ephemeral category switching
-* Exponential backoff + size checks for AI image fetches
-* Optional auto‑responses to greetings / casual phrases (toggle via env)
+## ✨ Core Features
+Bot:
+* Modular slash commands (fast guild registration)
+* Context menu actions: Explain Image, Summarize, Translate
+* AI text Q&A (`/ask`) + follow‑ups (`/askfollow`) with rolling context
+* Multi‑image explanation (1–3 images) via `/explain_image`
+* Channel summarization, translation, polls with live update buttons
+* Reminders, math & user utilities, safe chunking for long outputs
+* Pattern‑based auto replies (per‑guild enabled + cooldown)
+
+Dashboard:
+* Discord OAuth2 login (identify + guilds) w/ anti‑CSRF state
+* Guild selection grid (icon cards, search)
+* Per‑guild settings + auto‑response CRUD (enabled flags)
+* Regex tester panel (pattern + flags + multi‑line sample)
+* Bulk enable / disable / delete actions
+* Per‑user cooldown setting (ms) for auto replies
+* Glass UI, dark/light theme toggle, animated toasts, modern full‑screen login
+
+Persistence:
+* Guild‑scoped tables for settings + auto responses
+* OAuth user storage & last selected guild
 
 ## 📦 Tech Stack
-* Node.js >= 16.9 (discord.js v14 requirement)
-* discord.js
-* Google GenAI SDK (`@google/genai`) for Gemini models
-* Axios (download & re-upload images for embeds)
+Bot:
+* Node.js 18+ (global fetch) + discord.js v14
+* Google GenAI SDK (`@google/genai`) for Gemini 2.0 Flash
+* Axios (image re‑upload / fetch)
 
-## 🧩 Commands Overview
+Dashboard:
+* React + Vite + Bootstrap + custom theme
+* JWT auth + fetch API
+
+## 🧩 Commands Overview (Selected)
 Core:
 * `/ping` – Pong!
 * `/whoami` – Your tag + ID
@@ -67,9 +78,9 @@ Context Menu:
 * Message → Apps → **Summarize** – Summarize chat context (captures up to ~15 messages before/after, filters noise)
 * Message → Apps → **Translate** – Auto‑detect source and translate message content to ID (model driven)
 
-Auto Replies (optional):
-* Responds to greetings / common Indonesian & English phrases (e.g. "pagi", "hi", "makasih", gaming terms like "lag", "push rank") when enabled.
-* Cooldown per channel & phrase group (default 30s) to reduce spam.
+Auto Replies:
+* Responds to greetings / common Indonesian & English phrases
+* Configurable per guild; enabled toggle + per‑user cooldown (ms)
 
 ## 🖼️ Image Explanation
 ### Context Menu (recommended)
@@ -82,43 +93,48 @@ Right‑click (mobile: long press) image message → Apps → **Explain Image**.
 4. Oversized images (>8MB) skipped with notice
 
 ## 🤖 AI (Gemini) Notes
-* SDK: `@google/genai` using `gemini-2.0-flash`
-* Text & multimodal (image) handled
-* Exponential backoff (3 attempts) on transient failures
-* `/ask` responses cached (3 min) per identical prompt
-* `/askfollow` keeps limited rolling history (in‑memory per user)
-* Long outputs chunked safely
-* Images >8MB: rejected (slash) or not re‑uploaded (context menu fallback to URL)
+* Model: `gemini-2.0-flash`
+* Backoff (exponential) on transient failures (up to 3 attempts)
+* In‑memory prompt cache for `/ask` (3 min)
+* Rolling limited context for `/askfollow`
+* Safe chunking for long outputs
+* Skip re‑upload of large images (>8MB)
 
 ## ♻️ Limitations / Next Ideas
-* All state (polls, reminders, conversations, cache) in-memory → lost on restart
-* No rate limiting / abuse throttling yet
-* No persistence (DB, KV, or file) or analytics
-* No permission gating (e.g., restrict heavy AI commands to roles)
-* Conversation context limited to small rolling window
-* No structured logging / metrics exporter
-* Add tests & CI, graceful shutdown persistence snapshot
+* In‑memory runtime caches (loss on restart for non‑DB state like conversations)
+* Permission gating for dashboard mutations (currently minimal – server membership + optional manage flag indicator only)
+* Export / import auto responses JSON
+* Server‑side pagination for very large response sets
+* Accessibility (focus rings, ARIA labels) audit
+* Structured logging + metrics / tracing
+* Tests + CI, graceful shutdown snapshots
 
 ## 🔒 Safety / Abuse Considerations
-* Implement per-user cooldown (e.g. 10–15s) for `ask/askfollow/explain_image/summarize`
-* Add content moderation / filtering before broad release
-* Redact sensitive data in logs; rotate & centralize
-* Consider token usage tracking & quotas
+* Add command rate limiting (API already has rudimentary IP rate limit)
+* Content moderation / filtering for AI responses
+* Redact sensitive data in logs; rotate + centralize
+* Track token usage & add quotas
+
+## 🗣 Auto Responses Quick Guide
+Dashboard → Auto Responses:
+1. Add / Edit pattern (regex + flags)
+2. Provide one reply per line (bot picks randomly)
+3. Toggle Enabled inline or in modal
+4. Use search + pagination + bulk actions for maintenance
+5. Regex tester helps verify before saving
+
+Cooldown is per user (configurable at Settings panel). Disabled entries remain stored but skipped.
+
+## 🧭 Project Governance
+| Document | Purpose |
+|----------|---------|
+| [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) | Community expectations & enforcement |
+| [CONTRIBUTING.md](CONTRIBUTING.md) | How to set up dev env, propose changes |
+| [SECURITY.md](SECURITY.md) | Vulnerability reporting & hardening roadmap |
+| [LICENSE](LICENSE) | MIT license terms |
 
 ## 📝 License
-MIT
+This project is licensed under the [MIT License](LICENSE).
 
 ---
-## 🗣 Auto Responses (Optional)
-
-Enable lightweight pattern‑based greeting / chatter replies.
-
-Considerations:
-* Avoid responding to sensitive phrases – review patterns before production.
-* High traffic channels may need longer cooldowns.
-* For advanced behavior (per‑guild config, persistence, commands to add/remove patterns) promote patterns to a data store and expose admin slash commands.
-
----
-
----
-Feel free to extend: add persistence, global commands, moderation tools, rate limiting, and observability.
+Feel free to extend with moderation, analytics, observability, and advanced permission controls.

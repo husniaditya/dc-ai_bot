@@ -7,6 +7,7 @@ module.exports = {
       ai: '**AI**\n/ask\n/askfollow\n/explain_image (1-3 images)\n/summarize [count]\n/translate text target',
       polls: '**Polls**\n/poll create question options\n/poll results id',
       util: '**Utilities**\n/user info [target]\n/math add|sub|mul|div a b\n/remind minutes text',
+      manage: '**Management (Requires Manage Server)**\n/ytstats\n/ytdebug\n/twitchstats\n/twitchdebug\n/ytwatch (if configured)',
       notes: '**Notes**\nOutputs chunked. Images >8MB skipped. Data in-memory.'
     };
     const select = new StringSelectMenuBuilder().setCustomId('help_select').setPlaceholder('Select category').addOptions(
