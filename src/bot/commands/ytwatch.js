@@ -10,7 +10,7 @@ module.exports = (client) => ({
     if(!member || !member.permissions.has(require('discord.js').PermissionsBitField.Flags.ManageGuild)){
       await interaction.reply({ content:'Manage Server permission required.', flags:64 }); return;
     }
-    const store = require('../config/store');
+    const store = require('../../config/store');
   // Use flags for ephemeral (64) instead of deprecated ephemeral:true
   await interaction.deferReply({ flags:64 });
     const cfg = await store.getGuildYouTubeConfig(guild.id);

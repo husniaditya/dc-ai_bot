@@ -1,4 +1,4 @@
-const { getTwitchDebugEvents } = require('../twitch-watcher');
+const { getTwitchDebugEvents } = require('../services/twitch');
 
 module.exports = {
   name: 'twitchstats',

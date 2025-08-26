@@ -1,4 +1,4 @@
-const { ytStats } = require('../youtube-watcher');
+const { ytStats } = require('../services/youtube');
 
 module.exports = {
   name: 'ytstats',

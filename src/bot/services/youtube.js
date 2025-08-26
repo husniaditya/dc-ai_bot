@@ -9,7 +9,7 @@ if (typeof globalThis.fetch === 'function') fetchFn = (...a)=> globalThis.fetch(
 else {
 	try { fetchFn = (...a)=> require('node-fetch')(...a); } catch { fetchFn = ()=> { throw new Error('fetch not available'); }; }
 }
-const store = require('./config/store');
+const store = require('../../config/store');
 
 const STATE_PATH = path.join(__dirname, 'youtube-state.json');
 let state = { channels:{} };

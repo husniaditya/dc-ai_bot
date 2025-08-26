@@ -1,5 +1,5 @@
 // Twitch watcher: polls configured streamers per guild and announces when they go live.
-const store = require('./config/store');
+const store = require('../../config/store');
 
 const clientId = process.env.TWITCH_CLIENT_ID;
 const clientSecret = process.env.TWITCH_CLIENT_SECRET;

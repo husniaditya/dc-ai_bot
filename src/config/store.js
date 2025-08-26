@@ -57,7 +57,7 @@ let lastMetricsUpdate = 0;
 // Load seed auto responses from existing JS file and convert regex -> {pattern, flags}
 function loadSeedAutoResponses() {
   try {
-    const list = require('../auto-responses');
+    const list = require('../bot/services/auto-responses');
     autoResponses = list.map(r => ({
       key: r.key,
       pattern: r.pattern.source,

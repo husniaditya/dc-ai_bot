@@ -1,5 +1,5 @@
-const { askGemini } = require('../ai-client');
-const { sendLongReply, formatAIOutput } = require('../util');
+const { askGemini } = require('../../utils/ai-client');
+const { sendLongReply, formatAIOutput } = require('../../utils/util');
 module.exports = {
   name: 'translate',
   execute: async (interaction) => {

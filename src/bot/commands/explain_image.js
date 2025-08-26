@@ -1,5 +1,5 @@
-const { explainImages } = require('../ai-client');
-const { buildImageEmbedResponse } = require('../util');
+const { explainImages } = require('../../utils/ai-client');
+const { buildImageEmbedResponse } = require('../../utils/util');
 module.exports = {
   name: 'explain_image',
   execute: async (interaction) => {

@@ -1,5 +1,5 @@
 // Auto reply module dynamic settings via config store
-const store = require('../config/store');
+const store = require('../../config/store');
 
 module.exports = (client) => {
   const lastSent = new Map(); // key(channel+pattern) -> timestamp
