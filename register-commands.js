@@ -148,6 +148,14 @@ const commands = [
     description: 'Show recent YouTube watcher debug events (Manage Server)'
   },
   {
+    name: 'twitchstats',
+    description: 'Show Twitch watcher statistics'
+  },
+  {
+    name: 'twitchdebug',
+    description: 'Show recent Twitch watcher debug events (Manage Server)'
+  },
+  {
     name: 'Explain Image',
     type: 3 // MESSAGE context menu
   },

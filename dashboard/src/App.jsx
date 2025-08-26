@@ -602,6 +602,14 @@ export default function App(){
     { name:'ytwatch', usage:'/ytwatch action:<enable|disable|addchannel|removechannel|announcechannel|mentionrole|interval|status>', desc:'Manage YouTube notifications (requires Manage Server).', requiresManage:true },
     { name:'ytstats', usage:'/ytstats', desc:'Show YouTube watcher cache & quota stats.', requiresManage:true }
       ]
+    },
+    // Twitch group (conditionally shown if user has Manage Server permission in guild)
+    {
+      key: 'twitch', title: 'Twitch', icon: 'fa-brands fa-twitch', accent: '#9146FF',
+      items: [
+        { name:'twitchstats', usage:'/twitchstats', desc:'Show Twitch watcher cache & API stats.', requiresManage:true },
+        { name:'twitchdebug', usage:'/twitchdebug action:<config|status|test|resolve>', desc:'Debug Twitch integration and test notifications.', requiresManage:true }
+      ]
     }
   ];
   const selectedGuildObj = guilds.find(g=> g.id===selectedGuild);

@@ -30,6 +30,11 @@ const guildWelcomeCache = new Map();
 const guildYouTubeConfigCache = new Map();
 let youtubeHasConfigJsonColumn = null; // lazy detection
 
+// Guild Twitch watcher configuration cache
+// Shape: { streamers:[], announceChannelId:null, mentionTargets:[], enabled:false, intervalSec:300, liveTemplate:string, embedEnabled:true, streamerMessages:{}, streamerNames:{} }
+const guildTwitchConfigCache = new Map();
+let twitchHasConfigJsonColumn = null; // lazy detection
+
 // Load seed auto responses from existing JS file and convert regex -> {pattern, flags}
 function loadSeedAutoResponses() {
   try {
@@ -197,6 +202,21 @@ async function initMaria() {
       embed_enabled BOOLEAN NOT NULL DEFAULT 1,
       channel_messages MEDIUMTEXT NULL,
       channel_names MEDIUMTEXT NULL,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB`);
+    
+    // Twitch watcher per-guild configuration
+    await sqlPool.query(`CREATE TABLE IF NOT EXISTS guild_twitch_watch (
+      guild_id VARCHAR(32) PRIMARY KEY,
+      streamers TEXT NULL,
+      announce_channel_id VARCHAR(32) NULL,
+      mention_target VARCHAR(512) NULL,
+      enabled BOOLEAN NOT NULL DEFAULT 0,
+      interval_sec INT NOT NULL DEFAULT 300,
+      live_template TEXT NULL,
+      embed_enabled BOOLEAN NOT NULL DEFAULT 1,
+      streamer_messages MEDIUMTEXT NULL,
+      streamer_names MEDIUMTEXT NULL,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
     ) ENGINE=InnoDB`);
     // Silent migrations expanding mention_target length / adding columns if older version
@@ -737,6 +757,120 @@ module.exports = {
     return { ...next };
   },
   invalidateGuildYouTubeConfig: (guildId) => { guildYouTubeConfigCache.delete(guildId); },
+  
+  // --- Guild Twitch Watcher Config ---
+  getGuildTwitchConfig: async (guildId) => {
+    if(!guildId) throw new Error('guildId required');
+    if (guildTwitchConfigCache.has(guildId)) return { ...guildTwitchConfigCache.get(guildId) };
+    const defaults = {
+      streamers: [],
+      announceChannelId: null,
+      mentionRoleId: null, // legacy single value for backward compatibility
+      mentionTargets: [], // new multi-select list, values: 'everyone','here', role IDs
+      enabled: false,
+      intervalSec: 300,
+      liveTemplate: '🔴 LIVE {streamerName} is now LIVE: **{title}**\n{url} {roleMention}',
+      embedEnabled: true,
+      streamerMessages: {}, // per-streamer override templates
+      streamerNames: {}
+    };
+    if (mariaAvailable && sqlPool){
+      try {
+        const [rows] = await sqlPool.query('SELECT streamers, announce_channel_id, mention_target, enabled, interval_sec, live_template, embed_enabled, streamer_messages, streamer_names FROM guild_twitch_watch WHERE guild_id=?', [guildId]);
+        if(rows.length){
+          const r = rows[0];
+          const cfg = { ...defaults };
+          try { if(r.streamers) cfg.streamers = JSON.parse(r.streamers); } catch { cfg.streamers = []; }
+          cfg.announceChannelId = r.announce_channel_id || null;
+          const rawMention = (r.mention_target || '').trim();
+          let mt = [];
+          if(rawMention){
+            // split by comma and sanitize allowed tokens
+            mt = rawMention.split(',').map(s=>s.trim()).filter(Boolean).filter(x=> x==='everyone' || x==='here' || /^[0-9]{5,32}$/.test(x));
+          }
+          cfg.mentionTargets = mt;
+          cfg.mentionRoleId = mt.length === 1 && /^[0-9]{5,32}$/.test(mt[0]) ? mt[0] : null;
+          cfg.enabled = r.enabled === 1 || r.enabled === true;
+          cfg.intervalSec = r.interval_sec || defaults.intervalSec;
+          cfg.liveTemplate = r.live_template || defaults.liveTemplate;
+          cfg.embedEnabled = r.embed_enabled === 0 ? false : true;
+          try { if(r.streamer_messages) cfg.streamerMessages = JSON.parse(r.streamer_messages); } catch { cfg.streamerMessages = {}; }
+          try { if(r.streamer_names) cfg.streamerNames = JSON.parse(r.streamer_names); } catch { cfg.streamerNames = {}; }
+          guildTwitchConfigCache.set(guildId, cfg);
+          return { ...cfg };
+        }
+        // No row -> insert defaults (disabled)
+        try {
+          await sqlPool.query('INSERT INTO guild_twitch_watch(guild_id, streamers, enabled) VALUES (?,?,0)', [guildId, JSON.stringify([])]);
+          console.log('[TwitchCfg] inserted default row for guild', guildId);
+        } catch(e){ console.error('[TwitchCfg] failed inserting default row', guildId, e.message); }
+        guildTwitchConfigCache.set(guildId, defaults);
+        return { ...defaults };
+      } catch(e){
+        console.error('[TwitchCfg] load error guild', guildId, e.message);
+        return { ...defaults };
+      }
+    }
+    return { ...defaults }; // memory fallback (not persisted)
+  },
+  setGuildTwitchConfig: async (guildId, partial) => {
+    if(!guildId) throw new Error('guildId required');
+    const current = await module.exports.getGuildTwitchConfig(guildId);
+    const next = { ...current };
+    if (Array.isArray(partial.streamers)) next.streamers = partial.streamers.slice(0, 25); // reasonable cap
+    if (partial.announceChannelId !== undefined) next.announceChannelId = partial.announceChannelId || null;
+    // Multi-role logic: prefer mentionTargets if provided else fallback to mentionRoleId
+    if (Array.isArray(partial.mentionTargets)) {
+      const cleaned = partial.mentionTargets
+        .map(s=> String(s||'').trim())
+        .filter(Boolean)
+        .filter((v,i,a)=> a.indexOf(v)===i)
+        .filter(x=> x==='everyone' || x==='here' || /^[0-9]{5,32}$/.test(x))
+        .slice(0, 10); // cap to avoid excessive pings
+      next.mentionTargets = cleaned;
+      next.mentionRoleId = cleaned.length === 1 && /^[0-9]{5,32}$/.test(cleaned[0]) ? cleaned[0] : null;
+    } else if (partial.mentionRoleId !== undefined) {
+      const mr = partial.mentionRoleId ? String(partial.mentionRoleId) : null;
+      next.mentionRoleId = mr;
+      next.mentionTargets = mr ? [mr] : [];
+    }
+    if (partial.enabled !== undefined) next.enabled = !!partial.enabled;
+    if (partial.intervalSec !== undefined) {
+      const iv = parseInt(partial.intervalSec,10);
+      if(!isNaN(iv) && iv >= 60 && iv <= 3600) next.intervalSec = iv; // clamp 1min - 1h
+    }
+    if (partial.liveTemplate !== undefined) next.liveTemplate = (partial.liveTemplate || '').slice(0, 4000) || current.liveTemplate;
+    if (partial.embedEnabled !== undefined) next.embedEnabled = !!partial.embedEnabled;
+    if (partial.streamerMessages && typeof partial.streamerMessages === 'object') next.streamerMessages = { ...partial.streamerMessages };
+    if (partial.streamerNames && typeof partial.streamerNames === 'object') next.streamerNames = { ...partial.streamerNames };
+    guildTwitchConfigCache.set(guildId, next);
+    if (mariaAvailable && sqlPool){
+      const row = {
+        streamers: JSON.stringify(next.streamers||[]),
+        announce_channel_id: next.announceChannelId,
+        mention_target: next.mentionTargets.join(','),
+        enabled: next.enabled ? 1 : 0,
+        interval_sec: next.intervalSec,
+        live_template: next.liveTemplate,
+        embed_enabled: next.embedEnabled ? 1:0,
+        streamer_messages: JSON.stringify(next.streamerMessages||{}),
+        streamer_names: JSON.stringify(next.streamerNames||{})
+      };
+      try {
+        await sqlPool.query(`INSERT INTO guild_twitch_watch (guild_id, streamers, announce_channel_id, mention_target, enabled, interval_sec, live_template, embed_enabled, streamer_messages, streamer_names)
+          VALUES (?,?,?,?,?,?,?,?,?,?)
+          ON DUPLICATE KEY UPDATE streamers=VALUES(streamers), announce_channel_id=VALUES(announce_channel_id), mention_target=VALUES(mention_target), enabled=VALUES(enabled), interval_sec=VALUES(interval_sec), live_template=VALUES(live_template), embed_enabled=VALUES(embed_enabled), streamer_messages=VALUES(streamer_messages), streamer_names=VALUES(streamer_names)`,
+          [guildId, row.streamers, row.announce_channel_id, row.mention_target, row.enabled, row.interval_sec, row.live_template, row.embed_enabled, row.streamer_messages, row.streamer_names]
+        );
+        console.log('[TwitchCfg] saved guild', guildId, 'targets=', next.mentionTargets.length, 'streamers=', next.streamers.length);
+      } catch(e){
+        console.error('Twitch config save failed for guild', guildId, e.message);
+        throw e; // let caller surface persist_failed
+      }
+    }
+    return { ...next };
+  },
+  invalidateGuildTwitchConfig: (guildId) => { guildTwitchConfigCache.delete(guildId); },
   removeAutoResponse: async (key) => {
     const idx = autoResponses.findIndex(r => r.key === key);
     if (idx >= 0) autoResponses.splice(idx, 1);

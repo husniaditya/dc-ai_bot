@@ -1,10 +1,10 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { getYouTubeConfig, updateYouTubeConfig, getChannels, getRoles, resolveYouTubeChannel } from '../api';
+import { getYouTubeConfig, updateYouTubeConfig, getChannels, getRoles, resolveYouTubeChannel, getTwitchConfig, updateTwitchConfig, resolveTwitchStreamer } from '../api';
 
 // icon retained only as a fallback if an image asset is missing
 const SERVICES = [
   { key:'youtube', label:'YouTube', image:'youtube.png', icon:'fa-brands fa-youtube', color:'#FF0000', desc:'Video uploads & live notifications.' },
-  { key:'twitch', label:'Twitch', image:'twitch.png', icon:'fa-brands fa-twitch', color:'#9146FF', desc:'Streamer live alerts (coming soon).' },
+  { key:'twitch', label:'Twitch', image:'twitch.png', icon:'fa-brands fa-twitch', color:'#9146FF', desc:'Streamer live alerts.' },
   { key:'pubg', label:'PUBG', image:'pubg.png', icon:'fa-solid fa-crosshairs', color:'#f59e0b', desc:'Player / match stats (planned).' },
   { key:'valorant', label:'Valorant', image:'valorant.png', icon:'fa-solid fa-bullseye', color:'#e11d48', desc:'Match & agent stats (planned).' },
   { key:'apex', label:'Apex', image:'apexlegends.png', icon:'fa-solid fa-mountain', color:'#7c3aed', desc:'Legend stats & map rotation (planned).' },
@@ -20,15 +20,54 @@ export default function GamesSocialsSection({ guildId, pushToast }){
   const [ytOrig, setYtOrig] = useState(null);
   const [ytLoading, setYtLoading] = useState(false);
   const [ytSaving, setYtSaving] = useState(false);
+  const [twitchCfg, setTwitchCfg] = useState(null);
+  const [twitchOrig, setTwitchOrig] = useState(null);
+  const [twitchLoading, setTwitchLoading] = useState(false);
+  const [twitchSaving, setTwitchSaving] = useState(false);
   const [discordChannels, setDiscordChannels] = useState([]);
   const [newChannelId, setNewChannelId] = useState('');
+  const [newStreamerId, setNewStreamerId] = useState('');
   const [resolving, setResolving] = useState(false);
   const [guildRoles, setGuildRoles] = useState([]);
   const [editingChannel, setEditingChannel] = useState(null);
+  const [editingStreamer, setEditingStreamer] = useState(null);
 
   // Helper to build a preview string from a template
-  function buildPreview(tpl, channelId){
+  function buildPreview(tpl, channelId, type = 'youtube'){
     if(!tpl) return '';
+    
+    if(type === 'twitch') {
+      const streamerNames = twitchCfg?.streamerNames || {};
+      const streamerName = channelId ? (streamerNames[channelId] || 'StreamerName') : (streamerNames[twitchCfg?.streamers?.[0]] || 'StreamerName');
+      const streamTitle = 'Amazing Live Stream';
+      const url = `https://twitch.tv/${channelId || 'streamername'}`;
+      const thumbnail = `https://static-cdn.jtvnw.net/previews-ttv/live_user_${channelId || 'streamername'}-1920x1080.jpg`;
+      const list = twitchCfg?.mentionTargets && twitchCfg.mentionTargets.length? twitchCfg.mentionTargets : (twitchCfg?.mentionRoleId? [twitchCfg.mentionRoleId]:[]);
+      const roleMention = list.map(id=> id==='everyone'? '@everyone' : id==='here'? '@here' : (/^[0-9]{5,32}$/.test(id)? `<@&${id}>` : id)).join(' ');
+      const rolesById = Object.fromEntries((guildRoles||[]).map(r=> [r.id, r.name]));
+      const roleNames = list.map(id=>{
+        if(id==='everyone') return '@everyone';
+        if(id==='here') return '@here';
+        if(rolesById[id]) {
+          const n = rolesById[id];
+          return n.startsWith('@') ? n : '@'+n;
+        }
+        return id.startsWith('@') ? id : '@'+id;
+      }).join(', ');
+      return tpl
+        .replace(/\{streamerName\}/g, streamerName)
+        .replace(/\{title\}/g, streamTitle)
+        .replace(/\{url\}/g, url)
+        .replace(/\{roleMention\}/g, roleMention)
+        .replace(/\{roleNames\}/g, roleNames)
+        .replace(/\{thumbnail\}/g, thumbnail)
+        .replace(/\{game\}/g, 'Just Chatting')
+        .replace(/\{viewers\}/g, '1337')
+        .replace(/\{startedAt\}/g, new Date().toISOString())
+        .replace(/\{startedAtRelative\}/g, 'just now');
+    }
+    
+    // YouTube preview (original code)
     const sampleVideoId = 'VIDEO12345';
     const channelNames = ytCfg?.channelNames || {};
     const channelTitle = channelId ? (channelNames[channelId] || 'Channel Name') : (channelNames[ytCfg?.channels?.[0]] || 'Channel Name');
@@ -57,34 +96,52 @@ export default function GamesSocialsSection({ guildId, pushToast }){
   .replace(/\{publishedAt\}/g, new Date().toISOString())
   .replace(/\{publishedAtRelative\}/g, 'just now');
   }
-  function TemplatePreview({ template, channelId, size }){
-    const result = buildPreview(template, channelId);
+  function TemplatePreview({ template, channelId, size, type = 'youtube' }){
+    const result = buildPreview(template, channelId, type);
     const cls = 'template-preview'+(size? ' size-'+size:'');
     if(!template) return <div className={cls+" empty"}>No template set.</div>;
     return <div className={cls}><div className="preview-label small text-muted">Preview</div><div className="preview-body">{result}</div></div>;
   }
 
-  // Load YouTube config only when guildId and active is youtube
+  // Load configuration only when guildId and active service changes
   useEffect(()=>{
     if(!guildId) return;
-    if(active !== 'youtube') return;
-    (async() => {
-      try {
-        setYtLoading(true);
-        const [cfg, ch, roles] = await Promise.all([
-          getYouTubeConfig(guildId).catch(()=>null),
-          getChannels(guildId).catch(()=>null),
-          getRoles(guildId).catch(()=>null)
-        ]);
-        if(cfg){ setYtCfg(cfg); setYtOrig(cfg); }
-        if(ch && Array.isArray(ch.channels)) setDiscordChannels(ch.channels);
-        if(roles && Array.isArray(roles.roles)) setGuildRoles(roles.roles);
-      } finally { setYtLoading(false); }
-    })();
+    if(active === 'youtube') {
+      (async() => {
+        try {
+          setYtLoading(true);
+          const [cfg, ch, roles] = await Promise.all([
+            getYouTubeConfig(guildId).catch(()=>null),
+            getChannels(guildId).catch(()=>null),
+            getRoles(guildId).catch(()=>null)
+          ]);
+          if(cfg){ setYtCfg(cfg); setYtOrig(cfg); }
+          if(ch && Array.isArray(ch.channels)) setDiscordChannels(ch.channels);
+          if(roles && Array.isArray(roles.roles)) setGuildRoles(roles.roles);
+        } finally { setYtLoading(false); }
+      })();
+    } else if(active === 'twitch') {
+      (async() => {
+        try {
+          setTwitchLoading(true);
+          const [cfg, ch, roles] = await Promise.all([
+            getTwitchConfig(guildId).catch(()=>null),
+            getChannels(guildId).catch(()=>null),
+            getRoles(guildId).catch(()=>null)
+          ]);
+          if(cfg){ setTwitchCfg(cfg); setTwitchOrig(cfg); }
+          if(ch && Array.isArray(ch.channels)) setDiscordChannels(ch.channels);
+          if(roles && Array.isArray(roles.roles)) setGuildRoles(roles.roles);
+        } finally { setTwitchLoading(false); }
+      })();
+    }
   }, [guildId, active]);
 
   function ytDirty(){ if(!ytCfg||!ytOrig) return false; return JSON.stringify(ytCfg) !== JSON.stringify(ytOrig); }
   function ytReset(){ if(ytOrig) setYtCfg(ytOrig); }
+  
+  function twitchDirty(){ if(!twitchCfg||!twitchOrig) return false; return JSON.stringify(twitchCfg) !== JSON.stringify(twitchOrig); }
+  function twitchReset(){ if(twitchOrig) setTwitchCfg(twitchOrig); }
   async function ytSave(){
     if(!ytCfg) return;
     try { setYtSaving(true); const updated = await updateYouTubeConfig(ytCfg, guildId); const safe = {
@@ -96,6 +153,28 @@ export default function GamesSocialsSection({ guildId, pushToast }){
       }; setYtCfg(safe); setYtOrig(safe); pushToast && pushToast('success','YouTube config saved'); }
     catch(e){ pushToast && pushToast('error','Save failed'); }
     finally { setYtSaving(false); }
+  }
+  
+  async function twitchSave(){
+    if(!twitchCfg) return;
+    try { 
+      setTwitchSaving(true); 
+      const updated = await updateTwitchConfig(twitchCfg, guildId); 
+      const safe = {
+        streamers: Array.isArray(updated?.streamers)? updated.streamers : [],
+        mentionTargets: Array.isArray(updated?.mentionTargets)? updated.mentionTargets : (updated?.mentionRoleId ? [updated.mentionRoleId] : []),
+        streamerMessages: updated?.streamerMessages || {},
+        streamerNames: updated?.streamerNames || {},
+        ...updated
+      }; 
+      setTwitchCfg(safe); 
+      setTwitchOrig(safe); 
+      pushToast && pushToast('success','Twitch config saved'); 
+    } catch(e){ 
+      pushToast && pushToast('error','Save failed'); 
+    } finally { 
+      setTwitchSaving(false); 
+    }
   }
   async function addChannel(){
     const raw = newChannelId.trim(); if(!raw) return;
@@ -119,6 +198,32 @@ export default function GamesSocialsSection({ guildId, pushToast }){
     }
   }
   function removeChannel(cid){ setYtCfg(c => ({ ...c, channels: c.channels.filter(x=>x!==cid) })); }
+  
+  async function addStreamer(){
+    const raw = newStreamerId.trim(); if(!raw) return;
+    let username = null;
+    let resolvedName = null;
+    setResolving(true);
+    try {
+      const r = await resolveTwitchStreamer(raw);
+      username = r?.username || null;
+      resolvedName = r?.displayName || null;
+      if(!username) throw new Error('not resolved');
+      pushToast && pushToast('success', `Resolved to ${username}`);
+    } catch(e){
+      pushToast && pushToast('error','Could not resolve streamer');
+    } finally { setResolving(false); }
+    
+    if(username){
+      setTwitchCfg(c => ({ 
+        ...c, 
+        streamers: c.streamers.includes(username)? c.streamers : [...c.streamers, username], 
+        streamerNames: resolvedName ? { ...(c.streamerNames||{}), [username]: resolvedName } : (c.streamerNames||{}) 
+      }));
+      setNewStreamerId('');
+    }
+  }
+  function removeStreamer(username){ setTwitchCfg(c => ({ ...c, streamers: c.streamers.filter(x=>x!==username) })); }
 
   function renderYouTube(){
     if(ytLoading || !ytCfg){ return <div className="text-muted small">Loading YouTube config…</div>; }
@@ -248,6 +353,124 @@ export default function GamesSocialsSection({ guildId, pushToast }){
     </>;
   }
 
+  function renderTwitch(){
+    if(twitchLoading || !twitchCfg){ return <div className="text-muted small">Loading Twitch config…</div>; }
+    return <>
+      <div className="yt-config-grid mt-2">
+        {/* MAIN CONFIG */}
+        <div className="yt-config-block">
+          <div className="d-flex justify-content-between align-items-start mb-2">
+            <div>
+              <div className="small text-uppercase text-muted fw-semibold mb-1">Announcement</div>
+              <div className="form-check form-switch m-0">
+                <input className="form-check-input" type="checkbox" checked={twitchCfg.enabled} onChange={e=> setTwitchCfg(c=> ({ ...c, enabled: e.target.checked }))} />
+                <label className="form-check-label ms-2">{twitchCfg.enabled? 'Enabled':'Disabled'}</label>
+              </div>
+            </div>
+          </div>
+          <div className="mb-3">
+            <label className="form-label small fw-semibold mb-1">Announce Channel</label>
+            <select className="form-select form-select-sm" value={twitchCfg.announceChannelId||''} onChange={e=> setTwitchCfg(c=> ({ ...c, announceChannelId: e.target.value || null }))}>
+              <option value="">Select…</option>
+              {discordChannels.map(ch=> <option key={ch.id} value={ch.id}>{ch.name}</option>)}
+            </select>
+          </div>
+          <div className="mb-3">
+            <label className="form-label small fw-semibold d-flex align-items-center gap-2 mb-1">Mention Targets {twitchCfg.mentionTargets?.length ? <span className="badge-soft" style={{fontSize:'.55rem'}}>{twitchCfg.mentionTargets.length}</span>: null}</label>
+            <MentionTargetsPicker
+              value={twitchCfg.mentionTargets && twitchCfg.mentionTargets.length? twitchCfg.mentionTargets : (twitchCfg.mentionRoleId? [twitchCfg.mentionRoleId] : [])}
+              roles={guildRoles}
+              onChange={(list)=> setTwitchCfg(c=> ({ ...c, mentionTargets:list, mentionRoleId: (list.length===1 && /^[0-9]{5,32}$/.test(list[0])) ? list[0] : null }))}
+            />
+            <div className="form-text tiny text-muted mt-1">Enter to add • Backspace to remove • Order preserved</div>
+          </div>
+          <div className="mb-3">
+            <div>
+              <label className="form-label small fw-semibold mb-1">Interval (sec)</label>
+              <input type="number" min={60} className="form-control form-control-sm" style={{width:110}} value={twitchCfg.intervalSec} onChange={e=> setTwitchCfg(c=> ({ ...c, intervalSec: Math.max(60, parseInt(e.target.value)||300) }))} />
+            </div>
+          </div>
+          <div className="mb-3">
+            <div>
+              <label className="form-label small fw-semibold mb-1">Embeds</label>
+              <div className="form-check form-switch m-0">
+                <input className="form-check-input" type="checkbox" checked={twitchCfg.embedEnabled!==false} onChange={e=> setTwitchCfg(c=> ({ ...c, embedEnabled: e.target.checked }))} />
+                <label className="form-check-label ms-2">{twitchCfg.embedEnabled!==false ? 'Enabled':'Plain'}</label>
+              </div>
+            </div>
+          </div>
+        </div>
+        {/* GLOBAL TEMPLATES */}
+        <div className="yt-config-block">
+          <div className="small text-uppercase text-muted fw-semibold mb-2">Global Template</div>
+          <div className="mb-2">
+            <label className="form-label small fw-semibold mb-1">Live Stream</label>
+            <textarea rows={7} className="form-control form-control-sm" value={twitchCfg.liveTemplate||''} onChange={e=> setTwitchCfg(c=> ({ ...c, liveTemplate: e.target.value }))}></textarea>
+          </div>
+          <div className="form-text tiny mt-2">Placeholders: {'{streamerName} {title} {url} {roleNames} {game} {viewers} {thumbnail} {startedAt} {startedAtRelative}'}</div>
+        </div>
+        {/* TEMPLATE PREVIEW */}
+        <div className="yt-config-block">
+          <div className="small text-uppercase text-muted fw-semibold mb-2">Template Preview</div>
+          <div className="mb-2">
+            <TemplatePreview template={twitchCfg.liveTemplate} size="lg" type="twitch" />
+          </div>
+          <div className="form-text tiny mt-2">Placeholders: {'{streamerName} {title} {url} {roleNames} {game} {viewers} {thumbnail} {startedAt} {startedAtRelative}'}</div>
+        </div>
+      </div>
+      <div className="yt-config-block mt-3">
+        <div className="d-flex flex-wrap align-items-end gap-2 mb-3">
+          <div style={{flex:'1 1 260px'}}>
+            <label className="form-label small fw-semibold mb-1">Add Streamer (username / URL)</label>
+            &nbsp;{active==='twitch' && twitchCfg && twitchOrig && twitchCfg && (JSON.stringify(twitchCfg)!==JSON.stringify(twitchOrig)) && <span className="dirty-badge">Unsaved</span>}
+            <input className="form-control form-control-sm" placeholder="username, https://twitch.tv/username" value={newStreamerId} onChange={e=> setNewStreamerId(e.target.value)} onKeyDown={e=> { if(e.key==='Enter'){ e.preventDefault(); addStreamer(); } }} />
+          </div>
+          <button type="button" className="btn btn-sm btn-accent" onClick={addStreamer} disabled={!newStreamerId.trim()||resolving}><i className="fa-solid fa-plus" /> {resolving? 'Resolving...':'Add'}</button>
+        </div>
+        <ul className="yt-channel-list list-unstyled m-0 p-0">
+          {(!Array.isArray(twitchCfg.streamers) || twitchCfg.streamers.length===0) && <li className="text-muted small py-2">No streamers added yet.</li>}
+          {Array.isArray(twitchCfg.streamers) && twitchCfg.streamers.map(username => {
+            const override = (twitchCfg.streamerMessages||{})[username] || {};
+            const name = (twitchCfg.streamerNames||{})[username] || '';
+            const isEditing = editingStreamer===username;
+            return <li key={username} className={"yt-channel-item "+(isEditing? 'editing':'')}>
+              <div className="yt-channel-row">
+                <div className="flex-grow-1">
+                  <div className="d-flex align-items-center gap-2 flex-wrap">
+                    <code className="small text-muted">{username}</code>
+                    <input className="form-control form-control-sm flex-grow-1" placeholder="Display Name" value={name} onChange={e=> setTwitchCfg(c=> ({ ...c, streamerNames: { ...(c.streamerNames||{}), [username]: e.target.value.slice(0,120) } }))} />
+                  </div>
+                </div>
+                <div className="d-flex align-items-center gap-2 ms-2">
+                  <button type="button" className="btn btn-icon btn-xs" title="Edit per-streamer templates" onClick={()=> setEditingStreamer(p=> p===username? null: username)}><i className="fa-solid fa-pen" /></button>
+                  {(!name || name.trim()==='') && <button type="button" className="btn btn-icon btn-xs" title="Fetch streamer name" onClick={async ()=>{ try { setResolving(true); const r = await resolveTwitchStreamer(username); if(r?.username){ setTwitchCfg(c=> ({ ...c, streamerNames: { ...(c.streamerNames||{}), [username]: r.displayName || c.streamerNames?.[username] || '' } })); } } catch{} finally { setResolving(false); } }} disabled={resolving}><i className="fa-solid fa-download" /></button>}
+                  <button type="button" className="btn btn-icon btn-xs text-danger" title="Remove" onClick={()=> removeStreamer(username)}><i className="fa-solid fa-trash" /></button>
+                </div>
+              </div>
+              {isEditing && <div className="yt-channel-edit mt-2">
+                <div className="row g-2">
+                  <div className="col-md-12">
+                    <label className="form-label tiny fw-semibold mb-1">Live Template</label>
+                    <textarea rows={2} className="form-control form-control-sm" value={override.liveTemplate||''} onChange={e=> setTwitchCfg(c=> ({ ...c, streamerMessages: { ...(c.streamerMessages||{}), [username]: { ...(c.streamerMessages?.[username]||{}), liveTemplate: e.target.value } } }))}></textarea>
+                    <TemplatePreview template={override.liveTemplate || twitchCfg.liveTemplate} channelId={username} type="twitch" />
+                  </div>
+                </div>
+                <div className="d-flex gap-2 mt-2">
+                  <button type="button" className="btn btn-sm btn-outline-secondary" onClick={()=> setTwitchCfg(c=> { const sm = { ...(c.streamerMessages||{}) }; delete sm[username]; return { ...c, streamerMessages: sm }; })}>Clear Overrides</button>
+                  <button type="button" className="btn btn-sm btn-outline-light" onClick={()=> setEditingStreamer(null)}>Close</button>
+                </div>
+              </div>}
+            </li>;
+          })}
+        </ul>
+      </div>
+      <div className="d-flex gap-2 mt-3">
+        <button className="btn btn-outline-secondary" disabled={!twitchDirty()||twitchSaving} onClick={twitchReset}><i className="fa-solid fa-rotate-left me-2"/>Reset</button>
+        <button className="btn btn-primary" disabled={!twitchDirty()||twitchSaving} onClick={twitchSave}><i className="fa-solid fa-floppy-disk me-2"/>{twitchSaving? 'Saving…':'Save'}</button>
+      </div>
+    </>;
+  }
+
   function renderPlaceholder(service){
     return <div className="text-muted small p-3">
       <p className="mb-1"><strong>{service.label}</strong> integration is not configured yet.</p>
@@ -256,7 +479,7 @@ export default function GamesSocialsSection({ guildId, pushToast }){
     </div>;
   }
 
-  const showOverlay = active==='youtube' && (ytLoading || (!ytCfg && guildId));
+  const showOverlay = (active==='youtube' && (ytLoading || (!ytCfg && guildId))) || (active==='twitch' && (twitchLoading || (!twitchCfg && guildId)));
   return <div className="p-4 games-socials-wrapper position-relative">
     {showOverlay && <div className="loading-overlay">
       <div className="spinner" />
@@ -265,38 +488,59 @@ export default function GamesSocialsSection({ guildId, pushToast }){
     <div className="d-flex align-items-center gap-2 mb-3">
       <h5 className="mb-0">Games & Socials</h5>
       {active==='youtube' && ytCfg && ytOrig && ytCfg && (JSON.stringify(ytCfg)!==JSON.stringify(ytOrig)) && <span className="dirty-badge">Unsaved</span>}
+      {active==='twitch' && twitchCfg && twitchOrig && twitchCfg && (JSON.stringify(twitchCfg)!==JSON.stringify(twitchOrig)) && <span className="dirty-badge">Unsaved</span>}
     </div>
     <div className="services-grid d-flex flex-wrap gap-3 mb-3">
       {SERVICES.map(s => {
         const activeCls = s.key===active? 'active':'';
         const isYouTube = s.key==='youtube';
-        // Determine enabled state (only YouTube implemented)
-        const enabled = isYouTube ? (ytCfg?.enabled ?? false) : false;
+        const isTwitch = s.key==='twitch';
+        // Determine enabled state (YouTube and Twitch implemented)
+        const enabled = isYouTube ? (ytCfg?.enabled ?? false) : isTwitch ? (twitchCfg?.enabled ?? false) : false;
         function toggleEnabled(e){
           e.stopPropagation();
-          if(!isYouTube) return;
-          if(!ytCfg) return;
-          const prev = ytCfg;
-          const newVal = !prev.enabled;
-          setYtCfg(c=> ({ ...c, enabled: newVal }));
-          // Auto-save for quick toggle
-      (async()=>{
-            try {
-        await updateYouTubeConfig({ ...prev, enabled: newVal }, guildId);
-        // Fetch again to ensure DB flag authoritative
-        const fresh = await getYouTubeConfig(guildId);
-        setYtCfg(fresh); setYtOrig(fresh);
-              pushToast && pushToast('success', 'YouTube '+(newVal? 'enabled':'disabled'));
-            } catch(err){
-              pushToast && pushToast('error','Toggle failed');
-              setYtCfg(prev); // revert
-            }
-          })();
+          if(isYouTube) {
+            if(!ytCfg) return;
+            const prev = ytCfg;
+            const newVal = !prev.enabled;
+            setYtCfg(c=> ({ ...c, enabled: newVal }));
+            // Auto-save for quick toggle
+            (async()=>{
+              try {
+                await updateYouTubeConfig({ ...prev, enabled: newVal }, guildId);
+                // Fetch again to ensure DB flag authoritative
+                const fresh = await getYouTubeConfig(guildId);
+                setYtCfg(fresh); setYtOrig(fresh);
+                pushToast && pushToast('success', 'YouTube '+(newVal? 'enabled':'disabled'));
+              } catch(err){
+                pushToast && pushToast('error','Toggle failed');
+                setYtCfg(prev); // revert
+              }
+            })();
+          } else if(isTwitch) {
+            if(!twitchCfg) return;
+            const prev = twitchCfg;
+            const newVal = !prev.enabled;
+            setTwitchCfg(c=> ({ ...c, enabled: newVal }));
+            // Auto-save for quick toggle
+            (async()=>{
+              try {
+                await updateTwitchConfig({ ...prev, enabled: newVal }, guildId);
+                // Fetch again to ensure DB flag authoritative
+                const fresh = await getTwitchConfig(guildId);
+                setTwitchCfg(fresh); setTwitchOrig(fresh);
+                pushToast && pushToast('success', 'Twitch '+(newVal? 'enabled':'disabled'));
+              } catch(err){
+                pushToast && pushToast('error','Toggle failed');
+                setTwitchCfg(prev); // revert
+              }
+            })();
+          }
         }
   return <button key={s.key} type="button" className={'service-card card-glass p-3 pt-4 text-start position-relative '+activeCls} onClick={()=> setActive(s.key)} style={{width:170, border: s.key===active? '2px solid var(--accent)': '1px solid rgba(255,255,255,0.08)'}}>
           <div className="position-absolute top-0 end-0 p-1" onClick={e=> e.stopPropagation()}>
             <div className="form-check form-switch m-0">
-              <input className="form-check-input" style={{cursor: isYouTube? 'pointer':'not-allowed'}} disabled={!isYouTube || !ytCfg} type="checkbox" checked={enabled} onChange={toggleEnabled} />
+              <input className="form-check-input" style={{cursor: (isYouTube || isTwitch)? 'pointer':'not-allowed'}} disabled={!(isYouTube || isTwitch) || (isYouTube && !ytCfg) || (isTwitch && !twitchCfg)} type="checkbox" checked={enabled} onChange={toggleEnabled} />
             </div>
           </div>
           <div className="d-flex align-items-center gap-2 mb-2">
@@ -318,10 +562,12 @@ export default function GamesSocialsSection({ guildId, pushToast }){
         <div className="flex-grow-1">
           <div className="fw-semibold" style={{fontSize:'.9rem'}}>{svc.label} Configuration</div>
           {active==='youtube' && ytCfg && <div className="small text-muted" style={{fontSize:'.6rem'}}>{ytCfg.enabled? 'Announcements enabled':'Announcements disabled'}</div>}
+          {active==='twitch' && twitchCfg && <div className="small text-muted" style={{fontSize:'.6rem'}}>{twitchCfg.enabled? 'Announcements enabled':'Announcements disabled'}</div>}
         </div>
         {active==='youtube' && ytCfg && <span className={`status-dot ${ytCfg.enabled? 'on':'off'}`}></span>}
+        {active==='twitch' && twitchCfg && <span className={`status-dot ${twitchCfg.enabled? 'on':'off'}`}></span>}
       </div> ); })()}
-    {active==='youtube' ? renderYouTube() : renderPlaceholder(SERVICES.find(s=>s.key===active))}
+    {active==='youtube' ? renderYouTube() : active==='twitch' ? renderTwitch() : renderPlaceholder(SERVICES.find(s=>s.key===active))}
   </div>;
 }
 
