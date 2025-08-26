@@ -57,6 +57,8 @@ function createYouTubeRoutes(client, store) {
         intervalSec: req.body.intervalSec,
         uploadTemplate: req.body.uploadTemplate,
         liveTemplate: req.body.liveTemplate,
+        memberOnlyUploadTemplate: req.body.memberOnlyUploadTemplate,
+        memberOnlyLiveTemplate: req.body.memberOnlyLiveTemplate,
         embedEnabled: req.body.embedEnabled,
         channelMessages: req.body.channelMessages,
         channelNames: req.body.channelNames

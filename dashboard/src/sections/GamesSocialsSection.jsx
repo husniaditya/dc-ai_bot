@@ -92,9 +92,10 @@ export default function GamesSocialsSection({ guildId, pushToast }){
       .replace(/\{url\}/g, url)
       .replace(/\{roleMention\}/g, roleMention)
       .replace(/\{roleNames\}/g, roleNames)
-  .replace(/\{thumbnail\}/g, thumbnail)
-  .replace(/\{publishedAt\}/g, new Date().toISOString())
-  .replace(/\{publishedAtRelative\}/g, 'just now');
+      .replace(/\{thumbnail\}/g, thumbnail)
+      .replace(/\{publishedAt\}/g, new Date().toISOString())
+      .replace(/\{publishedAtRelative\}/g, 'just now')
+      .replace(/\{memberText\}/g, ' (Members Only)');
   }
   function TemplatePreview({ template, channelId, size, type = 'youtube' }){
     const result = buildPreview(template, channelId, type);
@@ -180,14 +181,25 @@ export default function GamesSocialsSection({ guildId, pushToast }){
   function twitchReset(){ if(twitchOrig) setTwitchCfg(twitchOrig); }
   async function ytSave(){
     if(!ytCfg) return;
-    try { setYtSaving(true); const updated = await updateYouTubeConfig(ytCfg, guildId); const safe = {
+    try { 
+      setYtSaving(true); 
+      const updated = await updateYouTubeConfig(ytCfg, guildId); 
+      // Use the complete response from backend, ensuring arrays are properly initialized
+      const safe = {
+        ...updated,
         channels: Array.isArray(updated?.channels)? updated.channels : [],
         mentionTargets: Array.isArray(updated?.mentionTargets)? updated.mentionTargets : (updated?.mentionRoleId ? [updated.mentionRoleId] : []),
         channelMessages: updated?.channelMessages || {},
-        channelNames: updated?.channelNames || {},
-        ...updated
-      }; setYtCfg(safe); setYtOrig(safe); pushToast && pushToast('success','YouTube config saved'); }
-    catch(e){ pushToast && pushToast('error','Save failed'); }
+        channelNames: updated?.channelNames || {}
+      }; 
+      setYtCfg(safe); 
+      setYtOrig(safe); 
+      pushToast && pushToast('success','YouTube config saved'); 
+    }
+    catch(e){ 
+      console.error('YouTube save error:', e);
+      pushToast && pushToast('error','Save failed'); 
+    }
     finally { setYtSaving(false); }
   }
   
@@ -196,17 +208,19 @@ export default function GamesSocialsSection({ guildId, pushToast }){
     try { 
       setTwitchSaving(true); 
       const updated = await updateTwitchConfig(twitchCfg, guildId); 
+      // Use the complete response from backend, ensuring arrays are properly initialized
       const safe = {
+        ...updated,
         streamers: Array.isArray(updated?.streamers)? updated.streamers : [],
         mentionTargets: Array.isArray(updated?.mentionTargets)? updated.mentionTargets : (updated?.mentionRoleId ? [updated.mentionRoleId] : []),
         streamerMessages: updated?.streamerMessages || {},
-        streamerNames: updated?.streamerNames || {},
-        ...updated
+        streamerNames: updated?.streamerNames || {}
       }; 
       setTwitchCfg(safe); 
       setTwitchOrig(safe); 
       pushToast && pushToast('success','Twitch config saved'); 
     } catch(e){ 
+      console.error('Twitch save error:', e);
       pushToast && pushToast('error','Save failed'); 
     } finally { 
       setTwitchSaving(false); 
@@ -310,25 +324,49 @@ export default function GamesSocialsSection({ guildId, pushToast }){
         </div>
         {/* GLOBAL TEMPLATES */}
         <div className="yt-config-block">
-          <div className="small text-uppercase text-muted fw-semibold mb-2">Global Templates</div>
+          <div className="small text-uppercase text-muted fw-semibold mb-2">Regular Template</div>
           <div className="mb-2">
             <label className="form-label small fw-semibold mb-1">Upload</label>
             <textarea rows={7} className="form-control form-control-sm" value={ytCfg.uploadTemplate||''} onChange={e=> setYtCfg(c=> ({ ...c, uploadTemplate: e.target.value }))}></textarea>
           </div>
-          <div>
+          <div className="mb-2">
             <label className="form-label small fw-semibold mb-1">Live</label>
             <textarea rows={7} className="form-control form-control-sm" value={ytCfg.liveTemplate||''} onChange={e=> setYtCfg(c=> ({ ...c, liveTemplate: e.target.value }))}></textarea>
           </div>
-          <div className="form-text tiny mt-2">Placeholders: {'{channelTitle} {title} {url} {roleNames} {thumbnail} {publishedAt} {publishedAtRelative}'}</div>
+          <br />
+          <div className="small text-uppercase text-muted fw-semibold mb-2">Member Template</div>
+          <div className="mb-2">
+            <label className="form-label small fw-semibold mb-1">Member Upload</label>
+            <textarea rows={7} className="form-control form-control-sm" value={ytCfg.memberOnlyUploadTemplate||''} onChange={e=> setYtCfg(c=> ({ ...c, memberOnlyUploadTemplate: e.target.value }))}></textarea>
+          </div>
+          <div>
+            <label className="form-label small fw-semibold mb-1">Member Live</label>
+            <textarea rows={7} className="form-control form-control-sm" value={ytCfg.memberOnlyLiveTemplate||''} onChange={e=> setYtCfg(c=> ({ ...c, memberOnlyLiveTemplate: e.target.value }))}></textarea>
+          </div>
+          <div className="form-text tiny mt-2">Placeholders: {'{channelTitle} {title} {url} {roleNames} {thumbnail} {publishedAt} {publishedAtRelative} {memberText}'}</div>
         </div>
         {/* TEMPLATE PREVIEW */}
         <div className="yt-config-block">
-          <div className="small text-uppercase text-muted fw-semibold mb-2">Template Preview</div>
+          <div className="small text-uppercase text-muted fw-semibold mb-2">Regular Template Preview</div>
           <div className="mb-2">
+            <div className="small fw-semibold mb-1">Regular Upload</div>
             <TemplatePreview template={ytCfg.uploadTemplate} size="lg" />
           </div>
+          <div className="mb-2">
+            <div className="small fw-semibold mb-1">Regular Live</div>
             <TemplatePreview template={ytCfg.liveTemplate} size="lg" />
-          <div className="form-text tiny mt-2">Placeholders: {'{channelTitle} {title} {url} {roleNames} {thumbnail} {publishedAt} {publishedAtRelative}'}</div>
+          </div>
+          <br />
+          <div className="small text-uppercase text-muted fw-semibold mb-2">Member Template Preview</div>
+          <div className="mb-2">
+            <div className="small fw-semibold mb-1">Member Upload</div>
+            <TemplatePreview template={ytCfg.memberOnlyUploadTemplate} size="lg" />
+          </div>
+          <div className="mb-2">
+            <div className="small fw-semibold mb-1">Member Live</div>
+            <TemplatePreview template={ytCfg.memberOnlyLiveTemplate} size="lg" />
+          </div>
+          <div className="form-text tiny mt-2">Placeholders: {'{channelTitle} {title} {url} {roleNames} {thumbnail} {publishedAt} {publishedAtRelative} {memberText}'}</div>
         </div>
       </div>
       <div className="yt-config-block mt-3">
@@ -368,9 +406,19 @@ export default function GamesSocialsSection({ guildId, pushToast }){
                     <TemplatePreview template={override.uploadTemplate || ytCfg.uploadTemplate} channelId={cid} />
                   </div>
                   <div className="col-md-6">
+                    <label className="form-label tiny fw-semibold mb-1">Member Upload Template</label>
+                    <textarea rows={2} className="form-control form-control-sm" value={override.memberOnlyUploadTemplate||''} onChange={e=> setYtCfg(c=> ({ ...c, channelMessages: { ...(c.channelMessages||{}), [cid]: { ...(c.channelMessages?.[cid]||{}), memberOnlyUploadTemplate: e.target.value } } }))}></textarea>
+                    <TemplatePreview template={override.memberOnlyUploadTemplate || ytCfg.memberOnlyUploadTemplate} channelId={cid} />
+                  </div>
+                  <div className="col-md-6">
                     <label className="form-label tiny fw-semibold mb-1">Live Template</label>
                     <textarea rows={2} className="form-control form-control-sm" value={override.liveTemplate||''} onChange={e=> setYtCfg(c=> ({ ...c, channelMessages: { ...(c.channelMessages||{}), [cid]: { ...(c.channelMessages?.[cid]||{}), liveTemplate: e.target.value } } }))}></textarea>
                     <TemplatePreview template={override.liveTemplate || ytCfg.liveTemplate} channelId={cid} />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label tiny fw-semibold mb-1">Member Live Template</label>
+                    <textarea rows={2} className="form-control form-control-sm" value={override.memberOnlyLiveTemplate||''} onChange={e=> setYtCfg(c=> ({ ...c, channelMessages: { ...(c.channelMessages||{}), [cid]: { ...(c.channelMessages?.[cid]||{}), memberOnlyLiveTemplate: e.target.value } } }))}></textarea>
+                    <TemplatePreview template={override.memberOnlyLiveTemplate || ytCfg.memberOnlyLiveTemplate} channelId={cid} />
                   </div>
                 </div>
                 <div className="d-flex gap-2 mt-2">
