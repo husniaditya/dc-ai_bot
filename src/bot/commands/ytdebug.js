@@ -14,6 +14,10 @@ module.exports = {
       return interaction.reply({ content:'Set YT_DEBUG_EVENTS=1 and restart to collect debug events.', flags:64 });
     }
     
+    // Get API key status from the service module
+    const youtubeService = require('../services/youtube');
+    const keyStatus = youtubeService.getKeyStatus ? youtubeService.getKeyStatus() : { totalKeys: 'Unknown', currentKey: 'Unknown', exhaustedKeys: 'Unknown' };
+    
     // Show basic stats first
     const stats = `**YouTube Watcher Statistics:**
 Total Polls: ${ytStats.totalPolls}
@@ -22,6 +26,11 @@ Total Errors: ${ytStats.totalErrors}
 API Calls: ${ytStats.apiCalls}
 Quota Errors: ${ytStats.quotaErrors}
 Last Poll: ${ytStats.lastPoll || 'Never'}
+
+**API Key Status:**
+Total Keys: ${keyStatus.totalKeys}
+Current Key: ${keyStatus.currentKey}
+Exhausted Keys: ${keyStatus.exhaustedKeys}
 
 **Recent Events (latest last):**`;
     

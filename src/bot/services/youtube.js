@@ -25,18 +25,21 @@ function initializeApiKeys() {
 	const singleKey = process.env.YOUTUBE_API_KEY;
 	
 	if (multipleKeys) {
-		// Parse multiple keys (comma or whitespace separated)
-		apiKeys = multipleKeys.split(/[,\s]+/).map(key => key.trim()).filter(key => key.length > 0);
+		// Parse multiple keys (comma or whitespace separated) and clean them
+		apiKeys = multipleKeys
+			.split(/[,\s\n\r]+/)
+			.map(key => key.trim())
+			.filter(key => key.length > 20); // YouTube API keys are typically longer than 20 chars
 	} else if (singleKey) {
-		apiKeys = [singleKey];
+		apiKeys = [singleKey.trim()];
 	}
 	
 	if (apiKeys.length === 0) {
-		console.warn('No YouTube API keys found in environment variables');
+		console.warn('No valid YouTube API keys found in environment variables');
 		return false;
 	}
 	
-	console.log(`[YT] Initialized with ${apiKeys.length} API key(s)`);
+	console.log(`[YT] Initialized with ${apiKeys.length} valid API key(s)`);
 	return true;
 }
 
@@ -52,11 +55,48 @@ function getCurrentApiKey() {
 	return apiKeys[currentKeyIndex];
 }
 
+function isKeyExhausted(apiKey) {
+	if (!apiKey) return true;
+	const errors = quotaState.keyErrors.get(apiKey) || 0;
+	return errors > 0; // Consider key exhausted if it has any quota errors
+}
+
+function getNextAvailableKey() {
+	if (apiKeys.length === 0) return null;
+	if (apiKeys.length === 1) return apiKeys[0]; // Only one key available
+	
+	// Find a key that hasn't been exhausted
+	for (let i = 0; i < apiKeys.length; i++) {
+		const testIndex = (currentKeyIndex + i + 1) % apiKeys.length;
+		const testKey = apiKeys[testIndex];
+		if (!isKeyExhausted(testKey)) {
+			currentKeyIndex = testIndex;
+			console.log(`[YT] Switched to fresh API key ${currentKeyIndex + 1}/${apiKeys.length}`);
+			pushDebug(`FRESH_KEY: Switched to non-exhausted key ${currentKeyIndex + 1}`);
+			return testKey;
+		}
+	}
+	
+	// All keys are exhausted, return current key anyway
+	console.log(`[YT] WARNING: All ${apiKeys.length} API keys appear to be exhausted`);
+	pushDebug(`ALL_EXHAUSTED: All ${apiKeys.length} keys have quota errors`);
+	return getCurrentApiKey();
+}
+
 function rotateToNextApiKey() {
 	if (apiKeys.length <= 1) return getCurrentApiKey();
-	const nextKey = getNextApiKey();
-	pushDebug(`KEY_ROTATION: Switched to API key ${currentKeyIndex + 1}/${apiKeys.length}`);
-	return nextKey;
+	
+	// Try to get the next available (non-exhausted) key
+	const nextKey = getNextAvailableKey();
+	if (nextKey) {
+		pushDebug(`KEY_ROTATION: Switched to API key ${currentKeyIndex + 1}/${apiKeys.length}`);
+		return nextKey;
+	}
+	
+	// Fallback to simple rotation if no fresh keys available
+	const fallbackKey = getNextApiKey();
+	pushDebug(`FALLBACK_ROTATION: No fresh keys, using key ${currentKeyIndex + 1}/${apiKeys.length}`);
+	return fallbackKey;
 }
 
 // Quota adaptive controls (in-memory)
@@ -104,23 +144,51 @@ function noteQuotaExceeded(apiKey = null){
 		
 		// Automatically rotate to next key when quota is exceeded
 		if (apiKeys.length > 1) {
+			const oldIndex = currentKeyIndex;
 			const newKey = rotateToNextApiKey();
-			pushDebug(`AUTO_ROTATION: Switched from exhausted key to new key`);
+			console.log(`[YT] AUTO_ROTATION: Switched from key ${oldIndex + 1} to key ${currentKeyIndex + 1}/${apiKeys.length}`);
+			pushDebug(`AUTO_ROTATION: Switched from exhausted key ${oldIndex + 1} to new key ${currentKeyIndex + 1}`);
+			return newKey; // Return the new key for immediate use
 		}
 	}
 	
-	if(quotaState.quotaErrors >= quotaState.threshold){
+	// Check if we should suspend all API calls
+	const totalActiveKeys = apiKeys.length;
+	const exhaustedKeys = Array.from(quotaState.keyErrors.values()).filter(errors => errors > 0).length;
+	
+	// If more than half the keys are exhausted or we hit the global threshold, suspend
+	if(quotaState.quotaErrors >= quotaState.threshold || exhaustedKeys >= Math.ceil(totalActiveKeys / 2)){
 		quotaState.suspendUntil = Date.now() + quotaState.cooldownMs;
-		const suspendMsg = `Suspending API calls for ${quotaState.cooldownMs / 60000} minutes due to quota errors`;
+		const suspendMsg = `Suspending API calls for ${quotaState.cooldownMs / 60000} minutes (${exhaustedKeys}/${totalActiveKeys} keys exhausted)`;
 		console.log(`[YT] ${suspendMsg}`);
 		pushDebug(`SUSPENDED: ${suspendMsg}`);
 	}
+	
+	return null; // No new key available
 }
 
 function inLowQuotaMode(){
 	if(process.env.YT_DISABLE_SEARCH==='1') return true; // explicit override
 	if(Date.now() < quotaState.suspendUntil) return true;
 	return false;
+}
+
+// Reset quota errors for keys periodically (quotas reset over time)
+function resetQuotaErrors() {
+	const resetAge = 60 * 60 * 1000; // 1 hour
+	const now = Date.now();
+	
+	if (now - quotaState.lastQuotaError > resetAge) {
+		const beforeSize = quotaState.keyErrors.size;
+		quotaState.keyErrors.clear();
+		quotaState.quotaErrors = 0;
+		quotaState.suspendUntil = 0;
+		
+		if (beforeSize > 0) {
+			console.log(`[YT] Reset quota errors for ${beforeSize} API keys (quota reset window)`);
+			pushDebug(`QUOTA_RESET: Cleared errors for ${beforeSize} keys after ${resetAge/60000} minutes`);
+		}
+	}
 }
 
 // Video age filtering function
@@ -165,16 +233,15 @@ async function fetchChannelUploads(channelId, apiKey){
 			const reason = js?.error?.errors?.[0]?.reason || js?.error?.code;
 			// If quotaExceeded or dailyLimitExceeded -> try next API key or fallback to playlist
 			if(/quota|daily/i.test(reason||'')){
-				noteQuotaExceeded(apiKey);
+				const rotatedKey = noteQuotaExceeded(apiKey);
 				// Try with the newly rotated API key if available
-				const currentKey = getCurrentApiKey();
-				if (currentKey && currentKey !== apiKey && apiKeys.length > 1) {
+				if (rotatedKey && rotatedKey !== apiKey) {
 					if(debug) console.log(`[YT] Retrying with rotated API key for channel ${channelId}`);
 					pushDebug(`KEY_RETRY: Using rotated API key for channel ${channelId}`);
-					return fetchChannelUploads(channelId, currentKey);
+					return fetchChannelUploads(channelId, rotatedKey);
 				}
 				pushDebug(`FALLBACK: Using playlist method for channel ${channelId} due to quota`);
-				return fetchChannelUploadsViaPlaylist(channelId, apiKey);
+				return fetchChannelUploadsViaPlaylist(channelId, getCurrentApiKey() || apiKey);
 			}
 		}
 	} catch(e){ 
@@ -212,9 +279,56 @@ async function fetchChannelUploads(channelId, apiKey){
 	return filteredItems;
 }
 
+// Enhanced video details fetching to detect member-only content
+async function fetchVideoDetails(videoIds, apiKey) {
+	if (!videoIds.length) return [];
+	const idsStr = videoIds.slice(0, 50).join(','); // API limit
+	const url = `https://www.googleapis.com/youtube/v3/videos?part=snippet,status,liveStreamingDetails&id=${idsStr}&key=${apiKey}`;
+	ytStats.apiCalls += 1;
+	pushDebug(`VIDEO_DETAILS: Fetching details for ${videoIds.length} video(s)`);
+	
+	try {
+		const res = await fetchFn(url);
+		const txt = await res.text();
+		let js; try { js = JSON.parse(txt); } catch { js = { _raw: txt }; }
+		
+		if(res.status === 403){
+			const reason = js?.error?.errors?.[0]?.reason || js?.error?.code;
+			if(/quota|daily/i.test(reason||'')){
+				noteQuotaExceeded(apiKey);
+				return [];
+			}
+		}
+		
+		if(!js || !Array.isArray(js.items)) return [];
+		
+		return js.items.map(item => ({
+			videoId: item.id,
+			title: item.snippet?.title,
+			publishedAt: item.snippet?.publishedAt,
+			thumbnail: item.snippet?.thumbnails?.high?.url || item.snippet?.thumbnails?.default?.url || null,
+			liveBroadcastContent: item.snippet?.liveBroadcastContent || 'none',
+			privacyStatus: item.status?.privacyStatus,
+			madeForKids: item.status?.madeForKids,
+			// Member-only detection indicators
+			isMemberOnly: item.status?.privacyStatus === 'unlisted' && 
+				(item.snippet?.description?.toLowerCase().includes('member') || 
+				 item.snippet?.title?.toLowerCase().includes('member')),
+			// Additional live stream details
+			actualStartTime: item.liveStreamingDetails?.actualStartTime,
+			scheduledStartTime: item.liveStreamingDetails?.scheduledStartTime,
+			concurrentViewers: item.liveStreamingDetails?.concurrentViewers
+		}));
+	} catch(e) { 
+		ytStats.totalErrors += 1;
+		pushDebug(`VIDEO_DETAILS_ERROR: ${e.message}`);
+		return []; 
+	}
+}
+
 // Explicit live search (eventType=live) tends to be more reliable for currently active streams than relying only on order=date search.
 async function fetchChannelLiveNow(channelId, apiKey){
-	const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${channelId}&eventType=live&type=video&maxResults=3&key=${apiKey}`;
+	const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${channelId}&eventType=live&type=video&maxResults=10&key=${apiKey}`;
 	ytStats.apiCalls += 1;
 	pushDebug(`LIVE_SEARCH: Checking for live streams on channel ${channelId}`);
 	
@@ -229,14 +343,13 @@ async function fetchChannelLiveNow(channelId, apiKey){
 		if(res.status === 403){
 			const reason = js?.error?.errors?.[0]?.reason || js?.error?.code;
 			if(/quota|daily/i.test(reason||'')){
-				noteQuotaExceeded(apiKey);
+				const rotatedKey = noteQuotaExceeded(apiKey);
 				// Try with the newly rotated API key if available
-				const currentKey = getCurrentApiKey();
-				if (currentKey && currentKey !== apiKey && apiKeys.length > 1) {
+				if (rotatedKey && rotatedKey !== apiKey) {
 					const debug = process.env.YT_DEBUG === '1';
 					if(debug) console.log(`[YT] Retrying live search with rotated API key for channel ${channelId}`);
 					pushDebug(`LIVE_KEY_RETRY: Using rotated API key for live search ${channelId}`);
-					return fetchChannelLiveNow(channelId, currentKey);
+					return fetchChannelLiveNow(channelId, rotatedKey);
 				}
 				return []; // silent skip on quota
 			}
@@ -245,7 +358,9 @@ async function fetchChannelLiveNow(channelId, apiKey){
 			pushDebug(`LIVE_NO_RESULTS: No live streams found for ${channelId}`);
 			return [];
 		}
-		const liveItems = js.items.map(it => ({
+		
+		// Get basic live items first
+		const basicLiveItems = js.items.map(it => ({
 			videoId: it.id?.videoId,
 			title: it.snippet?.title,
 			publishedAt: it.snippet?.publishedAt,
@@ -253,10 +368,27 @@ async function fetchChannelLiveNow(channelId, apiKey){
 			liveBroadcastContent: 'live' // force classify
 		})).filter(v=>v.videoId);
 		
-		if(liveItems.length > 0) {
-			pushDebug(`LIVE_FOUND: ${liveItems.length} live stream(s) for channel ${channelId}`);
+		// Enhance with detailed information to detect member-only streams
+		const videoIds = basicLiveItems.map(v => v.videoId);
+		if (videoIds.length > 0) {
+			const detailedItems = await fetchVideoDetails(videoIds, apiKey);
+			// Merge detailed information
+			const enhancedItems = basicLiveItems.map(basic => {
+				const detailed = detailedItems.find(d => d.videoId === basic.videoId);
+				return detailed ? { ...basic, ...detailed } : basic;
+			});
+			
+			if(enhancedItems.length > 0) {
+				const memberOnlyCount = enhancedItems.filter(v => v.isMemberOnly).length;
+				pushDebug(`LIVE_FOUND: ${enhancedItems.length} live stream(s) for channel ${channelId} (${memberOnlyCount} member-only)`);
+			}
+			return enhancedItems;
 		}
-		return liveItems;
+		
+		if(basicLiveItems.length > 0) {
+			pushDebug(`LIVE_FOUND: ${basicLiveItems.length} live stream(s) for channel ${channelId}`);
+		}
+		return basicLiveItems;
 	} catch(e) { 
 		ytStats.totalErrors += 1;
 		pushDebug(`LIVE_ERROR: Live search failed for ${channelId} - ${e.message}`);
@@ -275,13 +407,12 @@ async function fetchChannelUploadsViaPlaylist(channelId, apiKey){
 		if(cRes.status === 403){
 			const reason = cJs?.error?.errors?.[0]?.reason || cJs?.error?.code;
 			if(/quota|daily/i.test(reason||'')){
-				noteQuotaExceeded(apiKey);
+				const rotatedKey = noteQuotaExceeded(apiKey);
 				// Try with the newly rotated API key if available
-				const currentKey = getCurrentApiKey();
-				if (currentKey && currentKey !== apiKey && apiKeys.length > 1) {
+				if (rotatedKey && rotatedKey !== apiKey) {
 					if(debug) console.log(`[YT] Retrying playlist fetch with rotated API key for channel ${channelId}`);
 					pushDebug(`PLAYLIST_KEY_RETRY: Using rotated API key for channel ${channelId}`);
-					return fetchChannelUploadsViaPlaylist(channelId, currentKey);
+					return fetchChannelUploadsViaPlaylist(channelId, rotatedKey);
 				}
 			}
 			if(process.env.YT_ENABLE_RSS_FALLBACK==='1'){
@@ -298,13 +429,12 @@ async function fetchChannelUploadsViaPlaylist(channelId, apiKey){
 		if(pRes.status === 403){
 			const reason = pJs?.error?.errors?.[0]?.reason || pJs?.error?.code;
 			if(/quota|daily/i.test(reason||'')){
-				noteQuotaExceeded(apiKey);
+				const rotatedKey = noteQuotaExceeded(apiKey);
 				// Try with the newly rotated API key if available
-				const currentKey = getCurrentApiKey();
-				if (currentKey && currentKey !== apiKey && apiKeys.length > 1) {
+				if (rotatedKey && rotatedKey !== apiKey) {
 					if(debug) console.log(`[YT] Retrying playlist items with rotated API key for channel ${channelId}`);
 					pushDebug(`PLAYLIST_ITEMS_RETRY: Using rotated API key for channel ${channelId}`);
-					return fetchChannelUploadsViaPlaylist(channelId, currentKey);
+					return fetchChannelUploadsViaPlaylist(channelId, rotatedKey);
 				}
 			}
 			if(process.env.YT_ENABLE_RSS_FALLBACK==='1'){
@@ -366,26 +496,134 @@ async function fetchChannelUploadsViaRSS(channelId){
 	} catch(e){ if(debug) console.log('[YT] rss error', channelId, e.message); return []; }
 }
 
-// HTML live scrape fallback. Lightweight heuristic; may break if YouTube layout changes.
+// Enhanced HTML live scrape with member-only detection
 async function fetchLiveViaScrape(channelId){
 	if(process.env.YT_ENABLE_LIVE_SCRAPE !== '1') return [];
 	const debug = process.env.YT_DEBUG === '1';
-	const url = `https://www.youtube.com/channel/${channelId}/live`;
-	try {
-		const res = await fetchFn(url, { headers:{ 'User-Agent':'Mozilla/5.0' }});
-		if(!res.ok) return [];
-		const html = await res.text();
-		// Detect live flag & videoId in initial data JSON
-		if(!/isLiveNow"\s*:\s*true/.test(html)) return [];
-		const idMatch = html.match(/"videoId"\s*:\s*"([a-zA-Z0-9_-]{6,})"/);
-		const videoId = idMatch ? idMatch[1] : null;
-		if(!videoId) return [];
-		// Try to extract title
-		const titleMatch = html.match(/<meta itemprop="name" content="([^"]+)"/);
-		const title = titleMatch ? titleMatch[1] : 'Live Stream';
-		const thumb = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
-		return [{ videoId, title, publishedAt: new Date().toISOString(), thumbnail: thumb, liveBroadcastContent:'live' }];
-	} catch(e){ if(debug) console.log('[YT] live scrape error', channelId, e.message); return []; }
+	const enableMemberOnlyDetection = process.env.YT_ENABLE_MEMBER_ONLY_DETECTION === '1';
+	const enhancedScraping = process.env.YT_MEMBER_ONLY_SCRAPE_ENHANCED === '1';
+	
+	// Try multiple URLs to catch member-only streams
+	const urls = [
+		`https://www.youtube.com/channel/${channelId}/live`,
+		...(enhancedScraping ? [
+			`https://www.youtube.com/channel/${channelId}/community`,
+			`https://www.youtube.com/channel/${channelId}/streams`
+		] : [])
+	];
+	
+	const results = [];
+	
+	for (const url of urls) {
+		try {
+			const res = await fetchFn(url, { 
+				headers: { 
+					'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+					'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+					'Accept-Language': 'en-US,en;q=0.5'
+				}
+			});
+			if(!res.ok) continue;
+			
+			const html = await res.text();
+			
+			// Enhanced detection patterns
+			const patterns = [
+				// Standard live detection
+				/"isLiveNow"\s*:\s*true/,
+				// Member-only live detection (only if enabled)
+				...(enableMemberOnlyDetection ? [
+					/"text"\s*:\s*"Members-only"/,
+					/"badges".*?"text"\s*:\s*"Members only"/,
+					/"upcomingEventData".*?"isLiveNow"\s*:\s*true/
+				] : [])
+			];
+			
+			let isLive = false;
+			let isMemberOnly = false;
+			
+			for (const pattern of patterns) {
+				if (pattern.test(html)) {
+					isLive = true;
+					if (enableMemberOnlyDetection && pattern.source.includes('Member')) {
+						isMemberOnly = true;
+					}
+					break;
+				}
+			}
+			
+			if (!isLive) continue;
+			
+			// Extract video ID with multiple methods
+			const videoIdPatterns = [
+				/"videoId"\s*:\s*"([a-zA-Z0-9_-]{6,})"/,
+				/"watchEndpoint"\s*:\s*{\s*"videoId"\s*:\s*"([a-zA-Z0-9_-]{6,})"/,
+				/\/watch\?v=([a-zA-Z0-9_-]{6,})/
+			];
+			
+			let videoId = null;
+			for (const pattern of videoIdPatterns) {
+				const match = html.match(pattern);
+				if (match) {
+					videoId = match[1];
+					break;
+				}
+			}
+			
+			if (!videoId) continue;
+			
+			// Extract title with multiple methods
+			const titlePatterns = [
+				/<meta property="og:title" content="([^"]+)"/,
+				/<meta name="title" content="([^"]+)"/,
+				/"title"\s*:\s*{\s*"runs"\s*:\s*\[\s*{\s*"text"\s*:\s*"([^"]+)"/
+			];
+			
+			let title = 'Live Stream';
+			for (const pattern of titlePatterns) {
+				const match = html.match(pattern);
+				if (match) {
+					title = match[1];
+					break;
+				}
+			}
+			
+			const thumbnail = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+			
+			const streamInfo = { 
+				videoId, 
+				title, 
+				publishedAt: new Date().toISOString(), 
+				thumbnail, 
+				liveBroadcastContent: 'live',
+				isMemberOnly,
+				detectionMethod: 'scrape',
+				sourceUrl: url
+			};
+			
+			results.push(streamInfo);
+			
+			if (debug) {
+				console.log(`[YT] Scrape found ${isMemberOnly ? 'member-only ' : ''}live stream: ${title} (${videoId})`);
+			}
+			pushDebug(`SCRAPE_FOUND: ${isMemberOnly ? 'Member-only ' : ''}live stream ${videoId} from ${url}`);
+			
+		} catch(e) { 
+			if(debug) console.log(`[YT] live scrape error for ${url}:`, e.message); 
+			pushDebug(`SCRAPE_ERROR: ${url} - ${e.message}`);
+		}
+	}
+	
+	// Remove duplicates by videoId
+	const uniqueResults = results.filter((stream, index, self) => 
+		index === self.findIndex(s => s.videoId === stream.videoId)
+	);
+	
+	if (uniqueResults.length > 0) {
+		pushDebug(`SCRAPE_SUMMARY: Found ${uniqueResults.length} unique live stream(s) for ${channelId}`);
+	}
+	
+	return uniqueResults;
 }
 
 function buildRoleMention(cfg){
@@ -409,20 +647,43 @@ async function announce(guild, cfg, video, type){
 	if(!ch || !ch.isTextBased()) return;
 	
 	ytStats.totalAnnouncements += 1;
-	pushDebug(`ANNOUNCE: ${type.toUpperCase()} - ${video.title} (${video.videoId}) in guild ${guild.id}`);
+	const memberOnlyFlag = video.isMemberOnly ? ' [MEMBER-ONLY]' : '';
+	pushDebug(`ANNOUNCE: ${type.toUpperCase()}${memberOnlyFlag} - ${video.title} (${video.videoId}) in guild ${guild.id}`);
 	
-	// Template selection
-	const baseTemplate = type==='live' ? (cfg.liveTemplate || '') : (cfg.uploadTemplate || '');
+	// Template selection with member-only support
+	let baseTemplate = '';
+	if (type === 'live') {
+		if (video.isMemberOnly && cfg.memberOnlyLiveTemplate) {
+			baseTemplate = cfg.memberOnlyLiveTemplate;
+		} else {
+			baseTemplate = cfg.liveTemplate || '';
+		}
+	} else {
+		if (video.isMemberOnly && cfg.memberOnlyUploadTemplate) {
+			baseTemplate = cfg.memberOnlyUploadTemplate;
+		} else {
+			baseTemplate = cfg.uploadTemplate || '';
+		}
+	}
+	
 	const roleMention = buildRoleMention(cfg);
 	const url = `https://youtu.be/${video.videoId}`;
+	const memberBadge = video.isMemberOnly ? '👑 ' : '';
+	const memberText = video.isMemberOnly ? ' (Members Only)' : '';
+	
 	let content = baseTemplate
 		.replace(/\{roleMention\}/g, roleMention)
 		.replace(/\{channelTitle\}/g, cfg.channelNames?.[video.channelId] || 'YouTube Channel')
 		.replace(/\{title\}/g, video.title || 'Untitled')
 		.replace(/\{url\}/g, url)
-		.replace(/\{thumbnail\}/g, video.thumbnail || '');
+		.replace(/\{thumbnail\}/g, video.thumbnail || '')
+		.replace(/\{memberBadge\}/g, memberBadge)
+		.replace(/\{memberText\}/g, memberText);
+	
 	if(!cfg.embedEnabled){
-		if(content.length === 0) content = `${roleMention} ${url}`.trim();
+		if(content.length === 0) {
+			content = `${memberBadge}${roleMention} ${url}${memberText}`.trim();
+		}
 		// If template didn't include {thumbnail} but we have one, append it so users still see the image link
 		if(video.thumbnail && !/https?:\/\/.*(img\.youtube|ytimg|youtube)\./i.test(content)){
 			content = content + `\n${video.thumbnail}`;
@@ -430,13 +691,37 @@ async function announce(guild, cfg, video, type){
 		await ch.send(content);
 		return;
 	}
+	
+	// Enhanced embed for member-only content
+	const embedColor = video.isMemberOnly ? 0xFFD700 : (type==='live'? 0xE53935 : 0x1E88E5); // Gold for member-only
 	const embed = {
-		title: video.title?.slice(0,256) || 'New Video',
+		title: `${memberBadge}${video.title?.slice(0,256) || 'New Video'}${memberText}`,
 		url,
 		description: content.slice(0, 4000),
-		color: type==='live'? 0xE53935 : 0x1E88E5
+		color: embedColor
 	};
+	
 	if(video.thumbnail){ embed.image = { url: video.thumbnail }; }
+	
+	// Add member-only field to embed
+	if (video.isMemberOnly) {
+		embed.fields = [{
+			name: '👑 Member Exclusive',
+			value: 'This content is available to channel members only.',
+			inline: false
+		}];
+	}
+	
+	// Add additional live stream info if available
+	if (type === 'live' && video.concurrentViewers) {
+		if (!embed.fields) embed.fields = [];
+		embed.fields.push({
+			name: '👀 Viewers',
+			value: video.concurrentViewers,
+			inline: true
+		});
+	}
+	
 	await ch.send({ content: roleMention || undefined, embeds:[embed] });
 }
 
@@ -540,19 +825,26 @@ function startYouTubeWatcher(client){
 		return;
 	}
 	
-	pushDebug(`STARTUP: YouTube watcher started with ${apiKeys.length} API key(s)`);
+	// Start with the first available key
+	currentKeyIndex = 0;
+	console.log(`[YT] Starting with API key 1/${apiKeys.length}`);
+	pushDebug(`STARTUP: YouTube watcher started with ${apiKeys.length} API key(s), using key 1`);
 	
 	// Set up periodic key rotation (every 30 minutes) to distribute load
 	if (apiKeys.length > 1) {
 		setInterval(() => {
-			const oldKey = getCurrentApiKey();
+			const oldIndex = currentKeyIndex;
 			const newKey = rotateToNextApiKey();
-			pushDebug(`SCHEDULED_ROTATION: Rotated from key ${currentKeyIndex === 0 ? apiKeys.length : currentKeyIndex} to key ${currentKeyIndex + 1}`);
+			console.log(`[YT] SCHEDULED_ROTATION: Rotated from key ${oldIndex + 1} to key ${currentKeyIndex + 1}/${apiKeys.length}`);
+			pushDebug(`SCHEDULED_ROTATION: Rotated from key ${oldIndex + 1} to key ${currentKeyIndex + 1}`);
 		}, 30 * 60 * 1000); // 30 minutes
 	}
 	
 	async function tick(){
 		try {
+			// Reset quota errors periodically
+			resetQuotaErrors();
+			
 			for (const guild of client.guilds.cache.values()){
 				// Get the current API key for this polling cycle
 				const currentKey = getCurrentApiKey();
@@ -577,4 +869,16 @@ function startYouTubeWatcher(client){
 	console.log(`YouTube watcher started with ${apiKeys.length} API key(s), max video age: ${process.env.YT_MAX_VIDEO_AGE_HOURS || '24'} hours`);
 }
 
-module.exports = { startYouTubeWatcher, ytStats };
+function getKeyStatus() {
+	const exhaustedKeys = Array.from(quotaState.keyErrors.entries())
+		.filter(([key, errors]) => errors > 0)
+		.map(([key, errors]) => `${key.substring(0, 10)}...(${errors})`);
+	
+	return {
+		totalKeys: apiKeys.length,
+		currentKey: `${currentKeyIndex + 1}/${apiKeys.length} (${getCurrentApiKey()?.substring(0, 10)}...)`,
+		exhaustedKeys: exhaustedKeys.length > 0 ? exhaustedKeys.join(', ') : 'None'
+	};
+}
+
+module.exports = { startYouTubeWatcher, ytStats, getKeyStatus };

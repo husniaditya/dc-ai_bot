@@ -42,6 +42,22 @@ module.exports = (client) => ({
       const sec = interaction.options.getInteger('seconds');
       if(!sec || sec < 30) return interaction.editReply('seconds >= 30 required');
       updated = await store.setGuildYouTubeConfig(guild.id, { intervalSec: sec });
+    } else if(action === 'uploadtemplate'){
+      const template = interaction.options.getString('template');
+      if(!template) return interaction.editReply('template required');
+      updated = await store.setGuildYouTubeConfig(guild.id, { uploadTemplate: template });
+    } else if(action === 'livetemplate'){
+      const template = interaction.options.getString('template');
+      if(!template) return interaction.editReply('template required');
+      updated = await store.setGuildYouTubeConfig(guild.id, { liveTemplate: template });
+    } else if(action === 'memberuploadtemplate'){
+      const template = interaction.options.getString('template');
+      if(!template) return interaction.editReply('template required');
+      updated = await store.setGuildYouTubeConfig(guild.id, { memberOnlyUploadTemplate: template });
+    } else if(action === 'memberlivetemplate'){
+      const template = interaction.options.getString('template');
+      if(!template) return interaction.editReply('template required');
+      updated = await store.setGuildYouTubeConfig(guild.id, { memberOnlyLiveTemplate: template });
     } else if(action === 'status'){
       // no changes
     } else {
@@ -53,12 +69,31 @@ module.exports = (client) => ({
 });
 
 function formatConfig(cfg){
-  return 'YouTube Watch Config:\n'
+  const memberOnlyEnabled = process.env.YT_ENABLE_MEMBER_ONLY_DETECTION === '1';
+  let response = 'YouTube Watch Config:\n'
     + `Enabled: ${cfg.enabled}\n`
     + `AnnounceChannel: ${cfg.announceChannelId || 'unset'}\n`
     + `MentionRoleID: ${cfg.mentionRoleId || 'none'}\n`
     + `MentionRoleName: ${cfg.mentionRoleName || 'none'}\n`
     + `IntervalSec: ${cfg.intervalSec}\n`
     + `Channels(${cfg.channels.length}): ${cfg.channels.join(', ') || 'none'}\n`
-    + 'Actions: use /ytwatch with options (action, channel_id, discord_channel, role, seconds).';
+    + `UploadTemplate: ${cfg.uploadTemplate?.slice(0, 100)}${cfg.uploadTemplate?.length > 100 ? '...' : ''}\n`
+    + `LiveTemplate: ${cfg.liveTemplate?.slice(0, 100)}${cfg.liveTemplate?.length > 100 ? '...' : ''}\n`;
+  
+  if (memberOnlyEnabled) {
+    response += `MemberUploadTemplate: ${cfg.memberOnlyUploadTemplate?.slice(0, 100)}${cfg.memberOnlyUploadTemplate?.length > 100 ? '...' : ''}\n`
+      + `MemberLiveTemplate: ${cfg.memberOnlyLiveTemplate?.slice(0, 100)}${cfg.memberOnlyLiveTemplate?.length > 100 ? '...' : ''}\n`;
+  }
+  
+  response += '\nActions: use /ytwatch with options (action, channel_id, discord_channel, role, seconds, template).';
+  
+  if (memberOnlyEnabled) {
+    response += '\nMember-only detection is ENABLED. Use memberuploadtemplate/memberlivetemplate actions for custom member-only messages.';
+  } else {
+    response += '\nMember-only detection is DISABLED. Set YT_ENABLE_MEMBER_ONLY_DETECTION=1 to enable.';
+  }
+  
+  response += '\nAvailable placeholders: {roleMention}, {channelTitle}, {title}, {url}, {thumbnail}, {memberBadge}, {memberText}';
+  
+  return response;
 }
