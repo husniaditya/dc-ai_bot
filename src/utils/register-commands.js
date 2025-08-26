@@ -1,13 +1,77 @@
 const { REST, Routes } = require('discord.js');
-require('dotenv').config();
+const path = require('path');
+
+// Load .env from the root directory (two levels up from src/utils)
+require('dotenv').config({ path: path.resolve(__dirname, '../../.env') });
 
 const token = process.env.DISCORD_TOKEN;
 const clientId = process.env.CLIENT_ID;
-const guildId = process.env.GUILD_ID; // use a guild for faster registration during development
 
-if (!token || !clientId || !guildId) {
-  console.error('Missing one of DISCORD_TOKEN, CLIENT_ID, or GUILD_ID in environment. See .env.example.');
+if (!token || !clientId) {
+  console.error('Missing DISCORD_TOKEN or CLIENT_ID in environment. See .env.example.');
   process.exit(1);
+}
+
+// Function to get all guild IDs from database
+async function getAllGuildIds() {
+  try {
+    const store = require('../config/store');
+    
+    // Initialize persistence to load data
+    const mode = await store.initPersistence();
+    console.log(`Connected to database (${mode}), fetching all guild IDs...`);
+    
+    if (mode === 'maria') {
+      const mysql = require('mysql2/promise');
+      const host = process.env.MARIADB_HOST;
+      const user = process.env.MARIADB_USER;
+      const password = process.env.MARIADB_PASS;
+      const database = process.env.MARIADB_DB;
+      
+      if (host && user && database) {
+        const connection = await mysql.createConnection({
+          host, user, password, database,
+          port: process.env.MARIADB_PORT ? parseInt(process.env.MARIADB_PORT, 10) : 3306
+        });
+        
+        // Get unique guild IDs from various tables
+        const guildQueries = [
+          'SELECT DISTINCT guild_id FROM guild_settings',
+          'SELECT DISTINCT guild_id FROM guild_auto_responses',
+          'SELECT DISTINCT guild_id FROM guild_command_toggles',
+          'SELECT DISTINCT guild_id FROM guild_personalization',
+          'SELECT DISTINCT guild_id FROM guild_welcome',
+          'SELECT DISTINCT guild_id FROM guild_youtube_watch',
+          'SELECT DISTINCT guild_id FROM guild_twitch_watch',
+          'SELECT DISTINCT selected_guild_id as guild_id FROM m_user WHERE selected_guild_id IS NOT NULL'
+        ];
+        
+        const allGuildIds = new Set();
+        
+        for (const query of guildQueries) {
+          try {
+            const [rows] = await connection.execute(query);
+            rows.forEach(row => {
+              const guildId = row.guild_id;
+              if (guildId && guildId.length >= 15) { // Valid Discord guild ID length
+                allGuildIds.add(guildId);
+              }
+            });
+          } catch (err) {
+            console.warn(`Query failed (table might not exist): ${query.split(' ')[3]}`);
+          }
+        }
+        
+        await connection.end();
+        return Array.from(allGuildIds);
+      }
+    }
+    
+    return [];
+  } catch (error) {
+    console.warn('Could not access database:', error.message);
+    return [];
+  }
 }
 
 const commands = [
@@ -173,14 +237,45 @@ const rest = new REST({ version: '10' }).setToken(token);
 
 (async () => {
   try {
-    console.log('Registering application (/) commands for guild:', guildId);
-    await rest.put(
-      Routes.applicationGuildCommands(clientId, guildId),
-      { body: commands }
-    );
-    console.log('Successfully registered guild commands.');
+    const guildIds = await getAllGuildIds();
+    
+    if (guildIds.length === 0) {
+      console.log('No guilds found in database. Consider running register-commands-global.js instead.');
+      process.exit(1);
+    }
+    
+    console.log(`Found ${guildIds.length} guild(s) in database. Registering commands for all of them...`);
+    
+    let successCount = 0;
+    let failCount = 0;
+    
+    for (const guildId of guildIds) {
+      try {
+        console.log(`Registering commands for guild: ${guildId}`);
+        
+        await rest.put(
+          Routes.applicationGuildCommands(clientId, guildId),
+          { body: commands }
+        );
+        
+        console.log(`✅ Successfully registered commands for guild ${guildId}`);
+        successCount++;
+      } catch (error) {
+        console.error(`❌ Failed to register commands for guild ${guildId}:`, error.message);
+        if (error.status === 403) {
+          console.error('   Bot might not be in that guild or lacks permissions.');
+        }
+        failCount++;
+      }
+    }
+    
+    console.log(`\n📊 Registration Summary:`);
+    console.log(`   ✅ Successful: ${successCount} guild(s)`);
+    console.log(`   ❌ Failed: ${failCount} guild(s)`);
+    console.log(`\nCommands should be available immediately in successful guilds.`);
+    
   } catch (error) {
-    console.error('Failed to register commands:', error);
+    console.error('Failed to fetch guild IDs or register commands:', error);
     process.exit(1);
   }
 })();
