@@ -58,7 +58,7 @@ class JWTRotationManager {
     } catch (error) {
       console.error('❌ Error updating .env file:', error.message);
       console.log('\n📝 Please manually update your .env file with:');
-      console.log(`DASHBOARD_JWT_SECRET=${newSecrets.join(',')}`);
+      console.log(`DASHBOARD_JWT_SECRET`);
       return false;
     }
   }
@@ -69,8 +69,6 @@ class JWTRotationManager {
     
     this.currentSecrets.forEach((secret, index) => {
       const role = index === 0 ? '(PRIMARY - used for signing)' : '(verification only)';
-      console.log(`  ${index + 1}. ${secret.substring(0, 16)}...${secret.substring(secret.length - 16)} ${role}`);
-      console.log(`     Length: ${secret.length} chars`);
     });
     
     if (this.currentSecrets.length === 0) {
@@ -78,7 +76,7 @@ class JWTRotationManager {
     } else if (this.currentSecrets.length === 1) {
       console.log('ℹ️  Single secret mode - no rotation capability.');
     } else {
-      console.log(`✅ Rotation enabled with ${this.currentSecrets.length} secrets.`);
+      console.log(`✅ Rotation enabled - secrets available for verification.`);
     }
   }
 
