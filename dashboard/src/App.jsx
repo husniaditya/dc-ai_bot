@@ -129,8 +129,33 @@ export default function App(){
   const initialAuthCode = (typeof window !== 'undefined') ? new URLSearchParams(window.location.search).get('code') : null;
   const [authProcessing, setAuthProcessing] = useState(!!initialAuthCode && !token);
 
+  // Handle logout messages from URL parameters
+  useEffect(() => {
+    if (view === 'login') {
+      const params = new URLSearchParams(window.location.search);
+      const message = params.get('message');
+      
+      if (message && !error) {
+        setError(decodeURIComponent(message));
+        
+        // Clean URL after showing message
+        const cleanUrl = window.location.origin + window.location.pathname;
+        window.history.replaceState({}, '', cleanUrl);
+      }
+    }
+  }, [view, error]);
+
   // --- Lifecycle / bootstrap ---
   useEffect(()=>{
+    // Set up global auth manager integration if available
+    if (window.authManager) {
+      window.authManager.onLogout((reason) => {
+        console.log('AuthManager forced logout:', reason);
+        setError(reason || 'Session expired');
+        doLogout();
+      });
+    }
+    
     // If token already exists (persisted), go fetch guilds
     if(token && view==='login'){
       bootstrapGuilds();
@@ -151,7 +176,15 @@ export default function App(){
           const text = await resp.text();
           let data; try { data = text? JSON.parse(text):{}; } catch { throw new Error('OAuth exchange failed (bad JSON)'); }
           if(!resp.ok){ throw new Error(data.error || 'OAuth exchange failed'); }
-          if(data.token){ localStorage.setItem('token', data.token); setToken(data.token); }
+          if(data.token){ 
+            localStorage.setItem('token', data.token); 
+            setToken(data.token);
+            
+            // Also set token in AuthManager if available
+            if (window.authManager) {
+              window.authManager.setToken(data.token);
+            }
+          }
           if(Array.isArray(data.guilds)) setGuilds(data.guilds);
           setView('guild');
           const cleanUrl = window.location.origin + window.location.pathname; // strip params
@@ -178,23 +211,54 @@ export default function App(){
             } else {
               bootstrapGuilds();
             }
+          } else if(resp.status === 401) {
+            // Token is invalid/expired - force logout to clear everything
+            console.log('Token validation failed on login page - clearing session');
+            doLogout();
           }
-        } catch{}
+        } catch(e){
+          // Network error or other issue - don't force logout, just log
+          console.warn('Token validation failed:', e.message);
+        }
       })();
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
   async function bootstrapGuilds(){
+    // Guard: don't make API calls if no token
+    const currentToken = localStorage.getItem('token');
+    if (!currentToken) {
+      console.log('No token available for bootstrapGuilds, redirecting to login...');
+      setView('login');
+      return;
+    }
+    
     try {
       setLoading(true);
       // guild list endpoint piggybacked from settings API when guild not chosen yet? Fallback to /api/guilds via window.fetch
-  const res = await fetch(API_BASE + '/api/guilds', { headers:{ Authorization: 'Bearer '+localStorage.getItem('token') }});
-      if(!res.ok) throw new Error('Failed to load guilds');
-  const txt = await res.text(); let data={}; try { data = txt? JSON.parse(txt):{}; } catch { throw new Error('Guilds JSON parse failed'); }
+      const res = await fetch(API_BASE + '/api/guilds', { headers:{ Authorization: 'Bearer '+currentToken }});
+      if(!res.ok) {
+        if(res.status === 401) {
+          // Unauthorized - token invalid, force logout
+          console.log('Bootstrap guilds failed - unauthorized, forcing logout');
+          doLogout();
+          return;
+        }
+        throw new Error('Failed to load guilds');
+      }
+      const txt = await res.text(); 
+      let data={}; 
+      try { data = txt? JSON.parse(txt):{}; } catch { throw new Error('Guilds JSON parse failed'); }
       setGuilds(data.guilds||data||[]);
       setView('guild');
-    } catch(e){ setError(e.message); }
+    } catch(e){ 
+      if(e.message.includes('logout')) {
+        // Already handled logout above
+        return;
+      }
+      setError(e.message); 
+    }
     finally { setLoading(false); }
   }
 
@@ -202,15 +266,27 @@ export default function App(){
 
   async function refresh(){
     if(!selectedGuild) return;
+    
+    // Guard: don't make API calls if no token
+    const currentToken = localStorage.getItem('token');
+    if (!currentToken) {
+      console.log('No token available for refresh, skipping...');
+      return;
+    }
+    
     try {
       setLoading(true);
-  const [s, a] = await Promise.all([getSettings(selectedGuild), listAuto(selectedGuild)]);
-  setSettings(s || {});
-  setAutos(Array.isArray(a) ? a : []);
+      const [s, a] = await Promise.all([getSettings(selectedGuild), listAuto(selectedGuild)]);
+      setSettings(s || {});
+      setAutos(Array.isArray(a) ? a : []);
       setError('');
     } catch(e){
-      if (e.message.toLowerCase().includes('unauthorized')) { doLogout(); }
-      else setError(e.message);
+      if (e.message.toLowerCase().includes('unauthorized') || e.message.toLowerCase().includes('authentication failed')) { 
+        console.log('Refresh failed due to auth error, logging out...');
+        doLogout(); 
+      } else {
+        setError(e.message);
+      }
     } finally { setLoading(false); }
   }
 
@@ -226,17 +302,33 @@ export default function App(){
   }
 
   function doLogout(){
+    console.log('Executing logout - clearing all authentication state');
+    
+    // Clear all localStorage items
     localStorage.removeItem('token');
-    try {
-      localStorage.removeItem('selectedGuild');
-      localStorage.removeItem('dashSection');
-      localStorage.removeItem('lastView');
-    } catch(_){}
+    localStorage.removeItem('selectedGuild');
+    localStorage.removeItem('dashSection');
+    localStorage.removeItem('lastView');
+    localStorage.removeItem('guildsCache');
+    
+    // Reset all state
     setToken(null);
     setSelectedGuild(null);
     setSettings(null);
     setAutos([]);
+    setGuilds([]);
+    setError('');
+    setInfo('');
+    setLoading(false);
+    setAuthProcessing(false);
+    
+    // Ensure we're on login view
     setView('login');
+    
+    // Clear any existing auth manager token if available
+    if (window.authManager) {
+      window.authManager.clearToken();
+    }
   }
 
   function saveSelectedGuild(nextView){

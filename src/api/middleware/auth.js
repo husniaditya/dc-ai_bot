@@ -12,12 +12,17 @@ function authMiddleware(req, res, next) {
   const token = auth.startsWith('Bearer ') ? auth.slice(7) : null;
   
   if (!token) {
-    return res.status(401).json({ error: 'missing token' });
+    return res.status(401).json({ 
+      error: 'missing_token',
+      message: 'Authentication required',
+      requiresLogout: true 
+    });
   }
   
   // Try to verify with each secret (rotation support)
   let verified = false;
   let lastError = null;
+  let isExpired = false;
   
   for (let i = 0; i < JWT_SECRETS.length; i++) {
     try {
@@ -25,19 +30,56 @@ function authMiddleware(req, res, next) {
       verified = true;
       
       // Log which secret was used for debugging
-      if (JWT_SECRETS.length > 1) {
-        console.log(`JWT verified with secret #${i + 1}/${JWT_SECRETS.length}`);
-      }
+      // if (JWT_SECRETS.length > 1) {
+      //   console.log(`JWT verified with secret #${i + 1}/${JWT_SECRETS.length}`);
+      // }
       break;
     } catch(e) {
       lastError = e;
+      
+      // Check if the error is specifically due to token expiration
+      if (e.name === 'TokenExpiredError') {
+        isExpired = true;
+      }
       // Continue to next secret
     }
   }
   
   if (!verified) {
     console.log('JWT verification failed with all secrets:', lastError?.message);
-    return res.status(401).json({ error: 'invalid token' });
+    
+    // Handle different types of JWT errors with specific responses
+    if (isExpired) {
+      return res.status(401).json({ 
+        error: 'token_expired',
+        message: 'Your session has expired. Please log in again.',
+        requiresLogout: true,
+        expiredAt: lastError.expiredAt || null
+      });
+    }
+    
+    if (lastError?.name === 'JsonWebTokenError') {
+      return res.status(401).json({ 
+        error: 'invalid_token',
+        message: 'Invalid authentication token. Please log in again.',
+        requiresLogout: true 
+      });
+    }
+    
+    if (lastError?.name === 'NotBeforeError') {
+      return res.status(401).json({ 
+        error: 'token_not_active',
+        message: 'Token is not active yet.',
+        requiresLogout: true 
+      });
+    }
+    
+    // Generic invalid token response
+    return res.status(401).json({ 
+      error: 'authentication_failed',
+      message: 'Authentication failed. Please log in again.',
+      requiresLogout: true 
+    });
   }
   
   next();
