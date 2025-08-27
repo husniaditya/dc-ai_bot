@@ -32,14 +32,42 @@ export async function fetchJson(path){
   for(const b of bases){
     try {
       const res = await fetch(b + path, { headers:{ 'Accept':'application/json' } });
+      
+      // Clone the response so we can read it multiple times if needed
+      const resClone = res.clone();
+      
       if(!res.ok){
-        const txt = await res.text().catch(()=>'');
-        try { const j = txt? JSON.parse(txt):{}; throw new Error(j.error || ('HTTP '+res.status)); } catch(e){ if(e.message.startsWith('HTTP ')) throw e; }
+        let txt = '';
+        try { 
+          txt = await res.text(); 
+        } catch { 
+          txt = ''; 
+        }
+        try { 
+          const j = txt ? JSON.parse(txt) : {}; 
+          throw new Error(j.error || ('HTTP '+res.status)); 
+        } catch(e){ 
+          if(e.message.startsWith('HTTP ')) throw e; 
+          throw new Error('HTTP '+res.status);
+        }
       }
-      const txt = await res.text();
+      
+      let txt = '';
+      try {
+        txt = await resClone.text();
+      } catch {
+        txt = '';
+      }
+      
       if(!txt) return null;
-      try { return JSON.parse(txt); } catch { throw new Error('Bad JSON'); }
-    } catch(e){ lastErr = e; }
+      try { 
+        return JSON.parse(txt); 
+      } catch { 
+        throw new Error('Bad JSON response'); 
+      }
+    } catch(e){ 
+      lastErr = e; 
+    }
   }
   throw lastErr || new Error('Network error');
 }
