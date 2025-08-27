@@ -147,7 +147,7 @@ export default function App(){
       (async()=>{
         try {
           if(!authProcessing) setAuthProcessing(true);
-          const resp = await fetch(API_BASE + '/api/oauth/discord/exchange', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ code, state }) });
+          const resp = await fetch(API_BASE + '/api/auth/oauth/discord/exchange', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ code, state }) });
           const text = await resp.text();
           let data; try { data = text? JSON.parse(text):{}; } catch { throw new Error('OAuth exchange failed (bad JSON)'); }
           if(!resp.ok){ throw new Error(data.error || 'OAuth exchange failed'); }
@@ -167,7 +167,7 @@ export default function App(){
     if(token && view==='login'){
       (async()=>{
         try {
-          const resp = await fetch(API_BASE + '/api/user/me', { headers:{ Authorization:'Bearer '+token }});
+          const resp = await fetch(API_BASE + '/api/auth/user/me', { headers:{ Authorization:'Bearer '+token }});
           if(resp.ok){
             const t = await resp.text();
             let u={}; try { u = t? JSON.parse(t):{}; } catch {}
@@ -220,7 +220,7 @@ export default function App(){
   }
 
   function startDiscordLogin(){
-    fetchJson('/api/oauth/discord/url')
+    fetchJson('/api/auth/oauth/discord/url')
       .then(d=>{ if(d && d.url) window.location.href = d.url; else throw new Error('No OAuth URL'); })
       .catch(e=> setError('OAuth URL error: '+e.message+' (is backend running on 3001?)'));
   }
@@ -243,10 +243,32 @@ export default function App(){
     if(!selectedGuild) return;
     (async()=>{
       try {
-  await fetch(API_BASE + '/api/user/select-guild', { method:'POST', headers:{ 'Content-Type':'application/json', Authorization:'Bearer '+localStorage.getItem('token') }, body: JSON.stringify({ guildId: selectedGuild }) });
-      } catch(e){ /* non-fatal */ }
-      setView(nextView||'dashboard');
-      refresh();
+        const response = await fetch(API_BASE + '/api/auth/user/select-guild', { 
+          method:'POST', 
+          headers:{ 
+            'Content-Type':'application/json', 
+            Authorization:'Bearer '+localStorage.getItem('token') 
+          }, 
+          body: JSON.stringify({ guildId: selectedGuild }) 
+        });
+        
+        if (!response.ok) {
+          if (response.status === 401) {
+            // Token is invalid, redirect to login
+            doLogout();
+            return;
+          }
+          throw new Error(`Server selection failed: ${response.status}`);
+        }
+        
+        // Successfully selected guild, proceed to dashboard
+        setView(nextView||'dashboard');
+        refresh();
+      } catch(e){ 
+        console.error('Guild selection error:', e);
+        setError('Failed to select server: ' + e.message);
+        // Don't proceed to dashboard if there was an error
+      }
     })();
   }
 

@@ -1,0 +1,23 @@
+{
+  "autoRotation": {
+    "enabled": true,
+    "intervalDays": 7,
+    "keepSecretsCount": 3,
+    "lastRotation": "2025-08-26T22:14:46.221Z"
+  },
+  "generation": {
+    "secretLength": 64,
+    "algorithm": "hex",
+    "entropy": "crypto.randomBytes"
+  },
+  "backup": {
+    "enabled": true,
+    "maxBackups": 10,
+    "compressionEnabled": false
+  },
+  "notifications": {
+    "enabled": false,
+    "webhook": null,
+    "email": null
+  }
+}
