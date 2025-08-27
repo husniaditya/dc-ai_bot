@@ -170,6 +170,7 @@ export async function getRoles(guildId){ return authFetch('/api/roles' + (guildI
 export async function getYouTubeConfig(guildId){ return authFetch('/api/youtube/config' + (guildId?`?guildId=${guildId}`:'')); }
 export async function updateYouTubeConfig(partial, guildId){ return authFetch('/api/youtube/config' + (guildId?`?guildId=${guildId}`:''), { method:'PUT', body: JSON.stringify(partial) }); }
 export async function resolveYouTubeChannel(input){ return authFetch('/api/youtube/resolve-channel', { method:'POST', body: JSON.stringify({ input }) }); }
+export async function extractYouTubeChannelId(input){ return authFetch('/api/youtube/extract-channel-id', { method:'POST', body: JSON.stringify({ input }) }); }
 
 // Twitch watcher config helpers
 export async function getTwitchConfig(guildId){ return authFetch('/api/twitch/config' + (guildId?`?guildId=${guildId}`:'')); }

@@ -2,10 +2,32 @@
   "channels": {
     "935480450707759165:UCwOygeWv6P6wnjBpTh5mUzQ": {
       "knownUploads": [
-        "aHvhDXy8poA"
+        "aHvhDXy8poA",
+        "R2iteFFNXU4"
       ],
       "knownLives": [
-        "aHvhDXy8poA"
+        "R2iteFFNXU4"
+      ]
+    },
+    "935480450707759165:UCCbEyT5MkkAmy8QlaxXAuww": {
+      "knownUploads": [
+        "Uo7u-sX_vMw",
+        "O_6bX-ZkWsA",
+        "tWdzgTwkj6A",
+        "trdu4WfH-Zg",
+        "FDSZsYbt2js",
+        "up4vZxcc54I"
+      ],
+      "knownLives": [
+        "pFtcjAU_qug"
+      ]
+    },
+    "935480450707759165:UCna78p34u49q1Suxf-f4y1Q": {
+      "knownUploads": [
+        "sB5q5MStO0Q"
+      ],
+      "knownLives": [
+        "sB5q5MStO0Q"
       ]
     }
   }

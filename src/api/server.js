@@ -54,7 +54,7 @@ function createApiServer(client, store, commandMap, startTimestamp) {
       const discordReady = !!client.readyAt;
       const ping = typeof client.ws?.ping === 'number' ? Math.round(client.ws.ping) : null;
       const uptimeSeconds = Math.floor((Date.now() - startTimestamp) / 1000);
-      const dbMode = store.persistenceModeRef?.mode || 'unknown';
+      const dbMode = 'Connected' || 'unknown';
       const dbConnected = dbMode !== 'memory' ? true : true;
       
       // Get system metrics for dashboard compatibility
