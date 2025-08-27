@@ -37,8 +37,6 @@ function authMiddleware(req, res, next) {
   
   if (!verified) {
     console.log('JWT verification failed with all secrets:', lastError?.message);
-    console.log('Available JWT secrets count:', JWT_SECRETS.length);
-    console.log('Primary secret length:', PRIMARY_SECRET.length);
     return res.status(401).json({ error: 'invalid token' });
   }
   

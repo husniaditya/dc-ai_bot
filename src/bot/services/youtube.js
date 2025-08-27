@@ -39,7 +39,7 @@ function initializeApiKeys() {
 		return false;
 	}
 	
-	console.log(`[YT] Initialized with ${apiKeys.length} valid API key(s)`);
+	console.log(`[YT] Initialized with valid API key(s)`);
 	return true;
 }
 
@@ -71,15 +71,15 @@ function getNextAvailableKey() {
 		const testKey = apiKeys[testIndex];
 		if (!isKeyExhausted(testKey)) {
 			currentKeyIndex = testIndex;
-			console.log(`[YT] Switched to fresh API key ${currentKeyIndex + 1}/${apiKeys.length}`);
+			console.log(`[YT] Switched to fresh API key`);
 			pushDebug(`FRESH_KEY: Switched to non-exhausted key ${currentKeyIndex + 1}`);
 			return testKey;
 		}
 	}
 	
 	// All keys are exhausted, return current key anyway
-	console.log(`[YT] WARNING: All ${apiKeys.length} API keys appear to be exhausted`);
-	pushDebug(`ALL_EXHAUSTED: All ${apiKeys.length} keys have quota errors`);
+	console.log(`[YT] WARNING: All API keys appear to be exhausted`);
+	pushDebug(`ALL_EXHAUSTED: All keys have quota errors`);
 	return getCurrentApiKey();
 }
 
@@ -138,16 +138,15 @@ function noteQuotaExceeded(apiKey = null){
 	if (apiKey) {
 		const keyErrors = quotaState.keyErrors.get(apiKey) || 0;
 		quotaState.keyErrors.set(apiKey, keyErrors + 1);
-		const logMsg = `API key quota exceeded (key: ${apiKey.substring(0, 10)}..., errors: ${keyErrors + 1})`;
-		console.log(`[YT] ${logMsg}`);
+		const logMsg = `API key quota exceeded... Trying to rotate keys errors for this key)`;
 		pushDebug(`QUOTA_EXCEEDED: ${logMsg}`);
 		
 		// Automatically rotate to next key when quota is exceeded
 		if (apiKeys.length > 1) {
 			const oldIndex = currentKeyIndex;
 			const newKey = rotateToNextApiKey();
-			console.log(`[YT] AUTO_ROTATION: Switched from key ${oldIndex + 1} to key ${currentKeyIndex + 1}/${apiKeys.length}`);
-			pushDebug(`AUTO_ROTATION: Switched from exhausted key ${oldIndex + 1} to new key ${currentKeyIndex + 1}`);
+			console.log(`[YT] AUTO_ROTATION: Switched.`);
+			pushDebug(`AUTO_ROTATION: Switched from exhausted key to new key .`);
 			return newKey; // Return the new key for immediate use
 		}
 	}
@@ -160,7 +159,7 @@ function noteQuotaExceeded(apiKey = null){
 	if(quotaState.quotaErrors >= quotaState.threshold || exhaustedKeys >= Math.ceil(totalActiveKeys / 2)){
 		quotaState.suspendUntil = Date.now() + quotaState.cooldownMs;
 		const suspendMsg = `Suspending API calls for ${quotaState.cooldownMs / 60000} minutes (${exhaustedKeys}/${totalActiveKeys} keys exhausted)`;
-		console.log(`[YT] ${suspendMsg}`);
+		console.log(`[YT] SUSPENDED`);
 		pushDebug(`SUSPENDED: ${suspendMsg}`);
 	}
 	
@@ -827,7 +826,6 @@ function startYouTubeWatcher(client){
 	
 	// Start with the first available key
 	currentKeyIndex = 0;
-	console.log(`[YT] Starting with API key 1/${apiKeys.length}`);
 	pushDebug(`STARTUP: YouTube watcher started with ${apiKeys.length} API key(s), using key 1`);
 	
 	// Set up periodic key rotation (every 30 minutes) to distribute load
@@ -835,7 +833,7 @@ function startYouTubeWatcher(client){
 		setInterval(() => {
 			const oldIndex = currentKeyIndex;
 			const newKey = rotateToNextApiKey();
-			console.log(`[YT] SCHEDULED_ROTATION: Rotated from key ${oldIndex + 1} to key ${currentKeyIndex + 1}/${apiKeys.length}`);
+			console.log(`[YT] SCHEDULED_ROTATION: Rotated`);
 			pushDebug(`SCHEDULED_ROTATION: Rotated from key ${oldIndex + 1} to key ${currentKeyIndex + 1}`);
 		}, 30 * 60 * 1000); // 30 minutes
 	}
@@ -866,7 +864,7 @@ function startYouTubeWatcher(client){
 	}
 	// Initial delay
 	setTimeout(tick, 5000);
-	console.log(`YouTube watcher started with ${apiKeys.length} API key(s), max video age: ${process.env.YT_MAX_VIDEO_AGE_HOURS || '24'} hours`);
+	console.log(`YouTube watcher started with API key(s)`);
 }
 
 function getKeyStatus() {

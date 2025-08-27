@@ -385,7 +385,6 @@ if (result.success) {
     if (currentSecrets.length > 0) {
       currentSecrets.forEach((secret, index) => {
         const role = index === 0 ? '(PRIMARY)' : '(BACKUP)';
-        console.log(`  ${index + 1}. ${secret.substring(0, 16)}...${secret.substring(secret.length - 16)} ${role}`);
       });
     }
     
