@@ -19,8 +19,9 @@ function createAuthRoutes(client, store) {
   const JWT_SECRET_RAW = process.env.DASHBOARD_JWT_SECRET || 'changeme_dev_secret';
   const JWT_SECRETS = JWT_SECRET_RAW.split(',').map(s => s.trim()).filter(s => s.length > 0);
   const PRIMARY_JWT_SECRET = JWT_SECRETS[0]; // Use first secret for signing new tokens
-  const ADMIN_USER = process.env.DASHBOARD_ADMIN_USER || 'admin';
-  const ADMIN_PASS = process.env.DASHBOARD_ADMIN_PASS || 'password';
+  const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN; 
+  const ADMIN_USER = process.env.DASHBOARD_ADMIN_USER;
+  const ADMIN_PASS = process.env.DASHBOARD_ADMIN_PASS;
 
   // Discord OAuth authorize URL (front-end will redirect user here)
   router.get('/oauth/discord/url', (req, res) => {
@@ -86,19 +87,39 @@ function createAuthRoutes(client, store) {
       });
       const rawGuilds = await guildResp.json();
       
-      // Filter guilds to those where the bot is actually present
+      // Get guilds where the bot is present
       const botGuildIds = new Set(client.guilds.cache.map(g => g.id));
+      
+      // Process all guilds to determine manageable ones (for JWT storage)
       const MANAGE_GUILD = 1 << 5; // 0x20
-      const guilds = Array.isArray(rawGuilds) ? rawGuilds
-        .filter(g => botGuildIds.has(g.id))
-        .map(g => {
+      const allManageableGuilds = Array.isArray(rawGuilds) ? rawGuilds
+        .filter(g => {
           let permsNumber = 0;
           try { permsNumber = g.permissions ? Number(g.permissions) : 0; } catch {}
+          return (permsNumber & MANAGE_GUILD) === MANAGE_GUILD;
+        })
+        .map(g => g.id) : [];
+      
+      // For the response, only return guilds where BOTH conditions are met:
+      // 1. User can manage AND 2. Bot is present
+      const guilds = Array.isArray(rawGuilds) ? rawGuilds
+        .filter(g => {
+          // Must be manageable by user
+          let permsNumber = 0;
+          try { permsNumber = g.permissions ? Number(g.permissions) : 0; } catch {}
+          const canManage = (permsNumber & MANAGE_GUILD) === MANAGE_GUILD;
+          
+          // Must have bot present
+          const botPresent = botGuildIds.has(g.id);
+          
+          return canManage && botPresent;
+        })
+        .map(g => {
           return { 
             id: g.id, 
             name: g.name, 
             icon: g.icon, 
-            canManage: (permsNumber & MANAGE_GUILD) === MANAGE_GUILD 
+            canManage: true // We know they can manage since we filtered for it
           };
         }) : [];
       
@@ -112,8 +133,9 @@ function createAuthRoutes(client, store) {
       const jwtToken = jwt.sign({ 
         userId: user.id, 
         username: user.username, 
-        type: 'discord' 
-      }, PRIMARY_JWT_SECRET, { expiresIn: '6h' });
+        type: 'discord',
+        manageableGuilds: allManageableGuilds // Store ALL manageable guild IDs (for future use)
+      }, PRIMARY_JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
       
       audit(req, { action: 'oauth-login', user: user.id });
       res.json({ token: jwtToken, user, guilds });
@@ -168,6 +190,47 @@ function createAuthRoutes(client, store) {
     }
   });
 
+  // Logout endpoint - invalidates current session
+  router.post('/logout', authMiddleware, async (req, res) => {
+    try {
+      // Optional: Add token to blacklist if you implement token blacklisting
+      // await store.blacklistToken(req.headers.authorization?.slice(7));
+      
+      audit(req, { 
+        action: 'logout', 
+        user: req.user.userId || req.user.user,
+        type: req.user.type 
+      });
+      
+      res.json({ 
+        success: true, 
+        message: 'Successfully logged out',
+        requiresLogout: true 
+      });
+    } catch(e) {
+      console.error('Logout error:', e);
+      res.status(500).json({ 
+        error: 'logout_failed',
+        message: 'Error during logout process',
+        requiresLogout: true 
+      });
+    }
+  });
+
+  // Check token validity endpoint
+  router.get('/validate', authMiddleware, (req, res) => {
+    // If we reach here, token is valid (middleware passed)
+    res.json({ 
+      valid: true, 
+      user: {
+        userId: req.user.userId,
+        username: req.user.username,
+        type: req.user.type
+      },
+      expiresAt: req.user.exp ? new Date(req.user.exp * 1000).toISOString() : null
+    });
+  });
+
   // Legacy login (if not disabled)
   if (!process.env.DISABLE_LEGACY_LOGIN) {
     router.post('/login', (req, res) => {
@@ -178,7 +241,7 @@ function createAuthRoutes(client, store) {
           user: username, 
           role: 'admin', 
           type: 'legacy' 
-        }, PRIMARY_JWT_SECRET, { expiresIn: '6h' });
+        }, PRIMARY_JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
         
         audit(req, { action: 'login-success', user: username });
         return res.json({ token });

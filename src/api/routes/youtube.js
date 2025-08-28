@@ -51,6 +51,8 @@ function createYouTubeRoutes(client, store) {
       const partial = {
         channels: Array.isArray(req.body.channels) ? req.body.channels : undefined,
         announceChannelId: req.body.announceChannelId,
+        uploadAnnounceChannelId: req.body.uploadAnnounceChannelId,
+        liveAnnounceChannelId: req.body.liveAnnounceChannelId,
         mentionRoleId: req.body.mentionRoleId,
         mentionTargets: Array.isArray(req.body.mentionTargets) ? req.body.mentionTargets : undefined,
         enabled: req.body.enabled,
@@ -275,6 +277,62 @@ function createYouTubeRoutes(client, store) {
       res.json(out);
     } catch(e) { 
       res.status(500).json({ error: 'resolve_failed' }); 
+    }
+  });
+
+  // Extract channel ID from various URL formats using bot's extraction logic
+  router.post('/extract-channel-id', async (req, res) => {
+    try {
+      const { input } = req.body;
+      
+      if (!input || typeof input !== 'string') {
+        return res.status(400).json({ error: 'Input is required' });
+      }
+      
+      // Use the bot's extractChannelId function
+      const youtubeService = require('../../bot/services/youtube');
+      const channelId = await youtubeService.extractChannelId(input.trim());
+      
+      if (!channelId) {
+        return res.status(400).json({ 
+          error: 'Could not extract channel ID from input',
+          supportedFormats: [
+            'UC... (direct channel ID)',
+            'https://www.youtube.com/@username',
+            'https://www.youtube.com/channel/UC...',
+            '@username'
+          ]
+        });
+      }
+      
+      // Try to get channel name if possible
+      let channelName = null;
+      try {
+        const apiKey = process.env.YOUTUBE_API_KEY || process.env.YOUTUBE_API_KEYS?.split(',')[0];
+        if (apiKey) {
+          const url = `https://www.googleapis.com/youtube/v3/channels?part=snippet&id=${channelId}&key=${apiKey}`;
+          const response = await fetchFn(url);
+          if (response.ok) {
+            const data = await response.json();
+            if (data.items && data.items.length > 0) {
+              channelName = data.items[0].snippet.title;
+            }
+          }
+        }
+      } catch (e) {
+        // Ignore API errors, just return without name
+        console.log('Could not fetch channel name:', e.message);
+      }
+      
+      res.json({ 
+        channelId,
+        channelName,
+        extracted: channelId !== input.trim()
+      });
+      
+    } catch (e) {
+      console.error('Extract channel ID error:', e);
+      res.status(500).json({ error: 'Extraction failed: ' + e.message });
     }
   });
 
