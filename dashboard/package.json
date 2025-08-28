@@ -21,6 +21,6 @@
   "highcharts-react-official": "^3.2.1"
   },
   "devDependencies": {
-    "vite": "^5.3.4"
+    "vite": "^7.1.3"
   }
 }
