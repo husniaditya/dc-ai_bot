@@ -25,9 +25,33 @@ module.exports = (client) => ({
     } else if(action === 'disable'){
       updated = await store.setGuildYouTubeConfig(guild.id, { enabled:false });
     } else if(action === 'addchannel'){
-      const cid = (interaction.options.getString('channel_id')||'').trim();
-      if(!cid) return interaction.editReply('channel_id required');
-      updated = await store.setGuildYouTubeConfig(guild.id, cur => { if(!cur.channels.includes(cid)) cur.channels.push(cid); return cur; });
+      const input = (interaction.options.getString('channel_id')||'').trim();
+      if(!input) return interaction.editReply('channel_id required');
+      
+      // Try to extract channel ID from URL or handle
+      const youtube = require('../services/youtube');
+      const channelId = await youtube.extractChannelId(input);
+      
+      if (!channelId) {
+        return interaction.editReply(`❌ Could not extract channel ID from: ${input}\n\nSupported formats:\n• UC... (direct channel ID)\n• https://www.youtube.com/@username\n• https://www.youtube.com/channel/UC...\n• @username`);
+      }
+      
+      if (channelId !== input) {
+        await interaction.editReply(`🔍 Extracted channel ID: \`${channelId}\` from \`${input}\`\nAdding to watch list...`);
+      }
+      
+      try {
+        updated = await store.setGuildYouTubeConfig(guild.id, cur => { 
+          if(!cur.channels.includes(channelId)) {
+            cur.channels.push(channelId);
+          } else {
+            throw new Error(`Channel ${channelId} is already being watched`);
+          }
+          return cur; 
+        });
+      } catch (error) {
+        return interaction.editReply(`❌ Error: ${error.message}`);
+      }
     } else if(action === 'removechannel'){
       const cid = (interaction.options.getString('channel_id')||'').trim();
       updated = await store.setGuildYouTubeConfig(guild.id, cur => { cur.channels = cur.channels.filter(c=>c!==cid); return cur; });

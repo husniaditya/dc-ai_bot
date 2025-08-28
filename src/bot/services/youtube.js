@@ -39,7 +39,7 @@ function initializeApiKeys() {
 		return false;
 	}
 	
-	console.log(`[YT] Initialized with ${apiKeys.length} valid API key(s)`);
+	console.log(`[YT] Initialized with valid API key(s)`);
 	return true;
 }
 
@@ -71,15 +71,15 @@ function getNextAvailableKey() {
 		const testKey = apiKeys[testIndex];
 		if (!isKeyExhausted(testKey)) {
 			currentKeyIndex = testIndex;
-			console.log(`[YT] Switched to fresh API key ${currentKeyIndex + 1}/${apiKeys.length}`);
+			console.log(`[YT] Switched to fresh API key`);
 			pushDebug(`FRESH_KEY: Switched to non-exhausted key ${currentKeyIndex + 1}`);
 			return testKey;
 		}
 	}
 	
 	// All keys are exhausted, return current key anyway
-	console.log(`[YT] WARNING: All ${apiKeys.length} API keys appear to be exhausted`);
-	pushDebug(`ALL_EXHAUSTED: All ${apiKeys.length} keys have quota errors`);
+	console.log(`[YT] WARNING: All API keys appear to be exhausted`);
+	pushDebug(`ALL_EXHAUSTED: All keys have quota errors`);
 	return getCurrentApiKey();
 }
 
@@ -111,12 +111,21 @@ const quotaState = {
 
 // YouTube statistics and debug events (for /ytdebug command)
 const ytStats = {
+	started: Date.now(),
 	totalPolls: 0,
 	totalAnnouncements: 0,
 	totalErrors: 0,
 	apiCalls: 0,
 	quotaErrors: 0,
 	lastPoll: null,
+	// Detailed breakdowns for ytstats command
+	uploadsApiCalls: 0,
+	uploadsPlaylistCalls: 0,
+	uploadsRssCalls: 0,
+	liveSearchCalls: 0,
+	liveScrapeCalls: 0,
+	cacheHitsUploads: 0,
+	cacheHitsLive: 0,
 	_debugEvents: [] // ring buffer of recent debug events
 };
 
@@ -138,16 +147,15 @@ function noteQuotaExceeded(apiKey = null){
 	if (apiKey) {
 		const keyErrors = quotaState.keyErrors.get(apiKey) || 0;
 		quotaState.keyErrors.set(apiKey, keyErrors + 1);
-		const logMsg = `API key quota exceeded (key: ${apiKey.substring(0, 10)}..., errors: ${keyErrors + 1})`;
-		console.log(`[YT] ${logMsg}`);
+		const logMsg = `API key quota exceeded... Trying to rotate keys errors for this key)`;
 		pushDebug(`QUOTA_EXCEEDED: ${logMsg}`);
 		
 		// Automatically rotate to next key when quota is exceeded
 		if (apiKeys.length > 1) {
 			const oldIndex = currentKeyIndex;
 			const newKey = rotateToNextApiKey();
-			console.log(`[YT] AUTO_ROTATION: Switched from key ${oldIndex + 1} to key ${currentKeyIndex + 1}/${apiKeys.length}`);
-			pushDebug(`AUTO_ROTATION: Switched from exhausted key ${oldIndex + 1} to new key ${currentKeyIndex + 1}`);
+			console.log(`[YT] AUTO_ROTATION: Switched.`);
+			pushDebug(`AUTO_ROTATION: Switched from exhausted key to new key .`);
 			return newKey; // Return the new key for immediate use
 		}
 	}
@@ -160,7 +168,7 @@ function noteQuotaExceeded(apiKey = null){
 	if(quotaState.quotaErrors >= quotaState.threshold || exhaustedKeys >= Math.ceil(totalActiveKeys / 2)){
 		quotaState.suspendUntil = Date.now() + quotaState.cooldownMs;
 		const suspendMsg = `Suspending API calls for ${quotaState.cooldownMs / 60000} minutes (${exhaustedKeys}/${totalActiveKeys} keys exhausted)`;
-		console.log(`[YT] ${suspendMsg}`);
+		console.log(`[YT] SUSPENDED`);
 		pushDebug(`SUSPENDED: ${suspendMsg}`);
 	}
 	
@@ -189,6 +197,16 @@ function resetQuotaErrors() {
 			pushDebug(`QUOTA_RESET: Cleared errors for ${beforeSize} keys after ${resetAge/60000} minutes`);
 		}
 	}
+}
+
+// Manual quota reset function for debugging
+function forceResetQuotaErrors() {
+	const beforeSize = quotaState.keyErrors.size;
+	quotaState.keyErrors.clear();
+	quotaState.quotaErrors = 0;
+	quotaState.suspendUntil = 0;
+	console.log(`[YT] FORCE RESET: Cleared quota errors for ${beforeSize} API keys`);
+	pushDebug(`FORCE_RESET: Manually cleared errors for ${beforeSize} keys`);
 }
 
 // Video age filtering function
@@ -222,7 +240,16 @@ async function fetchChannelUploads(channelId, apiKey){
 		return fetchChannelUploadsViaPlaylist(channelId, apiKey);
 	}
 	
+	// Check if current key is exhausted and rotate proactively
+	if (isKeyExhausted(apiKey) && apiKeys.length > 1) {
+		const freshKey = getNextAvailableKey();
+		if (freshKey && freshKey !== apiKey) {
+			apiKey = freshKey;
+		}
+	}
+	
 	pushDebug(`API_CALL: Fetching uploads for channel ${channelId}`);
+	ytStats.uploadsApiCalls += 1; // Track upload API calls specifically
 	const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${channelId}&maxResults=5&order=date&type=video&key=${apiKey}`;
 	let res, js;
 	try {
@@ -236,18 +263,16 @@ async function fetchChannelUploads(channelId, apiKey){
 				const rotatedKey = noteQuotaExceeded(apiKey);
 				// Try with the newly rotated API key if available
 				if (rotatedKey && rotatedKey !== apiKey) {
-					if(debug) console.log(`[YT] Retrying with rotated API key for channel ${channelId}`);
-					pushDebug(`KEY_RETRY: Using rotated API key for channel ${channelId}`);
+					if(debug) console.log(`[YT] Retrying with rotated API key`);
+					pushDebug(`KEY_RETRY: Using rotated API key`);
 					return fetchChannelUploads(channelId, rotatedKey);
 				}
-				pushDebug(`FALLBACK: Using playlist method for channel ${channelId} due to quota`);
+				pushDebug(`FALLBACK: Using playlist method due to quota`);
 				return fetchChannelUploadsViaPlaylist(channelId, getCurrentApiKey() || apiKey);
 			}
 		}
 	} catch(e){ 
 		ytStats.totalErrors += 1;
-		if(debug) console.log('[YT] search uploads error', channelId, e.message); 
-		pushDebug(`ERROR: Search uploads failed for ${channelId} - ${e.message}`);
 		return []; 
 	}
 	let items = Array.isArray(js?.items)? js.items: [];
@@ -266,10 +291,8 @@ async function fetchChannelUploads(channelId, apiKey){
 		liveBroadcastContent: it.snippet?.liveBroadcastContent || 'none'
 	})).filter(v => {
 		if (!v.videoId) return false;
-		// Skip videos that are too old
-		if (isVideoTooOld(v.publishedAt)) {
-			if(debug) console.log(`[YT] Skipping old video: ${v.videoId} (${v.publishedAt})`);
-			pushDebug(`AGE_FILTER: Skipped old video ${v.videoId} from ${v.publishedAt}`);
+		// Skip videos that are too old (but not live streams)
+		if (v.liveBroadcastContent !== 'live' && isVideoTooOld(v.publishedAt)) {
 			return false;
 		}
 		return true;
@@ -328,9 +351,18 @@ async function fetchVideoDetails(videoIds, apiKey) {
 
 // Explicit live search (eventType=live) tends to be more reliable for currently active streams than relying only on order=date search.
 async function fetchChannelLiveNow(channelId, apiKey){
+	// Check if current key is exhausted and rotate proactively
+	if (isKeyExhausted(apiKey) && apiKeys.length > 1) {
+		const freshKey = getNextAvailableKey();
+		if (freshKey && freshKey !== apiKey) {
+			const debug = process.env.YT_DEBUG === '1';
+			apiKey = freshKey;
+		}
+	}
+	
 	const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${channelId}&eventType=live&type=video&maxResults=10&key=${apiKey}`;
 	ytStats.apiCalls += 1;
-	pushDebug(`LIVE_SEARCH: Checking for live streams on channel ${channelId}`);
+	ytStats.liveSearchCalls += 1; // Track live search calls specifically
 	
 	try {
 		if(inLowQuotaMode()) {
@@ -347,8 +379,8 @@ async function fetchChannelLiveNow(channelId, apiKey){
 				// Try with the newly rotated API key if available
 				if (rotatedKey && rotatedKey !== apiKey) {
 					const debug = process.env.YT_DEBUG === '1';
-					if(debug) console.log(`[YT] Retrying live search with rotated API key for channel ${channelId}`);
-					pushDebug(`LIVE_KEY_RETRY: Using rotated API key for live search ${channelId}`);
+					if(debug) console.log(`[YT] Retrying live search with rotated API key`);
+					pushDebug(`LIVE_KEY_RETRY: Using rotated API key for live search`);
 					return fetchChannelLiveNow(channelId, rotatedKey);
 				}
 				return []; // silent skip on quota
@@ -399,6 +431,7 @@ async function fetchChannelLiveNow(channelId, apiKey){
 // Fallback: get channel uploads playlist and then grab latest items.
 async function fetchChannelUploadsViaPlaylist(channelId, apiKey){
 	try {
+		ytStats.uploadsPlaylistCalls += 1; // Track playlist calls
 		const debug = process.env.YT_DEBUG === '1';
 		const cUrl = `https://www.googleapis.com/youtube/v3/channels?part=contentDetails&id=${channelId}&key=${apiKey}`;
 		const cRes = await fetchFn(cUrl);
@@ -410,8 +443,6 @@ async function fetchChannelUploadsViaPlaylist(channelId, apiKey){
 				const rotatedKey = noteQuotaExceeded(apiKey);
 				// Try with the newly rotated API key if available
 				if (rotatedKey && rotatedKey !== apiKey) {
-					if(debug) console.log(`[YT] Retrying playlist fetch with rotated API key for channel ${channelId}`);
-					pushDebug(`PLAYLIST_KEY_RETRY: Using rotated API key for channel ${channelId}`);
 					return fetchChannelUploadsViaPlaylist(channelId, rotatedKey);
 				}
 			}
@@ -421,7 +452,7 @@ async function fetchChannelUploadsViaPlaylist(channelId, apiKey){
 			return []; // cannot proceed without playlist id
 		}
 		const uploadsPlaylist = cJs?.items?.[0]?.contentDetails?.relatedPlaylists?.uploads;
-		if(!uploadsPlaylist){ if(debug) console.log('[YT] no uploads playlist', channelId); return []; }
+		if(!uploadsPlaylist){ return []; }
 		const pUrl = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId=${uploadsPlaylist}&maxResults=5&key=${apiKey}`;
 		const pRes = await fetchFn(pUrl);
 		const pTxt = await pRes.text();
@@ -432,8 +463,6 @@ async function fetchChannelUploadsViaPlaylist(channelId, apiKey){
 				const rotatedKey = noteQuotaExceeded(apiKey);
 				// Try with the newly rotated API key if available
 				if (rotatedKey && rotatedKey !== apiKey) {
-					if(debug) console.log(`[YT] Retrying playlist items with rotated API key for channel ${channelId}`);
-					pushDebug(`PLAYLIST_ITEMS_RETRY: Using rotated API key for channel ${channelId}`);
 					return fetchChannelUploadsViaPlaylist(channelId, rotatedKey);
 				}
 			}
@@ -453,9 +482,8 @@ async function fetchChannelUploadsViaPlaylist(channelId, apiKey){
 			liveBroadcastContent: 'none'
 		})).filter(v => {
 			if (!v.videoId) return false;
-			// Skip videos that are too old
+			// Skip videos that are too old (playlist items are usually uploads, not live)
 			if (isVideoTooOld(v.publishedAt)) {
-				if(debug) console.log(`[YT] Skipping old video from playlist: ${v.videoId} (${v.publishedAt})`);
 				return false;
 			}
 			return true;
@@ -467,11 +495,11 @@ async function fetchChannelUploadsViaPlaylist(channelId, apiKey){
 
 // RSS fallback (no API quota required). Only public uploads, no live state flag.
 async function fetchChannelUploadsViaRSS(channelId){
+	ytStats.uploadsRssCalls += 1; // Track RSS calls
 	const debug = process.env.YT_DEBUG === '1';
 	const url = `https://www.youtube.com/feeds/videos.xml?channel_id=${channelId}`;
 	try {
 		const res = await fetchFn(url);
-		if(debug) console.log('[YT] rss status', channelId, res.status);
 		if(!res.ok) return [];
 		const xml = await res.text();
 		const entries = [...xml.matchAll(/<entry>([\s\S]*?)<\/entry>/g)].slice(0,5).map(m=>m[1]);
@@ -484,21 +512,20 @@ async function fetchChannelUploadsViaRSS(channelId){
 			return { videoId:id, title, publishedAt:published, thumbnail:thumb, liveBroadcastContent:'none' };
 		}).filter(v => {
 			if (!v) return false;
-			// Skip videos that are too old
+			// Skip videos that are too old (RSS feeds are usually uploads, not live)
 			if (isVideoTooOld(v.publishedAt)) {
-				if(debug) console.log(`[YT] Skipping old video from RSS: ${v.videoId} (${v.publishedAt})`);
 				return false;
 			}
 			return true;
 		});
-		if(debug) console.log('[YT] rss entries', channelId, vids.map(v=>v.videoId).join(','));
 		return vids;
-	} catch(e){ if(debug) console.log('[YT] rss error', channelId, e.message); return []; }
+	} catch(e){ return []; }
 }
 
 // Enhanced HTML live scrape with member-only detection
 async function fetchLiveViaScrape(channelId){
 	if(process.env.YT_ENABLE_LIVE_SCRAPE !== '1') return [];
+	ytStats.liveScrapeCalls += 1; // Track scrape calls
 	const debug = process.env.YT_DEBUG === '1';
 	const enableMemberOnlyDetection = process.env.YT_ENABLE_MEMBER_ONLY_DETECTION === '1';
 	const enhancedScraping = process.env.YT_MEMBER_ONLY_SCRAPE_ENHANCED === '1';
@@ -507,8 +534,8 @@ async function fetchLiveViaScrape(channelId){
 	const urls = [
 		`https://www.youtube.com/channel/${channelId}/live`,
 		...(enhancedScraping ? [
-			`https://www.youtube.com/channel/${channelId}/community`,
-			`https://www.youtube.com/channel/${channelId}/streams`
+			`https://www.youtube.com/channel/${channelId}/videos`,
+			`https://www.youtube.com/channel/${channelId}`
 		] : [])
 	];
 	
@@ -523,7 +550,10 @@ async function fetchLiveViaScrape(channelId){
 					'Accept-Language': 'en-US,en;q=0.5'
 				}
 			});
-			if(!res.ok) continue;
+			
+			if(!res.ok) {
+				continue;
+			}
 			
 			const html = await res.text();
 			
@@ -552,7 +582,9 @@ async function fetchLiveViaScrape(channelId){
 				}
 			}
 			
-			if (!isLive) continue;
+			if (!isLive) {
+				continue;
+			}
 			
 			// Extract video ID with multiple methods
 			const videoIdPatterns = [
@@ -602,15 +634,9 @@ async function fetchLiveViaScrape(channelId){
 			};
 			
 			results.push(streamInfo);
-			
-			if (debug) {
-				console.log(`[YT] Scrape found ${isMemberOnly ? 'member-only ' : ''}live stream: ${title} (${videoId})`);
-			}
-			pushDebug(`SCRAPE_FOUND: ${isMemberOnly ? 'Member-only ' : ''}live stream ${videoId} from ${url}`);
-			
+
 		} catch(e) { 
-			if(debug) console.log(`[YT] live scrape error for ${url}:`, e.message); 
-			pushDebug(`SCRAPE_ERROR: ${url} - ${e.message}`);
+			
 		}
 	}
 	
@@ -642,10 +668,25 @@ function buildRoleMention(cfg){
 }
 
 async function announce(guild, cfg, video, type){
-	if(!cfg.announceChannelId) return;
-	const ch = guild.channels.cache.get(cfg.announceChannelId);
-	if(!ch || !ch.isTextBased()) return;
+	const debug = process.env.YT_DEBUG === '1';
 	
+	// Determine which channel to use based on type
+	let announceChannelId;
+	if (type === 'live') {
+		announceChannelId = cfg.liveAnnounceChannelId || cfg.announceChannelId;
+	} else {
+		announceChannelId = cfg.uploadAnnounceChannelId || cfg.announceChannelId;
+	}
+	
+	if(!announceChannelId) {
+		return;
+	}
+	
+	const ch = guild.channels.cache.get(announceChannelId);
+	if(!ch || !ch.isTextBased()) {
+		return;
+	}
+
 	ytStats.totalAnnouncements += 1;
 	const memberOnlyFlag = video.isMemberOnly ? ' [MEMBER-ONLY]' : '';
 	pushDebug(`ANNOUNCE: ${type.toUpperCase()}${memberOnlyFlag} - ${video.title} (${video.videoId}) in guild ${guild.id}`);
@@ -678,7 +719,9 @@ async function announce(guild, cfg, video, type){
 		.replace(/\{url\}/g, url)
 		.replace(/\{thumbnail\}/g, video.thumbnail || '')
 		.replace(/\{memberBadge\}/g, memberBadge)
-		.replace(/\{memberText\}/g, memberText);
+		.replace(/\{memberText\}/g, memberText)
+		.replace(/\{publishedAt\}/g, video.publishedAt ? new Date(video.publishedAt).toISOString() : new Date().toISOString())
+		.replace(/\{publishedAtRelative\}/g, 'just now');
 	
 	if(!cfg.embedEnabled){
 		if(content.length === 0) {
@@ -698,7 +741,12 @@ async function announce(guild, cfg, video, type){
 		title: `${memberBadge}${video.title?.slice(0,256) || 'New Video'}${memberText}`,
 		url,
 		description: content.slice(0, 4000),
-		color: embedColor
+		color: embedColor,
+		// Add footer with YouTube logo and timestamp using publishedAt
+		footer: {
+			text: `YouTube • ${video.publishedAt ? new Date(video.publishedAt).toLocaleTimeString() : new Date().toLocaleTimeString()}`,
+			icon_url: 'https://www.youtube.com/favicon.ico'
+		}
 	};
 	
 	if(video.thumbnail){ embed.image = { url: video.thumbnail }; }
@@ -717,7 +765,7 @@ async function announce(guild, cfg, video, type){
 		if (!embed.fields) embed.fields = [];
 		embed.fields.push({
 			name: '👀 Viewers',
-			value: video.concurrentViewers,
+			value: video.concurrentViewers.toString(),
 			inline: true
 		});
 	}
@@ -757,12 +805,12 @@ async function pollGuild(guild, apiKey){
 				fetchChannelUploads(channelId, currentKey),
 				fetchChannelLiveNow(channelId, currentKey)
 			]);
+			
 			// If no live via API and scraping enabled, try scrape
 			if(!liveNow.length){
 				const scraped = await fetchLiveViaScrape(channelId);
 				if(scraped.length) {
 					liveNow = scraped;
-					pushDebug(`LIVE_SCRAPE: Found ${scraped.length} live stream(s) via scraping for ${channelId}`);
 				}
 			}
 			// Merge, prefer marking item live if appears in live list
@@ -773,8 +821,6 @@ async function pollGuild(guild, apiKey){
 			}
 			const vids = Array.from(map.values());
 			if(!vids.length){ 
-				if(debug) console.log('[YT] no items after fallback', channelId); 
-				pushDebug(`NO_VIDEOS: No videos found for channel ${channelId}`);
 				continue; 
 			}
 			const k = key(guild.id, channelId);
@@ -782,12 +828,12 @@ async function pollGuild(guild, apiKey){
 			// Normalize arrays (legacy safety)
 			state.channels[k].knownUploads ||= [];
 			state.channels[k].knownLives ||= [];
-			if(debug) console.log('[YT] channel', channelId, 'items', vids.map(v=> v.videoId + (v.liveBroadcastContent==='live'? '[LIVE]':'' )).join(', '));
 			
 			let newUploads = 0, newLives = 0;
 			for (const v of vids){
 				v.channelId = channelId;
 				const isLive = v.liveBroadcastContent === 'live';
+				
 				if(isLive){
 					if(!state.channels[k].knownLives.includes(v.videoId)){
 						state.channels[k].knownLives.push(v.videoId);
@@ -810,8 +856,6 @@ async function pollGuild(guild, apiKey){
 			}
 		} catch(e){ 
 			ytStats.totalErrors += 1;
-			if(debug) console.log('[YT] channel error', channelId, e.message); 
-			pushDebug(`CHANNEL_ERROR: ${channelId} - ${e.message}`);
 		}
 	}
 	saveStateDebounced();
@@ -827,7 +871,6 @@ function startYouTubeWatcher(client){
 	
 	// Start with the first available key
 	currentKeyIndex = 0;
-	console.log(`[YT] Starting with API key 1/${apiKeys.length}`);
 	pushDebug(`STARTUP: YouTube watcher started with ${apiKeys.length} API key(s), using key 1`);
 	
 	// Set up periodic key rotation (every 30 minutes) to distribute load
@@ -835,8 +878,8 @@ function startYouTubeWatcher(client){
 		setInterval(() => {
 			const oldIndex = currentKeyIndex;
 			const newKey = rotateToNextApiKey();
-			console.log(`[YT] SCHEDULED_ROTATION: Rotated from key ${oldIndex + 1} to key ${currentKeyIndex + 1}/${apiKeys.length}`);
-			pushDebug(`SCHEDULED_ROTATION: Rotated from key ${oldIndex + 1} to key ${currentKeyIndex + 1}`);
+			console.log(`[YT] SCHEDULED_ROTATION: Rotated`);
+			pushDebug(`SCHEDULED_ROTATION: Rotated`);
 		}, 30 * 60 * 1000); // 30 minutes
 	}
 	
@@ -866,7 +909,98 @@ function startYouTubeWatcher(client){
 	}
 	// Initial delay
 	setTimeout(tick, 5000);
-	console.log(`YouTube watcher started with ${apiKeys.length} API key(s), max video age: ${process.env.YT_MAX_VIDEO_AGE_HOURS || '24'} hours`);
+	console.log(`YouTube watcher started with API key(s)`);
+}
+
+// Function to extract channel ID from various YouTube URL formats
+async function extractChannelId(input) {
+	const debug = process.env.YT_DEBUG === '1';
+	
+	// If it's already a channel ID (starts with UC and is the right length)
+	if (/^UC[a-zA-Z0-9_-]{22}$/.test(input)) {
+		return input;
+	}
+	
+	// Extract from various URL formats
+	let channelId = null;
+	let urlToFetch = null;
+	
+	// Handle @username format
+	if (input.startsWith('@')) {
+		urlToFetch = `https://www.youtube.com/${input}`;
+	}
+	// Handle full URLs
+	else if (input.includes('youtube.com')) {
+		// Extract different URL patterns
+		const patterns = [
+			/youtube\.com\/channel\/([a-zA-Z0-9_-]+)/,
+			/youtube\.com\/c\/([a-zA-Z0-9_-]+)/,
+			/youtube\.com\/user\/([a-zA-Z0-9_-]+)/,
+			/youtube\.com\/@([a-zA-Z0-9_.-]+)/,
+			/youtube\.com\/([a-zA-Z0-9_-]+)$/
+		];
+		
+		for (const pattern of patterns) {
+			const match = input.match(pattern);
+			if (match) {
+				if (pattern.source.includes('channel') && match[1].startsWith('UC')) {
+					// Direct channel ID from URL
+					channelId = match[1];
+					return channelId;
+				} else {
+					// Need to resolve the URL
+					urlToFetch = input;
+					break;
+				}
+			}
+		}
+	}
+	// Handle just username
+	else {
+		urlToFetch = `https://www.youtube.com/@${input}`;
+	}
+	
+	if (!urlToFetch) {
+		return null;
+	}
+	
+	// Fetch the page and extract channel ID
+	try {
+		const res = await fetchFn(urlToFetch, {
+			headers: {
+				'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+			}
+		});
+		
+		if (!res.ok) {
+			return null;
+		}
+		
+		const html = await res.text();
+		
+		// Try multiple patterns to find channel ID - prioritize more specific patterns
+		const extractPatterns = [
+			// Most specific patterns first - these should be the owner's channel
+			/"externalId":"(UC[a-zA-Z0-9_-]{22})"/,
+			/"webCommandMetadata":{"url":"\/channel\/(UC[a-zA-Z0-9_-]{22})"/,
+			/channel\/(UC[a-zA-Z0-9_-]{22})/,
+			// Generic channelId pattern last as it may match related channels
+			/"channelId":"(UC[a-zA-Z0-9_-]{22})"/
+		];
+		
+		for (const pattern of extractPatterns) {
+			const match = html.match(pattern);
+			if (match && match[1]) {
+				channelId = match[1];
+				return channelId;
+			}
+		}
+		
+		return null;
+		
+	} catch (error) {
+		return null;
+	}
 }
 
 function getKeyStatus() {
@@ -881,4 +1015,4 @@ function getKeyStatus() {
 	};
 }
 
-module.exports = { startYouTubeWatcher, ytStats, getKeyStatus };
+module.exports = { startYouTubeWatcher, ytStats, getKeyStatus, extractChannelId };

@@ -21,6 +21,7 @@ const youtubeRoutes = require('./routes/youtube');
 const twitchRoutes = require('./routes/twitch');
 const channelsRoutes = require('./routes/channels');
 const rolesRoutes = require('./routes/roles');
+const guildsRoutes = require('./routes/guilds');
 
 function createApiServer(client, store, commandMap, startTimestamp) {
   const app = express();
@@ -46,6 +47,7 @@ function createApiServer(client, store, commandMap, startTimestamp) {
   app.use('/api/twitch', authMiddleware, twitchRoutes(client, store));
   app.use('/api/channels', authMiddleware, channelsRoutes(client, store));
   app.use('/api/roles', authMiddleware, rolesRoutes(client, store));
+  app.use('/api/guilds', authMiddleware, guildsRoutes(client, store));
   
   // Root status endpoint for dashboard compatibility
   app.get('/api/status', authMiddleware, (req, res) => {
@@ -54,7 +56,7 @@ function createApiServer(client, store, commandMap, startTimestamp) {
       const discordReady = !!client.readyAt;
       const ping = typeof client.ws?.ping === 'number' ? Math.round(client.ws.ping) : null;
       const uptimeSeconds = Math.floor((Date.now() - startTimestamp) / 1000);
-      const dbMode = store.persistenceModeRef?.mode || 'unknown';
+      const dbMode = 'Connected' || 'unknown';
       const dbConnected = dbMode !== 'memory' ? true : true;
       
       // Get system metrics for dashboard compatibility

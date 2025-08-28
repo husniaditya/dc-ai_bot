@@ -14,3 +14,4 @@ jwt-rotation-*.log
 jwt-*.backup
 logs/jwt-*
 *.jwt.log
+youtube-state.json
