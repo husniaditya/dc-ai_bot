@@ -308,8 +308,15 @@ export default function GamesSocialsSection({ guildId, pushToast }){
             </div>
           </div>
           <div className="mb-3">
-            <label className="form-label small fw-semibold mb-1">Announce Channel</label>
-            <select className="form-select form-select-sm" value={ytCfg.announceChannelId||''} onChange={e=> setYtCfg(c=> ({ ...c, announceChannelId: e.target.value || null }))}>
+            <label className="form-label small fw-semibold mb-1">Upload Announce Channel</label>
+            <select className="form-select form-select-sm" value={ytCfg.uploadAnnounceChannelId||ytCfg.announceChannelId||''} onChange={e=> setYtCfg(c=> ({ ...c, uploadAnnounceChannelId: e.target.value || null }))}>
+              <option value="">Select…</option>
+              {discordChannels.map(ch=> <option key={ch.id} value={ch.id}>{ch.name}</option>)}
+            </select>
+          </div>
+          <div className="mb-3">
+            <label className="form-label small fw-semibold mb-1">Live Announce Channel</label>
+            <select className="form-select form-select-sm" value={ytCfg.liveAnnounceChannelId||ytCfg.announceChannelId||''} onChange={e=> setYtCfg(c=> ({ ...c, liveAnnounceChannelId: e.target.value || null }))}>
               <option value="">Select…</option>
               {discordChannels.map(ch=> <option key={ch.id} value={ch.id}>{ch.name}</option>)}
             </select>

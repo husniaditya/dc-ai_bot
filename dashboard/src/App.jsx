@@ -54,9 +54,16 @@ export default function App(){
     try {
       const tok = localStorage.getItem('token');
       const sg = localStorage.getItem('selectedGuild');
-      // If we have both token + selectedGuild assume dashboard; guild list will refresh async
-      if(tok && sg) return 'dashboard';
-      return 'login';
+      const lastView = localStorage.getItem('lastView');
+      
+      // If no token, go to login
+      if(!tok) return 'login';
+      
+      // If we have token but no selected guild, or last view was guild selection, go to guild selection
+      if(!sg || lastView === 'guild') return 'guild';
+      
+      // If we have both token + selectedGuild, assume dashboard
+      return 'dashboard';
     } catch { return 'login'; }
   }); // login | guild | dashboard
   const [guildSearch, setGuildSearch] = useState('');
@@ -104,6 +111,22 @@ export default function App(){
       })();
     }
   }, [token, selectedGuild, guilds.length]);
+
+  // Load guilds when on guild selection view (for page refresh scenarios)
+  useEffect(()=>{
+    if(token && view === 'guild' && guilds.length === 0){
+      (async()=>{
+        try {
+          const res = await fetch(API_BASE + '/api/guilds', { headers:{ Authorization: 'Bearer '+localStorage.getItem('token') }});
+          if(!res.ok) return;
+          const txt = await res.text();
+          let data={}; try { data = txt? JSON.parse(txt):{}; } catch { return; }
+          if(Array.isArray(data.guilds)) setGuilds(data.guilds);
+          else if(Array.isArray(data)) setGuilds(data);
+        } catch {}
+      })();
+    }
+  }, [token, view, guilds.length]);
   // Effect: lock body scroll when mobile sidebar open
   useEffect(()=>{
     if(sidebarOpen) { document.body.classList.add('sidebar-open'); }
@@ -205,9 +228,28 @@ export default function App(){
             const t = await resp.text();
             let u={}; try { u = t? JSON.parse(t):{}; } catch {}
             if(u && u.selected_guild_id){
-              setSelectedGuild(u.selected_guild_id);
-              setView('dashboard');
-              refresh();
+              // First, fetch guilds to validate the selected guild
+              const guildResp = await fetch(API_BASE + '/api/guilds', { headers:{ Authorization: 'Bearer '+token }});
+              if(guildResp.ok){
+                const guildTxt = await guildResp.text();
+                let guildData={}; try { guildData = guildTxt? JSON.parse(guildTxt):{}; } catch {}
+                const availableGuilds = guildData.guilds||guildData||[];
+                setGuilds(availableGuilds);
+                
+                // Check if the selected guild is still valid and user can manage it
+                const validGuild = availableGuilds.find(g => g.id === u.selected_guild_id && g.canManage);
+                if(validGuild){
+                  setSelectedGuild(u.selected_guild_id);
+                  setView('dashboard');
+                  refresh();
+                } else {
+                  // Selected guild is no longer valid, go to guild selection
+                  setSelectedGuild(null);
+                  setView('guild');
+                }
+              } else {
+                bootstrapGuilds();
+              }
             } else {
               bootstrapGuilds();
             }
@@ -245,7 +287,14 @@ export default function App(){
           doLogout();
           return;
         }
-        throw new Error('Failed to load guilds');
+        if(res.status === 404) {
+          // Guilds endpoint not found - set empty guilds and go to guild selection
+          console.log('Guilds endpoint not found - setting empty guild list');
+          setGuilds([]);
+          setView('guild');
+          return;
+        }
+        throw new Error(`Failed to load guilds (${res.status})`);
       }
       const txt = await res.text(); 
       let data={}; 
@@ -262,7 +311,89 @@ export default function App(){
     finally { setLoading(false); }
   }
 
+  // Function to refresh guild list (for when bot is added to new servers)
+  async function refreshGuilds(){
+    const currentToken = localStorage.getItem('token');
+    if (!currentToken) return;
+    
+    try {
+      const res = await fetch(API_BASE + '/api/guilds', { headers:{ Authorization: 'Bearer '+currentToken }});
+      
+      if(!res.ok) {
+        if(res.status === 401) {
+          doLogout();
+          return;
+        }
+        if(res.status === 404) {
+          // Guilds endpoint not found - redirect to guild selection with empty guilds
+          setGuilds([]);
+          setView('guild');
+          return;
+        }
+        return; // Fail silently for other errors during refresh
+      }
+      const txt = await res.text();
+      let data={}; 
+      try { data = txt? JSON.parse(txt):{}; } catch { return; }
+      setGuilds(data.guilds||data||[]);
+      // Clear any selected guild that might be invalid
+      const newGuilds = data.guilds||data||[];
+      if (selectedGuild && !newGuilds.find(g => g.id === selectedGuild)) {
+        setSelectedGuild(null);
+      }
+    } catch(e){ 
+      // Fail silently for refresh
+    }
+  }
+
   useEffect(()=>{ if(token && view==='dashboard' && selectedGuild){ refresh(); } }, [token, view, selectedGuild]);
+
+  // Ensure guilds are loaded when on guild selection view
+  useEffect(()=>{
+    if(token && view==='guild' && guilds.length === 0){
+      console.log('Guild selection view with empty guilds - fetching guilds...');
+      // Inline bootstrap logic to avoid dependency issues
+      (async()=>{
+        const currentToken = localStorage.getItem('token');
+        if (!currentToken) {
+          console.log('No token available for guild fetch, redirecting to login...');
+          setView('login');
+          return;
+        }
+        
+        try {
+          setLoading(true);
+          const res = await fetch(API_BASE + '/api/guilds', { headers:{ Authorization: 'Bearer '+currentToken }});
+          if(!res.ok) {
+            if(res.status === 401) {
+              console.log('Guild fetch failed - unauthorized, forcing logout');
+              doLogout();
+              return;
+            }
+            if(res.status === 404) {
+              console.log('Guilds endpoint not found - setting empty guild list');
+              setGuilds([]);
+              setView('guild');
+              return;
+            }
+            throw new Error(`Failed to load guilds (${res.status})`);
+          }
+          const txt = await res.text(); 
+          let data={}; 
+          try { data = txt? JSON.parse(txt):{}; } catch { throw new Error('Guilds JSON parse failed'); }
+          setGuilds(data.guilds||data||[]);
+          // Don't change view if we're already on guild
+        } catch(e){ 
+          if(e.message.includes('logout')) {
+            return;
+          }
+          setError(e.message); 
+        }
+        finally { setLoading(false); }
+      })();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token, view, guilds.length]);
 
   async function refresh(){
     if(!selectedGuild) return;
@@ -655,6 +786,7 @@ export default function App(){
         error={error}
         saveSelectedGuild={saveSelectedGuild}
         doLogout={doLogout}
+        refreshGuilds={refreshGuilds}
       />
       <Footer />
     </>;

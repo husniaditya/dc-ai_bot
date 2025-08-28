@@ -634,7 +634,69 @@ select.form-select option, .dataTables_wrapper .dataTables_length select.form-se
 .guild-name { font-size:.85rem; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .guild-tags { display:flex; gap:.35rem; flex-wrap:wrap; }
 .badge-perm { background: rgba(16,185,129,0.15); color: var(--success); border:1px solid rgba(16,185,129,0.4); font-size:.55rem; padding:.2rem .45rem; border-radius: 999px; letter-spacing:.5px; text-transform:uppercase; font-weight:600; }
+.badge-invite { background: rgba(99,102,241,0.15); color: var(--accent); border:1px solid rgba(99,102,241,0.4); font-size:.55rem; padding:.2rem .45rem; border-radius: 999px; letter-spacing:.5px; text-transform:uppercase; font-weight:600; }
 .checkmark { position:absolute; top:6px; right:8px; font-size:.9rem; color: var(--success); font-weight:700; text-shadow:0 0 6px rgba(16,185,129,0.6); }
+
+/* Invite Bot Card Styles */
+.guild-card-invite { border-style: dashed !important; border-color: rgba(99,102,241,0.3) !important; }
+.guild-card-invite:hover { border-color: rgba(99,102,241,0.6) !important; background: rgba(99,102,241,0.08) !important; }
+.guild-card-invite:hover:before { opacity: 1 !important; background: radial-gradient(circle at 120% -10%, rgba(99,102,241,0.25), transparent 70%) !important; }
+.guild-icon-add { 
+  width: 100%; 
+  height: 100%; 
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  font-size: 1.2rem; 
+  color: var(--accent); 
+  background: rgba(99,102,241,0.1); 
+  border-radius: 12px;
+  transition: var(--transition);
+}
+.guild-card-invite:hover .guild-icon-add { 
+  background: rgba(99,102,241,0.2); 
+  color: rgba(99,102,241,0.9);
+  transform: scale(1.05);
+}
+
+/* Pending Guild Card Styles */
+.guild-card-pending { 
+  opacity: 0.6; 
+  cursor: not-allowed !important; 
+  border-style: dashed !important; 
+  border-color: rgba(245,158,11,0.4) !important; 
+}
+.guild-card-pending:hover { 
+  border-color: rgba(245,158,11,0.6) !important; 
+  background: rgba(245,158,11,0.05) !important; 
+}
+.guild-icon-pending { 
+  width: 100%; 
+  height: 100%; 
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  font-size: 1.1rem; 
+  color: var(--warn); 
+  background: rgba(245,158,11,0.1); 
+  border-radius: 12px;
+  animation: pulse 2s infinite;
+}
+.badge-pending {
+  background: linear-gradient(90deg, rgba(245,158,11,0.2), rgba(245,158,11,0.15));
+  color: var(--warn);
+  font-size: 0.7rem;
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+  font-weight: 500;
+  border: 1px solid rgba(245,158,11,0.3);
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
 @media (max-width: 600px){ .guild-grid { grid-template-columns: repeat(auto-fill,minmax(150px,1fr)); } .guild-search { max-width:100%; } }
 
 /* Login modern layout */

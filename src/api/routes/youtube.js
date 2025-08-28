@@ -51,6 +51,8 @@ function createYouTubeRoutes(client, store) {
       const partial = {
         channels: Array.isArray(req.body.channels) ? req.body.channels : undefined,
         announceChannelId: req.body.announceChannelId,
+        uploadAnnounceChannelId: req.body.uploadAnnounceChannelId,
+        liveAnnounceChannelId: req.body.liveAnnounceChannelId,
         mentionRoleId: req.body.mentionRoleId,
         mentionTargets: Array.isArray(req.body.mentionTargets) ? req.body.mentionTargets : undefined,
         enabled: req.body.enabled,

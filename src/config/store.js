@@ -646,7 +646,7 @@ module.exports = {
     if(!guildId) throw new Error('guildId required');
     if (guildYouTubeConfigCache.has(guildId)) return { ...guildYouTubeConfigCache.get(guildId) };
     
-    // Ensure member-only template columns exist
+    // Ensure member-only template columns and separate announce channels exist
     if (mariaAvailable && sqlPool) {
       try {
         // Check if member-only columns exist
@@ -658,14 +658,26 @@ module.exports = {
           await sqlPool.query('ALTER TABLE guild_youtube_watch ADD COLUMN member_only_live_template TEXT');
           console.log('[YouTubeCfg] ✅ Successfully added member-only template columns');
         }
+        
+        // Check if separate announce channel columns exist
+        const [announceColumns] = await sqlPool.query('SHOW COLUMNS FROM guild_youtube_watch WHERE Field IN (\'upload_announce_channel_id\', \'live_announce_channel_id\')');
+        
+        if (announceColumns.length === 0) {
+          console.log('[YouTubeCfg] Adding separate announce channel columns...');
+          await sqlPool.query('ALTER TABLE guild_youtube_watch ADD COLUMN upload_announce_channel_id VARCHAR(32)');
+          await sqlPool.query('ALTER TABLE guild_youtube_watch ADD COLUMN live_announce_channel_id VARCHAR(32)');
+          console.log('[YouTubeCfg] ✅ Successfully added separate announce channel columns');
+        }
       } catch (error) {
-        console.warn('[YouTubeCfg] Warning: Could not check/add member-only columns:', error.message);
+        console.warn('[YouTubeCfg] Warning: Could not check/add new columns:', error.message);
       }
     }
     
     const defaults = {
       channels: [],
       announceChannelId: null,
+      uploadAnnounceChannelId: null,
+      liveAnnounceChannelId: null,
       mentionRoleId: null, // legacy single value for backward compatibility
       mentionTargets: [], // new multi-select list, values: 'everyone','here', role IDs
       enabled: false,
@@ -680,20 +692,27 @@ module.exports = {
     };
     if (mariaAvailable && sqlPool){
       try {
-        // Try to query with member-only columns first
+        // Try to query with new columns first
         let rows;
         try {
-          [rows] = await sqlPool.query('SELECT channels, announce_channel_id, mention_target, enabled, interval_sec, upload_template, live_template, member_only_upload_template, member_only_live_template, embed_enabled, channel_messages, channel_names FROM guild_youtube_watch WHERE guild_id=?', [guildId]);
+          [rows] = await sqlPool.query('SELECT channels, announce_channel_id, upload_announce_channel_id, live_announce_channel_id, mention_target, enabled, interval_sec, upload_template, live_template, member_only_upload_template, member_only_live_template, embed_enabled, channel_messages, channel_names FROM guild_youtube_watch WHERE guild_id=?', [guildId]);
         } catch (columnError) {
-          // Fallback to query without member-only columns if they don't exist
-          console.warn('[YouTubeCfg] Falling back to legacy query (member-only columns not found)');
-          [rows] = await sqlPool.query('SELECT channels, announce_channel_id, mention_target, enabled, interval_sec, upload_template, live_template, embed_enabled, channel_messages, channel_names FROM guild_youtube_watch WHERE guild_id=?', [guildId]);
+          // Fallback to query without new columns if they don't exist
+          try {
+            [rows] = await sqlPool.query('SELECT channels, announce_channel_id, mention_target, enabled, interval_sec, upload_template, live_template, member_only_upload_template, member_only_live_template, embed_enabled, channel_messages, channel_names FROM guild_youtube_watch WHERE guild_id=?', [guildId]);
+          } catch (memberOnlyError) {
+            // Final fallback to legacy query without member-only columns
+            console.warn('[YouTubeCfg] Falling back to legacy query (new columns not found)');
+            [rows] = await sqlPool.query('SELECT channels, announce_channel_id, mention_target, enabled, interval_sec, upload_template, live_template, embed_enabled, channel_messages, channel_names FROM guild_youtube_watch WHERE guild_id=?', [guildId]);
+          }
         }
         if(rows.length){
           const r = rows[0];
             const cfg = { ...defaults };
             try { if(r.channels) cfg.channels = JSON.parse(r.channels); } catch { cfg.channels = []; }
             cfg.announceChannelId = r.announce_channel_id || null;
+            cfg.uploadAnnounceChannelId = r.upload_announce_channel_id || null;
+            cfg.liveAnnounceChannelId = r.live_announce_channel_id || null;
             const rawMention = (r.mention_target || '').trim();
             let mt = [];
             if(rawMention){
@@ -741,6 +760,8 @@ module.exports = {
     const next = { ...current };
     if (Array.isArray(partial.channels)) next.channels = partial.channels.slice(0, 25); // reasonable cap
     if (partial.announceChannelId !== undefined) next.announceChannelId = partial.announceChannelId || null;
+    if (partial.uploadAnnounceChannelId !== undefined) next.uploadAnnounceChannelId = partial.uploadAnnounceChannelId || null;
+    if (partial.liveAnnounceChannelId !== undefined) next.liveAnnounceChannelId = partial.liveAnnounceChannelId || null;
     // Multi-role logic: prefer mentionTargets if provided else fallback to mentionRoleId
     if (Array.isArray(partial.mentionTargets)) {
       const cleaned = partial.mentionTargets
@@ -773,6 +794,8 @@ module.exports = {
       const row = {
         channels: JSON.stringify(next.channels||[]),
         announce_channel_id: next.announceChannelId,
+        upload_announce_channel_id: next.uploadAnnounceChannelId,
+        live_announce_channel_id: next.liveAnnounceChannelId,
         mention_target: next.mentionTargets.join(','),
         enabled: next.enabled ? 1 : 0,
         interval_sec: next.intervalSec,
@@ -789,36 +812,54 @@ module.exports = {
           try { await sqlPool.query('SELECT config_json FROM guild_youtube_watch LIMIT 1'); youtubeHasConfigJsonColumn = true; } catch { youtubeHasConfigJsonColumn = false; }
         }
         
-        // Try with member-only columns first
+        // Try with all new columns first
         try {
           if (youtubeHasConfigJsonColumn){
-            await sqlPool.query(`INSERT INTO guild_youtube_watch (guild_id, channels, announce_channel_id, mention_target, enabled, interval_sec, upload_template, live_template, member_only_upload_template, member_only_live_template, embed_enabled, channel_messages, channel_names, config_json)
-              VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)
-              ON DUPLICATE KEY UPDATE channels=VALUES(channels), announce_channel_id=VALUES(announce_channel_id), mention_target=VALUES(mention_target), enabled=VALUES(enabled), interval_sec=VALUES(interval_sec), upload_template=VALUES(upload_template), live_template=VALUES(live_template), member_only_upload_template=VALUES(member_only_upload_template), member_only_live_template=VALUES(member_only_live_template), embed_enabled=VALUES(embed_enabled), channel_messages=VALUES(channel_messages), channel_names=VALUES(channel_names), config_json=VALUES(config_json)`,
-              [guildId, row.channels, row.announce_channel_id, row.mention_target, row.enabled, row.interval_sec, row.upload_template, row.live_template, row.member_only_upload_template, row.member_only_live_template, row.embed_enabled, row.channel_messages, row.channel_names, JSON.stringify(next)]
+            await sqlPool.query(`INSERT INTO guild_youtube_watch (guild_id, channels, announce_channel_id, upload_announce_channel_id, live_announce_channel_id, mention_target, enabled, interval_sec, upload_template, live_template, member_only_upload_template, member_only_live_template, embed_enabled, channel_messages, channel_names, config_json)
+              VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+              ON DUPLICATE KEY UPDATE channels=VALUES(channels), announce_channel_id=VALUES(announce_channel_id), upload_announce_channel_id=VALUES(upload_announce_channel_id), live_announce_channel_id=VALUES(live_announce_channel_id), mention_target=VALUES(mention_target), enabled=VALUES(enabled), interval_sec=VALUES(interval_sec), upload_template=VALUES(upload_template), live_template=VALUES(live_template), member_only_upload_template=VALUES(member_only_upload_template), member_only_live_template=VALUES(member_only_live_template), embed_enabled=VALUES(embed_enabled), channel_messages=VALUES(channel_messages), channel_names=VALUES(channel_names), config_json=VALUES(config_json)`,
+              [guildId, row.channels, row.announce_channel_id, row.upload_announce_channel_id, row.live_announce_channel_id, row.mention_target, row.enabled, row.interval_sec, row.upload_template, row.live_template, row.member_only_upload_template, row.member_only_live_template, row.embed_enabled, row.channel_messages, row.channel_names, JSON.stringify(next)]
             );
           } else {
-            await sqlPool.query(`INSERT INTO guild_youtube_watch (guild_id, channels, announce_channel_id, mention_target, enabled, interval_sec, upload_template, live_template, member_only_upload_template, member_only_live_template, embed_enabled, channel_messages, channel_names)
-              VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)
-              ON DUPLICATE KEY UPDATE channels=VALUES(channels), announce_channel_id=VALUES(announce_channel_id), mention_target=VALUES(mention_target), enabled=VALUES(enabled), interval_sec=VALUES(interval_sec), upload_template=VALUES(upload_template), live_template=VALUES(live_template), member_only_upload_template=VALUES(member_only_upload_template), member_only_live_template=VALUES(member_only_live_template), embed_enabled=VALUES(embed_enabled), channel_messages=VALUES(channel_messages), channel_names=VALUES(channel_names)`,
-              [guildId, row.channels, row.announce_channel_id, row.mention_target, row.enabled, row.interval_sec, row.upload_template, row.live_template, row.member_only_upload_template, row.member_only_live_template, row.embed_enabled, row.channel_messages, row.channel_names]
+            await sqlPool.query(`INSERT INTO guild_youtube_watch (guild_id, channels, announce_channel_id, upload_announce_channel_id, live_announce_channel_id, mention_target, enabled, interval_sec, upload_template, live_template, member_only_upload_template, member_only_live_template, embed_enabled, channel_messages, channel_names)
+              VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+              ON DUPLICATE KEY UPDATE channels=VALUES(channels), announce_channel_id=VALUES(announce_channel_id), upload_announce_channel_id=VALUES(upload_announce_channel_id), live_announce_channel_id=VALUES(live_announce_channel_id), mention_target=VALUES(mention_target), enabled=VALUES(enabled), interval_sec=VALUES(interval_sec), upload_template=VALUES(upload_template), live_template=VALUES(live_template), member_only_upload_template=VALUES(member_only_upload_template), member_only_live_template=VALUES(member_only_live_template), embed_enabled=VALUES(embed_enabled), channel_messages=VALUES(channel_messages), channel_names=VALUES(channel_names)`,
+              [guildId, row.channels, row.announce_channel_id, row.upload_announce_channel_id, row.live_announce_channel_id, row.mention_target, row.enabled, row.interval_sec, row.upload_template, row.live_template, row.member_only_upload_template, row.member_only_live_template, row.embed_enabled, row.channel_messages, row.channel_names]
             );
           }
-        } catch (columnError) {
-          // Fallback to save without member-only columns if they don't exist
-          console.warn('[YouTubeCfg] Falling back to legacy save (member-only columns not found)');
-          if (youtubeHasConfigJsonColumn){
-            await sqlPool.query(`INSERT INTO guild_youtube_watch (guild_id, channels, announce_channel_id, mention_target, enabled, interval_sec, upload_template, live_template, embed_enabled, channel_messages, channel_names, config_json)
-              VALUES (?,?,?,?,?,?,?,?,?,?,?,?)
-              ON DUPLICATE KEY UPDATE channels=VALUES(channels), announce_channel_id=VALUES(announce_channel_id), mention_target=VALUES(mention_target), enabled=VALUES(enabled), interval_sec=VALUES(interval_sec), upload_template=VALUES(upload_template), live_template=VALUES(live_template), embed_enabled=VALUES(embed_enabled), channel_messages=VALUES(channel_messages), channel_names=VALUES(channel_names), config_json=VALUES(config_json)`,
-              [guildId, row.channels, row.announce_channel_id, row.mention_target, row.enabled, row.interval_sec, row.upload_template, row.live_template, row.embed_enabled, row.channel_messages, row.channel_names, JSON.stringify(next)]
-            );
-          } else {
-            await sqlPool.query(`INSERT INTO guild_youtube_watch (guild_id, channels, announce_channel_id, mention_target, enabled, interval_sec, upload_template, live_template, embed_enabled, channel_messages, channel_names)
-              VALUES (?,?,?,?,?,?,?,?,?,?,?)
-              ON DUPLICATE KEY UPDATE channels=VALUES(channels), announce_channel_id=VALUES(announce_channel_id), mention_target=VALUES(mention_target), enabled=VALUES(enabled), interval_sec=VALUES(interval_sec), upload_template=VALUES(upload_template), live_template=VALUES(live_template), embed_enabled=VALUES(embed_enabled), channel_messages=VALUES(channel_messages), channel_names=VALUES(channel_names)`,
-              [guildId, row.channels, row.announce_channel_id, row.mention_target, row.enabled, row.interval_sec, row.upload_template, row.live_template, row.embed_enabled, row.channel_messages, row.channel_names]
-            );
+        } catch (newColumnError) {
+          // Fallback to save without new announce channel columns
+          console.warn('[YouTubeCfg] Falling back to save without new announce channel columns');
+          try {
+            if (youtubeHasConfigJsonColumn){
+              await sqlPool.query(`INSERT INTO guild_youtube_watch (guild_id, channels, announce_channel_id, mention_target, enabled, interval_sec, upload_template, live_template, member_only_upload_template, member_only_live_template, embed_enabled, channel_messages, channel_names, config_json)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+                ON DUPLICATE KEY UPDATE channels=VALUES(channels), announce_channel_id=VALUES(announce_channel_id), mention_target=VALUES(mention_target), enabled=VALUES(enabled), interval_sec=VALUES(interval_sec), upload_template=VALUES(upload_template), live_template=VALUES(live_template), member_only_upload_template=VALUES(member_only_upload_template), member_only_live_template=VALUES(member_only_live_template), embed_enabled=VALUES(embed_enabled), channel_messages=VALUES(channel_messages), channel_names=VALUES(channel_names), config_json=VALUES(config_json)`,
+                [guildId, row.channels, row.announce_channel_id, row.mention_target, row.enabled, row.interval_sec, row.upload_template, row.live_template, row.member_only_upload_template, row.member_only_live_template, row.embed_enabled, row.channel_messages, row.channel_names, JSON.stringify(next)]
+              );
+            } else {
+              await sqlPool.query(`INSERT INTO guild_youtube_watch (guild_id, channels, announce_channel_id, mention_target, enabled, interval_sec, upload_template, live_template, member_only_upload_template, member_only_live_template, embed_enabled, channel_messages, channel_names)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)
+                ON DUPLICATE KEY UPDATE channels=VALUES(channels), announce_channel_id=VALUES(announce_channel_id), mention_target=VALUES(mention_target), enabled=VALUES(enabled), interval_sec=VALUES(interval_sec), upload_template=VALUES(upload_template), live_template=VALUES(live_template), member_only_upload_template=VALUES(member_only_upload_template), member_only_live_template=VALUES(member_only_live_template), embed_enabled=VALUES(embed_enabled), channel_messages=VALUES(channel_messages), channel_names=VALUES(channel_names)`,
+                [guildId, row.channels, row.announce_channel_id, row.mention_target, row.enabled, row.interval_sec, row.upload_template, row.live_template, row.member_only_upload_template, row.member_only_live_template, row.embed_enabled, row.channel_messages, row.channel_names]
+              );
+            }
+          } catch (memberOnlyError) {
+            // Final fallback to legacy save without member-only columns
+            console.warn('[YouTubeCfg] Falling back to legacy save (member-only columns not found)');
+            if (youtubeHasConfigJsonColumn){
+              await sqlPool.query(`INSERT INTO guild_youtube_watch (guild_id, channels, announce_channel_id, mention_target, enabled, interval_sec, upload_template, live_template, embed_enabled, channel_messages, channel_names, config_json)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?)
+                ON DUPLICATE KEY UPDATE channels=VALUES(channels), announce_channel_id=VALUES(announce_channel_id), mention_target=VALUES(mention_target), enabled=VALUES(enabled), interval_sec=VALUES(interval_sec), upload_template=VALUES(upload_template), live_template=VALUES(live_template), embed_enabled=VALUES(embed_enabled), channel_messages=VALUES(channel_messages), channel_names=VALUES(channel_names), config_json=VALUES(config_json)`,
+                [guildId, row.channels, row.announce_channel_id, row.mention_target, row.enabled, row.interval_sec, row.upload_template, row.live_template, row.embed_enabled, row.channel_messages, row.channel_names, JSON.stringify(next)]
+              );
+            } else {
+              await sqlPool.query(`INSERT INTO guild_youtube_watch (guild_id, channels, announce_channel_id, mention_target, enabled, interval_sec, upload_template, live_template, embed_enabled, channel_messages, channel_names)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?)
+                ON DUPLICATE KEY UPDATE channels=VALUES(channels), announce_channel_id=VALUES(announce_channel_id), mention_target=VALUES(mention_target), enabled=VALUES(enabled), interval_sec=VALUES(interval_sec), upload_template=VALUES(upload_template), live_template=VALUES(live_template), embed_enabled=VALUES(embed_enabled), channel_messages=VALUES(channel_messages), channel_names=VALUES(channel_names)`,
+                [guildId, row.channels, row.announce_channel_id, row.mention_target, row.enabled, row.interval_sec, row.upload_template, row.live_template, row.embed_enabled, row.channel_messages, row.channel_names]
+              );
+            }
           }
         }
         console.log('[YouTubeCfg] saved guild', guildId, 'targets=', next.mentionTargets.length, 'channels=', next.channels.length, 'legacyCfgJson=', youtubeHasConfigJsonColumn);

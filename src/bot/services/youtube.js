@@ -670,11 +670,19 @@ function buildRoleMention(cfg){
 async function announce(guild, cfg, video, type){
 	const debug = process.env.YT_DEBUG === '1';
 	
-	if(!cfg.announceChannelId) {
+	// Determine which channel to use based on type
+	let announceChannelId;
+	if (type === 'live') {
+		announceChannelId = cfg.liveAnnounceChannelId || cfg.announceChannelId;
+	} else {
+		announceChannelId = cfg.uploadAnnounceChannelId || cfg.announceChannelId;
+	}
+	
+	if(!announceChannelId) {
 		return;
 	}
 	
-	const ch = guild.channels.cache.get(cfg.announceChannelId);
+	const ch = guild.channels.cache.get(announceChannelId);
 	if(!ch || !ch.isTextBased()) {
 		return;
 	}
@@ -711,7 +719,9 @@ async function announce(guild, cfg, video, type){
 		.replace(/\{url\}/g, url)
 		.replace(/\{thumbnail\}/g, video.thumbnail || '')
 		.replace(/\{memberBadge\}/g, memberBadge)
-		.replace(/\{memberText\}/g, memberText);
+		.replace(/\{memberText\}/g, memberText)
+		.replace(/\{publishedAt\}/g, video.publishedAt ? new Date(video.publishedAt).toISOString() : new Date().toISOString())
+		.replace(/\{publishedAtRelative\}/g, 'just now');
 	
 	if(!cfg.embedEnabled){
 		if(content.length === 0) {
@@ -731,7 +741,12 @@ async function announce(guild, cfg, video, type){
 		title: `${memberBadge}${video.title?.slice(0,256) || 'New Video'}${memberText}`,
 		url,
 		description: content.slice(0, 4000),
-		color: embedColor
+		color: embedColor,
+		// Add footer with YouTube logo and timestamp using publishedAt
+		footer: {
+			text: `YouTube • ${video.publishedAt ? new Date(video.publishedAt).toLocaleTimeString() : new Date().toLocaleTimeString()}`,
+			icon_url: 'https://www.youtube.com/favicon.ico'
+		}
 	};
 	
 	if(video.thumbnail){ embed.image = { url: video.thumbnail }; }
@@ -750,7 +765,7 @@ async function announce(guild, cfg, video, type){
 		if (!embed.fields) embed.fields = [];
 		embed.fields.push({
 			name: '👀 Viewers',
-			value: video.concurrentViewers,
+			value: video.concurrentViewers.toString(),
 			inline: true
 		});
 	}
