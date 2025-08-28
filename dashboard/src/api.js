@@ -12,15 +12,95 @@ async function login(username, password){
   return data;
 }
 
+// Enhanced auth fetch with JWT expiration handling
 async function authFetch(path, opts={}){
   const token = getToken();
-  const headers = Object.assign({}, opts.headers||{}, { 'Content-Type':'application/json', Authorization: 'Bearer ' + token });
-  const res = await fetch(API_BASE + path, { ...opts, headers });
-  if(res.status === 401) throw new Error('Unauthorized');
-  let text;
-  try { text = await res.text(); } catch { text = ''; }
-  if(!text) return null; // allow empty 204 responses
-  try { return JSON.parse(text); } catch(e){ throw new Error('Bad JSON response'); }
+  
+  if (!token) {
+    // No token available - don't call handleAuthError to avoid loops
+    console.warn('authFetch called without token for:', path);
+    throw new Error('No authentication token available');
+  }
+  
+  const headers = Object.assign({}, opts.headers||{}, { 
+    'Content-Type':'application/json', 
+    Authorization: 'Bearer ' + token 
+  });
+  
+  try {
+    const res = await fetch(API_BASE + path, { ...opts, headers });
+    
+    // Handle authentication errors with specific JWT error handling
+    if(res.status === 401) {
+      let errorData = {};
+      try {
+        const text = await res.text();
+        errorData = text ? JSON.parse(text) : {};
+      } catch (e) {
+        // If we can't parse the error response, treat as generic auth error
+        errorData = { error: 'authentication_failed', message: 'Authentication failed' };
+      }
+      
+      // Check if server indicates forced logout is required
+      if (errorData.requiresLogout) {
+        handleAuthError(errorData.message || 'Session expired');
+        throw new Error('Authentication failed - session expired');
+      }
+      
+      // Generic 401 handling
+      handleAuthError('Unauthorized access');
+      throw new Error('Unauthorized');
+    }
+    
+    let text;
+    try { text = await res.text(); } catch { text = ''; }
+    if(!text) return null; // allow empty 204 responses
+    try { return JSON.parse(text); } catch(e){ throw new Error('Bad JSON response'); }
+    
+  } catch (error) {
+    // Network errors or other fetch failures
+    if (error.message.includes('Authentication failed')) {
+      throw error; // Re-throw auth errors
+    }
+    
+    // For network errors, don't force logout
+    throw error;
+  }
+}
+
+/**
+ * Handle authentication errors by clearing token and redirecting
+ * @param {string} message - Error message to display
+ */
+let isHandlingAuthError = false; // Guard to prevent multiple simultaneous logout attempts
+
+function handleAuthError(message = 'Authentication failed') {
+  // Prevent multiple simultaneous logout attempts
+  if (isHandlingAuthError) {
+    console.log('Auth error already being handled, skipping...');
+    return;
+  }
+  
+  isHandlingAuthError = true;
+  console.warn('Authentication error:', message);
+  
+  // Clear stored token
+  localStorage.removeItem('token');
+  
+  // Reset the guard after a short delay
+  setTimeout(() => {
+    isHandlingAuthError = false;
+  }, 1000);
+  
+  // Try to use auth manager if available
+  if (window.authManager) {
+    window.authManager.forceLogout(message);
+  } else {
+    // Fallback: redirect to login with message
+    const params = new URLSearchParams();
+    params.set('message', message);
+    window.location.href = '/?message=' + encodeURIComponent(message);
+  }
 }
 
 export function getApiBase(){ return API_BASE || ''; }
@@ -90,9 +170,38 @@ export async function getRoles(guildId){ return authFetch('/api/roles' + (guildI
 export async function getYouTubeConfig(guildId){ return authFetch('/api/youtube/config' + (guildId?`?guildId=${guildId}`:'')); }
 export async function updateYouTubeConfig(partial, guildId){ return authFetch('/api/youtube/config' + (guildId?`?guildId=${guildId}`:''), { method:'PUT', body: JSON.stringify(partial) }); }
 export async function resolveYouTubeChannel(input){ return authFetch('/api/youtube/resolve-channel', { method:'POST', body: JSON.stringify({ input }) }); }
+export async function extractYouTubeChannelId(input){ return authFetch('/api/youtube/extract-channel-id', { method:'POST', body: JSON.stringify({ input }) }); }
 
 // Twitch watcher config helpers
 export async function getTwitchConfig(guildId){ return authFetch('/api/twitch/config' + (guildId?`?guildId=${guildId}`:'')); }
 export async function updateTwitchConfig(partial, guildId){ return authFetch('/api/twitch/config' + (guildId?`?guildId=${guildId}`:''), { method:'PUT', body: JSON.stringify(partial) }); }
 export async function resolveTwitchStreamer(input){ return authFetch('/api/twitch/resolve-streamer', { method:'POST', body: JSON.stringify({ input }) }); }
-export { login };
+
+// Authentication management
+export async function logout() {
+  try {
+    await authFetch('/api/auth/logout', { method: 'POST' });
+  } catch (error) {
+    // Even if logout API call fails, clear local storage
+    console.warn('Logout API call failed:', error);
+  } finally {
+    // Always clear local storage
+    localStorage.removeItem('token');
+  }
+}
+
+export async function validateToken() {
+  try {
+    const result = await authFetch('/api/auth/validate');
+    return result && result.valid === true;
+  } catch (error) {
+    console.warn('Token validation failed:', error);
+    return false;
+  }
+}
+
+export async function getCurrentUser() {
+  return authFetch('/api/auth/user/me');
+}
+
+export { login, getToken, setToken, handleAuthError };

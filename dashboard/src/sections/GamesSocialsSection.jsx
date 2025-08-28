@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { getYouTubeConfig, updateYouTubeConfig, getChannels, getRoles, resolveYouTubeChannel, getTwitchConfig, updateTwitchConfig, resolveTwitchStreamer } from '../api';
+import { getYouTubeConfig, updateYouTubeConfig, getChannels, getRoles, extractYouTubeChannelId, getTwitchConfig, updateTwitchConfig, resolveTwitchStreamer } from '../api';
 
 // icon retained only as a fallback if an image asset is missing
 const SERVICES = [
@@ -227,24 +227,41 @@ export default function GamesSocialsSection({ guildId, pushToast }){
     }
   }
   async function addChannel(){
-    const raw = newChannelId.trim(); if(!raw) return;
-    let cid = null;
-    let resolvedName = null;
-    if(/^UC[0-9A-Za-z_-]{21,}$/.test(raw)) cid = raw; else {
-      setResolving(true);
-      try {
-        const r = await resolveYouTubeChannel(raw);
-        cid = r?.channelId || null;
-        resolvedName = r?.title || null;
-        if(!cid) throw new Error('not resolved');
-        pushToast && pushToast('success', `Resolved to ${cid}`);
-      } catch(e){
-        pushToast && pushToast('error','Could not resolve channel');
-      } finally { setResolving(false); }
-    }
-    if(cid){
-      setYtCfg(c => ({ ...c, channels: c.channels.includes(cid)? c.channels : [...c.channels, cid], channelNames: resolvedName ? { ...(c.channelNames||{}), [cid]: resolvedName } : (c.channelNames||{}) }));
+    const raw = newChannelId.trim(); 
+    if(!raw) return;
+    
+    setResolving(true);
+    try {
+      // Use the new authenticated API function
+      const result = await extractYouTubeChannelId(raw);
+      
+      const cid = result.channelId;
+      const resolvedName = result.channelName || null;
+      
+      if (ytCfg.channels.includes(cid)) {
+        pushToast && pushToast('error', `Channel ${cid} is already being watched`);
+        return;
+      }
+      
+      // Show extraction info if URL was converted
+      if (result.extracted) {
+        pushToast && pushToast('success', `Extracted channel ID: ${cid}${resolvedName ? ` (${resolvedName})` : ''}`);
+      } else if (resolvedName) {
+        pushToast && pushToast('success', `Added channel: ${resolvedName}`);
+      }
+      
+      setYtCfg(c => ({ 
+        ...c, 
+        channels: [...c.channels, cid],
+        channelNames: resolvedName ? { ...(c.channelNames||{}), [cid]: resolvedName } : (c.channelNames||{})
+      }));
       setNewChannelId('');
+      
+    } catch (e) {
+      console.error('Channel extraction error:', e);
+      pushToast && pushToast('error', e.message || 'Failed to add channel');
+    } finally {
+      setResolving(false);
     }
   }
   function removeChannel(cid){ setYtCfg(c => ({ ...c, channels: c.channels.filter(x=>x!==cid) })); }
@@ -291,8 +308,15 @@ export default function GamesSocialsSection({ guildId, pushToast }){
             </div>
           </div>
           <div className="mb-3">
-            <label className="form-label small fw-semibold mb-1">Announce Channel</label>
-            <select className="form-select form-select-sm" value={ytCfg.announceChannelId||''} onChange={e=> setYtCfg(c=> ({ ...c, announceChannelId: e.target.value || null }))}>
+            <label className="form-label small fw-semibold mb-1">Upload Announce Channel</label>
+            <select className="form-select form-select-sm" value={ytCfg.uploadAnnounceChannelId||ytCfg.announceChannelId||''} onChange={e=> setYtCfg(c=> ({ ...c, uploadAnnounceChannelId: e.target.value || null }))}>
+              <option value="">Select…</option>
+              {discordChannels.map(ch=> <option key={ch.id} value={ch.id}>{ch.name}</option>)}
+            </select>
+          </div>
+          <div className="mb-3">
+            <label className="form-label small fw-semibold mb-1">Live Announce Channel</label>
+            <select className="form-select form-select-sm" value={ytCfg.liveAnnounceChannelId||ytCfg.announceChannelId||''} onChange={e=> setYtCfg(c=> ({ ...c, liveAnnounceChannelId: e.target.value || null }))}>
               <option value="">Select…</option>
               {discordChannels.map(ch=> <option key={ch.id} value={ch.id}>{ch.name}</option>)}
             </select>
@@ -372,9 +396,9 @@ export default function GamesSocialsSection({ guildId, pushToast }){
       <div className="yt-config-block mt-3">
         <div className="d-flex flex-wrap align-items-end gap-2 mb-3">
           <div style={{flex:'1 1 260px'}}>
-            <label className="form-label small fw-semibold mb-1">Add Channel (ID / URL / @handle)</label>
+            <label className="form-label small fw-semibold mb-1">Add Channel (URL)</label>
             &nbsp;{active==='youtube' && ytCfg && ytOrig && ytCfg && (JSON.stringify(ytCfg)!==JSON.stringify(ytOrig)) && <span className="dirty-badge">Unsaved</span>}
-            <input className="form-control form-control-sm" placeholder="UC..., https://youtube.com/@handle" value={newChannelId} onChange={e=> setNewChannelId(e.target.value)} onKeyDown={e=> { if(e.key==='Enter'){ e.preventDefault(); addChannel(); } }} />
+            <input className="form-control form-control-sm" placeholder="https://youtube.com/@handle" value={newChannelId} onChange={e=> setNewChannelId(e.target.value)} onKeyDown={e=> { if(e.key==='Enter'){ e.preventDefault(); addChannel(); } }} />
           </div>
           <button type="button" className="btn btn-sm btn-accent" onClick={addChannel} disabled={!newChannelId.trim()||resolving}><i className="fa-solid fa-plus" /> {resolving? 'Resolving...':'Add'}</button>
         </div>

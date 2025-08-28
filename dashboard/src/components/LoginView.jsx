@@ -30,17 +30,11 @@ export default function LoginView({ error, authProcessing, startDiscordLogin }) 
               </div>
             ) : (
               <div className="vstack gap-3">
-                <p className="text-muted small m-0">Sign in with Discord to manage the bot. You can also invite it to new servers below.</p>
+                <p className="text-muted small m-0">Sign in with Discord to manage the bot.</p>
                 <button onClick={startDiscordLogin} className="btn btn-discord-cta">
                   <span className="ico me-1"><i className="fa-brands fa-discord" /></span>
                   <span>Login with Discord</span>
                 </button>
-                {inviteUrl && (
-                  <a href={inviteUrl} target="_blank" rel="noopener noreferrer" className="btn btn-outline-light">
-                    <i className="fa-solid fa-plus me-2" /> Invite Bot to Your Server
-                  </a>
-                )}
-                {!inviteUrl && <div className="small text-warning">Set VITE_DISCORD_CLIENT_ID in environment to show an invite link.</div>}
               </div>
             )}
             <div className="login-footer small text-muted mt-4">© {year} Choco Maid • Not affiliated with Discord</div>
