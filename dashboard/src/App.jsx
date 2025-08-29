@@ -191,10 +191,10 @@ export default function App(){
     const params = new URLSearchParams(window.location.search);
     const code = params.get('code');
     const state = params.get('state');
-    if(!token && code && state){
+    if(!token && code && state && !authProcessing){
       (async()=>{
         try {
-          if(!authProcessing) setAuthProcessing(true);
+          setAuthProcessing(true);
           const resp = await fetch(API_BASE + '/api/auth/oauth/discord/exchange', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ code, state }) });
           const text = await resp.text();
           let data; try { data = text? JSON.parse(text):{}; } catch { throw new Error('OAuth exchange failed (bad JSON)'); }
@@ -216,7 +216,7 @@ export default function App(){
         finally { setAuthProcessing(false); }
       })();
     }
-  }, [token, authProcessing]);
+  }, [token]); // Removed authProcessing from dependencies
 
   // If token exists (return visit) fetch user profile to restore selected guild automatically
   useEffect(()=>{
