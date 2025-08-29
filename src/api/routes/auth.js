@@ -13,10 +13,15 @@ function createAuthRoutes(client, store) {
   async function saveOAuthState(state) {
     if (store.sqlPool) {
       try {
-        await store.sqlPool.query(
+        const result = await store.sqlPool.query(
           'INSERT INTO oauth_states (state, created_at, expires_at, active) VALUES (?, NOW(), DATE_ADD(NOW(), INTERVAL 10 MINUTE), 1) ON DUPLICATE KEY UPDATE created_at = NOW(), expires_at = DATE_ADD(NOW(), INTERVAL 10 MINUTE), active = 1',
           [state]
         );
+        
+        // Handle different result structures
+        const affectedRows = result.affectedRows || result[0]?.affectedRows || (Array.isArray(result) && result[0]?.affectedRows) || 0;
+        console.log('[OAuth] Saved state to DB:', state, 'affected rows:', affectedRows);
+        
         return true;
       } catch(e) {
         console.warn('Failed to save OAuth state to DB:', e.message);
@@ -25,6 +30,7 @@ function createAuthRoutes(client, store) {
     }
     // Fallback to in-memory
     oauthStateStore.set(state, Date.now());
+    console.log('[OAuth] Saved state to memory:', state);
     return true;
   }
 
@@ -51,7 +57,11 @@ function createAuthRoutes(client, store) {
       try {
         // Instead of deleting, mark as inactive for debugging/tracking
         const result = await store.sqlPool.query('UPDATE oauth_states SET active = 0 WHERE state = ?', [state]);
-        console.log('[OAuth] Deactivated state in DB:', state, 'affected rows:', result.affectedRows);
+        
+        // Handle different result structures from mysql2
+        const affectedRows = result.affectedRows || result[0]?.affectedRows || (Array.isArray(result) && result[0]?.affectedRows) || 0;
+        console.log('[OAuth] Deactivated state in DB:', state, 'affected rows:', affectedRows);
+        
         return true;
       } catch(e) {
         console.warn('Failed to deactivate OAuth state in DB:', e.message);
@@ -68,9 +78,19 @@ function createAuthRoutes(client, store) {
       try {
         // Mark expired states as inactive instead of deleting them
         const result = await store.sqlPool.query('UPDATE oauth_states SET active = 0 WHERE expires_at < NOW() AND active = 1');
+        const affectedRows = result.affectedRows || result[0]?.affectedRows || (Array.isArray(result) && result[0]?.affectedRows) || 0;
+        
+        if (affectedRows > 0) {
+          console.log('[OAuth] Marked', affectedRows, 'expired states as inactive');
+        }
         
         // Optionally delete very old inactive states (older than 1 day) to keep table clean
         const deleteResult = await store.sqlPool.query('DELETE FROM oauth_states WHERE created_at < DATE_SUB(NOW(), INTERVAL 1 DAY) AND active = 0');
+        const deletedRows = deleteResult.affectedRows || deleteResult[0]?.affectedRows || (Array.isArray(deleteResult) && deleteResult[0]?.affectedRows) || 0;
+        
+        if (deletedRows > 0) {
+          console.log('[OAuth] Deleted', deletedRows, 'old inactive states');
+        }
       } catch(e) {
         console.warn('Failed to cleanup expired OAuth states:', e.message);
       }
@@ -99,6 +119,13 @@ function createAuthRoutes(client, store) {
 
   // Discord OAuth authorize URL (front-end will redirect user here)
   router.get('/oauth/discord/url', async (req, res) => {
+    const { preferApp, isMobile } = req.query;
+    const userAgent = req.headers['user-agent'] || '';
+    
+    // Server-side mobile detection as backup
+    const serverMobileDetection = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
+    const isActuallyMobile = isMobile === 'true' || serverMobileDetection;
+    
     const state = Math.random().toString(36).slice(2, 18);
     const saved = await saveOAuthState(state);
     
@@ -113,7 +140,30 @@ function createAuthRoutes(client, store) {
       state
     });
     
-    res.json({ url: `https://discord.com/api/oauth2/authorize?${params.toString()}` });
+    // Generate URLs
+    const webUrl = `https://discord.com/api/oauth2/authorize?${params.toString()}`;
+    const appUrl = `discord://discord.com/api/oauth2/authorize?${params.toString()}`;
+    
+    // Smart URL selection based on device type and preference
+    let primaryUrl;
+    if (isActuallyMobile) {
+      // Mobile: Always prefer Discord app
+      primaryUrl = appUrl;
+    } else if (preferApp === 'true') {
+      // Desktop: User specifically requested app
+      primaryUrl = appUrl;
+    } else {
+      // Desktop: Default to web browser
+      primaryUrl = webUrl;
+    }
+    
+    res.json({ 
+      url: primaryUrl,
+      webUrl,
+      appUrl,
+      isMobile: isActuallyMobile,
+      preferApp: preferApp === 'true'
+    });
   });
 
   // OAuth callback exchange (code -> token -> user info & guilds)

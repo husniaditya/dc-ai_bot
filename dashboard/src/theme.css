@@ -715,10 +715,29 @@ body.login-mode { height:100vh; overflow:hidden; }
 .logo-orb .logo-img + .orb-text { display:none; }
 .login-title { font-size:1.55rem; font-weight:600; letter-spacing:.5px; }
 .login-subtitle { font-size:.8rem; letter-spacing:.5px; color:var(--text-muted); font-weight:500; }
-.btn-discord-cta { --grad: linear-gradient(90deg,var(--accent),#8d90ff); background: var(--grad); border:none; color:#fff !important; font-weight:600; letter-spacing:.3px; box-shadow: var(--accent-glow); padding:.85rem 1.25rem; border-radius: calc(var(--radius-sm) + 2px); position:relative; overflow:hidden; }
+.btn-discord-cta { --grad: linear-gradient(90deg,var(--accent),#8d90ff); background: var(--grad); border:none; color:#fff !important; font-weight:600; letter-spacing:.3px; box-shadow: var(--accent-glow); padding:.85rem 1.25rem; border-radius: calc(var(--radius-sm) + 2px); position:relative; overflow:hidden; transition: all var(--transition); }
 .btn-discord-cta .ico { font-size:.95rem; margin-right:.4rem; opacity:.85; }
 .btn-discord-cta:before { content:""; position:absolute; inset:0; background: linear-gradient(120deg, rgba(255,255,255,0.18), transparent 65%); mix-blend-mode:overlay; opacity:.55; transition:var(--transition); }
 .btn-discord-cta:hover:before { opacity:.85; }
+
+/* Loading state for Discord button */
+.btn-discord-cta:disabled {
+  opacity: 0.8;
+  cursor: not-allowed;
+  box-shadow: 0 0 0 1px rgba(99,102,241,0.2), 0 2px 8px -2px rgba(99,102,241,0.3);
+}
+
+.btn-discord-cta:disabled:hover:before {
+  opacity: 0.55; /* Don't brighten on hover when disabled */
+}
+
+/* Custom spinner for login button */
+.btn-discord-cta .spinner-border-sm {
+  width: 1rem;
+  height: 1rem;
+  border-width: 0.125rem;
+}
+
 .login-footer { text-align:center; opacity:.75; }
 .auth-processing { min-height:160px; }
 
