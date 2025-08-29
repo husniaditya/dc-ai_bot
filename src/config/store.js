@@ -277,6 +277,25 @@ async function initMaria() {
       selected_guild_id VARCHAR(32) NULL,
       last_login TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
     ) ENGINE=InnoDB`);
+
+    // OAuth states table (for persistent OAuth flow state across server restarts)
+    await sqlPool.query(`CREATE TABLE IF NOT EXISTS oauth_states (
+      state VARCHAR(64) PRIMARY KEY,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      expires_at TIMESTAMP NOT NULL,
+      active BOOLEAN NOT NULL DEFAULT 1,
+      INDEX idx_expires (expires_at),
+      INDEX idx_active (active)
+    ) ENGINE=InnoDB`);
+
+    // Migration: Add active column to existing oauth_states table
+    try { 
+      await sqlPool.query('ALTER TABLE oauth_states ADD COLUMN active BOOLEAN NOT NULL DEFAULT 1'); 
+      console.log('Migration: added active column to oauth_states'); 
+    } catch (e) { 
+      if(!/Duplicate column/i.test(e.message)) console.warn('Migration oauth_states.active skipped:', e.message); 
+    }
+
     // Seed settings
     const [rows] = await sqlPool.query('SELECT auto_reply_enabled, auto_reply_cooldown_ms FROM settings WHERE id=1');
     if (rows.length === 0) {
@@ -1241,5 +1260,10 @@ module.exports = {
     systemStats.commandsToday = 0;
     commandUsageStats.clear();
     console.log('Daily stats reset');
+  },
+
+  // Expose sqlPool for direct database access (for OAuth states, etc.)
+  get sqlPool() {
+    return sqlPool;
   }
 };
