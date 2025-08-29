@@ -148,9 +148,11 @@ export default function App(){
     window.addEventListener('keydown', handler);
     return ()=> window.removeEventListener('keydown', handler);
   }, [showAutoModal, sidebarOpen]);
-  // Detect OAuth code immediately to avoid login flash
+  // OAuth processing flag (start as false so effect below can trigger the first exchange)
   const initialAuthCode = (typeof window !== 'undefined') ? new URLSearchParams(window.location.search).get('code') : null;
-  const [authProcessing, setAuthProcessing] = useState(!!initialAuthCode && !token);
+  const [authProcessing, setAuthProcessing] = useState(false);
+  // Ref to avoid double exchange attempts if dependencies cause re-run
+  const oauthExchangeStarted = useRef(false);
 
   // Handle logout messages from URL parameters
   useEffect(() => {
@@ -191,14 +193,38 @@ export default function App(){
     const params = new URLSearchParams(window.location.search);
     const code = params.get('code');
     const state = params.get('state');
-    if(!token && code && state && !authProcessing){
+    
+    // Reset authProcessing if it's been stuck for too long (failsafe)
+    if (authProcessing && !code) {
+      console.log('Resetting stuck authProcessing state');
+      setAuthProcessing(false);
+      return;
+    }
+    
+  if(!token && code && state && !authProcessing && !oauthExchangeStarted.current){
       (async()=>{
         try {
           setAuthProcessing(true);
-          const resp = await fetch(API_BASE + '/api/auth/oauth/discord/exchange', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ code, state }) });
+      oauthExchangeStarted.current = true;
+          
+          // Add timeout to prevent hanging
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+          
+          const resp = await fetch(API_BASE + '/api/auth/oauth/discord/exchange', { 
+            method:'POST', 
+            headers:{'Content-Type':'application/json'}, 
+            body: JSON.stringify({ code, state }),
+            signal: controller.signal
+          });
+          
+          clearTimeout(timeoutId);
           const text = await resp.text();
           let data; try { data = text? JSON.parse(text):{}; } catch { throw new Error('OAuth exchange failed (bad JSON)'); }
-          if(!resp.ok){ throw new Error(data.error || 'OAuth exchange failed'); }
+          if(!resp.ok){ 
+            console.error('OAuth exchange failed:', data);
+            throw new Error(data.error || 'OAuth exchange failed'); 
+          }
           if(data.token){ 
             localStorage.setItem('token', data.token); 
             setToken(data.token);
@@ -208,15 +234,38 @@ export default function App(){
               window.authManager.setToken(data.token);
             }
           }
-          if(Array.isArray(data.guilds)) setGuilds(data.guilds);
+          if(Array.isArray(data.guilds)) {
+            setGuilds(data.guilds);
+          }
           setView('guild');
           const cleanUrl = window.location.origin + window.location.pathname; // strip params
           window.history.replaceState({}, '', cleanUrl);
-        } catch(e){ setError(e.message); }
-        finally { setAuthProcessing(false); }
+        } catch(e){ 
+          console.error('OAuth exchange error:', e);
+          if (e.name === 'AbortError') {
+            setError('Authentication timed out. Please try again.');
+          } else {
+            setError(e.message); 
+          }
+        }
+        finally { 
+          setAuthProcessing(false); 
+        }
       })();
     }
-  }, [token]); // Removed authProcessing from dependencies
+  }, [token, authProcessing]);
+  
+  // Failsafe: Reset authProcessing if it gets stuck
+  useEffect(() => {
+    if (authProcessing) {
+      const timeoutId = setTimeout(() => {
+        console.log('Resetting stuck authProcessing after timeout');
+        setAuthProcessing(false);
+      }, 15000); // 15 second timeout
+      
+      return () => clearTimeout(timeoutId);
+    }
+  }, [authProcessing]);
 
   // If token exists (return visit) fetch user profile to restore selected guild automatically
   useEffect(()=>{
@@ -433,7 +482,6 @@ export default function App(){
   }
 
   function doLogout(){
-    console.log('Executing logout - clearing all authentication state');
     
     // Clear all localStorage items
     localStorage.removeItem('token');
