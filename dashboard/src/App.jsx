@@ -38,6 +38,7 @@ export default function App(){
   const [info, setInfo] = useState('');
   const [toasts, setToasts] = useState([]); // {id,type,message}
   const [loading, setLoading] = useState(false);
+  const [loginLoading, setLoginLoading] = useState(false); // Loading state for login button
   const [oauthMode, setOauthMode] = useState(true); // new flag
   const [guilds, setGuilds] = useState(()=>{
     try {
@@ -476,9 +477,132 @@ export default function App(){
   }
 
   function startDiscordLogin(){
-    fetchJson('/api/auth/oauth/discord/url')
-      .then(d=>{ if(d && d.url) window.location.href = d.url; else throw new Error('No OAuth URL'); })
-      .catch(e=> setError('OAuth URL error: '+e.message+' (is backend running on 3001?)'));
+    // Set loading state
+    setLoginLoading(true);
+    setError(''); // Clear any previous errors
+    
+    // Detect if user is on mobile or desktop
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
+                     (navigator.maxTouchPoints && navigator.maxTouchPoints > 2 && /MacIntel/.test(navigator.platform));
+    
+    // For mobile: always prefer Discord app
+    // For desktop: check if Discord app is available, fallback to browser
+    const preferApp = isMobile;
+    
+    const url = `/api/auth/oauth/discord/url?preferApp=${preferApp}&isMobile=${isMobile}`;
+    
+    fetchJson(url)
+      .then(d => { 
+        if(d && (d.url || d.webUrl || d.appUrl)) {
+          // Add a small delay to show the loading state
+          setTimeout(() => {
+            if(isMobile && d.appUrl) {
+              // Mobile: Always try Discord app first
+              tryDiscordAppWithFallback(d.appUrl, d.webUrl || d.url, true);
+            } else if(!isMobile && d.appUrl && d.webUrl) {
+              // Desktop: Check if Discord app is running, otherwise use browser
+              checkDiscordAppAndRedirect(d.appUrl, d.webUrl);
+            } else {
+              // Fallback to whatever URL is available
+              const redirectUrl = d.url || d.webUrl || d.appUrl;
+              window.location.href = redirectUrl;
+            }
+          }, 800); // 800ms delay to show loading animation
+        } else {
+          throw new Error('No OAuth URL'); 
+        }
+      })
+      .catch(e=> {
+        setError('OAuth URL error: '+e.message+' (is backend running on 3001?)');
+        setLoginLoading(false); // Reset loading state on error
+      });
+  }
+
+  function checkDiscordAppAndRedirect(appUrl, webUrl) {
+    // For desktop: Try to detect if Discord app is running/available
+    let redirected = false;
+    
+    // Create a test to see if Discord app can handle the protocol
+    const startTime = Date.now();
+    
+    // Try Discord app protocol
+    window.location.href = appUrl;
+    
+    // Set up a timer to check if we're still on the page
+    // If Discord app opens, the page should lose focus or the app should take over
+    setTimeout(() => {
+      const elapsed = Date.now() - startTime;
+      
+      // If we're still here and focused after 2 seconds, Discord app probably didn't open
+      if (document.hasFocus() && !document.hidden && !redirected) {
+        console.log('Discord app not available or failed to open, redirecting to browser');
+        window.location.href = webUrl;
+        redirected = true;
+      }
+    }, 2000);
+    
+    // Also check for visibility change (app switch)
+    const handleVisibilityChange = () => {
+      if (document.hidden && !redirected) {
+        redirected = true;
+        console.log('Discord app opened successfully');
+        document.removeEventListener('visibilitychange', handleVisibilityChange);
+      }
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    // Cleanup listener after 5 seconds
+    setTimeout(() => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    }, 5000);
+  }
+
+  function tryDiscordAppWithFallback(appUrl, webUrl, isMobile = false) {
+    let redirected = false;
+    const startTime = Date.now();
+    
+    // For mobile, be more persistent with app opening
+    const fallbackDelay = isMobile ? 3000 : 2000;
+    
+    try {
+      window.location.href = appUrl;
+    } catch (e) {
+      console.log('Discord app protocol failed, using web browser');
+      window.location.href = webUrl;
+      redirected = true;
+      return;
+    }
+    
+    // Fallback mechanism
+    setTimeout(() => {
+      if (document.hasFocus() && !document.hidden && !redirected) {
+        console.log(`Discord app failed to open after ${fallbackDelay}ms, redirecting to web browser`);
+        window.location.href = webUrl;
+        redirected = true;
+      }
+    }, fallbackDelay);
+    
+    // For mobile, also listen for app switches
+    if (isMobile) {
+      const handleFocus = () => {
+        // If we regain focus quickly, app probably didn't open
+        const elapsed = Date.now() - startTime;
+        if (elapsed < 1000 && !redirected) {
+          console.log('Quick focus return, Discord app may not be installed');
+          window.location.href = webUrl;
+          redirected = true;
+        }
+        window.removeEventListener('focus', handleFocus);
+      };
+      
+      window.addEventListener('focus', handleFocus);
+      
+      // Cleanup
+      setTimeout(() => {
+        window.removeEventListener('focus', handleFocus);
+      }, 5000);
+    }
   }
 
   function doLogout(){
@@ -815,6 +939,7 @@ export default function App(){
       <LoginView
         error={error}
         authProcessing={authProcessing}
+        loginLoading={loginLoading}
         startDiscordLogin={startDiscordLogin}
       />
       <Footer />

@@ -1,11 +1,17 @@
 import React from 'react';
 
 // Legacy admin form removed. Replaced with: Discord OAuth login + Bot Invite button.
-export default function LoginView({ error, authProcessing, startDiscordLogin }) {
+export default function LoginView({ error, authProcessing, loginLoading, startDiscordLogin }) {
   const year = new Date().getFullYear();
   const clientId = (typeof import.meta !== 'undefined' && import.meta.env) ? (import.meta.env.VITE_DISCORD_CLIENT_ID || import.meta.env.VITE_CLIENT_ID) : '';
   const invitePerms = (typeof import.meta !== 'undefined' && import.meta.env) ? (import.meta.env.VITE_INVITE_PERMISSIONS || '') : '';
   const inviteUrl = clientId ? `https://discord.com/oauth2/authorize?client_id=${clientId}&scope=bot%20applications.commands${invitePerms?`&permissions=${invitePerms}`:''}` : null;
+
+  // Detect if user is on mobile for smart button text
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
+                   (navigator.maxTouchPoints && navigator.maxTouchPoints > 2 && /MacIntel/.test(navigator.platform));
+
+  const loginButtonText = isMobile ? 'Open Discord App' : 'Login with Discord';
 
   return (
     <div className="login-viewport">
@@ -31,10 +37,35 @@ export default function LoginView({ error, authProcessing, startDiscordLogin }) 
             ) : (
               <div className="vstack gap-3">
                 <p className="text-muted small m-0">Sign in with Discord to manage the bot.</p>
-                <button onClick={startDiscordLogin} className="btn btn-discord-cta">
-                  <span className="ico me-1"><i className="fa-brands fa-discord" /></span>
-                  <span>Login with Discord</span>
+                <button 
+                  onClick={startDiscordLogin} 
+                  className="btn btn-discord-cta"
+                  disabled={loginLoading}
+                >
+                  {loginLoading ? (
+                    <>
+                      <span className="ico me-2">
+                        <div className="spinner-border spinner-border-sm" role="status">
+                          <span className="visually-hidden">Loading...</span>
+                        </div>
+                      </span>
+                      <span>Please wait...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="ico me-1"><i className="fa-brands fa-discord" /></span>
+                      <span>{loginButtonText}</span>
+                    </>
+                  )}
                 </button>
+                <div className="small text-muted mt-1">
+                  {loginLoading ? (
+                    <>
+                      <i className="fa-solid fa-clock me-1"></i>
+                      {isMobile ? 'Opening Discord app...' : 'Preparing authentication...'}
+                    </>
+                  ): ('')}
+                </div>
               </div>
             )}
             <div className="login-footer small text-muted mt-4">© {year} Choco Maid • Not affiliated with Discord</div>
