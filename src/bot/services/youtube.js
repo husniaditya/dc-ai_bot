@@ -745,7 +745,7 @@ async function announce(guild, cfg, video, type){
 		// Add footer with YouTube logo and timestamp using publishedAt
 		footer: {
 			text: `YouTube • ${video.publishedAt ? new Date(video.publishedAt).toLocaleTimeString() : new Date().toLocaleTimeString()}`,
-			icon_url: 'https://www.youtube.com/favicon.ico'
+			icon_url: 'https://img.icons8.com/color/96/000000/youtube-play.png'
 		}
 	};
 	

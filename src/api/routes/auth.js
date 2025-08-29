@@ -53,6 +53,7 @@ function createAuthRoutes(client, store) {
     if (!state || !oauthStateStore.has(state)) return res.status(400).json({ error: 'invalid_state' });
     
     try {
+      // Delete state immediately to prevent reuse
       oauthStateStore.delete(state);
       
       const tokenResp = await fetch('https://discord.com/api/oauth2/token', {
