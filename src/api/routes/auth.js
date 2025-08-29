@@ -17,7 +17,6 @@ function createAuthRoutes(client, store) {
           'INSERT INTO oauth_states (state, created_at, expires_at, active) VALUES (?, NOW(), DATE_ADD(NOW(), INTERVAL 10 MINUTE), 1) ON DUPLICATE KEY UPDATE created_at = NOW(), expires_at = DATE_ADD(NOW(), INTERVAL 10 MINUTE), active = 1',
           [state]
         );
-        console.log('[OAuth] Saved state to DB:', state);
         return true;
       } catch(e) {
         console.warn('Failed to save OAuth state to DB:', e.message);
@@ -36,7 +35,6 @@ function createAuthRoutes(client, store) {
           'SELECT state FROM oauth_states WHERE state = ? AND expires_at > NOW() AND active = 1',
           [state]
         );
-        console.log('[OAuth] Verified state in DB:', state, 'found:', rows.length > 0);
         return rows.length > 0;
       } catch(e) {
         console.warn('Failed to verify OAuth state from DB:', e.message);
@@ -70,15 +68,9 @@ function createAuthRoutes(client, store) {
       try {
         // Mark expired states as inactive instead of deleting them
         const result = await store.sqlPool.query('UPDATE oauth_states SET active = 0 WHERE expires_at < NOW() AND active = 1');
-        if (result.affectedRows > 0) {
-          console.log('[OAuth] Marked', result.affectedRows, 'expired states as inactive');
-        }
         
         // Optionally delete very old inactive states (older than 1 day) to keep table clean
         const deleteResult = await store.sqlPool.query('DELETE FROM oauth_states WHERE created_at < DATE_SUB(NOW(), INTERVAL 1 DAY) AND active = 0');
-        if (deleteResult.affectedRows > 0) {
-          console.log('[OAuth] Deleted', deleteResult.affectedRows, 'old inactive states');
-        }
       } catch(e) {
         console.warn('Failed to cleanup expired OAuth states:', e.message);
       }
@@ -109,7 +101,6 @@ function createAuthRoutes(client, store) {
   router.get('/oauth/discord/url', async (req, res) => {
     const state = Math.random().toString(36).slice(2, 18);
     const saved = await saveOAuthState(state);
-    console.log('[OAuth] Generated state:', state, 'saved:', saved);
     
     // Cleanup expired states
     await cleanupExpiredStates();
