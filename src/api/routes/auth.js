@@ -9,6 +9,80 @@ const oauthStateStore = new Map();
 function createAuthRoutes(client, store) {
   const router = express.Router();
 
+  // OAuth state helpers (using database for persistence across restarts/instances)
+  async function saveOAuthState(state) {
+    if (store.sqlPool) {
+      try {
+        await store.sqlPool.query(
+          'INSERT INTO oauth_states (state, created_at, expires_at, active) VALUES (?, NOW(), DATE_ADD(NOW(), INTERVAL 10 MINUTE), 1) ON DUPLICATE KEY UPDATE created_at = NOW(), expires_at = DATE_ADD(NOW(), INTERVAL 10 MINUTE), active = 1',
+          [state]
+        );
+        return true;
+      } catch(e) {
+        console.warn('Failed to save OAuth state to DB:', e.message);
+        return false;
+      }
+    }
+    // Fallback to in-memory
+    oauthStateStore.set(state, Date.now());
+    return true;
+  }
+
+  async function verifyOAuthState(state) {
+    if (store.sqlPool) {
+      try {
+        const [rows] = await store.sqlPool.query(
+          'SELECT state FROM oauth_states WHERE state = ? AND expires_at > NOW() AND active = 1',
+          [state]
+        );
+        return rows.length > 0;
+      } catch(e) {
+        console.warn('Failed to verify OAuth state from DB:', e.message);
+        // Fallback to in-memory
+        return oauthStateStore.has(state);
+      }
+    }
+    // Fallback to in-memory
+    return oauthStateStore.has(state);
+  }
+
+  async function deleteOAuthState(state) {
+    if (store.sqlPool) {
+      try {
+        // Instead of deleting, mark as inactive for debugging/tracking
+        const result = await store.sqlPool.query('UPDATE oauth_states SET active = 0 WHERE state = ?', [state]);
+        console.log('[OAuth] Deactivated state in DB:', state, 'affected rows:', result.affectedRows);
+        return true;
+      } catch(e) {
+        console.warn('Failed to deactivate OAuth state in DB:', e.message);
+        return false;
+      }
+    }
+    // Fallback to in-memory
+    oauthStateStore.delete(state);
+    return true;
+  }
+
+  async function cleanupExpiredStates() {
+    if (store.sqlPool) {
+      try {
+        // Mark expired states as inactive instead of deleting them
+        const result = await store.sqlPool.query('UPDATE oauth_states SET active = 0 WHERE expires_at < NOW() AND active = 1');
+        
+        // Optionally delete very old inactive states (older than 1 day) to keep table clean
+        const deleteResult = await store.sqlPool.query('DELETE FROM oauth_states WHERE created_at < DATE_SUB(NOW(), INTERVAL 1 DAY) AND active = 0');
+      } catch(e) {
+        console.warn('Failed to cleanup expired OAuth states:', e.message);
+      }
+    } else {
+      // Fallback: prune expired in-memory states (>10m)
+      const now = Date.now();
+      for (const [s, ts] of oauthStateStore) {
+        if (now - ts > 10 * 60 * 1000) oauthStateStore.delete(s);
+      }
+    }
+  }
+
   // Discord OAuth config - read environment variables inside function after dotenv is loaded
   const OAUTH_CLIENT_ID = process.env.CLIENT_ID;
   const OAUTH_CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET;
@@ -24,15 +98,12 @@ function createAuthRoutes(client, store) {
   const ADMIN_PASS = process.env.DASHBOARD_ADMIN_PASS;
 
   // Discord OAuth authorize URL (front-end will redirect user here)
-  router.get('/oauth/discord/url', (req, res) => {
+  router.get('/oauth/discord/url', async (req, res) => {
     const state = Math.random().toString(36).slice(2, 18);
-    oauthStateStore.set(state, Date.now());
+    const saved = await saveOAuthState(state);
     
-    // prune expired (>10m)
-    const now = Date.now();
-    for (const [s, ts] of oauthStateStore) {
-      if (now - ts > 10 * 60 * 1000) oauthStateStore.delete(s);
-    }
+    // Cleanup expired states
+    await cleanupExpiredStates();
     
     const params = new URLSearchParams({
       client_id: OAUTH_CLIENT_ID,
@@ -50,11 +121,16 @@ function createAuthRoutes(client, store) {
     const { code, state } = req.body || {};
     
     if (!code) return res.status(400).json({ error: 'missing code' });
-    if (!state || !oauthStateStore.has(state)) return res.status(400).json({ error: 'invalid_state' });
+    
+    const stateValid = await verifyOAuthState(state);
+    if (!state || !stateValid) {
+      console.log('[OAuth] Invalid state:', state, 'valid:', stateValid);
+      return res.status(400).json({ error: 'invalid_state' });
+    }
     
     try {
       // Delete state immediately to prevent reuse
-      oauthStateStore.delete(state);
+      await deleteOAuthState(state);
       
       const tokenResp = await fetch('https://discord.com/api/oauth2/token', {
         method: 'POST',
@@ -230,6 +306,36 @@ function createAuthRoutes(client, store) {
       },
       expiresAt: req.user.exp ? new Date(req.user.exp * 1000).toISOString() : null
     });
+  });
+
+  // Debug endpoint to view OAuth states (remove in production)
+  router.get('/debug/oauth-states', async (req, res) => {
+    if (store.sqlPool) {
+      try {
+        const [rows] = await store.sqlPool.query(
+          'SELECT state, created_at, expires_at, active, (expires_at > NOW()) as valid FROM oauth_states ORDER BY created_at DESC LIMIT 20'
+        );
+        res.json({ 
+          database: rows,
+          inMemory: Array.from(oauthStateStore.entries()).map(([state, timestamp]) => ({
+            state,
+            timestamp: new Date(timestamp).toISOString(),
+            age_minutes: Math.round((Date.now() - timestamp) / 60000)
+          }))
+        });
+      } catch(e) {
+        res.status(500).json({ error: e.message });
+      }
+    } else {
+      res.json({ 
+        database: 'Not connected',
+        inMemory: Array.from(oauthStateStore.entries()).map(([state, timestamp]) => ({
+          state,
+          timestamp: new Date(timestamp).toISOString(),
+          age_minutes: Math.round((Date.now() - timestamp) / 60000)
+        }))
+      });
+    }
   });
 
   // Legacy login (if not disabled)
