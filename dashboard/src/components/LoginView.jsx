@@ -62,18 +62,6 @@ export default function LoginView({ error, authProcessing, loginLoading, startDi
                   )}
                 </button>
                 {/* Debug: Direct Discord OAuth link */}
-                {clientId && !loginLoading && (
-                  <div className="small text-muted">
-                    <a 
-                      href={`https://discord.com/oauth2/authorize?client_id=${clientId}&response_type=code&redirect_uri=${encodeURIComponent('https://chocomaid.xyz/callback')}&scope=identify+guilds`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-decoration-none"
-                    >
-                      🔗 Direct Discord login link (fallback)
-                    </a>
-                  </div>
-                )}
                 <div className="small text-muted mt-1">
                   {loginLoading ? (
                     <>
