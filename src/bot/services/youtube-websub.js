@@ -43,7 +43,7 @@ const websubStats = {
 // Debug logging
 function debugLog(message, data = null) {
   if (process.env.WEBSUB_DEBUG === '1') {
-    console.log(`[WEBSUB] ${message}`, data || '');
+    console.log('[WEBSUB] %s', message, data || '');
   }
 }
 
