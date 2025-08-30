@@ -336,6 +336,68 @@ function createYouTubeRoutes(client, store) {
     }
   });
 
+  // Get comprehensive YouTube service status including WebSub
+  router.get('/service-status', async (req, res) => {
+    try {
+      const youtubeService = require('../../bot/services/youtube');
+      const stats = youtubeService.getYouTubeStats ? youtubeService.getYouTubeStats() : null;
+      
+      if (!stats) {
+        return res.status(503).json({ error: 'YouTube service not available' });
+      }
+
+      // Get current configuration for context
+      const guildId = req.query.guildId || (req.user.type === 'discord' ? 
+        (await store.getUser(req.user.userId))?.selected_guild_id : null);
+      
+      let guildConfig = null;
+      if (guildId) {
+        try {
+          guildConfig = await store.getGuildYouTubeConfig(guildId);
+        } catch (e) {
+          // Ignore errors getting guild config
+        }
+      }
+
+      res.json({
+        polling: {
+          enabled: true,
+          totalPolls: stats.totalPolls,
+          totalAnnouncements: stats.totalAnnouncements,
+          lastPoll: stats.lastPoll,
+          errors: stats.totalErrors,
+          apiCalls: stats.apiCalls,
+          quotaErrors: stats.quotaErrors
+        },
+        websub: stats.websub ? {
+          enabled: stats.websub.enabled !== false,
+          activeSubscriptions: stats.websub.activeSubscriptions || 0,
+          totalChannels: stats.websub.totalChannels || 0,
+          notifications: stats.websub.notifications || 0,
+          lastNotification: stats.websub.lastNotification,
+          subscriptions: stats.websub.subscriptions || 0,
+          unsubscriptions: stats.websub.unsubscriptions || 0,
+          verifications: stats.websub.verifications || 0,
+          errors: stats.websub.errors || 0
+        } : {
+          enabled: false,
+          reason: 'Not configured or not available'
+        },
+        apiKeys: stats.keyStatus,
+        guildConfig: guildConfig ? {
+          enabled: guildConfig.enabled,
+          channels: guildConfig.channels?.length || 0,
+          intervalSec: guildConfig.intervalSec
+        } : null,
+        mode: stats.websub?.enabled ? 'hybrid' : 'polling-only'
+      });
+
+    } catch (e) {
+      console.error('Service status error:', e);
+      res.status(500).json({ error: 'Failed to get service status' });
+    }
+  });
+
   return router;
 }
 

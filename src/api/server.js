@@ -18,6 +18,7 @@ const commandsRoutes = require('./routes/commands');
 const autoResponsesRoutes = require('./routes/autoResponses');
 const analyticsRoutes = require('./routes/analytics');
 const youtubeRoutes = require('./routes/youtube');
+const youtubeWebSubRoutes = require('./routes/youtube-websub');
 const twitchRoutes = require('./routes/twitch');
 const channelsRoutes = require('./routes/channels');
 const rolesRoutes = require('./routes/roles');
@@ -44,6 +45,7 @@ function createApiServer(client, store, commandMap, startTimestamp) {
   app.use('/api/auto-responses', authMiddleware, autoResponsesRoutes(store));
   app.use('/api/analytics', authMiddleware, analyticsRoutes(client, store, startTimestamp, commandMap));
   app.use('/api/youtube', authMiddleware, youtubeRoutes(client, store));
+  app.use('/api/youtube', youtubeWebSubRoutes(client, store)); // WebSub endpoints (no auth for webhooks)
   app.use('/api/twitch', authMiddleware, twitchRoutes(client, store));
   app.use('/api/channels', authMiddleware, channelsRoutes(client, store));
   app.use('/api/roles', authMiddleware, rolesRoutes(client, store));
