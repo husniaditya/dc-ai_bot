@@ -40,6 +40,26 @@ function setupReadyHandler(client, store, startTimestamp, commandMap) {
     // Start YouTube watcher (announces new uploads & live streams if env configured)
     try {
       startYouTubeWatcher(client);
+      
+      // Initialize WebSub service if enabled
+      const enableWebSub = process.env.YT_ENABLE_WEBSUB === '1';
+      if (enableWebSub) {
+        try {
+          const websubService = require('../services/youtube-websub');
+          const websubInitialized = websubService.initializeWebSub(client);
+          
+          if (websubInitialized) {
+            console.log('YouTube WebSub service initialized - real-time notifications enabled');
+          } else {
+            console.warn('WebSub service failed to initialize - check WEBSUB_CALLBACK_BASE configuration');
+          }
+        } catch (error) {
+          console.warn('Failed to initialize WebSub service:', error.message);
+        }
+      } else {
+        console.log('YouTube WebSub disabled - using polling mode only');
+      }
+      
     } catch(e) { 
       console.warn('YouTube watcher failed to start', e.message); 
     }
