@@ -71,15 +71,19 @@ function getNextAvailableKey() {
 		const testKey = apiKeys[testIndex];
 		if (!isKeyExhausted(testKey)) {
 			currentKeyIndex = testIndex;
-			console.log(`[YT] Switched to fresh API key`);
-			pushDebug(`FRESH_KEY: Switched to non-exhausted key ${currentKeyIndex + 1}`);
+			if (process.env.YT_DEBUG === '1') {
+				console.log(`[YT] Switched to fresh API key`);
+				pushDebug(`FRESH_KEY: Switched to non-exhausted key ${currentKeyIndex + 1}`);
+			}
 			return testKey;
 		}
 	}
 	
 	// All keys are exhausted, return current key anyway
-	console.log(`[YT] WARNING: All API keys appear to be exhausted`);
-	pushDebug(`ALL_EXHAUSTED: All keys have quota errors`);
+	if (process.env.YT_DEBUG === '1') {
+		console.log(`[YT] WARNING: All API keys appear to be exhausted`);
+		pushDebug(`ALL_EXHAUSTED: All keys have quota errors`);
+	}
 	return getCurrentApiKey();
 }
 
@@ -154,8 +158,10 @@ function noteQuotaExceeded(apiKey = null){
 		if (apiKeys.length > 1) {
 			const oldIndex = currentKeyIndex;
 			const newKey = rotateToNextApiKey();
-			console.log(`[YT] AUTO_ROTATION: Switched.`);
-			pushDebug(`AUTO_ROTATION: Switched from exhausted key to new key .`);
+			if (process.env.YT_DEBUG === '1') {
+				console.log(`[YT] AUTO_ROTATION: Switched.`);
+				pushDebug(`AUTO_ROTATION: Switched from exhausted key to new key .`);
+			}
 			return newKey; // Return the new key for immediate use
 		}
 	}
@@ -652,126 +658,8 @@ async function fetchLiveViaScrape(channelId){
 	return uniqueResults;
 }
 
-function buildRoleMention(cfg){
-	const targets = Array.isArray(cfg.mentionTargets)? cfg.mentionTargets: [];
-	if(!targets.length) return '';
-	const parts = targets.map(t => {
-		if(t==='everyone') return '@everyone';
-		if(t==='here') return '@here';
-		if(/^[0-9]{5,32}$/.test(t)) return `<@&${t}>`;
-		return null;
-	}).filter(Boolean);
-	// Deduplicate preserving order
-	const seen = new Set();
-	const uniq = parts.filter(p=>{ if(seen.has(p)) return false; seen.add(p); return true; });
-	return uniq.join(' ');
-}
-
-async function announce(guild, cfg, video, type){
-	const debug = process.env.YT_DEBUG === '1';
-	
-	// Determine which channel to use based on type
-	let announceChannelId;
-	if (type === 'live') {
-		announceChannelId = cfg.liveAnnounceChannelId || cfg.announceChannelId;
-	} else {
-		announceChannelId = cfg.uploadAnnounceChannelId || cfg.announceChannelId;
-	}
-	
-	if(!announceChannelId) {
-		return;
-	}
-	
-	const ch = guild.channels.cache.get(announceChannelId);
-	if(!ch || !ch.isTextBased()) {
-		return;
-	}
-
-	ytStats.totalAnnouncements += 1;
-	const memberOnlyFlag = video.isMemberOnly ? ' [MEMBER-ONLY]' : '';
-	pushDebug(`ANNOUNCE: ${type.toUpperCase()}${memberOnlyFlag} - ${video.title} (${video.videoId}) in guild ${guild.id}`);
-	
-	// Template selection with member-only support
-	let baseTemplate = '';
-	if (type === 'live') {
-		if (video.isMemberOnly && cfg.memberOnlyLiveTemplate) {
-			baseTemplate = cfg.memberOnlyLiveTemplate;
-		} else {
-			baseTemplate = cfg.liveTemplate || '';
-		}
-	} else {
-		if (video.isMemberOnly && cfg.memberOnlyUploadTemplate) {
-			baseTemplate = cfg.memberOnlyUploadTemplate;
-		} else {
-			baseTemplate = cfg.uploadTemplate || '';
-		}
-	}
-	
-	const roleMention = buildRoleMention(cfg);
-	const url = `https://youtu.be/${video.videoId}`;
-	const memberBadge = video.isMemberOnly ? '👑 ' : '';
-	const memberText = video.isMemberOnly ? ' (Members Only)' : '';
-	
-	let content = baseTemplate
-		.replace(/\{roleMention\}/g, roleMention)
-		.replace(/\{channelTitle\}/g, cfg.channelNames?.[video.channelId] || 'YouTube Channel')
-		.replace(/\{title\}/g, video.title || 'Untitled')
-		.replace(/\{url\}/g, url)
-		.replace(/\{thumbnail\}/g, video.thumbnail || '')
-		.replace(/\{memberBadge\}/g, memberBadge)
-		.replace(/\{memberText\}/g, memberText)
-		.replace(/\{publishedAt\}/g, video.publishedAt ? new Date(video.publishedAt).toISOString() : new Date().toISOString())
-		.replace(/\{publishedAtRelative\}/g, 'just now');
-	
-	if(!cfg.embedEnabled){
-		if(content.length === 0) {
-			content = `${memberBadge}${roleMention} ${url}${memberText}`.trim();
-		}
-		// If template didn't include {thumbnail} but we have one, append it so users still see the image link
-		if(video.thumbnail && !/https?:\/\/.*(img\.youtube|ytimg|youtube)\./i.test(content)){
-			content = content + `\n${video.thumbnail}`;
-		}
-		await ch.send(content);
-		return;
-	}
-	
-	// Enhanced embed for member-only content
-	const embedColor = video.isMemberOnly ? 0xFFD700 : (type==='live'? 0xE53935 : 0x1E88E5); // Gold for member-only
-	const embed = {
-		title: `${memberBadge}${video.title?.slice(0,256) || 'New Video'}${memberText}`,
-		url,
-		description: content.slice(0, 4000),
-		color: embedColor,
-		// Add footer with YouTube logo and timestamp using publishedAt
-		footer: {
-			text: `YouTube • ${video.publishedAt ? new Date(video.publishedAt).toLocaleTimeString() : new Date().toLocaleTimeString()}`,
-			icon_url: 'https://img.icons8.com/color/96/000000/youtube-play.png'
-		}
-	};
-	
-	if(video.thumbnail){ embed.image = { url: video.thumbnail }; }
-	
-	// Add member-only field to embed
-	if (video.isMemberOnly) {
-		embed.fields = [{
-			name: '👑 Member Exclusive',
-			value: 'This content is available to channel members only.',
-			inline: false
-		}];
-	}
-	
-	// Add additional live stream info if available
-	if (type === 'live' && video.concurrentViewers) {
-		if (!embed.fields) embed.fields = [];
-		embed.fields.push({
-			name: '👀 Viewers',
-			value: video.concurrentViewers.toString(),
-			inline: true
-		});
-	}
-	
-	await ch.send({ content: roleMention || undefined, embeds:[embed] });
-}
+// Import shared announcer functionality
+const { announce, buildRoleMention } = require('./youtube-announcer');
 
 function pruneOld(stateList){
 	if(stateList.length > 50) stateList.splice(0, stateList.length - 50);
@@ -873,6 +761,34 @@ function startYouTubeWatcher(client){
 	currentKeyIndex = 0;
 	pushDebug(`STARTUP: YouTube watcher started with ${apiKeys.length} API key(s), using key 1`);
 	
+	// Initialize WebSub service if configured
+	const enableWebSub = process.env.YT_ENABLE_WEBSUB === '1';
+	let websubInitialized = false;
+	
+	if (enableWebSub) {
+		try {
+			const websubService = require('./youtube-websub');
+			websubInitialized = websubService.initializeWebSub(client);
+			
+			if (websubInitialized) {
+				console.log('YouTube WebSub service initialized - real-time notifications enabled');
+				pushDebug('WEBSUB: Real-time notifications enabled');
+			}
+		} catch (error) {
+			console.warn('Failed to initialize WebSub service:', error.message);
+			pushDebug(`WEBSUB_ERROR: ${error.message}`);
+		}
+	}
+	
+	// Determine polling behavior based on WebSub status
+	const pollingMode = websubInitialized ? 'hybrid' : 'full';
+	const pollingInterval = websubInitialized ? 
+		parseInt(process.env.YT_WEBSUB_FALLBACK_INTERVAL || '1800', 10) : // 30 minutes fallback with WebSub
+		Math.max(60, parseInt(process.env.YT_POLLING_INTERVAL || '300', 10)); // 5 minutes default polling
+	
+	console.log(`YouTube watcher mode: ${pollingMode} (polling every ${pollingInterval}s)`);
+	pushDebug(`MODE: ${pollingMode} polling with ${pollingInterval}s interval`);
+	
 	// Set up periodic key rotation (every 30 minutes) to distribute load
 	if (apiKeys.length > 1) {
 		setInterval(() => {
@@ -897,16 +813,25 @@ function startYouTubeWatcher(client){
 			ytStats.totalErrors += 1;
 			pushDebug(`TICK_ERROR: ${e.message}`);
 		}
-		// Dynamic interval: choose smallest interval among enabled guilds, else default 300
-		let minInterval = 300;
-		try {
-			for (const guild of client.guilds.cache.values()){
-				const cfg = await store.getGuildYouTubeConfig(guild.id);
-				if(cfg.enabled && cfg.intervalSec && cfg.intervalSec < minInterval) minInterval = cfg.intervalSec;
-			}
-		} catch{}
+		
+		// Dynamic interval based on mode and configuration
+		let minInterval = pollingInterval;
+		
+		if (!websubInitialized) {
+			// In pure polling mode, use the smallest configured interval
+			try {
+				for (const guild of client.guilds.cache.values()){
+					const cfg = await store.getGuildYouTubeConfig(guild.id);
+					if(cfg.enabled && cfg.intervalSec && cfg.intervalSec < minInterval) {
+						minInterval = cfg.intervalSec;
+					}
+				}
+			} catch{}
+		}
+		
 		setTimeout(tick, Math.max(60, minInterval) * 1000);
 	}
+	
 	// Initial delay
 	setTimeout(tick, 5000);
 	console.log(`YouTube watcher started with API key(s)`);
@@ -1015,4 +940,30 @@ function getKeyStatus() {
 	};
 }
 
-module.exports = { startYouTubeWatcher, ytStats, getKeyStatus, extractChannelId };
+function getYouTubeStats() {
+	const keyStatus = getKeyStatus();
+	
+	// Try to get WebSub stats if available
+	let websubStats = null;
+	try {
+		const websubService = require('./youtube-websub');
+		websubStats = websubService.getWebSubStats();
+	} catch (error) {
+		// WebSub not available or not initialized
+	}
+	
+	return {
+		...ytStats,
+		keyStatus,
+		websub: websubStats
+	};
+}
+
+module.exports = { 
+	startYouTubeWatcher, 
+	ytStats, 
+	getKeyStatus, 
+	getYouTubeStats,
+	extractChannelId,
+	announce // Export announce for WebSub service
+};

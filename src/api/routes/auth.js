@@ -20,8 +20,9 @@ function createAuthRoutes(client, store) {
         
         // Handle different result structures
         const affectedRows = result.affectedRows || result[0]?.affectedRows || (Array.isArray(result) && result[0]?.affectedRows) || 0;
-        console.log('[OAuth] Saved state to DB:', state, 'affected rows:', affectedRows);
-        
+        if (process.env.DEBUG_PERSONALIZATION === '1') {
+            console.log('[OAuth] Saved state to DB:', state, 'affected rows:', affectedRows);
+        }
         return true;
       } catch(e) {
         console.warn('Failed to save OAuth state to DB:', e.message);
@@ -30,7 +31,9 @@ function createAuthRoutes(client, store) {
     }
     // Fallback to in-memory
     oauthStateStore.set(state, Date.now());
-    console.log('[OAuth] Saved state to memory:', state);
+    if (process.env.DEBUG_PERSONALIZATION === '1') {
+        console.log('[OAuth] Saved state to memory:', state);
+    }
     return true;
   }
 
@@ -60,7 +63,10 @@ function createAuthRoutes(client, store) {
         
         // Handle different result structures from mysql2
         const affectedRows = result.affectedRows || result[0]?.affectedRows || (Array.isArray(result) && result[0]?.affectedRows) || 0;
-        console.log('[OAuth] Deactivated state in DB:', state, 'affected rows:', affectedRows);
+        
+        if (process.env.DEBUG_PERSONALIZATION === '1') {
+            console.log('[OAuth] Deactivated state in DB:', state, 'affected rows:', affectedRows);
+        }
         
         return true;
       } catch(e) {
@@ -81,7 +87,9 @@ function createAuthRoutes(client, store) {
         const affectedRows = result.affectedRows || result[0]?.affectedRows || (Array.isArray(result) && result[0]?.affectedRows) || 0;
         
         if (affectedRows > 0) {
-          console.log('[OAuth] Marked', affectedRows, 'expired states as inactive');
+          if (process.env.DEBUG_PERSONALIZATION === '1') {
+              console.log('[OAuth] Marked', affectedRows, 'expired states as inactive');
+          }
         }
         
         // Optionally delete very old inactive states (older than 1 day) to keep table clean
@@ -89,7 +97,9 @@ function createAuthRoutes(client, store) {
         const deletedRows = deleteResult.affectedRows || deleteResult[0]?.affectedRows || (Array.isArray(deleteResult) && deleteResult[0]?.affectedRows) || 0;
         
         if (deletedRows > 0) {
-          console.log('[OAuth] Deleted', deletedRows, 'old inactive states');
+          if (process.env.DEBUG_PERSONALIZATION === '1') {
+            console.log('[OAuth] Deleted', deletedRows, 'old inactive states');
+          }
         }
       } catch(e) {
         console.warn('Failed to cleanup expired OAuth states:', e.message);
@@ -108,6 +118,7 @@ function createAuthRoutes(client, store) {
   const OAUTH_CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET;
   const OAUTH_REDIRECT_URI = process.env.DASHBOARD_OAUTH_REDIRECT;
   const OAUTH_SCOPES = ['identify', 'guilds'];
+  const DEBUG_PERSONALIZATION = process.env.DEBUG_PERSONALIZATION;
   
   // JWT and admin config
   const JWT_SECRET_RAW = process.env.DASHBOARD_JWT_SECRET || 'changeme_dev_secret';
@@ -174,7 +185,9 @@ function createAuthRoutes(client, store) {
     
     const stateValid = await verifyOAuthState(state);
     if (!state || !stateValid) {
-      console.log('[OAuth] Invalid state:', state, 'valid:', stateValid);
+      if (process.env.DEBUG_PERSONALIZATION === '1') {
+        console.log('[OAuth] Invalid state:', state, 'valid:', stateValid);
+      }
       return res.status(400).json({ error: 'invalid_state' });
     }
     
@@ -275,7 +288,9 @@ function createAuthRoutes(client, store) {
 
   // Set selected guild for user (requires authentication)
   router.post('/user/select-guild', authMiddleware, async (req, res) => {
-    console.log('Guild selection request from user:', req.user.userId);
+    if (process.env.DEBUG_PERSONALIZATION=== '1') {
+        console.log('Guild selection request from user:', req.user.userId);
+    }
     const { guildId } = req.body || {};
     if (!guildId) return res.status(400).json({ error: 'guildId required' });
     
@@ -286,7 +301,9 @@ function createAuthRoutes(client, store) {
         return res.status(400).json({ error: 'bot_not_in_guild' });
       }
       
-      console.log('Setting user selected guild:', req.user.userId, guildId);
+      if (process.env.DEBUG_PERSONALIZATION === '1') {
+          console.log('Setting user selected guild:', req.user.userId, guildId);
+      }
       await store.setUserSelectedGuild(req.user.userId, guildId);
       
       // Trigger seed (loads defaults into guild tables if empty)
@@ -298,7 +315,9 @@ function createAuthRoutes(client, store) {
       }
       
       audit(req, { action: 'select-guild', guild: guildId });
-      console.log('Guild selection successful for user:', req.user.userId);
+      if (process.env.DEBUG_PERSONALIZATION === '1') {
+        console.log('Guild selection successful for user:', req.user.userId);
+      }
       res.json({ ok: true });
       
     } catch(e) { 
