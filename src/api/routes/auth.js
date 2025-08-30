@@ -6,8 +6,46 @@ const authMiddleware = require('../middleware/auth');
 // In-memory OAuth state store (anti-CSRF). Key: state -> timestamp
 const oauthStateStore = new Map();
 
+// Test database connection and table existence
+async function testDatabaseConnection(store) {
+  if (!store || !store.sqlPool) {
+    if (process.env.DEBUG_PERSONALIZATION === '1') {
+      console.warn('[OAuth] No database connection available');
+    }
+    return false;
+  }
+  
+  try {
+    // Test basic connection
+    await store.sqlPool.query('SELECT 1');
+    
+    // Test oauth_states table exists
+    await store.sqlPool.query('SELECT COUNT(*) FROM oauth_states LIMIT 1');
+    
+    if (process.env.DEBUG_PERSONALIZATION === '1') {
+      console.log('[OAuth] Database connection and oauth_states table verified');
+    }
+    return true;
+  } catch(e) {
+    console.error('[OAuth] Database connection test failed:', e.message);
+    return false;
+  }
+}
+
 function createAuthRoutes(client, store) {
   const router = express.Router();
+
+  // Test database connection on startup
+  (async () => {
+    const connected = await testDatabaseConnection(store);
+    if (connected) {
+      if (process.env.DEBUG_PERSONALIZATION === '1') {
+        console.log('[OAuth] Database connection test passed');
+      }
+    } else {
+      console.warn('[OAuth] Database connection test failed - using in-memory fallback');
+    }
+  })();
 
   // OAuth state helpers (using database for persistence across restarts/instances)
   async function saveOAuthState(state) {
@@ -18,21 +56,41 @@ function createAuthRoutes(client, store) {
           [state]
         );
         
-        // Handle different result structures
+        // Handle different result structures from mysql2
         const affectedRows = result.affectedRows || result[0]?.affectedRows || (Array.isArray(result) && result[0]?.affectedRows) || 0;
+        
         if (process.env.DEBUG_PERSONALIZATION === '1') {
-            console.log('[OAuth] Saved state to DB:', state, 'affected rows:', affectedRows);
+          console.log('[OAuth] Saved state to DB:', state, 'affected rows:', affectedRows);
+        }
+        
+        // Verify the state was actually saved
+        const [verifyRows] = await store.sqlPool.query(
+          'SELECT state FROM oauth_states WHERE state = ? AND active = 1',
+          [state]
+        );
+        
+        if (verifyRows.length === 0) {
+          console.error('[OAuth] State verification failed - not found in database:', state);
+          // Fallback to in-memory
+          oauthStateStore.set(state, Date.now());
+          return false;
+        }
+        
+        if (process.env.DEBUG_PERSONALIZATION === '1') {
+          console.log('[OAuth] State verification successful:', state);
         }
         return true;
       } catch(e) {
-        console.warn('Failed to save OAuth state to DB:', e.message);
+        console.error('[OAuth] Failed to save OAuth state to DB:', e.message, e.stack);
+        // Fallback to in-memory
+        oauthStateStore.set(state, Date.now());
         return false;
       }
     }
     // Fallback to in-memory
     oauthStateStore.set(state, Date.now());
     if (process.env.DEBUG_PERSONALIZATION === '1') {
-        console.log('[OAuth] Saved state to memory:', state);
+      console.log('[OAuth] Saved state to memory (no DB):', state);
     }
     return true;
   }
@@ -40,19 +98,40 @@ function createAuthRoutes(client, store) {
   async function verifyOAuthState(state) {
     if (store.sqlPool) {
       try {
+        if (process.env.DEBUG_PERSONALIZATION === '1') {
+          console.log('[OAuth] Verifying state:', state);
+        }
         const [rows] = await store.sqlPool.query(
-          'SELECT state FROM oauth_states WHERE state = ? AND expires_at > NOW() AND active = 1',
+          'SELECT state, expires_at FROM oauth_states WHERE state = ? AND expires_at > NOW() AND active = 1',
           [state]
         );
+        
+        if (process.env.DEBUG_PERSONALIZATION === '1') {
+          console.log('[OAuth] State verification result:', {
+            state,
+            found: rows.length > 0,
+            rows: rows.length,
+            expiresAt: rows[0]?.expires_at
+          });
+        }
+        
         return rows.length > 0;
       } catch(e) {
-        console.warn('Failed to verify OAuth state from DB:', e.message);
+        console.error('[OAuth] Failed to verify OAuth state from DB:', e.message, e.stack);
         // Fallback to in-memory
-        return oauthStateStore.has(state);
+        const memoryResult = oauthStateStore.has(state);
+        if (process.env.DEBUG_PERSONALIZATION === '1') {
+          console.log('[OAuth] Memory fallback result:', memoryResult);
+        }
+        return memoryResult;
       }
     }
     // Fallback to in-memory
-    return oauthStateStore.has(state);
+    const memoryResult = oauthStateStore.has(state);
+    if (process.env.DEBUG_PERSONALIZATION === '1') {
+      console.log('[OAuth] Memory-only verification:', state, memoryResult);
+    }
+    return memoryResult;
   }
 
   async function deleteOAuthState(state) {
@@ -65,30 +144,39 @@ function createAuthRoutes(client, store) {
         const affectedRows = result.affectedRows || result[0]?.affectedRows || (Array.isArray(result) && result[0]?.affectedRows) || 0;
         
         if (process.env.DEBUG_PERSONALIZATION === '1') {
-            console.log('[OAuth] Deactivated state in DB:', state, 'affected rows:', affectedRows);
+          console.log('[OAuth] Deactivated state in DB:', state, 'affected rows:', affectedRows);
         }
         
-        return true;
+        return affectedRows > 0;
       } catch(e) {
-        console.warn('Failed to deactivate OAuth state in DB:', e.message);
+        console.error('[OAuth] Failed to deactivate OAuth state in DB:', e.message, e.stack);
+        // Fallback to in-memory
+        oauthStateStore.delete(state);
         return false;
       }
     }
     // Fallback to in-memory
+    const hadState = oauthStateStore.has(state);
     oauthStateStore.delete(state);
-    return true;
+    if (process.env.DEBUG_PERSONALIZATION === '1') {
+      console.log('[OAuth] Deleted state from memory:', state, 'had state:', hadState);
+    }
+    return hadState;
   }
 
   async function cleanupExpiredStates() {
     if (store.sqlPool) {
       try {
+        // Test database connection first
+        await store.sqlPool.query('SELECT 1');
+        
         // Mark expired states as inactive instead of deleting them
         const result = await store.sqlPool.query('UPDATE oauth_states SET active = 0 WHERE expires_at < NOW() AND active = 1');
         const affectedRows = result.affectedRows || result[0]?.affectedRows || (Array.isArray(result) && result[0]?.affectedRows) || 0;
         
         if (affectedRows > 0) {
           if (process.env.DEBUG_PERSONALIZATION === '1') {
-              console.log('[OAuth] Marked', affectedRows, 'expired states as inactive');
+            console.log('[OAuth] Marked', affectedRows, 'expired states as inactive');
           }
         }
         
@@ -102,13 +190,22 @@ function createAuthRoutes(client, store) {
           }
         }
       } catch(e) {
-        console.warn('Failed to cleanup expired OAuth states:', e.message);
+        console.error('[OAuth] Failed to cleanup expired OAuth states:', e.message, e.stack);
       }
     } else {
       // Fallback: prune expired in-memory states (>10m)
       const now = Date.now();
+      let prunedCount = 0;
       for (const [s, ts] of oauthStateStore) {
-        if (now - ts > 10 * 60 * 1000) oauthStateStore.delete(s);
+        if (now - ts > 10 * 60 * 1000) {
+          oauthStateStore.delete(s);
+          prunedCount++;
+        }
+      }
+      if (prunedCount > 0) {
+        if (process.env.DEBUG_PERSONALIZATION === '1') {
+          console.log('[OAuth] Pruned', prunedCount, 'expired in-memory states');
+        }
       }
     }
   }
@@ -138,7 +235,15 @@ function createAuthRoutes(client, store) {
     const isActuallyMobile = isMobile === 'true' || serverMobileDetection;
     
     const state = Math.random().toString(36).slice(2, 18);
+    if (process.env.DEBUG_PERSONALIZATION === '1') {
+      console.log('[OAuth] Generated state:', state);
+    }
+    
     const saved = await saveOAuthState(state);
+    if (!saved) {
+      console.error('[OAuth] Failed to save state, aborting:', state);
+      return res.status(500).json({ error: 'state_save_failed', message: 'Failed to save OAuth state' });
+    }
     
     // Cleanup expired states
     await cleanupExpiredStates();
@@ -172,7 +277,8 @@ function createAuthRoutes(client, store) {
         serverMobileDetection,
         isActuallyMobile,
         preferApp,
-        selectedUrl: primaryUrl.includes('discord://') ? 'app' : 'web'
+        selectedUrl: primaryUrl.includes('discord://') ? 'app' : 'web',
+        state
       });
     }
     
@@ -181,7 +287,8 @@ function createAuthRoutes(client, store) {
       webUrl,
       appUrl,
       isMobile: isActuallyMobile,
-      preferApp: preferApp === 'true'
+      preferApp: preferApp === 'true',
+      state: process.env.DEBUG_PERSONALIZATION === '1' ? state : undefined // Include state for debugging only
     });
   });
 
@@ -189,20 +296,45 @@ function createAuthRoutes(client, store) {
   router.post('/oauth/discord/exchange', express.json(), async (req, res) => {
     const { code, state } = req.body || {};
     
-    if (!code) return res.status(400).json({ error: 'missing code' });
+    if (process.env.DEBUG_PERSONALIZATION === '1') {
+      console.log('[OAuth] Exchange request:', { 
+        hasCode: !!code, 
+        state, 
+        bodyKeys: Object.keys(req.body || {}),
+        contentType: req.headers['content-type']
+      });
+    }
+    
+    if (!code) {
+      console.error('[OAuth] Missing code in exchange request');
+      return res.status(400).json({ error: 'missing_code', message: 'Authorization code is required' });
+    }
+    
+    if (!state) {
+      console.error('[OAuth] Missing state in exchange request');
+      return res.status(400).json({ error: 'missing_state', message: 'OAuth state parameter is required' });
+    }
     
     const stateValid = await verifyOAuthState(state);
-    if (!state || !stateValid) {
-      if (process.env.DEBUG_PERSONALIZATION === '1') {
-        console.log('[OAuth] Invalid state:', state, 'valid:', stateValid);
-      }
-      return res.status(400).json({ error: 'invalid_state' });
+    if (!stateValid) {
+      console.error('[OAuth] Invalid state in exchange:', state);
+      return res.status(400).json({ 
+        error: 'invalid_state', 
+        message: 'OAuth state is invalid or expired',
+        receivedState: process.env.DEBUG_PERSONALIZATION === '1' ? state : undefined
+      });
     }
     
     try {
       // Delete state immediately to prevent reuse
+      if (process.env.DEBUG_PERSONALIZATION === '1') {
+        console.log('[OAuth] Deleting used state:', state);
+      }
       await deleteOAuthState(state);
       
+      if (process.env.DEBUG_PERSONALIZATION === '1') {
+        console.log('[OAuth] Exchanging code for token...');
+      }
       const tokenResp = await fetch('https://discord.com/api/oauth2/token', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -217,23 +349,43 @@ function createAuthRoutes(client, store) {
       
       if (!tokenResp.ok) {
         const text = await tokenResp.text();
-        return res.status(400).json({ error: 'token_exchange_failed', detail: text });
+        console.error('[OAuth] Token exchange failed:', tokenResp.status, text);
+        return res.status(400).json({ 
+          error: 'token_exchange_failed', 
+          detail: text,
+          status: tokenResp.status
+        });
       }
       
       const tokenJson = await tokenResp.json();
       const accessToken = tokenJson.access_token;
+      if (process.env.DEBUG_PERSONALIZATION === '1') {
+        console.log('[OAuth] Token exchange successful');
+      }
       
       // Fetch user
+      if (process.env.DEBUG_PERSONALIZATION === '1') {
+        console.log('[OAuth] Fetching user info...');
+      }
       const userResp = await fetch('https://discord.com/api/users/@me', {
         headers: { Authorization: `Bearer ${accessToken}` }
       });
       const user = await userResp.json();
+      if (process.env.DEBUG_PERSONALIZATION === '1') {
+        console.log('[OAuth] User fetched:', user.username, user.id);
+      }
       
       // Fetch guilds
+      if (process.env.DEBUG_PERSONALIZATION === '1') {
+        console.log('[OAuth] Fetching user guilds...');
+      }
       const guildResp = await fetch('https://discord.com/api/users/@me/guilds', {
         headers: { Authorization: `Bearer ${accessToken}` }
       });
       const rawGuilds = await guildResp.json();
+      if (process.env.DEBUG_PERSONALIZATION === '1') {
+        console.log('[OAuth] Guilds fetched:', Array.isArray(rawGuilds) ? rawGuilds.length : 'not array');
+      }
       
       // Get guilds where the bot is present
       const botGuildIds = new Set(client.guilds.cache.map(g => g.id));
@@ -271,11 +423,21 @@ function createAuthRoutes(client, store) {
           };
         }) : [];
       
+      if (process.env.DEBUG_PERSONALIZATION === '1') {
+        console.log('[OAuth] Manageable guilds with bot:', guilds.length);
+      }
+      
       // Persist user (MariaDB only currently)
       try { 
+        if (process.env.DEBUG_PERSONALIZATION === '1') {
+          console.log('[OAuth] Persisting user...');
+        }
         await store.upsertUser(user); 
+        if (process.env.DEBUG_PERSONALIZATION === '1') {
+          console.log('[OAuth] User persisted successfully');
+        }
       } catch(e) { 
-        console.warn('Persist user failed', e.message); 
+        console.warn('[OAuth] Persist user failed:', e.message); 
       }
       
       const jwtToken = jwt.sign({ 
@@ -285,12 +447,20 @@ function createAuthRoutes(client, store) {
         manageableGuilds: allManageableGuilds // Store ALL manageable guild IDs (for future use)
       }, PRIMARY_JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
       
+      if (process.env.DEBUG_PERSONALIZATION === '1') {
+        console.log('[OAuth] JWT token created for user:', user.username);
+      }
+      
       audit(req, { action: 'oauth-login', user: user.id });
       res.json({ token: jwtToken, user, guilds });
       
     } catch(e) {
-      console.error('OAuth exchange error', e);
-      res.status(500).json({ error: 'oauth_failed' });
+      console.error('[OAuth] Exchange error:', e.message, e.stack);
+      res.status(500).json({ 
+        error: 'oauth_failed', 
+        message: 'Internal server error during OAuth exchange',
+        detail: process.env.DEBUG_PERSONALIZATION === '1' ? e.message : 'Internal error'
+      });
     }
   });
 
@@ -387,31 +557,54 @@ function createAuthRoutes(client, store) {
 
   // Debug endpoint to view OAuth states (remove in production)
   router.get('/debug/oauth-states', async (req, res) => {
-    if (store.sqlPool) {
-      try {
-        const [rows] = await store.sqlPool.query(
-          'SELECT state, created_at, expires_at, active, (expires_at > NOW()) as valid FROM oauth_states ORDER BY created_at DESC LIMIT 20'
-        );
-        res.json({ 
-          database: rows,
-          inMemory: Array.from(oauthStateStore.entries()).map(([state, timestamp]) => ({
-            state,
-            timestamp: new Date(timestamp).toISOString(),
-            age_minutes: Math.round((Date.now() - timestamp) / 60000)
-          }))
-        });
-      } catch(e) {
-        res.status(500).json({ error: e.message });
+    try {
+      const dbStates = [];
+      const memoryStates = [];
+      
+      if (store.sqlPool) {
+        try {
+          const [rows] = await store.sqlPool.query(
+            'SELECT state, created_at, expires_at, active, (expires_at > NOW()) as valid FROM oauth_states ORDER BY created_at DESC LIMIT 20'
+          );
+          dbStates.push(...rows);
+        } catch(e) {
+          if (process.env.DEBUG_PERSONALIZATION === '1') {
+            console.error('[OAuth Debug] Database query failed:', e.message);
+          }
+        }
       }
-    } else {
-      res.json({ 
-        database: 'Not connected',
-        inMemory: Array.from(oauthStateStore.entries()).map(([state, timestamp]) => ({
-          state,
+      
+      // In-memory states
+      for (const [state, timestamp] of oauthStateStore.entries()) {
+        memoryStates.push({
+          state: process.env.DEBUG_PERSONALIZATION === '1' ? state : 'hidden',
           timestamp: new Date(timestamp).toISOString(),
-          age_minutes: Math.round((Date.now() - timestamp) / 60000)
-        }))
+          age_minutes: Math.round((Date.now() - timestamp) / 60000),
+          valid: (Date.now() - timestamp) < 10 * 60 * 1000
+        });
+      }
+      
+      res.json({ 
+        database: {
+          connected: !!store.sqlPool,
+          states: process.env.DEBUG_PERSONALIZATION === '1' ? dbStates : dbStates.map(s => ({...s, state: 'hidden'})),
+          count: dbStates.length
+        },
+        inMemory: {
+          states: memoryStates,
+          count: memoryStates.length
+        },
+        summary: {
+          total_db: dbStates.length,
+          total_memory: memoryStates.length,
+          valid_db: dbStates.filter(s => s.valid).length,
+          valid_memory: memoryStates.filter(s => s.valid).length
+        },
+        debug_mode: process.env.DEBUG_PERSONALIZATION === '1'
       });
+    } catch(e) {
+      console.error('[OAuth Debug] Debug endpoint error:', e.message);
+      res.status(500).json({ error: e.message });
     }
   });
 

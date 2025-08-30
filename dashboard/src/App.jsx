@@ -481,13 +481,17 @@ export default function App(){
     setLoginLoading(true);
     setError(''); // Clear any previous errors
     
-    // Detect if user is on mobile or desktop
+    // For development environment, always use web browser OAuth
+    // This avoids "discord://" protocol handler errors in development
+    const isDevelopment = window.location.hostname === 'localhost' || 
+                         window.location.hostname === '127.0.0.1' || 
+                         window.location.port;
+    
+    // Only prefer Discord app in production and on mobile
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
                      (navigator.maxTouchPoints && navigator.maxTouchPoints > 2 && /MacIntel/.test(navigator.platform));
     
-    // For mobile: always prefer Discord app
-    // For desktop: check if Discord app is available, fallback to browser
-    const preferApp = isMobile;
+    const preferApp = !isDevelopment && isMobile;
     
     const url = `/api/auth/oauth/discord/url?preferApp=${preferApp}&isMobile=${isMobile}`;
     
@@ -496,15 +500,15 @@ export default function App(){
         if(d && (d.url || d.webUrl || d.appUrl)) {
           // Add a small delay to show the loading state
           setTimeout(() => {
-            if(isMobile && d.appUrl) {
-              // Mobile: Always try Discord app first
+            if(!isDevelopment && isMobile && d.appUrl) {
+              // Mobile production: Try Discord app first
               tryDiscordAppWithFallback(d.appUrl, d.webUrl || d.url, true);
-            } else if(!isMobile && d.appUrl && d.webUrl) {
-              // Desktop: Check if Discord app is running, otherwise use browser
+            } else if(!isDevelopment && !isMobile && d.appUrl && d.webUrl) {
+              // Desktop production: Check if Discord app is running, otherwise use browser
               checkDiscordAppAndRedirect(d.appUrl, d.webUrl);
             } else {
-              // Fallback to whatever URL is available
-              const redirectUrl = d.url || d.webUrl || d.appUrl;
+              // Development or fallback: Always use web browser
+              const redirectUrl = d.webUrl || d.url || d.appUrl;
               window.location.href = redirectUrl;
             }
           }, 800); // 800ms delay to show loading animation
