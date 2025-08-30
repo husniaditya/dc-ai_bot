@@ -406,9 +406,9 @@ async function parseAtomFeed(xml, channelId) {
         let sanitizedTitle = (title || 'Unknown Title')
           .replace(/&lt;/g, '<')
           .replace(/&gt;/g, '>')
-          .replace(/&amp;/g, '&')
           .replace(/&quot;/g, '"')
           .replace(/&#39;/g, "'")
+          .replace(/&amp;/g, '&')
           .substring(0, 200); // Limit title length
 
         // Validate date format
