@@ -10,8 +10,11 @@ export default function LoginView({ error, authProcessing, loginLoading, startDi
   // Detect if user is on mobile for smart button text
   const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
                    (navigator.maxTouchPoints && navigator.maxTouchPoints > 2 && /MacIntel/.test(navigator.platform));
-
-  const loginButtonText = isMobile ? 'Open Discord App' : 'Login with Discord';
+  
+  // Check if Discord app is likely available (mobile devices typically have better deep linking support)
+  const hasDiscordApp = isMobile;
+  
+  const loginButtonText = hasDiscordApp ? 'Login with Discord' : 'Login with Discord';
 
   return (
     <div className="login-viewport">
@@ -58,11 +61,24 @@ export default function LoginView({ error, authProcessing, loginLoading, startDi
                     </>
                   )}
                 </button>
+                {/* Debug: Direct Discord OAuth link */}
+                {clientId && !loginLoading && (
+                  <div className="small text-muted">
+                    <a 
+                      href={`https://discord.com/oauth2/authorize?client_id=${clientId}&response_type=code&redirect_uri=${encodeURIComponent('https://chocomaid.xyz/callback')}&scope=identify+guilds`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-decoration-none"
+                    >
+                      🔗 Direct Discord login link (fallback)
+                    </a>
+                  </div>
+                )}
                 <div className="small text-muted mt-1">
                   {loginLoading ? (
                     <>
                       <i className="fa-solid fa-clock me-1"></i>
-                      {isMobile ? 'Opening Discord app...' : 'Preparing authentication...'}
+                      Preparing Discord authentication...
                     </>
                   ): ('')}
                 </div>

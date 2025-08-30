@@ -402,8 +402,9 @@ async function parseAtomFeed(xml, channelId) {
       
       // Validate video ID format
       if (videoId && /^[a-zA-Z0-9_-]{11}$/.test(videoId)) {
-        // Sanitize title to prevent XSS
+        // Sanitize title to prevent XSS - decode HTML entities in correct order
         let sanitizedTitle = (title || 'Unknown Title')
+          .replace(/&amp;/g, '&')     // Must be first to prevent double-decoding
           .replace(/&lt;/g, '<')
           .replace(/&gt;/g, '>')
           .replace(/&quot;/g, '"')

@@ -157,15 +157,23 @@ function createAuthRoutes(client, store) {
     
     // Smart URL selection based on device type and preference
     let primaryUrl;
-    if (isActuallyMobile) {
-      // Mobile: Always prefer Discord app
-      primaryUrl = appUrl;
-    } else if (preferApp === 'true') {
-      // Desktop: User specifically requested app
+    if (preferApp === 'true' && isActuallyMobile) {
+      // Only use Discord app if explicitly requested AND on mobile
       primaryUrl = appUrl;
     } else {
-      // Desktop: Default to web browser
+      // Default to web browser for better compatibility
       primaryUrl = webUrl;
+    }
+    
+    // Debug logging
+    if (process.env.DEBUG_PERSONALIZATION === '1') {
+      console.log('[OAuth] URL selection:', {
+        userAgent: userAgent.substring(0, 100),
+        serverMobileDetection,
+        isActuallyMobile,
+        preferApp,
+        selectedUrl: primaryUrl.includes('discord://') ? 'app' : 'web'
+      });
     }
     
     res.json({ 
