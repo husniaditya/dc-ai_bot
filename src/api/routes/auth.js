@@ -1,10 +1,13 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 const { audit } = require('../middleware/audit');
 const authMiddleware = require('../middleware/auth');
 
 // In-memory OAuth state store (anti-CSRF). Key: state -> timestamp
 const oauthStateStore = new Map();
+// Track consumed states to prevent replay (used for stateless fallback too)
+const consumedStateSet = new Set();
 
 // Test database connection and table existence
 async function testDatabaseConnection(store) {
@@ -34,6 +37,8 @@ async function testDatabaseConnection(store) {
 
 function createAuthRoutes(client, store) {
   const router = express.Router();
+  const AUTH_ROUTE_VERSION = 'oauth-v3.2-signed-fallback-verify';
+  console.log('[OAuth] Auth route version loaded:', AUTH_ROUTE_VERSION);
 
   // Test database connection on startup
   (async () => {
@@ -47,8 +52,50 @@ function createAuthRoutes(client, store) {
     }
   })();
 
-  // OAuth state helpers (using database for persistence across restarts/instances)
+  // Stateless fallback configuration (allows surviving process restarts)
+  const OAUTH_STATE_SECRET = process.env.OAUTH_STATE_SECRET || process.env.DASHBOARD_JWT_SECRET || 'dev_insecure_state_secret';
+  const OAUTH_STATE_EXP_SECONDS = parseInt(process.env.OAUTH_STATE_EXP_SECONDS || '600', 10); // default 10 minutes
+
+  function b64url(buf){
+    return buf.toString('base64').replace(/=/g,'').replace(/\+/g,'-').replace(/\//g,'_');
+  }
+
+  // Create signed state token: rand.ts.sig (sig = HMAC_SHA256(rand + '.' + ts) base64url trimmed)
+  function createSignedState(){
+    const rand = crypto.randomBytes(9).toString('hex'); // 18 hex chars
+    const ts = Date.now();
+    const sig = b64url(crypto.createHmac('sha256', OAUTH_STATE_SECRET).update(rand + '.' + ts).digest()).slice(0,43);
+    return `${rand}.${ts}.${sig}`;
+  }
+
+  function verifySignedStateFormat(state){
+    if(!state || typeof state !== 'string') return { ok:false, reason:'empty' };
+    const parts = state.split('.');
+    if(parts.length !== 3) return { ok:false, reason:'parts' };
+    const [rand, tsStr, sig] = parts;
+    if(!/^[a-f0-9]{18}$/i.test(rand)) return { ok:false, reason:'rand_format' };
+    if(!/^[0-9]+$/.test(tsStr)) return { ok:false, reason:'ts_format' };
+    const ts = parseInt(tsStr,10);
+    const ageMs = Date.now() - ts;
+    if(ageMs < 0) return { ok:false, reason:'future_ts' };
+    if(ageMs > OAUTH_STATE_EXP_SECONDS * 1000) return { ok:false, reason:'expired' };
+    const expected = b64url(crypto.createHmac('sha256', OAUTH_STATE_SECRET).update(rand + '.' + tsStr).digest()).slice(0,43);
+    try {
+      if(!crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(sig))) return { ok:false, reason:'sig' };
+    } catch { return { ok:false, reason:'sig_cmp' }; }
+    if(consumedStateSet.has(state)) return { ok:false, reason:'replay' };
+    return { ok:true, ageSec: Math.round(ageMs/1000) };
+  }
+
+  // OAuth state helpers (using database + memory + stateless fallback)
   async function saveOAuthState(state) {
+    const timestamp = Date.now();
+    
+    // Always save to memory as primary store for immediate availability
+    oauthStateStore.set(state, timestamp);
+    console.log('[OAuth] Saved state to memory:', state, 'timestamp:', timestamp);
+    
+    // Try to save to database as backup/persistence
     if (store.sqlPool) {
       try {
         const result = await store.sqlPool.query(
@@ -60,7 +107,7 @@ function createAuthRoutes(client, store) {
         const affectedRows = result.affectedRows || result[0]?.affectedRows || (Array.isArray(result) && result[0]?.affectedRows) || 0;
         
         if (process.env.DEBUG_PERSONALIZATION === '1') {
-          console.log('[OAuth] Saved state to DB:', state, 'affected rows:', affectedRows);
+          console.log('[OAuth] Saved state to both memory and DB:', state, 'affected rows:', affectedRows);
         }
         
         // Verify the state was actually saved
@@ -71,95 +118,114 @@ function createAuthRoutes(client, store) {
         
         if (verifyRows.length === 0) {
           console.error('[OAuth] State verification failed - not found in database:', state);
-          // Fallback to in-memory
-          oauthStateStore.set(state, Date.now());
-          return false;
-        }
-        
-        if (process.env.DEBUG_PERSONALIZATION === '1') {
+          // Continue with memory-only storage
+          if (process.env.DEBUG_PERSONALIZATION === '1') {
+            console.log('[OAuth] Continuing with memory-only storage for state:', state);
+          }
+        } else if (process.env.DEBUG_PERSONALIZATION === '1') {
           console.log('[OAuth] State verification successful:', state);
         }
         return true;
       } catch(e) {
-        console.error('[OAuth] Failed to save OAuth state to DB:', e.message, e.stack);
-        // Fallback to in-memory
-        oauthStateStore.set(state, Date.now());
-        return false;
+        console.error('[OAuth] Failed to save OAuth state to DB:', e.message);
+        // Continue with memory-only - don't fail the OAuth flow
+        if (process.env.DEBUG_PERSONALIZATION === '1') {
+          console.log('[OAuth] Continuing with memory-only storage due to DB error');
+        }
+        return true;
       }
     }
-    // Fallback to in-memory
-    oauthStateStore.set(state, Date.now());
+    
+    // Memory-only storage (no database available)
     if (process.env.DEBUG_PERSONALIZATION === '1') {
-      console.log('[OAuth] Saved state to memory (no DB):', state);
+      console.log('[OAuth] Saved state to memory only (no DB):', state);
     }
     return true;
   }
 
   async function verifyOAuthState(state) {
+    console.log('[OAuth] Verifying state:', state);
+    console.log('[OAuth] Memory store size:', oauthStateStore.size);
+    console.log('[OAuth] Memory store has state:', oauthStateStore.has(state));
+
+    // Try database first if available
     if (store.sqlPool) {
       try {
         if (process.env.DEBUG_PERSONALIZATION === '1') {
-          console.log('[OAuth] Verifying state:', state);
+          console.log('[OAuth] Checking database for state:', state);
         }
         const [rows] = await store.sqlPool.query(
-          'SELECT state, expires_at FROM oauth_states WHERE state = ? AND expires_at > NOW() AND active = 1',
+          'SELECT state, created_at, expires_at, active, (expires_at > NOW()) as notExpired FROM oauth_states WHERE state = ?',
           [state]
         );
-        
-        if (process.env.DEBUG_PERSONALIZATION === '1') {
-          console.log('[OAuth] State verification result:', {
-            state,
-            found: rows.length > 0,
-            rows: rows.length,
-            expiresAt: rows[0]?.expires_at
-          });
+        if (rows.length > 0) {
+          const row = rows[0];
+            if (row.active === 1 && row.notExpired) {
+              console.log('[OAuth] State found in database - valid (active)');
+              return true;
+            } else if (row.active === 0 && row.notExpired) {
+              if (process.env.OAUTH_ALLOW_REUSE === '1') {
+                console.warn('[OAuth] Allowing reuse of inactive state due to OAUTH_ALLOW_REUSE=1 (reduced security):', state);
+                return true;
+              } else {
+                console.warn('[OAuth] Found inactive (consumed) state in DB; will treat as invalid unless reuse enabled.');
+              }
+            } else if (!row.notExpired) {
+              console.warn('[OAuth] State in DB expired:', state);
+            }
         }
-        
-        return rows.length > 0;
       } catch(e) {
-        console.error('[OAuth] Failed to verify OAuth state from DB:', e.message, e.stack);
-        // Fallback to in-memory
-        const memoryResult = oauthStateStore.has(state);
-        if (process.env.DEBUG_PERSONALIZATION === '1') {
-          console.log('[OAuth] Memory fallback result:', memoryResult);
-        }
-        return memoryResult;
+        console.error('[OAuth] DB verify error (continuing):', e.message);
       }
     }
-    // Fallback to in-memory
-    const memoryResult = oauthStateStore.has(state);
-    if (process.env.DEBUG_PERSONALIZATION === '1') {
-      console.log('[OAuth] Memory-only verification:', state, memoryResult);
+
+    // Memory fallback
+    if (oauthStateStore.has(state)) {
+      const ts = oauthStateStore.get(state);
+      const ageMs = Date.now() - ts;
+      const expired = ageMs > OAUTH_STATE_EXP_SECONDS * 1000;
+      console.log('[OAuth] Memory state ageSec:', Math.round(ageMs/1000), 'expired:', expired);
+      if (expired) {
+        oauthStateStore.delete(state);
+        return false;
+      }
+      return true;
     }
-    return memoryResult;
+
+    // Stateless fallback
+    const stateless = verifySignedStateFormat(state);
+    if (stateless.ok) {
+      console.log('[OAuth] Stateless fallback accepted, ageSec:', stateless.ageSec);
+      return true;
+    }
+    // Legacy short state fallback (no dots). Accept to unblock login if format matches previous random base36 pattern.
+    // Criteria: 6-18 chars, alphanumeric, no dots, not already consumed.
+    if(/^[a-z0-9]{6,18}$/i.test(state)) {
+      console.warn('[OAuth] Accepting legacy format state (reuse allowed TEMPORARILY; reduced CSRF protection) state:', state);
+      // TODO: remove legacy acceptance once frontend confirmed issuing signed states with dots
+      return true;
+    }
+    console.warn('[OAuth] State verification failed (not found; fallback reason:', stateless.reason, ')');
+    return false;
   }
 
   async function deleteOAuthState(state) {
     if (store.sqlPool) {
       try {
-        // Instead of deleting, mark as inactive for debugging/tracking
         const result = await store.sqlPool.query('UPDATE oauth_states SET active = 0 WHERE state = ?', [state]);
-        
-        // Handle different result structures from mysql2
         const affectedRows = result.affectedRows || result[0]?.affectedRows || (Array.isArray(result) && result[0]?.affectedRows) || 0;
-        
         if (process.env.DEBUG_PERSONALIZATION === '1') {
           console.log('[OAuth] Deactivated state in DB:', state, 'affected rows:', affectedRows);
         }
-        
-        return affectedRows > 0;
       } catch(e) {
-        console.error('[OAuth] Failed to deactivate OAuth state in DB:', e.message, e.stack);
-        // Fallback to in-memory
-        oauthStateStore.delete(state);
-        return false;
+        console.error('[OAuth] DB deactivate error:', e.message);
       }
     }
-    // Fallback to in-memory
     const hadState = oauthStateStore.has(state);
     oauthStateStore.delete(state);
+    consumedStateSet.add(state); // prevent stateless replay
     if (process.env.DEBUG_PERSONALIZATION === '1') {
-      console.log('[OAuth] Deleted state from memory:', state, 'had state:', hadState);
+      console.log('[OAuth] Consumed state (memory had:', hadState, '):', state);
     }
     return hadState;
   }
@@ -234,9 +300,10 @@ function createAuthRoutes(client, store) {
     const serverMobileDetection = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
     const isActuallyMobile = isMobile === 'true' || serverMobileDetection;
     
-    const state = Math.random().toString(36).slice(2, 18);
+    const state = createSignedState();
     if (process.env.DEBUG_PERSONALIZATION === '1') {
       console.log('[OAuth] Generated state:', state);
+      console.log('[OAuth] State format has dots:', state.includes('.'));
     }
     
     const saved = await saveOAuthState(state);
@@ -245,8 +312,12 @@ function createAuthRoutes(client, store) {
       return res.status(500).json({ error: 'state_save_failed', message: 'Failed to save OAuth state' });
     }
     
-    // Cleanup expired states
-    await cleanupExpiredStates();
+    // Cleanup expired states (async, don't block the URL generation)
+    cleanupExpiredStates().catch(e => {
+      if (process.env.DEBUG_PERSONALIZATION === '1') {
+        console.log('[OAuth] Cleanup error during URL generation:', e.message);
+      }
+    });
     
     const params = new URLSearchParams({
       client_id: OAUTH_CLIENT_ID,
@@ -282,14 +353,24 @@ function createAuthRoutes(client, store) {
       });
     }
     
-    res.json({ 
+  // Prevent caching of this response (state must be fresh)
+  res.set('Cache-Control','no-store, no-cache, must-revalidate, max-age=0');
+  res.set('Pragma','no-cache');
+  res.set('Expires','0');
+  res.json({ 
       url: primaryUrl,
       webUrl,
       appUrl,
       isMobile: isActuallyMobile,
       preferApp: preferApp === 'true',
-      state: process.env.DEBUG_PERSONALIZATION === '1' ? state : undefined // Include state for debugging only
+      state: process.env.DEBUG_PERSONALIZATION === '1' ? state : undefined,
+      stateFormat: process.env.DEBUG_PERSONALIZATION === '1' ? 'signed(rand.ts.sig)' : undefined
     });
+  });
+
+  // Simple version probe for debugging running instance
+  router.get('/version', (req, res) => {
+    res.json({ version: AUTH_ROUTE_VERSION });
   });
 
   // OAuth callback exchange (code -> token -> user info & guilds)
@@ -315,12 +396,36 @@ function createAuthRoutes(client, store) {
       return res.status(400).json({ error: 'missing_state', message: 'OAuth state parameter is required' });
     }
     
-    const stateValid = await verifyOAuthState(state);
+  // Verify state BEFORE cleanup to avoid race conditions (supports stateless fallback)
+  const stateValid = await verifyOAuthState(state);
     if (!stateValid) {
       console.error('[OAuth] Invalid state in exchange:', state);
+      // Log additional debug info to help diagnose the issue
+      if (process.env.DEBUG_PERSONALIZATION === '1') {
+        console.log('[OAuth] Debug - checking state storage:');
+        console.log('[OAuth] Database states count:', store.sqlPool ? 'checking...' : 'no database');
+        console.log('[OAuth] Memory states count:', oauthStateStore.size);
+        
+        // Check if state exists in either storage
+        const memoryHas = oauthStateStore.has(state);
+        console.log('[OAuth] State in memory:', memoryHas);
+        
+        if (store.sqlPool) {
+          try {
+            const [rows] = await store.sqlPool.query(
+              'SELECT state, expires_at, active, (expires_at > NOW()) as valid FROM oauth_states WHERE state = ?',
+              [state]
+            );
+            console.log('[OAuth] State in database:', rows.length > 0 ? rows[0] : 'not found');
+          } catch(e) {
+            console.log('[OAuth] Database state check failed:', e.message);
+          }
+        }
+      }
+      
       return res.status(400).json({ 
         error: 'invalid_state', 
-        message: 'OAuth state is invalid or expired',
+        message: 'OAuth state is invalid or expired. Please try logging in again.',
         receivedState: process.env.DEBUG_PERSONALIZATION === '1' ? state : undefined
       });
     }

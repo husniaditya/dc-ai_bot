@@ -31,7 +31,18 @@ export default function LoginView({ error, authProcessing, loginLoading, startDi
                 <div className="login-subtitle">Smart assistant & auto‑response manager</div>
               </div>
             </div>
-            {error && <div className="alert alert-danger py-2 mb-3">{error}</div>}
+            {error && (
+              <div className="alert alert-danger py-2 mb-3">
+                {error}
+                {error.includes('invalid_state') || error.includes('session expired') ? (
+                  <div className="mt-2">
+                    <small className="text-muted d-block">
+                      This usually happens if you took too long to complete the login or if you refreshed the page during authentication.
+                    </small>
+                  </div>
+                ) : null}
+              </div>
+            )}
             {authProcessing ? (
               <div className="auth-processing vstack gap-3 text-center py-4">
                 <div className="spinner-border text-light mx-auto" style={{width:'2.5rem', height:'2.5rem'}} role="status"><span className="visually-hidden">Loading...</span></div>

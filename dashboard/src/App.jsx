@@ -199,18 +199,26 @@ export default function App(){
     if (authProcessing && !code) {
       console.log('Resetting stuck authProcessing state');
       setAuthProcessing(false);
+      oauthExchangeStarted.current = false; // Reset the exchange flag too
       return;
     }
     
-  if(!token && code && state && !authProcessing && !oauthExchangeStarted.current){
+    if(!token && code && state && !authProcessing && !oauthExchangeStarted.current){
       (async()=>{
         try {
           setAuthProcessing(true);
-      oauthExchangeStarted.current = true;
+          oauthExchangeStarted.current = true;
+          
+          // Clear any previous errors before starting OAuth
+          setError('');
+          
+          if (process.env.DEBUG_PERSONALIZATION === '1') {
+              console.log('[OAuth Debug] Starting exchange with code:', code?.substring(0, 10) + '...', 'state:', state);
+          }
           
           // Add timeout to prevent hanging
           const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+          const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
           
           const resp = await fetch(API_BASE + '/api/auth/oauth/discord/exchange', { 
             method:'POST', 
@@ -221,11 +229,27 @@ export default function App(){
           
           clearTimeout(timeoutId);
           const text = await resp.text();
-          let data; try { data = text? JSON.parse(text):{}; } catch { throw new Error('OAuth exchange failed (bad JSON)'); }
+          
+          if (process.env.DEBUG_PERSONALIZATION === '1') {
+              console.log('[OAuth Debug] Exchange response status:', resp.status);
+              console.log('[OAuth Debug] Exchange response text:', text);
+          }
+          
+          let data; 
+          try { 
+            data = text ? JSON.parse(text) : {}; 
+          } catch { 
+            throw new Error('OAuth exchange failed (invalid server response)'); 
+          }
+          
           if(!resp.ok){ 
             console.error('OAuth exchange failed:', data);
-            throw new Error(data.error || 'OAuth exchange failed'); 
+            const errorMsg = data.error === 'invalid_state' 
+              ? 'Login session expired. Please try logging in again.' 
+              : (data.message || data.error || 'OAuth exchange failed');
+            throw new Error(errorMsg); 
           }
+          
           if(data.token){ 
             localStorage.setItem('token', data.token); 
             setToken(data.token);
@@ -243,26 +267,48 @@ export default function App(){
           window.history.replaceState({}, '', cleanUrl);
         } catch(e){ 
           console.error('OAuth exchange error:', e);
+          oauthExchangeStarted.current = false; // Reset flag on error so user can try again
           if (e.name === 'AbortError') {
             setError('Authentication timed out. Please try again.');
           } else {
             setError(e.message); 
           }
-        }
-        finally { 
-          setAuthProcessing(false); 
+          // IMPORTANT: Clear stale code/state params so we don't keep retrying the same expired state
+          try {
+            const url = new URL(window.location.href);
+            if (url.searchParams.has('code') || url.searchParams.has('state')) {
+              const cleanUrl = window.location.origin + window.location.pathname; // drop query
+              window.history.replaceState({}, '', cleanUrl);
+              if (process.env.DEBUG_PERSONALIZATION === '1') {
+                console.log('[OAuth Debug] Cleared stale code/state params after failure');
+              }
+            }
+          } catch(_e) { /* ignore */ }
+        } finally { 
+          setAuthProcessing(false);
         }
       })();
     }
   }, [token, authProcessing]);
   
+  // Clear OAuth exchange flag when leaving login view or when token changes
+  useEffect(() => {
+    if (view !== 'login' || token) {
+      if (oauthExchangeStarted.current) {
+        console.log('Clearing OAuth exchange flag - view changed or token acquired');
+        oauthExchangeStarted.current = false;
+      }
+    }
+  }, [view, token]);
+
   // Failsafe: Reset authProcessing if it gets stuck
   useEffect(() => {
     if (authProcessing) {
       const timeoutId = setTimeout(() => {
         console.log('Resetting stuck authProcessing after timeout');
         setAuthProcessing(false);
-      }, 15000); // 15 second timeout
+        oauthExchangeStarted.current = false; // Also reset the exchange flag
+      }, 30000); // 30 second timeout
       
       return () => clearTimeout(timeoutId);
     }
@@ -477,48 +523,43 @@ export default function App(){
   }
 
   function startDiscordLogin(){
-    // Set loading state
     setLoginLoading(true);
-    setError(''); // Clear any previous errors
-    
-    // For development environment, always use web browser OAuth
-    // This avoids "discord://" protocol handler errors in development
-    const isDevelopment = window.location.hostname === 'localhost' || 
-                         window.location.hostname === '127.0.0.1' || 
-                         window.location.port;
-    
-    // Only prefer Discord app in production and on mobile
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
-                     (navigator.maxTouchPoints && navigator.maxTouchPoints > 2 && /MacIntel/.test(navigator.platform));
-    
-    const preferApp = !isDevelopment && isMobile;
-    
+    setError('');
+    const isDevelopment = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || !!window.location.port);
+    const ua = navigator.userAgent;
+    const isIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    const isAndroid = /Android/i.test(ua);
+    const isMobile = isIOS || isAndroid;
+  // Optional: allow Android deep link attempt if explicitly enabled (can be flaky on some devices/browsers)
+  const enableAndroidApp = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_ANDROID_APP_LOGIN === '1');
+  // Attempt discord:// on iOS by default; Android only if flag enabled. Desktop handled separately below.
+  const preferApp = !isDevelopment && (isIOS || (enableAndroidApp && isAndroid));
+    if (process.env.DEBUG_PERSONALIZATION === '1') {
+      console.log('[OAuth Debug] Platform detection:', { isDevelopment, isIOS, isAndroid, isMobile, preferApp });
+    }
     const url = `/api/auth/oauth/discord/url?preferApp=${preferApp}&isMobile=${isMobile}`;
-    
     fetchJson(url)
-      .then(d => { 
-        if(d && (d.url || d.webUrl || d.appUrl)) {
-          // Add a small delay to show the loading state
-          setTimeout(() => {
-            if(!isDevelopment && isMobile && d.appUrl) {
-              // Mobile production: Try Discord app first
-              tryDiscordAppWithFallback(d.appUrl, d.webUrl || d.url, true);
-            } else if(!isDevelopment && !isMobile && d.appUrl && d.webUrl) {
-              // Desktop production: Check if Discord app is running, otherwise use browser
-              checkDiscordAppAndRedirect(d.appUrl, d.webUrl);
-            } else {
-              // Development or fallback: Always use web browser
-              const redirectUrl = d.webUrl || d.url || d.appUrl;
-              window.location.href = redirectUrl;
-            }
-          }, 800); // 800ms delay to show loading animation
+      .then(d => {
+        if (process.env.DEBUG_PERSONALIZATION === '1') {
+          console.log('[OAuth Debug] URL generation response:', d);
+        }
+        if(!(d && (d.url || d.webUrl || d.appUrl))) throw new Error('No OAuth URL');
+    if(preferApp && d.appUrl){
+      // Immediate deep link attempt (no artificial delay) with fallback (mobile flag influences timing)
+      tryDiscordAppWithFallback(d.appUrl, d.webUrl || d.url || d.appUrl, isMobile);
+        } else if(!isDevelopment && !isMobile && d.appUrl && d.webUrl){
+            checkDiscordAppAndRedirect(d.appUrl, d.webUrl);
         } else {
-          throw new Error('No OAuth URL'); 
+            const redirectUrl = d.webUrl || d.url || d.appUrl;
+            if (process.env.DEBUG_PERSONALIZATION === '1') {
+              console.log('[OAuth Debug] Using web OAuth URL:', redirectUrl);
+            }
+            window.location.href = redirectUrl;
         }
       })
-      .catch(e=> {
+      .catch(e => {
         setError('OAuth URL error: '+e.message+' (is backend running on 3001?)');
-        setLoginLoading(false); // Reset loading state on error
+        setLoginLoading(false);
       });
   }
 
@@ -581,7 +622,6 @@ export default function App(){
     // Fallback mechanism
     setTimeout(() => {
       if (document.hasFocus() && !document.hidden && !redirected) {
-        console.log(`Discord app failed to open after ${fallbackDelay}ms, redirecting to web browser`);
         window.location.href = webUrl;
         redirected = true;
       }
@@ -607,6 +647,58 @@ export default function App(){
         window.removeEventListener('focus', handleFocus);
       }, 5000);
     }
+  }
+
+  // Android specific sequence using discord:// then intent:// then web fallback.
+  // NOTE: Discord Android app often does NOT register the deep link for the full OAuth authorize path; success is not guaranteed.
+  function tryAndroidDeepLinkSequence(oauthData){
+    const webUrl = oauthData.webUrl || oauthData.url || oauthData.appUrl;
+    const originalAppUrl = oauthData.appUrl; // discord://discord.com/api/oauth2/authorize?... (from backend)
+    // Derive query part to build variant deep links (Discord may only register certain paths on Android)
+    const queryPart = (()=>{ try { return webUrl.split('?')[1] || ''; } catch { return ''; } })();
+    const variants = [
+      originalAppUrl,
+      `discord://discord.com/oauth2/authorize?${queryPart}`,
+      `discord://oauth2/authorize?${queryPart}`
+    ].filter(Boolean);
+    // Build intent URL (Chrome) with fallback back to the web URL (using standard /oauth2 path, not /api/oauth2)
+    const intentUrl = `intent://discord.com/oauth2/authorize?${queryPart}#Intent;scheme=discord;package=com.discord;S.browser_fallback_url=${encodeURIComponent(webUrl)};end`;
+    if (process.env.DEBUG_PERSONALIZATION === '1') {
+      console.log('[OAuth Debug][Android] Deep link sequence start', { variants, intentUrl, webUrl });
+    }
+    let stage = 0; // 0 protocol, 1 intent, 2 web
+    let variantIndex = 0;
+    const tryIntent = () => {
+      if(stage !== 0) return;
+      stage = 1;
+      if (process.env.DEBUG_PERSONALIZATION === '1') console.log('[OAuth Debug][Android] Trying intent URL');
+      window.location.href = intentUrl;
+    };
+    const fallbackWeb = () => {
+      if(stage === 2) return;
+      stage = 2;
+      if (process.env.DEBUG_PERSONALIZATION === '1') console.log('[OAuth Debug][Android] Falling back to web URL');
+      window.location.href = webUrl;
+    };
+    // Attempt variants sequentially before intent
+    const tryNextVariant = () => {
+      if (variantIndex >= variants.length) { tryIntent(); return; }
+      const v = variants[variantIndex++];
+      if (!v) { tryNextVariant(); return; }
+      if (process.env.DEBUG_PERSONALIZATION === '1') console.log('[OAuth Debug][Android] Trying variant', v);
+      try { window.location.href = v; } catch { tryNextVariant(); }
+      // Schedule next variant if still here
+      setTimeout(()=>{
+        if (document.hasFocus() && !document.hidden && stage === 0) {
+          tryNextVariant();
+        }
+      }, 600);
+    };
+    tryNextVariant();
+    // After 1s attempt intent if still here
+    setTimeout(()=>{ if(document.hasFocus() && !document.hidden && stage === 0) tryIntent(); }, 2000);
+    // After 2500ms fallback to web if still here
+    setTimeout(()=>{ if(document.hasFocus() && !document.hidden && stage < 2) fallbackWeb(); }, 4000);
   }
 
   function doLogout(){
