@@ -71,15 +71,19 @@ function getNextAvailableKey() {
 		const testKey = apiKeys[testIndex];
 		if (!isKeyExhausted(testKey)) {
 			currentKeyIndex = testIndex;
-			console.log(`[YT] Switched to fresh API key`);
-			pushDebug(`FRESH_KEY: Switched to non-exhausted key ${currentKeyIndex + 1}`);
+			if (process.env.YT_DEBUG === '1') {
+				console.log(`[YT] Switched to fresh API key`);
+				pushDebug(`FRESH_KEY: Switched to non-exhausted key ${currentKeyIndex + 1}`);
+			}
 			return testKey;
 		}
 	}
 	
 	// All keys are exhausted, return current key anyway
-	console.log(`[YT] WARNING: All API keys appear to be exhausted`);
-	pushDebug(`ALL_EXHAUSTED: All keys have quota errors`);
+	if (process.env.YT_DEBUG === '1') {
+		console.log(`[YT] WARNING: All API keys appear to be exhausted`);
+		pushDebug(`ALL_EXHAUSTED: All keys have quota errors`);
+	}
 	return getCurrentApiKey();
 }
 
@@ -154,8 +158,10 @@ function noteQuotaExceeded(apiKey = null){
 		if (apiKeys.length > 1) {
 			const oldIndex = currentKeyIndex;
 			const newKey = rotateToNextApiKey();
-			console.log(`[YT] AUTO_ROTATION: Switched.`);
-			pushDebug(`AUTO_ROTATION: Switched from exhausted key to new key .`);
+			if (process.env.YT_DEBUG === '1') {
+				console.log(`[YT] AUTO_ROTATION: Switched.`);
+				pushDebug(`AUTO_ROTATION: Switched from exhausted key to new key .`);
+			}
 			return newKey; // Return the new key for immediate use
 		}
 	}
