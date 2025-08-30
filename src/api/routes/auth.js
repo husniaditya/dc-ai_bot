@@ -118,6 +118,7 @@ function createAuthRoutes(client, store) {
   const OAUTH_CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET;
   const OAUTH_REDIRECT_URI = process.env.DASHBOARD_OAUTH_REDIRECT;
   const OAUTH_SCOPES = ['identify', 'guilds'];
+  const DEBUG_PERSONALIZATION = process.env.DEBUG_PERSONALIZATION;
   
   // JWT and admin config
   const JWT_SECRET_RAW = process.env.DASHBOARD_JWT_SECRET || 'changeme_dev_secret';

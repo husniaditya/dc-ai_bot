@@ -3,6 +3,14 @@
 const crypto = require('crypto');
 const express = require('express');
 const store = require('../../config/store');
+const createRateLimitMiddleware = require('../../api/middleware/rateLimit');
+
+// WebSub specific rate limiters using the shared middleware
+const websubNotificationRateLimit = createRateLimitMiddleware();
+const websubVerificationRateLimit = createRateLimitMiddleware();
+
+// Security constants
+const MAX_NOTIFICATION_SIZE = 1024 * 1024; // 1MB max notification size
 
 // Use global fetch (Node 18+) with fallback
 let fetchFn;
@@ -165,64 +173,137 @@ async function performWebSubOperation(channelId, mode) {
 }
 
 /**
- * Handle WebSub verification challenges
+ * Handle WebSub verification challenges with shared rate limiting
  */
 function handleVerification(req, res, channelId) {
-  const mode = req.query['hub.mode'];
-  const topic = req.query['hub.topic'];
-  const challenge = req.query['hub.challenge'];
-  const leaseSeconds = req.query['hub.lease_seconds'];
-
-  debugLog(`Verification request for channel ${channelId}:`, {
-    mode,
-    topic,
-    challenge: challenge?.slice(0, 20) + '...',
-    leaseSeconds
-  });
-
-  // Verify the topic matches our expected format
-  const expectedTopic = WEBSUB_TOPIC_BASE + channelId;
-  if (topic !== expectedTopic) {
-    debugLog(`Topic mismatch: expected ${expectedTopic}, got ${topic}`);
-    websubStats.denials++;
-    return res.status(404).send('Topic not found');
-  }
-
-  if (mode === 'subscribe') {
-    const sub = subscriptions.get(channelId);
-    if (sub) {
-      sub.subscribed = true;
-      sub.expiresAt = new Date(Date.now() + (parseInt(leaseSeconds) * 1000));
-      pendingSubscriptions.delete(channelId);
-      
-      debugLog(`Subscription verified for channel ${channelId}, expires at ${sub.expiresAt}`);
+  // Use shared rate limiting middleware
+  websubVerificationRateLimit(req, res, (err) => {
+    if (err) {
+      debugLog(`Rate limit exceeded for verification request from ${req.ip}`);
+      return; // Response already sent by middleware
     }
-    websubStats.verifications++;
-  } else if (mode === 'unsubscribe') {
-    subscriptions.delete(channelId);
-    debugLog(`Unsubscription verified for channel ${channelId}`);
-    websubStats.verifications++;
-  }
 
-  // Return the challenge to confirm the verification
-  res.status(200).send(challenge);
+    // Input validation and sanitization
+    if (!channelId || typeof channelId !== 'string' || !/^UC[a-zA-Z0-9_-]{22}$/.test(channelId)) {
+      debugLog(`Invalid channelId format: ${channelId}`);
+      return res.status(400).send('Invalid channel ID');
+    }
+
+    const mode = req.query['hub.mode'];
+    const topic = req.query['hub.topic'];
+    const challenge = req.query['hub.challenge'];
+    const leaseSeconds = req.query['hub.lease_seconds'];
+
+    // Validate required parameters
+    if (!mode || typeof mode !== 'string' || !['subscribe', 'unsubscribe'].includes(mode)) {
+      debugLog(`Invalid mode: ${mode}`);
+      return res.status(400).send('Invalid mode');
+    }
+
+    if (!topic || typeof topic !== 'string') {
+      debugLog(`Invalid topic: ${topic}`);
+      return res.status(400).send('Invalid topic');
+    }
+
+    if (!challenge || typeof challenge !== 'string') {
+      debugLog(`Invalid challenge: ${challenge}`);
+      return res.status(400).send('Invalid challenge');
+    }
+
+    debugLog(`Verification request for channel ${channelId}:`, {
+      mode,
+      topic,
+      challenge: challenge?.slice(0, 20) + '...',
+      leaseSeconds
+    });
+
+    // Verify the topic matches our expected format
+    const expectedTopic = WEBSUB_TOPIC_BASE + channelId;
+    if (topic !== expectedTopic) {
+      debugLog(`Topic mismatch: expected ${expectedTopic}, got ${topic}`);
+      websubStats.denials++;
+      return res.status(404).send('Topic not found');
+    }
+
+    if (mode === 'subscribe') {
+      const sub = subscriptions.get(channelId);
+      if (sub) {
+        sub.subscribed = true;
+        // Validate leaseSeconds is a positive integer
+        const leaseSecondsNum = parseInt(leaseSeconds, 10);
+        if (isNaN(leaseSecondsNum) || leaseSecondsNum <= 0) {
+          debugLog(`Invalid lease_seconds: ${leaseSeconds}`);
+          return res.status(400).send('Invalid lease_seconds');
+        }
+        sub.expiresAt = new Date(Date.now() + (leaseSecondsNum * 1000));
+        pendingSubscriptions.delete(channelId);
+        
+        debugLog(`Subscription verified for channel ${channelId}, expires at ${sub.expiresAt}`);
+      }
+      websubStats.verifications++;
+    } else if (mode === 'unsubscribe') {
+      subscriptions.delete(channelId);
+      debugLog(`Unsubscription verified for channel ${channelId}`);
+      websubStats.verifications++;
+    }
+
+    // Return the challenge to confirm the verification
+    res.status(200).send(challenge);
+  });
 }
 
 /**
- * Handle incoming WebSub notifications
+ * Handle incoming WebSub notifications with shared rate limiting and security
  */
 async function handleNotification(req, res, channelId, client) {
-  try {
+  // Use shared rate limiting middleware
+  websubNotificationRateLimit(req, res, async (err) => {
+    if (err) {
+      debugLog(`Rate limit exceeded for notification request from ${req.ip}`);
+      return; // Response already sent by middleware
+    }
+
+    try {
+      // Check notification size
+      const contentLength = parseInt(req.headers['content-length'] || '0', 10);
+      if (contentLength > MAX_NOTIFICATION_SIZE) {
+        debugLog(`Notification too large: ${contentLength} bytes for channel ${channelId}`);
+        return res.status(413).send('Payload Too Large');
+      }
+
+      // Input validation and sanitization
+      if (!channelId || typeof channelId !== 'string' || !/^UC[a-zA-Z0-9_-]{22}$/.test(channelId)) {
+        debugLog(`Invalid channelId format in notification: ${channelId}`);
+        return res.status(400).send('Invalid channel ID');
+      }
+
     // Verify the signature if secret is configured
     if (WEBSUB_SECRET && req.headers['x-hub-signature']) {
       const signature = req.headers['x-hub-signature'];
-      const bodyString = typeof req.body === 'string' ? req.body : JSON.stringify(req.body);
+      
+      // Validate signature format
+      if (!signature || typeof signature !== 'string' || !signature.startsWith('sha1=')) {
+        debugLog(`Invalid signature format for channel ${channelId}`);
+        return res.status(401).send('Invalid signature format');
+      }
+
+      // Ensure body is properly handled
+      let bodyString;
+      if (Buffer.isBuffer(req.body)) {
+        bodyString = req.body.toString('utf8');
+      } else if (typeof req.body === 'string') {
+        bodyString = req.body;
+      } else {
+        bodyString = JSON.stringify(req.body);
+      }
+
       const expectedSignature = 'sha1=' + crypto
         .createHmac('sha1', WEBSUB_SECRET)
         .update(bodyString, 'utf8')
         .digest('hex');
 
-      if (signature !== expectedSignature) {
+      // Use constant-time comparison to prevent timing attacks
+      if (!crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expectedSignature))) {
         debugLog(`Signature verification failed for channel ${channelId}`);
         return res.status(401).send('Unauthorized');
       }
@@ -232,8 +313,23 @@ async function handleNotification(req, res, channelId, client) {
     websubStats.notifications++;
     websubStats.lastNotification = new Date().toISOString();
 
-    // Parse the Atom XML feed
-    const feedXml = typeof req.body === 'string' ? req.body : req.body.toString();
+    // Parse the Atom XML feed with proper validation
+    let feedXml;
+    if (Buffer.isBuffer(req.body)) {
+      feedXml = req.body.toString('utf8');
+    } else if (typeof req.body === 'string') {
+      feedXml = req.body;
+    } else {
+      debugLog(`Invalid body type for channel ${channelId}:`, typeof req.body);
+      return res.status(400).send('Invalid request body');
+    }
+
+    // Basic XML validation
+    if (!feedXml || typeof feedXml !== 'string' || feedXml.trim().length === 0) {
+      debugLog(`Empty or invalid XML feed for channel ${channelId}`);
+      return res.status(400).send('Invalid XML feed');
+    }
+
     const videos = await parseAtomFeed(feedXml, channelId);
 
     if (videos.length > 0) {
@@ -248,38 +344,87 @@ async function handleNotification(req, res, channelId, client) {
 
     res.status(200).send('OK');
 
-  } catch (error) {
-    websubStats.errors++;
-    debugLog(`Notification processing error:`, error.message);
-    console.error('WebSub notification error:', error);
-    res.status(500).send('Processing error');
-  }
+    } catch (error) {
+      websubStats.errors++;
+      debugLog(`Notification processing error:`, error.message);
+      console.error('WebSub notification error:', error);
+      res.status(500).send('Processing error');
+    }
+  });
 }
 
 /**
- * Parse Atom XML feed from YouTube WebSub notification
+ * Parse Atom XML feed from YouTube WebSub notification with security validations
  */
 async function parseAtomFeed(xml, channelId) {
   try {
+    // Input validation
+    if (!xml || typeof xml !== 'string') {
+      throw new Error('Invalid XML input');
+    }
+
+    // Validate channel ID format
+    if (!channelId || typeof channelId !== 'string' || !/^UC[a-zA-Z0-9_-]{22}$/.test(channelId)) {
+      throw new Error('Invalid channel ID format');
+    }
+
+    // Basic XML validation - check for suspicious content
+    if (xml.length > 1024 * 1024) { // 1MB limit
+      throw new Error('XML feed too large');
+    }
+
+    // Check for potentially malicious XML patterns
+    const dangerousPatterns = [
+      /<!ENTITY/i,
+      /<!DOCTYPE.*\[/i,
+      /<\?xml.*encoding\s*=\s*['"]((?!utf-8|UTF-8)[^'"]*)['"]/i
+    ];
+
+    for (const pattern of dangerousPatterns) {
+      if (pattern.test(xml)) {
+        throw new Error('Potentially malicious XML detected');
+      }
+    }
+
     const videos = [];
     
-    // Extract entry elements
-    const entryMatches = xml.matchAll(/<entry>(.*?)<\/entry>/gs);
+    // Extract entry elements with length limit
+    const entryMatches = Array.from(xml.matchAll(/<entry>(.*?)<\/entry>/gs)).slice(0, 10); // Limit to 10 entries
     
     for (const match of entryMatches) {
       const entryXml = match[1];
       
-      // Extract video information
+      // Extract video information with validation
       const videoId = extractXmlValue(entryXml, 'yt:videoId');
       const title = extractXmlValue(entryXml, 'title');
       const published = extractXmlValue(entryXml, 'published');
       const updated = extractXmlValue(entryXml, 'updated');
       
-      if (videoId) {
+      // Validate video ID format
+      if (videoId && /^[a-zA-Z0-9_-]{11}$/.test(videoId)) {
+        // Sanitize title to prevent XSS
+        let sanitizedTitle = (title || 'Unknown Title')
+          .replace(/&lt;/g, '<')
+          .replace(/&gt;/g, '>')
+          .replace(/&amp;/g, '&')
+          .replace(/&quot;/g, '"')
+          .replace(/&#39;/g, "'")
+          .substring(0, 200); // Limit title length
+
+        // Validate date format
+        let publishedDate = new Date().toISOString();
+        if (published || updated) {
+          const dateToCheck = published || updated;
+          const parsedDate = new Date(dateToCheck);
+          if (!isNaN(parsedDate.getTime())) {
+            publishedDate = parsedDate.toISOString();
+          }
+        }
+
         const video = {
           videoId,
-          title: title || 'Unknown Title',
-          publishedAt: published || updated || new Date().toISOString(),
+          title: sanitizedTitle,
+          publishedAt: publishedDate,
           thumbnail: `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`,
           channelId,
           liveBroadcastContent: 'none', // Will be determined later if needed
@@ -287,24 +432,58 @@ async function parseAtomFeed(xml, channelId) {
         };
         
         videos.push(video);
-        debugLog(`Parsed video: ${videoId} - ${title}`);
+        debugLog(`Parsed video: ${videoId} - ${sanitizedTitle}`);
+      } else {
+        debugLog(`Invalid video ID format: ${videoId}`);
       }
     }
     
     return videos;
     
   } catch (error) {
-    debugLog(`Feed parsing error:`, error.message);
+    debugLog(`Feed parsing error for channel ${channelId}:`, error.message);
     return [];
   }
 }
 
 /**
- * Extract value from XML using simple regex (good enough for Atom feeds)
+ * Extract value from XML using simple regex with security validation
  */
 function extractXmlValue(xml, tagName) {
-  const match = xml.match(new RegExp(`<${tagName}[^>]*>([^<]*)<\/${tagName}>`));
-  return match ? match[1].trim() : null;
+  try {
+    // Input validation
+    if (!xml || typeof xml !== 'string' || !tagName || typeof tagName !== 'string') {
+      return null;
+    }
+
+    // Validate tag name to prevent injection
+    if (!/^[a-zA-Z:_][a-zA-Z0-9:_.-]*$/.test(tagName)) {
+      return null;
+    }
+
+    // Limit XML size for processing
+    if (xml.length > 100000) { // 100KB limit for individual entry
+      return null;
+    }
+
+    const match = xml.match(new RegExp(`<${tagName}[^>]*>([^<]*)<\/${tagName}>`));
+    if (match && match[1]) {
+      let value = match[1].trim();
+      
+      // Limit value length
+      if (value.length > 1000) {
+        value = value.substring(0, 1000);
+      }
+      
+      return value;
+    }
+    
+    return null;
+    
+  } catch (error) {
+    debugLog(`XML value extraction error for tag ${tagName}:`, error.message);
+    return null;
+  }
 }
 
 /**
