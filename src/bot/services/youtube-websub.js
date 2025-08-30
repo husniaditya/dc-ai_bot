@@ -409,6 +409,7 @@ async function parseAtomFeed(xml, channelId) {
           .replace(/&gt;/g, '>')
           .replace(/&quot;/g, '"')
           .replace(/&#39;/g, "'")
+          .replace(/&amp;/g, '&')
           .substring(0, 200); // Limit title length
 
         // Validate date format
