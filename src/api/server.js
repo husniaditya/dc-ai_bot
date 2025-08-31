@@ -23,6 +23,7 @@ const twitchRoutes = require('./routes/twitch');
 const channelsRoutes = require('./routes/channels');
 const rolesRoutes = require('./routes/roles');
 const guildsRoutes = require('./routes/guilds');
+const moderationRoutes = require('./routes/moderation');
 
 function createApiServer(client, store, commandMap, startTimestamp) {
   const app = express();
@@ -50,6 +51,7 @@ function createApiServer(client, store, commandMap, startTimestamp) {
   app.use('/api/channels', authMiddleware, channelsRoutes(client, store));
   app.use('/api/roles', authMiddleware, rolesRoutes(client, store));
   app.use('/api/guilds', authMiddleware, guildsRoutes(client, store));
+  app.use('/api/moderation', authMiddleware, moderationRoutes(client, store));
   
   // Root status endpoint for dashboard compatibility
   app.get('/api/status', authMiddleware, (req, res) => {

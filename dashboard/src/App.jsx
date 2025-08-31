@@ -6,7 +6,7 @@ const AutosSectionLazy = React.lazy(()=> import('./sections/AutosSection.jsx'));
 const OverviewSection = React.lazy(()=> import('./sections/OverviewSection.jsx'));
 const CommandsSection = React.lazy(()=> import('./sections/CommandsSection.jsx'));
 const PersonalizationSection = React.lazy(()=> import('./sections/PersonalizationSection.jsx'));
-const WelcomeSection = React.lazy(()=> import('./sections/WelcomeSection.jsx'));
+const ModerationSection = React.lazy(()=> import('./sections/ModerationSection.jsx'));
 const GamesSocialsSection = React.lazy(()=> import('./sections/GamesSocialsSection.jsx'));
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './theme.css';
@@ -212,7 +212,7 @@ export default function App(){
           // Clear any previous errors before starting OAuth
           setError('');
           
-          if (process.env.DEBUG_PERSONALIZATION === '1') {
+          if (import.meta.env.DEBUG_PERSONALIZATION === '1') {
               console.log('[OAuth Debug] Starting exchange with code:', code?.substring(0, 10) + '...', 'state:', state);
           }
           
@@ -230,7 +230,7 @@ export default function App(){
           clearTimeout(timeoutId);
           const text = await resp.text();
           
-          if (process.env.DEBUG_PERSONALIZATION === '1') {
+          if (import.meta.env.DEBUG_PERSONALIZATION === '1') {
               console.log('[OAuth Debug] Exchange response status:', resp.status);
               console.log('[OAuth Debug] Exchange response text:', text);
           }
@@ -279,7 +279,7 @@ export default function App(){
             if (url.searchParams.has('code') || url.searchParams.has('state')) {
               const cleanUrl = window.location.origin + window.location.pathname; // drop query
               window.history.replaceState({}, '', cleanUrl);
-              if (process.env.DEBUG_PERSONALIZATION === '1') {
+              if (import.meta.env.DEBUG_PERSONALIZATION === '1') {
                 console.log('[OAuth Debug] Cleared stale code/state params after failure');
               }
             }
@@ -534,13 +534,13 @@ export default function App(){
   const enableAndroidApp = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_ANDROID_APP_LOGIN === '1');
   // Attempt discord:// on iOS by default; Android only if flag enabled. Desktop handled separately below.
   const preferApp = !isDevelopment && (isIOS || (enableAndroidApp && isAndroid));
-    if (process.env.DEBUG_PERSONALIZATION === '1') {
+    if (import.meta.env.DEBUG_PERSONALIZATION === '1') {
       console.log('[OAuth Debug] Platform detection:', { isDevelopment, isIOS, isAndroid, isMobile, preferApp });
     }
     const url = `/api/auth/oauth/discord/url?preferApp=${preferApp}&isMobile=${isMobile}`;
     fetchJson(url)
       .then(d => {
-        if (process.env.DEBUG_PERSONALIZATION === '1') {
+        if (import.meta.env.DEBUG_PERSONALIZATION === '1') {
           console.log('[OAuth Debug] URL generation response:', d);
         }
         if(!(d && (d.url || d.webUrl || d.appUrl))) throw new Error('No OAuth URL');
@@ -551,7 +551,7 @@ export default function App(){
             checkDiscordAppAndRedirect(d.appUrl, d.webUrl);
         } else {
             const redirectUrl = d.webUrl || d.url || d.appUrl;
-            if (process.env.DEBUG_PERSONALIZATION === '1') {
+            if (import.meta.env.DEBUG_PERSONALIZATION === '1') {
               console.log('[OAuth Debug] Using web OAuth URL:', redirectUrl);
             }
             window.location.href = redirectUrl;
@@ -663,7 +663,7 @@ export default function App(){
     ].filter(Boolean);
     // Build intent URL (Chrome) with fallback back to the web URL (using standard /oauth2 path, not /api/oauth2)
     const intentUrl = `intent://discord.com/oauth2/authorize?${queryPart}#Intent;scheme=discord;package=com.discord;S.browser_fallback_url=${encodeURIComponent(webUrl)};end`;
-    if (process.env.DEBUG_PERSONALIZATION === '1') {
+    if (import.meta.env.DEBUG_PERSONALIZATION === '1') {
       console.log('[OAuth Debug][Android] Deep link sequence start', { variants, intentUrl, webUrl });
     }
     let stage = 0; // 0 protocol, 1 intent, 2 web
@@ -671,13 +671,13 @@ export default function App(){
     const tryIntent = () => {
       if(stage !== 0) return;
       stage = 1;
-      if (process.env.DEBUG_PERSONALIZATION === '1') console.log('[OAuth Debug][Android] Trying intent URL');
+      if (import.meta.env.DEBUG_PERSONALIZATION === '1') console.log('[OAuth Debug][Android] Trying intent URL');
       window.location.href = intentUrl;
     };
     const fallbackWeb = () => {
       if(stage === 2) return;
       stage = 2;
-      if (process.env.DEBUG_PERSONALIZATION === '1') console.log('[OAuth Debug][Android] Falling back to web URL');
+      if (import.meta.env.DEBUG_PERSONALIZATION === '1') console.log('[OAuth Debug][Android] Falling back to web URL');
       window.location.href = webUrl;
     };
     // Attempt variants sequentially before intent
@@ -685,7 +685,7 @@ export default function App(){
       if (variantIndex >= variants.length) { tryIntent(); return; }
       const v = variants[variantIndex++];
       if (!v) { tryNextVariant(); return; }
-      if (process.env.DEBUG_PERSONALIZATION === '1') console.log('[OAuth Debug][Android] Trying variant', v);
+      if (import.meta.env.DEBUG_PERSONALIZATION === '1') console.log('[OAuth Debug][Android] Trying variant', v);
       try { window.location.href = v; } catch { tryNextVariant(); }
       // Schedule next variant if still here
       setTimeout(()=>{
@@ -1207,7 +1207,9 @@ export default function App(){
 
   // saveWelcome redefined above with dirty tracking
   // Channel selection placeholder (requires channel list API future). For now free text.
-  const welcomeContent = <WelcomeSection welcomeCfg={welcomeCfg} welcomeChannels={welcomeChannels} welcomeDirty={welcomeDirty} resetWelcome={resetWelcome} saveWelcome={saveWelcome} welcomeLoading={welcomeLoading} resolvedGuildName={resolvedGuildName} setWelcomeCfg={setWelcomeCfg} toggleWelcomeEnabled={toggleWelcomeEnabled} />;
+  const moderationContent = <React.Suspense fallback={<div className="text-muted small p-3">Loading Moderation…</div>}>
+    <ModerationSection guildId={selectedGuild} pushToast={pushToast} />
+  </React.Suspense>;
 
   const settingsContent = <React.Suspense fallback={<div className="text-muted small p-3">Loading settings…</div>}>
     <SettingsSection guildId={selectedGuild} pushToast={pushToast} />
@@ -1215,7 +1217,7 @@ export default function App(){
   const gamesContent = <React.Suspense fallback={<div className="text-muted small p-3">Loading Games & Socials…</div>}>
     <GamesSocialsSection guildId={selectedGuild} pushToast={pushToast} />
   </React.Suspense>;
-  const sectionMap = { overview: overviewContent, autos: autosContent, commands: commandsContent, personal: personalizationContent, welcome: welcomeContent, games: gamesContent, settings: settingsContent };
+  const sectionMap = { overview: overviewContent, autos: autosContent, commands: commandsContent, personal: personalizationContent, moderation: moderationContent, games: gamesContent, settings: settingsContent };
 
   // Preload lazily loaded sections to reduce Suspense flashes
   function preloadSection(key){
@@ -1225,7 +1227,7 @@ export default function App(){
       case 'overview': import('./sections/OverviewSection.jsx'); break;
       case 'commands': import('./sections/CommandsSection.jsx'); break;
       case 'personal': import('./sections/PersonalizationSection.jsx'); break;
-      case 'welcome': import('./sections/WelcomeSection.jsx'); break;
+      case 'moderation': import('./sections/ModerationSection.jsx'); break;
   case 'settings': import('./sections/SettingsSection.jsx'); break;
   case 'autos': import('./sections/AutosSection.jsx'); break;
   case 'games': import('./sections/GamesSocialsSection.jsx'); break;
