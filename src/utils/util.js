@@ -1,12 +1,24 @@
 const MAX_DISCORD_MESSAGE = 2000;
 async function sendLongReply(interaction, text){
   let s = (text||'').toString();
-  if (s.length<=MAX_DISCORD_MESSAGE) return interaction.editReply ? interaction.editReply(s) : interaction.reply(s);
-  if (interaction.editReply) await interaction.editReply(s.slice(0,MAX_DISCORD_MESSAGE));
-  else await interaction.reply(s.slice(0,MAX_DISCORD_MESSAGE));
+  if (s.length<=MAX_DISCORD_MESSAGE) {
+    if (interaction.deferred || interaction.replied) {
+      return await interaction.editReply(s);
+    } else {
+      return await interaction.reply(s);
+    }
+  }
+  
+  if (interaction.deferred || interaction.replied) {
+    await interaction.editReply(s.slice(0,MAX_DISCORD_MESSAGE));
+  } else {
+    await interaction.reply(s.slice(0,MAX_DISCORD_MESSAGE));
+  }
+  
   s = s.slice(MAX_DISCORD_MESSAGE);
   while(s.length){
-    const part = s.slice(0,MAX_DISCORD_MESSAGE); s=s.slice(MAX_DISCORD_MESSAGE);
+    const part = s.slice(0,MAX_DISCORD_MESSAGE); 
+    s=s.slice(MAX_DISCORD_MESSAGE);
     await interaction.followUp({ content: part });
   }
 }

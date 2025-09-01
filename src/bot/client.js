@@ -49,7 +49,7 @@ function createDiscordClient(store, startTimestamp) {
   // Set up event handlers
   readyHandler(client, store, startTimestamp, commandMap);
   guildMemberAddHandler(client, store);
-  interactionCreateHandler(client, store, commandMap);
+  interactionCreateHandler(client, store, startTimestamp, commandMap);
   messageReactionAddHandler(client, store);
   messageReactionRemoveHandler(client, store);
 

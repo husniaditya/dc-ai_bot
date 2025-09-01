@@ -1917,5 +1917,231 @@ module.exports = {
       ]);
     }
     return current[featureKey];
+  },
+
+  // Self-Assignable Roles (Slash Command Roles) Functions
+  getGuildSelfAssignableRoles: async (guildId) => {
+    if (!guildId) throw new Error('guildId required');
+    
+    if (mariaAvailable && sqlPool) {
+      const [rows] = await sqlPool.query(`
+        SELECT id, guild_id, command_name, description, channel_id, role_id, role_type, 
+               require_permission, allowed_roles, status, created_at, created_by, 
+               updated_at, updated_by
+        FROM guild_self_assignable_roles 
+        WHERE guild_id = ? 
+        ORDER BY command_name, role_id
+      `, [guildId]);
+      
+      // Group by command_name
+      const commands = {};
+      rows.forEach(row => {
+        const commandName = row.command_name;
+        if (!commands[commandName]) {
+          commands[commandName] = {
+            id: `${guildId}-${commandName}`,
+            commandName: row.command_name,
+            description: row.description,
+            channelId: row.channel_id,
+            requirePermission: row.require_permission,
+            allowedRoles: row.allowed_roles ? JSON.parse(row.allowed_roles) : [],
+            status: row.status,
+            roles: [],
+            created_at: row.created_at,
+            created_by: row.created_by,
+            updated_at: row.updated_at,
+            updated_by: row.updated_by
+          };
+        }
+        commands[commandName].roles.push({
+          id: row.id,
+          roleId: row.role_id,
+          type: row.role_type
+        });
+      });
+      
+      return Object.values(commands);
+    }
+    
+    return []; // Memory fallback
+  },
+
+  addGuildSelfAssignableRole: async (guildId, data, createdBy) => {
+    if (!guildId) throw new Error('guildId required');
+    if (!data.commandName) throw new Error('commandName required');
+    if (!data.roles || !Array.isArray(data.roles) || data.roles.length === 0) {
+      throw new Error('roles array required');
+    }
+    
+    if (mariaAvailable && sqlPool) {
+      const connection = await sqlPool.getConnection();
+      try {
+        await connection.beginTransaction();
+        
+        // Delete existing roles for this command
+        await connection.query(
+          'DELETE FROM guild_self_assignable_roles WHERE guild_id = ? AND command_name = ?',
+          [guildId, data.commandName]
+        );
+        
+        // Insert new roles
+        for (const role of data.roles) {
+          if (!role.roleId) continue;
+          
+          await connection.query(`
+            INSERT INTO guild_self_assignable_roles 
+            (guild_id, command_name, description, channel_id, role_id, role_type, 
+             require_permission, allowed_roles, status, created_by, updated_by)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          `, [
+            guildId,
+            data.commandName,
+            data.description || '',
+            data.channelId || null,
+            role.roleId,
+            role.type || 'toggle',
+            data.requirePermission || false,
+            JSON.stringify(data.allowedRoles || []),
+            data.status !== false,
+            createdBy || null,
+            createdBy || null
+          ]);
+        }
+        
+        await connection.commit();
+        return await module.exports.getGuildSelfAssignableRoles(guildId);
+      } catch (error) {
+        await connection.rollback();
+        throw error;
+      } finally {
+        connection.release();
+      }
+    }
+    
+    throw new Error('Database not available');
+  },
+
+  updateGuildSelfAssignableRole: async (guildId, commandName, data, updatedBy) => {
+    if (!guildId) throw new Error('guildId required');
+    if (!commandName) throw new Error('commandName required');
+    
+    if (mariaAvailable && sqlPool) {
+      const connection = await sqlPool.getConnection();
+      try {
+        await connection.beginTransaction();
+        
+        // Delete existing roles for this command
+        await connection.query(
+          'DELETE FROM guild_self_assignable_roles WHERE guild_id = ? AND command_name = ?',
+          [guildId, commandName]
+        );
+        
+        // Insert updated roles
+        if (data.roles && Array.isArray(data.roles)) {
+          for (const role of data.roles) {
+            if (!role.roleId) continue;
+            
+            await connection.query(`
+              INSERT INTO guild_self_assignable_roles 
+              (guild_id, command_name, description, channel_id, role_id, role_type, 
+               require_permission, allowed_roles, status, created_by, updated_by)
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            `, [
+              guildId,
+              commandName,
+              data.description || '',
+              data.channelId || null,
+              role.roleId,
+              role.type || 'toggle',
+              data.requirePermission || false,
+              JSON.stringify(data.allowedRoles || []),
+              data.status !== false,
+              updatedBy || null,
+              updatedBy || null
+            ]);
+          }
+        }
+        
+        await connection.commit();
+        return await module.exports.getGuildSelfAssignableRoles(guildId);
+      } catch (error) {
+        await connection.rollback();
+        throw error;
+      } finally {
+        connection.release();
+      }
+    }
+    
+    throw new Error('Database not available');
+  },
+
+  deleteGuildSelfAssignableRole: async (guildId, commandName) => {
+    if (!guildId) throw new Error('guildId required');
+    if (!commandName) throw new Error('commandName required');
+    
+    if (mariaAvailable && sqlPool) {
+      await sqlPool.query(
+        'DELETE FROM guild_self_assignable_roles WHERE guild_id = ? AND command_name = ?',
+        [guildId, commandName]
+      );
+      return true;
+    }
+    
+    throw new Error('Database not available');
+  },
+
+  toggleGuildSelfAssignableRoleStatus: async (guildId, commandName, status) => {
+    if (!guildId) throw new Error('guildId required');
+    if (!commandName) throw new Error('commandName required');
+    
+    if (mariaAvailable && sqlPool) {
+      await sqlPool.query(
+        'UPDATE guild_self_assignable_roles SET status = ? WHERE guild_id = ? AND command_name = ?',
+        [status, guildId, commandName]
+      );
+      return await module.exports.getGuildSelfAssignableRoles(guildId);
+    }
+    
+    throw new Error('Database not available');
+  },
+
+  getGuildSelfAssignableRoleByCommand: async (guildId, commandName) => {
+    if (!guildId) throw new Error('guildId required');
+    if (!commandName) throw new Error('commandName required');
+    
+    if (mariaAvailable && sqlPool) {
+      const [rows] = await sqlPool.query(`
+        SELECT id, guild_id, command_name, description, channel_id, role_id, role_type, 
+               require_permission, allowed_roles, status, created_at, created_by, 
+               updated_at, updated_by
+        FROM guild_self_assignable_roles 
+        WHERE guild_id = ? AND command_name = ?
+        ORDER BY role_id
+      `, [guildId, commandName]);
+      
+      if (rows.length === 0) return null;
+      
+      const firstRow = rows[0];
+      return {
+        id: `${guildId}-${commandName}`,
+        commandName: firstRow.command_name,
+        description: firstRow.description,
+        channelId: firstRow.channel_id,
+        requirePermission: firstRow.require_permission,
+        allowedRoles: firstRow.allowed_roles ? JSON.parse(firstRow.allowed_roles) : [],
+        status: firstRow.status,
+        roles: rows.map(row => ({
+          id: row.id,
+          roleId: row.role_id,
+          type: row.role_type
+        })),
+        created_at: firstRow.created_at,
+        created_by: firstRow.created_by,
+        updated_at: firstRow.updated_at,
+        updated_by: firstRow.updated_by
+      };
+    }
+    
+    return null;
   }
 };

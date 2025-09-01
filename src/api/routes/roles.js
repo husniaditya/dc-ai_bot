@@ -279,5 +279,184 @@ module.exports = function(client, store) {
     }
   });
 
+  // ============================================
+  // Self-Assignable Roles (Slash Command Roles)
+  // ============================================
+
+  // Get self-assignable roles for a guild
+  router.get('/guild/:guildId/self-assignable-roles', async (req, res) => {
+    try {
+      const { guildId } = req.params;
+      if (!guildId) {
+        return res.status(400).json({ error: 'guildId is required' });
+      }
+
+      const slashRoles = await store.getGuildSelfAssignableRoles(guildId);
+      res.json({ success: true, slashRoles });
+    } catch (error) {
+      console.error('Error fetching self-assignable roles:', error);
+      res.status(500).json({ error: 'Failed to fetch self-assignable roles' });
+    }
+  });
+
+  // Add a new self-assignable role command
+  router.post('/guild/:guildId/self-assignable-roles', async (req, res) => {
+    try {
+      const { guildId } = req.params;
+      const { commandName, description, channelId, roles, requirePermission, allowedRoles, status } = req.body;
+      
+      if (!guildId || !commandName || !roles || !Array.isArray(roles) || roles.length === 0) {
+        return res.status(400).json({ error: 'guildId, commandName, and roles array are required' });
+      }
+
+      // Validate that all roles have roleId
+      const validRoles = roles.filter(role => role.roleId && role.roleId.trim() !== '');
+      if (validRoles.length === 0) {
+        return res.status(400).json({ error: 'At least one valid role with roleId is required' });
+      }
+
+      // Validate command name format - now more flexible since it's just a title
+      if (!commandName || commandName.trim().length === 0) {
+        return res.status(400).json({ error: 'Title is required' });
+      }
+
+      if (commandName.length > 100) {
+        return res.status(400).json({ error: 'Title must be 100 characters or less' });
+      }
+
+      // Check if command already exists
+      const existingCommand = await store.getGuildSelfAssignableRoleByCommand(guildId, commandName);
+      if (existingCommand) {
+        return res.status(400).json({ error: 'A command with this name already exists' });
+      }
+
+      // Get user ID from token (you may need to implement this based on your auth system)
+      const createdBy = req.user?.id || null;
+
+      const slashRoles = await store.addGuildSelfAssignableRole(guildId, {
+        commandName,
+        description: description || '',
+        channelId: channelId || null,
+        roles: validRoles,
+        requirePermission: requirePermission || false,
+        allowedRoles: allowedRoles || [],
+        status: status !== false
+      }, createdBy);
+
+      res.json({ success: true, slashRoles });
+    } catch (error) {
+      console.error('Error creating self-assignable role:', error);
+      if (error.message.includes('already exists')) {
+        res.status(400).json({ error: error.message });
+      } else {
+        res.status(500).json({ error: 'Failed to create self-assignable role' });
+      }
+    }
+  });
+
+  // Update a self-assignable role command
+  router.put('/guild/:guildId/self-assignable-roles/:commandName', async (req, res) => {
+    try {
+      const { guildId, commandName } = req.params;
+      const { description, channelId, roles, requirePermission, allowedRoles, status } = req.body;
+      
+      if (!guildId || !commandName) {
+        return res.status(400).json({ error: 'guildId and commandName are required' });
+      }
+
+      // Check if command exists
+      const existingCommand = await store.getGuildSelfAssignableRoleByCommand(guildId, commandName);
+      if (!existingCommand) {
+        return res.status(404).json({ error: 'Command not found' });
+      }
+
+      if (roles && Array.isArray(roles)) {
+        const validRoles = roles.filter(role => role.roleId && role.roleId.trim() !== '');
+        if (validRoles.length === 0) {
+          return res.status(400).json({ error: 'At least one valid role with roleId is required' });
+        }
+      }
+
+      // Get user ID from token
+      const updatedBy = req.user?.id || null;
+
+      const slashRoles = await store.updateGuildSelfAssignableRole(guildId, commandName, {
+        description: description !== undefined ? description : existingCommand.description,
+        channelId: channelId !== undefined ? channelId : existingCommand.channelId,
+        roles: roles || existingCommand.roles,
+        requirePermission: requirePermission !== undefined ? requirePermission : existingCommand.requirePermission,
+        allowedRoles: allowedRoles !== undefined ? allowedRoles : existingCommand.allowedRoles,
+        status: status !== undefined ? status : existingCommand.status
+      }, updatedBy);
+
+      res.json({ success: true, slashRoles });
+    } catch (error) {
+      console.error('Error updating self-assignable role:', error);
+      res.status(500).json({ error: 'Failed to update self-assignable role' });
+    }
+  });
+
+  // Toggle self-assignable role command status
+  router.patch('/guild/:guildId/self-assignable-roles/:commandName/toggle', async (req, res) => {
+    try {
+      const { guildId, commandName } = req.params;
+      const { status } = req.body;
+      
+      if (!guildId || !commandName || status === undefined) {
+        return res.status(400).json({ error: 'guildId, commandName, and status are required' });
+      }
+
+      const slashRoles = await store.toggleGuildSelfAssignableRoleStatus(guildId, commandName, status);
+      res.json({ success: true, slashRoles });
+    } catch (error) {
+      console.error('Error toggling self-assignable role status:', error);
+      res.status(500).json({ error: 'Failed to toggle self-assignable role status' });
+    }
+  });
+
+  // Delete a self-assignable role command
+  router.delete('/guild/:guildId/self-assignable-roles/:commandName', async (req, res) => {
+    try {
+      const { guildId, commandName } = req.params;
+      
+      if (!guildId || !commandName) {
+        return res.status(400).json({ error: 'guildId and commandName are required' });
+      }
+
+      const success = await store.deleteGuildSelfAssignableRole(guildId, commandName);
+      
+      if (!success) {
+        return res.status(404).json({ error: 'Command not found or failed to delete' });
+      }
+
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error deleting self-assignable role:', error);
+      res.status(500).json({ error: 'Failed to delete self-assignable role' });
+    }
+  });
+
+  // Get a specific self-assignable role command
+  router.get('/guild/:guildId/self-assignable-roles/:commandName', async (req, res) => {
+    try {
+      const { guildId, commandName } = req.params;
+      
+      if (!guildId || !commandName) {
+        return res.status(400).json({ error: 'guildId and commandName are required' });
+      }
+
+      const command = await store.getGuildSelfAssignableRoleByCommand(guildId, commandName);
+      
+      if (!command) {
+        return res.status(404).json({ error: 'Command not found' });
+      }
+
+      res.json({ success: true, command });
+    } catch (error) {
+      console.error('Error fetching self-assignable role command:', error);
+      res.status(500).json({ error: 'Failed to fetch self-assignable role command' });
+    }
+  });
+
   return router;
 };

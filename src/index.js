@@ -39,6 +39,7 @@ function loadCommands(client){
 
 // Load event handlers
 function loadEvents(client, store, commandMap, startTimestamp) {
+  console.log(`[EVENT DEBUG] Loading events for client: ${client.user?.tag || 'not ready'}`);
   const eventsDir = path.join(__dirname, 'bot/events');
   if (!fs.existsSync(eventsDir)) {
     console.warn('Events directory not found:', eventsDir);
@@ -52,8 +53,9 @@ function loadEvents(client, store, commandMap, startTimestamp) {
       const eventHandler = require(path.join(eventsDir, file));
       if (typeof eventHandler === 'function') {
         // Call the setup function with required parameters
+        console.log(`[EVENT DEBUG] Loading event: ${file.replace('.js', '')}`);
         eventHandler(client, store, startTimestamp, commandMap);
-        console.log(`Loaded event: ${file.replace('.js', '')}`);
+        console.log(`[EVENT DEBUG] Loaded event: ${file.replace('.js', '')}`);
       }
     } catch (e) {
       console.error('Failed loading event', file, e.message);

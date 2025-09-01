@@ -966,6 +966,8 @@ export default function App(){
       return { ...prev, [name]: enabled };
     });
     setCommandToggle(name, enabled, selectedGuild).then(()=>{
+      // Show toast with appropriate style
+      pushToast(enabled ? 'success' : 'info', `Command "${name}" ${enabled ? 'enabled' : 'disabled'} successfully`);
       // fetch authoritative analytics snapshot
       refreshAnalytics();
     }).catch(()=>{
@@ -1126,9 +1128,25 @@ export default function App(){
       ]
     },
     {
+      key: 'moderation', title: 'Moderation & Roles', icon: 'fa-users-gear', accent: '#8b5cf6',
+      items: [
+        { name:'role list', usage:'/role list', desc:'Show all available self-assignable roles.' },
+        { name:'role menu', usage:'/role menu', desc:'Interactive role selection menu (ephemeral).' },
+        { name:'role add', usage:'/role add <role> [user]', desc:'Add a self-assignable role to yourself or another user.' },
+        { name:'role remove', usage:'/role remove <role> [user]', desc:'Remove a self-assignable role from yourself or another user.' },
+        { name:'role setup', usage:'/role setup <action> <role> [options]', desc:'Configure self-assignable roles (requires Manage Roles).', requiresManage:true },
+        { name:'role toggle', usage:'/role toggle <command_name>', desc:'Enable/disable a role command (requires Manage Roles).', requiresManage:true }
+      ]
+    },
+    {
       key: 'passive', title: 'Passive / Automation', icon: 'fa-bolt', accent: '#ef4444',
       items: [
-        { name:'autoreply', usage:'(passive)', desc:'Automatic replies based on configured patterns.' }
+        { name:'autoreply', usage:'(passive)', desc:'Automatic replies based on configured patterns.' },
+        { name:'welcome', usage:'(passive)', desc:'Welcome new members with customizable messages and cards.' },
+        { name:'automod', usage:'(passive)', desc:'Automatic moderation for spam, caps, links, and profanity.' },
+        { name:'xp system', usage:'(passive)', desc:'XP and leveling system for active members.' },
+        { name:'audit logs', usage:'(passive)', desc:'Track all moderation actions and server changes.' },
+        { name:'anti-raid', usage:'(passive)', desc:'Protection against raids and mass join attacks.' }
       ]
     },
     // YouTube group (conditionally shown if user has Manage Server permission in guild)

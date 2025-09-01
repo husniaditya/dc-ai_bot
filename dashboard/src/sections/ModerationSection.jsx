@@ -777,6 +777,85 @@ function AutomodConfigForm({ config, updateConfig, channels, roles }) {
 
 // Role Management Configuration
 function RolesConfigForm({ config, updateConfig, channels, roles, guildId, showToast }) {
+  const [activeTab, setActiveTab] = useState('reaction');
+
+  return (
+    <div className="moderation-config-form space-y-4">
+      {/* Tab Navigation */}
+      <div className="mb-4">
+        <div className="d-flex align-items-center gap-3 mb-3">
+          <h6 className="mb-0 fw-bold">Role Management System</h6>
+          <span className="badge badge-soft">
+            <i className="fa-solid fa-users-gear me-1"></i>
+            Multiple Role Assignment Methods
+          </span>
+        </div>
+        
+        <nav className="nav nav-pills nav-fill bg-dark rounded p-1" style={{ backgroundColor: 'rgba(255,255,255,0.05)' }}>
+          <button
+            className={`nav-link ${activeTab === 'reaction' ? 'active' : ''}`}
+            onClick={() => setActiveTab('reaction')}
+            style={{
+              backgroundColor: activeTab === 'reaction' ? '#8b5cf6' : 'transparent',
+              color: activeTab === 'reaction' ? 'white' : '#9ca3af',
+              border: 'none',
+              borderRadius: '6px',
+              transition: 'all 0.2s ease',
+              fontWeight: '500',
+              fontSize: '0.875rem'
+            }}
+          >
+            <i className="fa-solid fa-face-smile me-2"></i>
+            Reaction Roles
+          </button>
+          <button
+            className={`nav-link ${activeTab === 'slash' ? 'active' : ''}`}
+            onClick={() => setActiveTab('slash')}
+            style={{
+              backgroundColor: activeTab === 'slash' ? '#8b5cf6' : 'transparent',
+              color: activeTab === 'slash' ? 'white' : '#9ca3af',
+              border: 'none',
+              borderRadius: '6px',
+              transition: 'all 0.2s ease',
+              fontWeight: '500',
+              fontSize: '0.875rem'
+            }}
+          >
+            <i className="fa-solid fa-terminal me-2"></i>
+            Slash Commands
+          </button>
+        </nav>
+      </div>
+
+      {/* Tab Content */}
+      <div className="tab-content">
+        {activeTab === 'reaction' && (
+          <ReactionRolesConfig
+            config={config}
+            updateConfig={updateConfig}
+            channels={channels}
+            roles={roles}
+            guildId={guildId}
+            showToast={showToast}
+          />
+        )}
+        {activeTab === 'slash' && (
+          <SlashCommandRolesConfig
+            config={config}
+            updateConfig={updateConfig}
+            channels={channels}
+            roles={roles}
+            guildId={guildId}
+            showToast={showToast}
+          />
+        )}
+      </div>
+    </div>
+  );
+}
+
+// Reaction Roles Configuration Component
+function ReactionRolesConfig({ config, updateConfig, channels, roles, guildId, showToast }) {
   const [reactionRoles, setReactionRoles] = useState([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -1735,6 +1814,593 @@ function RolesConfigForm({ config, updateConfig, channels, roles, guildId, showT
                     type="button"
                     className="btn btn-danger px-4"
                     onClick={() => handleDeleteReactionRole(deleteTarget.messageId)}
+                    style={{
+                      background: 'linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)',
+                      border: 'none',
+                      boxShadow: '0 4px 12px rgba(220, 38, 38, 0.3)'
+                    }}
+                  >
+                    <i className="fa-solid fa-trash me-2"></i>
+                    Delete Forever
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Slash Command Roles Configuration Component
+function SlashCommandRolesConfig({ config, updateConfig, channels, roles, guildId, showToast }) {
+  const [slashRoles, setSlashRoles] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [editingCommand, setEditingCommand] = useState(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [formData, setFormData] = useState({
+    commandName: '',
+    description: '',
+    channelId: '',
+    roles: [{ roleId: '', type: 'toggle' }],
+    requirePermission: false,
+    allowedRoles: [],
+    status: true
+  });
+
+  // Fetch slash command roles when component mounts
+  useEffect(() => {
+    fetchSlashRoles();
+  }, []);
+
+  const fetchSlashRoles = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch(`/api/roles/guild/${guildId}/self-assignable-roles`, {
+        headers: {
+          Authorization: 'Bearer ' + localStorage.getItem('token')
+        }
+      });
+      const data = await response.json();
+      if (data.success && data.slashRoles) {
+        setSlashRoles(data.slashRoles);
+      }
+    } catch (error) {
+      console.error('Error fetching slash command roles:', error);
+      showToast('error', 'Failed to fetch slash command roles');
+    }
+    setLoading(false);
+  };
+
+  const handleAddSlashRole = async () => {
+    setSaving(true);
+    try {
+      const payload = { 
+        guildId, 
+        commandName: formData.commandName,
+        description: formData.description,
+        channelId: formData.channelId || null,
+        roles: formData.roles,
+        requirePermission: formData.requirePermission,
+        allowedRoles: formData.allowedRoles,
+        status: formData.status
+      };
+      
+      console.log('Sending payload:', payload);
+      
+      const isEditing = editingCommand !== null;
+      const url = isEditing 
+        ? `/api/roles/guild/${guildId}/self-assignable-roles/${editingCommand.commandName}`
+        : `/api/roles/guild/${guildId}/self-assignable-roles`;
+      
+      console.log('Request URL:', url);
+      console.log('Request method:', isEditing ? 'PUT' : 'POST');
+      
+      const response = await fetch(url, {
+        method: isEditing ? 'PUT' : 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          Authorization: 'Bearer ' + localStorage.getItem('token')
+        },
+        body: JSON.stringify(payload)
+      });
+
+      console.log('Response status:', response.status);
+      console.log('Response ok:', response.ok);
+
+      if (response.ok) {
+        setShowAddForm(false);
+        setEditingCommand(null);
+        resetForm();
+        fetchSlashRoles();
+        showToast('success', `Slash command role ${isEditing ? 'updated' : 'created'} successfully!`);
+      } else {
+        const errorData = await response.json().catch(() => ({ message: `HTTP ${response.status}: ${response.statusText}` }));
+        console.error('API Error:', errorData);
+        console.error('Request payload:', payload);
+        console.error('Response status:', response.status);
+        showToast('error', errorData.message || `Failed to ${isEditing ? 'update' : 'create'} slash command role`);
+      }
+    } catch (error) {
+      console.error('Error saving slash command role:', error);
+      showToast('error', `Failed to ${editingCommand ? 'update' : 'create'} slash command role`);
+    }
+    setSaving(false);
+  };
+
+  const handleToggleStatus = async (commandName, currentStatus) => {
+    try {
+      const response = await fetch(`/api/roles/guild/${guildId}/self-assignable-roles/${commandName}/toggle`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: 'Bearer ' + localStorage.getItem('token')
+        },
+        body: JSON.stringify({ status: !currentStatus })
+      });
+
+      if (response.ok) {
+        fetchSlashRoles();
+        showToast('success', `Slash command ${!currentStatus ? 'enabled' : 'disabled'} successfully!`);
+      } else {
+        const error = await response.json();
+        showToast('error', error.message || 'Failed to toggle slash command status');
+      }
+    } catch (error) {
+      console.error('Error toggling slash command status:', error);
+      showToast('error', 'Failed to toggle slash command status');
+    }
+  };
+
+  const handleDeleteSlashRole = async (commandName) => {
+    try {
+      const response = await fetch(`/api/roles/guild/${guildId}/self-assignable-roles/${commandName}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: 'Bearer ' + localStorage.getItem('token')
+        }
+      });
+
+      if (response.ok) {
+        fetchSlashRoles();
+        showToast('info', 'Slash command role deleted successfully!');
+      } else {
+        const error = await response.json();
+        showToast('error', error.message || 'Failed to delete slash command role');
+      }
+    } catch (error) {
+      console.error('Error deleting slash command role:', error);
+      showToast('error', 'Failed to delete slash command role');
+    } finally {
+      setShowDeleteConfirm(false);
+      setDeleteTarget(null);
+    }
+  };
+
+  const confirmDelete = (command) => {
+    setDeleteTarget(command);
+    setShowDeleteConfirm(true);
+  };
+
+  const resetForm = () => {
+    setEditingCommand(null);
+    setFormData({
+      commandName: '',
+      description: '',
+      channelId: '',
+      roles: [{ roleId: '', type: 'toggle' }],
+      requirePermission: false,
+      allowedRoles: [],
+      status: true
+    });
+  };
+
+  const addRole = () => {
+    setFormData(prev => ({
+      ...prev,
+      roles: [...prev.roles, { roleId: '', type: 'toggle' }]
+    }));
+  };
+
+  const removeRole = (index) => {
+    if (formData.roles.length > 1) {
+      setFormData(prev => ({
+        ...prev,
+        roles: prev.roles.filter((_, i) => i !== index)
+      }));
+    }
+  };
+
+  const updateRole = (index, field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      roles: prev.roles.map((role, i) => 
+        i === index ? { ...role, [field]: value } : role
+      )
+    }));
+  };
+
+  const getRoleName = (roleId) => {
+    const role = roles.find(r => r.id === roleId);
+    return role ? role.name : 'Unknown Role';
+  };
+
+  const getChannelName = (channelId) => {
+    const channel = channels.find(ch => ch.id === channelId);
+    return channel ? `#${channel.name}` : 'Unknown Channel';
+  };
+
+  return (
+    <div className="moderation-config-form space-y-4">
+      <div className="mb-3">
+        <div className="d-flex justify-content-between align-items-center mb-2">
+          <label className="form-label small fw-semibold mb-0">Slash Command Roles</label>
+          <button 
+            type="button" 
+            className="btn btn-primary btn-sm"
+            onClick={() => {
+              setEditingCommand(null);
+              setShowAddForm(true);
+              resetForm();
+            }}
+          >
+            <i className="fa-solid fa-plus me-1"></i>
+            Add Slash Command
+          </button>
+        </div>
+
+        {/* Slash Command Roles Table */}
+        {loading ? (
+          <div className="text-center py-3">
+            <i className="fa-solid fa-spinner fa-spin me-2"></i>
+            Loading slash command roles...
+          </div>
+        ) : slashRoles.length > 0 ? (
+          <div className="table-responsive">
+            <table className="table table-sm">
+              <thead>
+                <tr>
+                  <th>Status</th>
+                  <th>Title</th>
+                  <th>Description</th>
+                  <th>Channel</th>
+                  <th>Roles</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {slashRoles.map((command, index) => (
+                  <tr key={command.id || index}>
+                    <td>
+                      <div className="form-check form-switch m-0">
+                        <input
+                          className="form-check-input"
+                          type="checkbox"
+                          checked={command.status !== false}
+                          onChange={() => handleToggleStatus(command.commandName, command.status)}
+                        />
+                      </div>
+                    </td>
+                    <td>
+                      <div className="fw-semibold text-primary" style={{ fontSize: '0.85rem' }}>
+                        {command.commandName}
+                      </div>
+                    </td>
+                    <td>
+                      <div className="small text-muted">
+                        {command.description || 'No description'}
+                      </div>
+                    </td>
+                    <td>{getChannelName(command.channelId)}</td>
+                    <td>
+                      <div className="d-flex flex-wrap gap-1">
+                        {command.roles?.map((role, roleIndex) => (
+                          <div key={roleIndex} className="d-flex align-items-center gap-1 p-1 rounded" style={{backgroundColor: 'rgba(255,255,255,0.05)'}}>
+                            <span className="small text-muted">{getRoleName(role.roleId)}</span>
+                            <span className={`badge badge-${role.type === 'toggle' ? 'primary' : role.type === 'add_only' ? 'success' : 'warning'}`} style={{fontSize: '0.6rem'}}>
+                              {role.type?.replace('_', ' ') || 'toggle'}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </td>
+                    <td>
+                      <button 
+                        type="button" 
+                        className="btn btn-outline-primary btn-sm me-1"
+                        onClick={() => {
+                          setEditingCommand(command);
+                          setFormData({
+                            commandName: command.commandName,
+                            description: command.description,
+                            channelId: command.channelId || '',
+                            roles: command.roles || [{ roleId: '', type: 'toggle' }],
+                            requirePermission: command.requirePermission || false,
+                            allowedRoles: command.allowedRoles || [],
+                            status: command.status !== false
+                          });
+                          setShowAddForm(true);
+                        }}
+                      >
+                        <i className="fa-solid fa-edit"></i>
+                      </button>
+                      <button 
+                        type="button" 
+                        className="btn btn-outline-danger btn-sm"
+                        onClick={() => confirmDelete(command)}
+                      >
+                        <i className="fa-solid fa-trash"></i>
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div className="text-center py-3 text-muted">
+            No slash command roles configured. Click "Add Slash Command" to get started.
+          </div>
+        )}
+
+        {/* Add/Edit Form */}
+        {showAddForm && (
+          <div className="mt-3 p-3 border rounded position-relative">
+            {saving && (
+              <div 
+                className="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center"
+                style={{
+                  backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                  borderRadius: '6px',
+                  zIndex: 1000
+                }}
+              >
+                <div className="text-center text-light">
+                  <div className="spinner-border spinner-border-sm mb-2" role="status">
+                    <span className="visually-hidden">Loading...</span>
+                  </div>
+                  <div className="small">{editingCommand ? 'Updating' : 'Creating'} slash command...</div>
+                </div>
+              </div>
+            )}
+
+            <div className="d-flex justify-content-between align-items-center mb-3">
+              <h6 className="mb-0">
+                {editingCommand ? 'Edit' : 'Create New'} Slash Command Role
+              </h6>
+              <div className="form-check form-switch">
+                <input 
+                  id="slash-command-status"
+                  className="form-check-input" 
+                  type="checkbox" 
+                  checked={formData.status !== false}
+                  onChange={(e) => setFormData({...formData, status: e.target.checked})}
+                />
+                <label htmlFor="slash-command-status" className="form-check-label small fw-semibold">
+                  Enable Command
+                </label>
+              </div>
+            </div>
+
+            <div className="row">
+              <div className="col-md-6 mb-3">
+                <label className="form-label small fw-semibold">Title</label>
+                <input 
+                  type="text" 
+                  className="form-control form-control-sm"
+                  value={formData.commandName}
+                  onChange={(e) => setFormData({...formData, commandName: e.target.value})}
+                  placeholder="Gaming Roles"
+                />
+                <small className="text-muted">A descriptive title for this role group</small>
+              </div>
+              <div className="col-md-6 mb-3">
+                <label className="form-label small">Channel</label>
+                <select 
+                  className="form-select form-select-sm custom-dropdown"
+                  value={formData.channelId}
+                  onChange={(e) => setFormData({...formData, channelId: e.target.value})}
+                >
+                  <option value="">All Channel</option>
+                  {channels.filter(ch => ch.type === 0).map(channel => (
+                    <option key={channel.id} value={channel.id}>#{channel.name}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="mb-3">
+              <label className="form-label small fw-semibold">Description</label>
+              <input 
+                type="text" 
+                className="form-control form-control-sm"
+                value={formData.description}
+                onChange={(e) => setFormData({...formData, description: e.target.value})}
+                placeholder="Manage your roles with this command"
+              />
+              <small className="text-muted">A brief description of what this command does</small>
+            </div>
+
+            <div className="mb-3">
+              <div className="d-flex justify-content-between align-items-center mb-2">
+                <label className="form-label small fw-semibold mb-0">Command Roles</label>
+                <button 
+                  type="button" 
+                  className="btn btn-outline-primary btn-sm"
+                  onClick={addRole}
+                >
+                  <i className="fa-solid fa-plus me-1"></i>
+                  Add Role
+                </button>
+              </div>
+
+              {formData.roles.map((role, index) => (
+                <div key={index} className="role-row border rounded p-3 mb-3" style={{ backgroundColor: 'rgba(255,255,255,0.02)' }}>
+                  <div className="d-flex justify-content-between align-items-center mb-2">
+                    <h6 className="mb-0 small fw-semibold">Role {index + 1}</h6>
+                    {formData.roles.length > 1 && (
+                      <button 
+                        type="button" 
+                        className="btn btn-outline-danger btn-sm"
+                        onClick={() => removeRole(index)}
+                      >
+                        <i className="fa-solid fa-trash"></i>
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="row">
+                    <div className="col-md-8 mb-3">
+                      <label className="form-label small">Role</label>
+                      <select 
+                        className="form-select form-select-sm custom-dropdown"
+                        value={role.roleId || ''}
+                        onChange={(e) => updateRole(index, 'roleId', e.target.value)}
+                      >
+                        <option value="">Select a role...</option>
+                        {roles.filter(role => !role.managed).map(role => (
+                          <option key={role.id} value={role.id}>{role.name}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="col-md-4 mb-3">
+                      <label className="form-label small">Type</label>
+                      <select 
+                        className="form-select form-select-sm custom-dropdown"
+                        value={role.type || 'toggle'}
+                        onChange={(e) => updateRole(index, 'type', e.target.value)}
+                      >
+                        <option value="toggle">Toggle (Add/Remove)</option>
+                        <option value="add_only">Add Only</option>
+                        <option value="remove_only">Remove Only</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="d-flex justify-content-end gap-2">
+              <button 
+                type="button" 
+                className="btn btn-secondary btn-sm"
+                disabled={saving}
+                onClick={() => {
+                  setShowAddForm(false);
+                  resetForm();
+                }}
+              >
+                <i className="fa-solid fa-times me-1"></i>
+                Cancel
+              </button>
+              <button 
+                type="button" 
+                className="btn btn-primary btn-sm"
+                onClick={handleAddSlashRole}
+                disabled={
+                  saving ||
+                  !formData.commandName.trim() ||
+                  !formData.description.trim() ||
+                  formData.roles.some(role => !role.roleId)
+                }
+              >
+                {saving ? (
+                  <>
+                    <div className="spinner-border spinner-border-sm me-2" role="status">
+                      <span className="visually-hidden">Loading...</span>
+                    </div>
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <i className="fa-solid fa-floppy-disk me-1"></i>
+                    {editingCommand ? 'Update' : 'Save'} Slash Command
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && deleteTarget && (
+        <div 
+          className="modal show d-block"
+          style={{ 
+            backgroundColor: 'rgba(0,0,0,0.7)',
+            zIndex: 1060
+          }}
+        >
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content bg-dark text-light border-0 shadow-lg">
+              <div className="modal-body text-center p-4">
+                <div className="mb-3">
+                  <div 
+                    className="d-inline-flex align-items-center justify-content-center rounded-circle"
+                    style={{
+                      width: '64px',
+                      height: '64px',
+                      backgroundColor: 'rgba(220, 38, 38, 0.1)',
+                      border: '3px solid rgba(220, 38, 38, 0.3)'
+                    }}
+                  >
+                    <i 
+                      className="fa-solid fa-triangle-exclamation" 
+                      style={{ 
+                        fontSize: '24px', 
+                        color: '#dc2626' 
+                      }}
+                    />
+                  </div>
+                </div>
+
+                <h5 className="mb-3 fw-bold">Delete Slash Command?</h5>
+
+                <div className="mb-4">
+                  <p className="text-muted mb-2">
+                    You're about to permanently delete the slash command:
+                  </p>
+                  <div 
+                    className="p-3 rounded border"
+                    style={{ 
+                      backgroundColor: 'rgba(255,255,255,0.05)',
+                      borderColor: 'rgba(255,255,255,0.1)'
+                    }}
+                  >
+                    <div className="fw-semibold text-primary mb-1">
+                      Title: {deleteTarget.commandName}
+                    </div>
+                    <div className="small text-muted">
+                      Desc: {deleteTarget.description}
+                    </div>
+                  </div>
+                  <p className="text-warning small mt-3 mb-0">
+                    <i className="fa-solid fa-exclamation-triangle me-2"></i>
+                    This action cannot be undone.
+                  </p>
+                </div>
+
+                <div className="d-flex gap-3 justify-content-center">
+                  <button
+                    type="button"
+                    className="btn btn-secondary px-4"
+                    onClick={() => {
+                      setShowDeleteConfirm(false);
+                      setDeleteTarget(null);
+                    }}
+                  >
+                    <i className="fa-solid fa-times me-2"></i>
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-danger px-4"
+                    onClick={() => handleDeleteSlashRole(deleteTarget.commandName)}
                     style={{
                       background: 'linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)',
                       border: 'none',
