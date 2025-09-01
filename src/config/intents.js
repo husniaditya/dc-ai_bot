@@ -2,7 +2,8 @@ const { GatewayIntentBits } = require('discord.js');
 
 const DEFAULT_INTENTS = [
   GatewayIntentBits.Guilds,
-  GatewayIntentBits.GuildMessages
+  GatewayIntentBits.GuildMessages,
+  GatewayIntentBits.GuildMessageReactions
 ];
 
 const PRIVILEGED_INTENTS = [

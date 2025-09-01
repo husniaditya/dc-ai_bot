@@ -40,7 +40,6 @@ const guildModerationFeaturesCache = new Map(); // guildId -> feature states
 const guildWelcomeMessageCache = new Map(); // guildId -> welcome message config
 const guildAutoModRulesCache = new Map(); // guildId -> automod rules array
 const guildReactionRolesCache = new Map(); // guildId -> reaction roles array
-const guildAutoRolesCache = new Map(); // guildId -> auto roles array
 const guildXpSettingsCache = new Map(); // guildId -> xp settings
 const guildScheduledMessagesCache = new Map(); // guildId -> scheduled messages array
 const guildAntiRaidSettingsCache = new Map(); // guildId -> anti-raid settings
@@ -277,6 +276,15 @@ async function initMaria() {
     }
   // Attempt migration (ignore errors if column exists) with logging
   try { await sqlPool.query('ALTER TABLE auto_responses ADD COLUMN enabled BOOLEAN NOT NULL DEFAULT 1'); console.log('Migration: added enabled column to auto_responses'); } catch (e){ if(!/Duplicate column/i.test(e.message)) console.warn('Migration auto_responses.enabled skipped:', e.message); }
+
+  // Add custom_message column to guild_reaction_roles table
+  try { await sqlPool.query('ALTER TABLE guild_reaction_roles ADD COLUMN custom_message TEXT NULL'); console.log('Migration: added custom_message column to guild_reaction_roles'); } catch (e){ if(!/Duplicate column/i.test(e.message)) console.warn('Migration guild_reaction_roles.custom_message skipped:', e.message); }
+  
+  // Add title column to guild_reaction_roles table
+  try { await sqlPool.query('ALTER TABLE guild_reaction_roles ADD COLUMN title VARCHAR(200) NULL'); console.log('Migration: added title column to guild_reaction_roles'); } catch (e){ if(!/Duplicate column/i.test(e.message)) console.warn('Migration guild_reaction_roles.title skipped:', e.message); }
+  
+  // Add status column to guild_reaction_roles table
+  try { await sqlPool.query('ALTER TABLE guild_reaction_roles ADD COLUMN status BOOLEAN NOT NULL DEFAULT 1'); console.log('Migration: added status column to guild_reaction_roles'); } catch (e){ if(!/Duplicate column/i.test(e.message)) console.warn('Migration guild_reaction_roles.status skipped:', e.message); }
   try { await sqlPool.query('ALTER TABLE guild_auto_responses ADD COLUMN enabled BOOLEAN NOT NULL DEFAULT 1'); console.log('Migration: added enabled column to guild_auto_responses'); } catch (e){ if(!/Duplicate column/i.test(e.message)) console.warn('Migration guild_auto_responses.enabled skipped:', e.message); }
     // Users table (Discord OAuth users)
     await sqlPool.query(`CREATE TABLE IF NOT EXISTS m_user (
@@ -394,22 +402,40 @@ async function initMaria() {
       emoji VARCHAR(100) NOT NULL,
       role_id VARCHAR(32) NOT NULL,
       type ENUM('toggle', 'add_only', 'remove_only') DEFAULT 'toggle',
+      custom_message TEXT NULL,
+      title VARCHAR(255) NULL,
+      status TINYINT(1) DEFAULT 1,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       INDEX idx_message (message_id),
       INDEX idx_guild (guild_id)
     ) ENGINE=InnoDB`);
 
-    // Role Management - Auto Roles
-    await sqlPool.query(`CREATE TABLE IF NOT EXISTS guild_auto_roles (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      guild_id VARCHAR(32) NOT NULL,
-      role_id VARCHAR(32) NOT NULL,
-      trigger_type ENUM('join', 'boost', 'verify') NOT NULL,
-      delay_seconds INT DEFAULT 0,
-      enabled BOOLEAN DEFAULT 1,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      INDEX idx_guild_trigger (guild_id, trigger_type, enabled)
-    ) ENGINE=InnoDB`);
+    // Check and add missing columns for guild_reaction_roles
+    try {
+      // Check if title column exists
+      const [titleColumnCheck] = await sqlPool.query(`
+        SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS 
+        WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'guild_reaction_roles' AND COLUMN_NAME = 'title'
+      `);
+      
+      if (titleColumnCheck.length === 0) {
+        await sqlPool.query('ALTER TABLE guild_reaction_roles ADD COLUMN title VARCHAR(255) NULL AFTER custom_message');
+        console.log('Added title column to guild_reaction_roles');
+      }
+
+      // Check if status column exists
+      const [statusColumnCheck] = await sqlPool.query(`
+        SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS 
+        WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'guild_reaction_roles' AND COLUMN_NAME = 'status'
+      `);
+      
+      if (statusColumnCheck.length === 0) {
+        await sqlPool.query('ALTER TABLE guild_reaction_roles ADD COLUMN status TINYINT(1) DEFAULT 1 AFTER title');
+        console.log('Added status column to guild_reaction_roles');
+      }
+    } catch (error) {
+      console.error('Error adding columns to guild_reaction_roles:', error);
+    }
 
     // XP System - User Levels
     await sqlPool.query(`CREATE TABLE IF NOT EXISTS guild_user_levels (
@@ -1576,20 +1602,172 @@ module.exports = {
     if (guildReactionRolesCache.has(guildId)) return guildReactionRolesCache.get(guildId).map(r => ({ ...r }));
     
     if (mariaAvailable && sqlPool) {
-      const [rows] = await sqlPool.query('SELECT * FROM guild_reaction_roles WHERE guild_id=? ORDER BY created_at DESC', [guildId]);
+      const [rows] = await sqlPool.query(`
+        SELECT id, message_id, channel_id, emoji, role_id, type, custom_message, title, status, created_at
+        FROM guild_reaction_roles 
+        WHERE guild_id=? 
+        ORDER BY created_at DESC
+      `, [guildId]);
+      
       const reactionRoles = rows.map(r => ({
         id: r.id,
         messageId: r.message_id,
         channelId: r.channel_id,
         emoji: r.emoji,
         roleId: r.role_id,
-        type: r.type
+        type: r.type || 'toggle',
+        customMessage: r.custom_message,
+        title: r.title,
+        status: r.status !== 0
       }));
       guildReactionRolesCache.set(guildId, reactionRoles);
       return reactionRoles.map(r => ({ ...r }));
     }
     guildReactionRolesCache.set(guildId, []);
     return [];
+  },
+
+  addGuildReactionRole: async (guildId, data) => {
+    if (!guildId) return null;
+    
+    if (mariaAvailable && sqlPool) {
+      const [result] = await sqlPool.query(
+        'INSERT INTO guild_reaction_roles (guild_id, message_id, channel_id, emoji, role_id, type, custom_message, title, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+        [guildId, data.messageId, data.channelId, data.emoji, data.roleId, data.type || 'toggle', data.customMessage || null, data.title || null, data.status !== false ? 1 : 0]
+      );
+      
+      // Invalidate cache
+      guildReactionRolesCache.delete(guildId);
+      
+      return {
+        id: result.insertId,
+        messageId: data.messageId,
+        channelId: data.channelId,
+        emoji: data.emoji,
+        roleId: data.roleId,
+        type: data.type || 'toggle',
+        customMessage: data.customMessage || null,
+        title: data.title || null,
+        status: data.status !== false
+      };
+    }
+    
+    return null;
+  },
+
+  removeGuildReactionRolesByMessage: async (guildId, messageId) => {
+    if (!guildId || !messageId) return false;
+    
+    if (mariaAvailable && sqlPool) {
+      await sqlPool.query(
+        'DELETE FROM guild_reaction_roles WHERE guild_id=? AND message_id=?',
+        [guildId, messageId]
+      );
+      
+      // Invalidate cache
+      guildReactionRolesCache.delete(guildId);
+      
+      return true;
+    }
+    
+    return false;
+  },
+
+  updateGuildReactionRole: async (guildId, id, data) => {
+    if (!guildId) return null;
+    
+    if (mariaAvailable && sqlPool) {
+      // First, get the original record to find the message_id
+      const [originalRecord] = await sqlPool.query(
+        'SELECT message_id, channel_id, emoji FROM guild_reaction_roles WHERE id=? AND guild_id=? LIMIT 1',
+        [id, guildId]
+      );
+      
+      if (originalRecord.length === 0) return null;
+      
+      const messageId = originalRecord[0].message_id;
+      const channelId = originalRecord[0].channel_id;
+      const emoji = originalRecord[0].emoji;
+      
+      // Delete all existing records for this message/emoji combination
+      await sqlPool.query(
+        'DELETE FROM guild_reaction_roles WHERE guild_id=? AND message_id=? AND emoji=?',
+        [guildId, messageId, emoji]
+      );
+      
+      // Insert new records for each role
+      let lastInsertId = null;
+      for (const roleData of data.roles) {
+        if (!roleData.roleId) continue; // Skip empty roles
+        
+        const [result] = await sqlPool.query(
+          'INSERT INTO guild_reaction_roles (guild_id, message_id, channel_id, emoji, role_id, type, custom_message, title, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+          [guildId, data.messageId || messageId, data.channelId || channelId, data.emoji || emoji, roleData.roleId, roleData.type || 'toggle', data.customMessage || null, data.title || null, data.status !== false ? 1 : 0]
+        );
+        
+        if (!lastInsertId) lastInsertId = result.insertId;
+      }
+      
+      // Invalidate cache
+      guildReactionRolesCache.delete(guildId);
+      
+      return {
+        id: lastInsertId,
+        messageId: data.messageId || messageId,
+        channelId: data.channelId || channelId,
+        emoji: data.emoji || emoji,
+        roles: data.roles,
+        customMessage: data.customMessage || null,
+        title: data.title || null,
+        status: data.status !== false
+      };
+    }
+    return null;
+  },
+
+  updateGuildReactionRoleStatus: async (guildId, id, status) => {
+    if (!guildId) return null;
+    
+    if (mariaAvailable && sqlPool) {
+      await sqlPool.query(
+        'UPDATE guild_reaction_roles SET status=? WHERE id=? AND guild_id=?',
+        [status ? 1 : 0, id, guildId]
+      );
+      
+      // Invalidate cache
+      guildReactionRolesCache.delete(guildId);
+      
+      return true;
+    }
+    return false;
+  },
+
+  deleteGuildReactionRole: async (guildId, id) => {
+    if (!guildId) return false;
+    
+    if (mariaAvailable && sqlPool) {
+      await sqlPool.query('DELETE FROM guild_reaction_roles WHERE id=? AND guild_id=?', [id, guildId]);
+      
+      // Invalidate cache
+      guildReactionRolesCache.delete(guildId);
+      
+      return true;
+    }
+    return false;
+  },
+
+  deleteGuildReactionRoleByMessageId: async (guildId, messageId) => {
+    if (!guildId || !messageId) return false;
+    
+    if (mariaAvailable && sqlPool) {
+      await sqlPool.query('DELETE FROM guild_reaction_roles WHERE message_id=? AND guild_id=?', [messageId, guildId]);
+      
+      // Invalidate cache
+      guildReactionRolesCache.delete(guildId);
+      
+      return true;
+    }
+    return false;
   },
 
   // Anti-Raid Settings

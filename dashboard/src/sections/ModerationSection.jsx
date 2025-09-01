@@ -1,5 +1,5 @@
-import React, { useEffect, useState, useRef } from 'react';
-import { getChannels, getRoles } from '../api.js';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
+import { getChannels, getRoles, getGuildEmojis } from '../api.js';
 
 // Moderation features with their configurations
 const MODERATION_FEATURES = [
@@ -24,8 +24,8 @@ const MODERATION_FEATURES = [
     label: 'Role Management',
     icon: 'fa-users-gear',
     color: '#8b5cf6',
-    desc: 'Manage roles with reaction roles and automated role assignment.',
-    features: ['Reaction Roles', 'Auto Roles', 'Role Menus', 'Permission Sync']
+    desc: 'Manage roles with reaction roles and role menus.',
+    features: ['Reaction Roles', 'Role Menus', 'Permission Sync', 'Custom Messages']
   },
   {
     key: 'xp',
@@ -63,6 +63,19 @@ const MODERATION_FEATURES = [
 
 export default function ModerationSection({ guildId, pushToast }) {
   const [features, setFeatures] = useState({});
+  
+  // Safe toast function that can be used in async contexts
+  const showToast = (type, message) => {
+    try {
+      if (pushToast && typeof pushToast === 'function') {
+        pushToast(type, message);
+      } else {
+        console.log('Toast would show:', type, message);
+      }
+    } catch (error) {
+      console.error('Error showing toast:', error);
+    }
+  };
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState({});
   const [showConfigModal, setShowConfigModal] = useState(false);
@@ -430,8 +443,10 @@ export default function ModerationSection({ guildId, pushToast }) {
           feature={activeFeature}
           channels={channels}
           roles={roles}
+          guildId={guildId}
           onSave={saveFeatureConfig}
           onClose={closeConfigModal}
+          showToast={showToast}
         />
       )}
     </div>
@@ -439,7 +454,7 @@ export default function ModerationSection({ guildId, pushToast }) {
 }
 
 // Configuration Modal Component
-function ConfigurationModal({ feature, channels, roles, onSave, onClose }) {
+function ConfigurationModal({ feature, channels, roles, guildId, onSave, onClose, showToast }) {
   const [config, setConfig] = useState(feature.config || {});
   const [originalConfig, setOriginalConfig] = useState(feature.config || {});
   const [saving, setSaving] = useState(false);
@@ -511,30 +526,12 @@ function ConfigurationModal({ feature, channels, roles, onSave, onClose }) {
             <button type="button" className="btn-close btn-close-white" onClick={handleClose} />
           </div>
           <div className="modal-body">
-            {renderConfigForm(feature.key, config, updateConfig, channels, roles)}
+            {renderConfigForm(feature.key, config, updateConfig, channels, roles, guildId, showToast)}
           </div>
           <div className="modal-footer border-secondary">
-            <button 
-              type="button" 
-              className="btn btn-outline-secondary" 
-              onClick={resetConfig}
-              disabled={!isDirty() || saving}
-            >
-              <i className="fa-solid fa-rotate-left me-2" />
-              Reset
-            </button>
             <button type="button" className="btn btn-secondary" onClick={handleClose}>
               <i className="fa-solid fa-times me-2" />
-              Cancel
-            </button>
-            <button 
-              type="button" 
-              className="btn btn-primary" 
-              onClick={handleSave}
-              disabled={!isDirty() || saving}
-            >
-              <i className={`fa-solid ${saving ? 'fa-spinner fa-spin' : 'fa-floppy-disk'} me-2`} />
-              {saving ? 'Saving...' : 'Save Configuration'}
+              Close
             </button>
           </div>
         </div>
@@ -544,7 +541,7 @@ function ConfigurationModal({ feature, channels, roles, onSave, onClose }) {
 }
 
 // Render different config forms based on feature type
-function renderConfigForm(featureKey, config, updateConfig, channels, roles) {
+function renderConfigForm(featureKey, config, updateConfig, channels, roles, guildId, showToast) {
   switch (featureKey) {
     case 'welcome':
       return (
@@ -571,6 +568,8 @@ function renderConfigForm(featureKey, config, updateConfig, channels, roles) {
           updateConfig={updateConfig} 
           channels={channels} 
           roles={roles} 
+          guildId={guildId}
+          showToast={showToast}
         />
       );
     case 'xp':
@@ -645,12 +644,13 @@ function WelcomeConfigForm({ config, updateConfig, channels, roles }) {
       <div className="mb-3">
         <div className="form-check form-switch">
           <input 
+            id="welcome-card-enabled"
             className="form-check-input" 
             type="checkbox" 
             checked={config.cardEnabled || false}
             onChange={(e) => updateConfig('cardEnabled', e.target.checked)}
           />
-          <label className="form-check-label small fw-semibold">Enable Welcome Card</label>
+          <label htmlFor="welcome-card-enabled" className="form-check-label small fw-semibold">Enable Welcome Card</label>
         </div>
       </div>
 
@@ -678,48 +678,52 @@ function AutomodConfigForm({ config, updateConfig, channels, roles }) {
       <div className="mb-3">
         <div className="form-check form-switch">
           <input 
+            id="automod-spam-detection"
             className="form-check-input" 
             type="checkbox" 
             checked={config.spamDetection || false}
             onChange={(e) => updateConfig('spamDetection', e.target.checked)}
           />
-          <label className="form-check-label small fw-semibold">Spam Detection</label>
+          <label htmlFor="automod-spam-detection" className="form-check-label small fw-semibold">Spam Detection</label>
         </div>
       </div>
 
       <div className="mb-3">
         <div className="form-check form-switch">
           <input 
+            id="automod-caps-filter"
             className="form-check-input" 
             type="checkbox" 
             checked={config.capsFilter || false}
             onChange={(e) => updateConfig('capsFilter', e.target.checked)}
           />
-          <label className="form-check-label small fw-semibold">Excessive Caps Filter</label>
+          <label htmlFor="automod-caps-filter" className="form-check-label small fw-semibold">Excessive Caps Filter</label>
         </div>
       </div>
 
       <div className="mb-3">
         <div className="form-check form-switch">
           <input 
+            id="automod-link-filter"
             className="form-check-input" 
             type="checkbox" 
             checked={config.linkFilter || false}
             onChange={(e) => updateConfig('linkFilter', e.target.checked)}
           />
-          <label className="form-check-label small fw-semibold">Link Filter</label>
+          <label htmlFor="automod-link-filter" className="form-check-label small fw-semibold">Link Filter</label>
         </div>
       </div>
 
       <div className="mb-3">
         <div className="form-check form-switch">
           <input 
+            id="automod-profanity-filter"
             className="form-check-input" 
             type="checkbox" 
             checked={config.profanityFilter || false}
             onChange={(e) => updateConfig('profanityFilter', e.target.checked)}
           />
-          <label className="form-check-label small fw-semibold">Profanity Filter</label>
+          <label htmlFor="automod-profanity-filter" className="form-check-label small fw-semibold">Profanity Filter</label>
         </div>
       </div>
 
@@ -772,57 +776,980 @@ function AutomodConfigForm({ config, updateConfig, channels, roles }) {
 }
 
 // Role Management Configuration
-function RolesConfigForm({ config, updateConfig, channels, roles }) {
+function RolesConfigForm({ config, updateConfig, channels, roles, guildId, showToast }) {
+  const [reactionRoles, setReactionRoles] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [editingRole, setEditingRole] = useState(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [formData, setFormData] = useState({
+    messageId: '',
+    channelId: '',
+    title: '',
+    status: true,
+    reactions: [{ emoji: '', roleId: '', type: 'toggle' }]
+  });
+  const [customMessage, setCustomMessage] = useState('React to get your roles!');
+  const [originalFormData, setOriginalFormData] = useState({
+    messageId: '',
+    channelId: '',
+    title: '',
+    status: true,
+    reactions: [{ emoji: '', roleId: '', type: 'toggle' }]
+  });
+  const [originalCustomMessage, setOriginalCustomMessage] = useState('React to get your roles!');
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [guildEmojis, setGuildEmojis] = useState([]);
+  const [updatingStatus, setUpdatingStatus] = useState({});
+  const emojiPickerRef = useRef(null);
+
+  // Close emoji picker when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (emojiPickerRef.current && !emojiPickerRef.current.contains(event.target)) {
+        setShowEmojiPicker(false);
+      }
+    };
+
+    if (showEmojiPicker) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showEmojiPicker]);
+
+  // Fetch reaction roles when component mounts
+  useEffect(() => {
+    fetchReactionRoles();
+    fetchGuildEmojis();
+  }, []);
+
+  const fetchGuildEmojis = async () => {
+    try {
+      const data = await getGuildEmojis(guildId);
+      if (data.emojis) {
+        setGuildEmojis(data.emojis);
+      }
+    } catch (error) {
+      console.error('Error fetching guild emojis:', error);
+    }
+  };
+
+  const fetchReactionRoles = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch(`/api/roles/reaction-roles?guildId=${guildId}`, {
+        headers: {
+          Authorization: 'Bearer ' + localStorage.getItem('token')
+        }
+      });
+      const data = await response.json();
+      if (data.reactionRoles) {
+        setReactionRoles(data.reactionRoles);
+      }
+    } catch (error) {
+      console.error('Error fetching reaction roles:', error);
+    }
+    setLoading(false);
+  };
+
+  const handleAddReactionRole = async () => {
+    setSaving(true);
+    
+    try {
+      const payload = { 
+        guildId, 
+        ...formData,
+        customMessage: customMessage,
+        title: formData.title || null
+      };
+      
+      const response = await fetch('/api/roles/reaction-roles', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          Authorization: 'Bearer ' + localStorage.getItem('token')
+        },
+        body: JSON.stringify(payload)
+      });
+      
+      if (response.ok) {
+        await fetchReactionRoles();
+        setShowAddForm(false);
+        resetForm();
+        showToast('success', `Reaction role "${formData.title}" created successfully!`);
+      } else {
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        throw new Error(errorData.error || 'Failed to create reaction role');
+      }
+    } catch (error) {
+      console.error('Error adding reaction role:', error);
+      showToast('error', `Failed to create reaction role: ${error.message}`);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleUpdateReactionRole = async () => {
+    setSaving(true);
+    
+    try {
+      const payload = { 
+        guildId, 
+        ...formData,
+        customMessage: customMessage,
+        title: formData.title || null
+      };
+      
+      const response = await fetch(`/api/roles/reaction-roles/${editingRole.id}`, {
+        method: 'PUT',
+        headers: { 
+          'Content-Type': 'application/json',
+          Authorization: 'Bearer ' + localStorage.getItem('token')
+        },
+        body: JSON.stringify(payload)
+      });
+      
+      if (response.ok) {
+        await fetchReactionRoles();
+        setEditingRole(null);
+        resetForm();
+        showToast('success', `Reaction role "${formData.title}" updated successfully!`);
+      } else {
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        throw new Error(errorData.error || 'Failed to update reaction role');
+      }
+    } catch (error) {
+      console.error('Error updating reaction role:', error);
+      showToast('error', `Failed to update reaction role: ${error.message}`);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDeleteReactionRole = async (messageId) => {
+    try {
+      const response = await fetch(`/api/roles/reaction-roles/message/${messageId}`, {
+        method: 'DELETE',
+        headers: { 
+          'Content-Type': 'application/json',
+          Authorization: 'Bearer ' + localStorage.getItem('token')
+        },
+        body: JSON.stringify({ guildId })
+      });
+      
+      if (response.ok) {
+        await fetchReactionRoles();
+        showToast('success', 'Reaction role configuration deleted successfully!');
+      } else {
+        throw new Error('Failed to delete reaction role configuration');
+      }
+    } catch (error) {
+      console.error('Error deleting reaction role:', error);
+      showToast('error', 'Failed to delete reaction role configuration');
+    } finally {
+      setShowDeleteConfirm(false);
+      setDeleteTarget(null);
+    }
+  };
+
+  const confirmDelete = (group) => {
+    setDeleteTarget(group);
+    setShowDeleteConfirm(true);
+  };
+
+  const handleToggleStatus = async (roleId, currentStatus) => {
+    const newStatus = !currentStatus;
+    
+    setUpdatingStatus(prev => ({ ...prev, [roleId]: true }));
+    
+    try {
+      const response = await fetch(`/api/roles/reaction-roles/${roleId}/status`, {
+        method: 'PATCH',
+        headers: { 
+          'Content-Type': 'application/json',
+          Authorization: 'Bearer ' + localStorage.getItem('token')
+        },
+        body: JSON.stringify({ guildId, status: newStatus })
+      });
+      
+      if (response.ok) {
+        await fetchReactionRoles();
+        showToast('success', `Reaction role ${newStatus ? 'enabled' : 'disabled'} successfully!`);
+      } else {
+        throw new Error('Failed to update status');
+      }
+    } catch (error) {
+      console.error('Error toggling status:', error);
+      showToast('error', 'Failed to update reaction role status');
+    } finally {
+      setUpdatingStatus(prev => ({ ...prev, [roleId]: false }));
+    }
+  };
+
+  const resetForm = () => {
+    if (editingRole) {
+      // Reset to original values when editing
+      setFormData(originalFormData);
+      setCustomMessage(originalCustomMessage);
+    } else {
+      // Reset to default values when adding new
+      setFormData({
+        messageId: '',
+        channelId: '',
+        title: '',
+        status: true,
+        reactions: [{ emoji: '', roleId: '', type: 'toggle' }]
+      });
+      setCustomMessage('React to get your roles!');
+    }
+    setShowEmojiPicker(false);
+  };
+
+  // Check if form has been modified
+  const hasChanges = () => {
+    if (editingRole) {
+      // When editing, compare with original values
+      return JSON.stringify(formData) !== JSON.stringify(originalFormData) || 
+             customMessage !== originalCustomMessage;
+    } else {
+      // When adding new, check if any field has been filled
+      const defaultReactions = [{ emoji: '', roleId: '', type: 'toggle' }];
+      return formData.title !== '' || 
+             formData.channelId !== '' || 
+             JSON.stringify(formData.reactions) !== JSON.stringify(defaultReactions) ||
+             formData.status !== true ||
+             customMessage !== 'React to get your roles!';
+    }
+  };
+
+  // Add a new reaction to the reactions array
+  const addReaction = () => {
+    setFormData(prev => ({
+      ...prev,
+      reactions: [...prev.reactions, { emoji: '', roleId: '', type: 'toggle' }]
+    }));
+  };
+
+  // Remove a reaction from the reactions array
+  const removeReaction = (index) => {
+    if (formData.reactions.length > 1) {
+      setFormData(prev => ({
+        ...prev,
+        reactions: prev.reactions.filter((_, i) => i !== index)
+      }));
+    }
+  };
+
+  // Update a specific reaction
+  const updateReaction = (index, field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      reactions: prev.reactions.map((reaction, i) => 
+        i === index ? { ...reaction, [field]: value } : reaction
+      )
+    }));
+  };
+
+  // Remove a role from the roles array
+  const removeRole = (index) => {
+    setFormData(prev => ({
+      ...prev,
+      roles: prev.roles.filter((_, i) => i !== index)
+    }));
+  };
+
+  const startEdit = (role) => {
+    setEditingRole(role);
+    const editFormData = {
+      messageId: role.messageId,
+      channelId: role.channelId,
+      title: role.title || '',
+      status: role.status !== false,
+      reactions: role.reactions || [{ emoji: role.emoji || '', roleId: role.roleId || '', type: role.type || 'toggle' }] // Handle both grouped and legacy single reaction
+    };
+    const editCustomMessage = role.customMessage || 'React to get your roles!';
+    
+    setFormData(editFormData);
+    setCustomMessage(editCustomMessage);
+    
+    // Store original values for reset functionality
+    setOriginalFormData(editFormData);
+    setOriginalCustomMessage(editCustomMessage);
+    setShowEmojiPicker(false);
+  };
+
+  const getChannelName = (channelId) => {
+    const channel = channels.find(ch => ch.id === channelId);
+    return channel ? `#${channel.name}` : 'Unknown Channel';
+  };
+
+  const getRoleName = (roleId) => {
+    const role = roles.find(r => r.id === roleId);
+    return role ? role.name : 'Unknown Role';
+  };
+
+  // Group reaction roles by message
+  const groupedReactionRoles = () => {
+    const grouped = {};
+    reactionRoles.forEach(role => {
+      const key = role.messageId || 'no-message';
+      if (!grouped[key]) {
+        grouped[key] = {
+          messageId: role.messageId,
+          channelId: role.channelId,
+          title: role.title,
+          customMessage: role.customMessage,
+          status: role.status,
+          reactions: []
+        };
+      }
+      grouped[key].reactions.push({
+        id: role.id,
+        emoji: role.emoji,
+        roleId: role.roleId,
+        type: role.type
+      });
+    });
+    return Object.values(grouped);
+  };
+
   return (
     <div className="moderation-config-form space-y-4">
       <div className="mb-3">
-        <div className="form-check form-switch">
-          <input 
-            className="form-check-input" 
-            type="checkbox" 
-            checked={config.reactionRoles || false}
-            onChange={(e) => updateConfig('reactionRoles', e.target.checked)}
-          />
-          <label className="form-check-label small fw-semibold">Enable Reaction Roles</label>
+        <div className="d-flex justify-content-between align-items-center mb-2">
+          <label className="form-label small fw-semibold mb-0">Reaction Role Configurations</label>
+          <button 
+            type="button" 
+            className="btn btn-primary btn-sm"
+            onClick={() => {
+              setEditingRole(null);
+              setShowAddForm(true);
+              // Force reset to default values for adding new
+              setFormData({
+                messageId: '',
+                channelId: '',
+                title: '',
+                status: true,
+                reactions: [{ emoji: '', roleId: '', type: 'toggle' }]
+              });
+              setCustomMessage('React to get your roles!');
+              setShowEmojiPicker(false);
+            }}
+          >
+            <i className="fa-solid fa-plus me-1"></i>
+            Add Reaction Role
+          </button>
         </div>
+
+        {/* Reaction Roles Table */}
+        {loading ? (
+          <div className="text-center py-3">
+            <i className="fa-solid fa-spinner fa-spin me-2"></i>
+            Loading reaction roles...
+          </div>
+        ) : reactionRoles.length > 0 ? (
+          <div className="table-responsive">
+            <table className="table table-sm">
+              <thead>
+                <tr>
+                  <th>Status</th>
+                  <th>Title</th>
+                  <th>Channel</th>
+                  <th>Message</th>
+                  <th>Reactions</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {groupedReactionRoles().map((group, index) => (
+                  <tr key={group.messageId || index}>
+                    <td>
+                      <div className="form-check form-switch m-0">
+                        <input
+                          className="form-check-input"
+                          type="checkbox"
+                          checked={group.status !== false}
+                          disabled={updatingStatus[group.reactions[0]?.id]}
+                          onChange={() => handleToggleStatus(group.reactions[0]?.id, group.status)}
+                          style={{ cursor: updatingStatus[group.reactions[0]?.id] ? 'not-allowed' : 'pointer' }}
+                        />
+                        {updatingStatus[group.reactions[0]?.id] && (
+                          <small className="text-muted d-block">Updating...</small>
+                        )}
+                      </div>
+                    </td>
+                    <td>
+                      <div className="fw-semibold text-primary" style={{ fontSize: '0.85rem' }}>
+                        {group.title || 'Untitled'}
+                      </div>
+                    </td>
+                    <td>{getChannelName(group.channelId)}</td>
+                    <td>
+                      {group.customMessage ? (
+                        <div>
+                          <span className="badge badge-success mb-1">Bot Message</span>
+                          <div className="small text-muted text-truncate" style={{maxWidth: '150px'}}>
+                            {group.customMessage}
+                          </div>
+                        </div>
+                      ) : (
+                        <div>
+                          <span className="badge badge-secondary mb-1">User Message</span>
+                          <div className="font-monospace small">{group.messageId}</div>
+                        </div>
+                      )}
+                    </td>
+                    <td>
+                      <div className="d-flex flex-wrap gap-1">
+                        {group.reactions.map((reaction, reactionIndex) => (
+                          <div key={reactionIndex} className="d-flex align-items-center gap-1 p-1 rounded" style={{backgroundColor: 'rgba(255,255,255,0.05)'}}>
+                            <span className="small text-muted">{getRoleName(reaction.roleId)}</span>
+                            <span className={`badge badge-${(reaction.type || 'toggle') === 'toggle' ? 'primary' : (reaction.type || 'toggle') === 'add_only' ? 'success' : 'warning'}`} style={{fontSize: '0.6rem'}}>
+                              {(reaction.type || 'toggle').replace('_', ' ')}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </td>
+                    <td>
+                      <button 
+                        type="button" 
+                        className="btn btn-outline-primary btn-sm me-1"
+                        onClick={() => {
+                          // Create a pseudo-role object for editing
+                          const editRole = {
+                            id: group.reactions[0]?.id,
+                            messageId: group.messageId,
+                            channelId: group.channelId,
+                            title: group.title,
+                            customMessage: group.customMessage,
+                            status: group.status,
+                            reactions: group.reactions
+                          };
+                          startEdit(editRole);
+                        }}
+                      >
+                        <i className="fa-solid fa-edit"></i>
+                      </button>
+                      <button 
+                        type="button" 
+                        className="btn btn-outline-danger btn-sm"
+                        onClick={() => confirmDelete(group)}
+                      >
+                        <i className="fa-solid fa-trash"></i>
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div className="text-center py-3 text-muted">
+            No reaction roles configured. Click "Add Reaction Role" to get started.
+          </div>
+        )}
+
+        {/* Add/Edit Form */}
+        {(showAddForm || editingRole) && (
+          <div className="mt-3 p-3 border rounded position-relative">
+            {/* Loading Overlay */}
+            {saving && (
+              <div 
+                className="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center"
+                style={{
+                  backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                  borderRadius: '6px',
+                  zIndex: 1000
+                }}
+              >
+                <div className="text-center text-light">
+                  <div className="spinner-border spinner-border-sm mb-2" role="status">
+                    <span className="visually-hidden">Loading...</span>
+                  </div>
+                  <div className="small">
+                    {editingRole ? 'Updating reaction role...' : 'Creating reaction role...'}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="d-flex justify-content-between align-items-center mb-3">
+              <h6 className="mb-0">
+                {editingRole ? 'Edit Existing Reaction Role' : 'Create New Reaction Role'}
+                {hasChanges() && (
+                  <span className="badge badge-warning ms-2" style={{ fontSize: '0.6rem' }}>
+                    <i className="fa-solid fa-circle-exclamation me-1"></i>
+                    Unsaved Changes
+                  </span>
+                )}
+              </h6>
+              
+              {/* Status Toggle - Top Right */}
+              <div className="form-check form-switch">
+                <input 
+                  id="reaction-role-status"
+                  className="form-check-input" 
+                  type="checkbox" 
+                  checked={formData.status !== false}
+                  onChange={(e) => setFormData({...formData, status: e.target.checked})}
+                />
+                <label htmlFor="reaction-role-status" className="form-check-label small fw-semibold">
+                  Enable Reaction Role
+                </label>
+              </div>
+            </div>
+            
+            {/* Title Field */}
+            <div className="mb-3">
+              <label className="form-label small fw-semibold">Title</label>
+              <input 
+                type="text" 
+                className="form-control form-control-sm"
+                value={formData.title}
+                onChange={(e) => setFormData({...formData, title: e.target.value})}
+                placeholder="Enter a title for this reaction role"
+              />
+              <small className="text-muted">A descriptive title to help identify this reaction role</small>
+            </div>
+
+            <div className="row">
+              <div className="col-md-6 mb-3">
+                <label className="form-label small">Channel</label>
+                <select 
+                  className="form-select form-select-sm custom-dropdown"
+                  value={formData.channelId}
+                  onChange={(e) => setFormData({...formData, channelId: e.target.value})}
+                >
+                  <option value="">Select a channel...</option>
+                  {channels.filter(ch => ch.type === 0).map(channel => (
+                    <option key={channel.id} value={channel.id}>#{channel.name}</option>
+                  ))}
+                </select>
+              </div>
+              {editingRole && (
+                <div className="col-md-6 mb-3">
+                  <label className="form-label small">Message ID</label>
+                  <input 
+                    type="text" 
+                    className="form-control form-control-sm"
+                    value={formData.messageId}
+                    readOnly
+                    style={{ 
+                      backgroundColor: 'rgba(255,255,255,0.05)',
+                      cursor: 'not-allowed'
+                    }}
+                    title="Message ID cannot be changed when editing"
+                  />
+                  <small className="text-muted">Message ID is read-only when editing</small>
+                </div>
+              )}
+            </div>
+
+            {/* Custom Message - Always show for both add and edit */}
+            <div className="mb-3">
+              <label className="form-label small fw-semibold">Custom Message</label>
+              <textarea 
+                className="form-control form-control-sm"
+                rows={6}
+                value={customMessage}
+                onChange={(e) => setCustomMessage(e.target.value)}
+                placeholder="React to get your roles!"
+              />
+              <small className="text-muted">
+                {editingRole 
+                  ? 'The message content for this reaction role'
+                  : 'The message content that will be posted by the bot'
+                }
+              </small>
+              
+              {/* Message Preview with Multiple Reactions */}
+              <div className="template-preview mt-2">
+                <div className="preview-label">Preview</div>
+                <div className="preview-body">
+                  <div style={{ marginBottom: '8px' }}>
+                    {customMessage || 'React to get your roles!'}
+                  </div>
+                  {formData.reactions.map((reaction, index) => (
+                    <div key={index} className="d-flex align-items-center gap-2 mb-1">
+                      <span style={{ fontSize: '1.2rem' }}>{reaction.emoji || '🎉'}</span>
+                      <span>→</span>
+                      <span className="text-muted" style={{ fontSize: '0.8rem' }}>
+                        {reaction.roleId ? getRoleName(reaction.roleId) : 'Select a role'}
+                      </span>
+                      <span className="badge badge-secondary" style={{ fontSize: '0.6rem' }}>
+                        {(reaction.type || 'toggle').replace('_', ' ')}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Multiple Reactions Section */}
+            <div className="mb-3">
+              <div className="d-flex justify-content-between align-items-center mb-2">
+                <label className="form-label small fw-semibold mb-0">Reaction Roles</label>
+                <button 
+                  type="button" 
+                  className="btn btn-outline-primary btn-sm"
+                  onClick={addReaction}
+                >
+                  <i className="fa-solid fa-plus me-1"></i>
+                  Add Reaction
+                </button>
+              </div>
+
+              {formData.reactions.map((reaction, index) => (
+                <div key={index} className="reaction-row border rounded p-3 mb-3" style={{ backgroundColor: 'rgba(255,255,255,0.02)' }}>
+                  <div className="d-flex justify-content-between align-items-center mb-2">
+                    <h6 className="mb-0 small fw-semibold">Reaction {index + 1}</h6>
+                    {formData.reactions.length > 1 && (
+                      <button 
+                        type="button" 
+                        className="btn btn-outline-danger btn-sm"
+                        onClick={() => removeReaction(index)}
+                      >
+                        <i className="fa-solid fa-trash"></i>
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="row">
+                    <div className="col-md-5 mb-3">
+                      <label className="form-label small">Emoji</label>
+                      <div className="position-relative">
+                        <input 
+                          type="text" 
+                          className="form-control form-control-sm"
+                          value={reaction.emoji || ''}
+                          onChange={(e) => updateReaction(index, 'emoji', e.target.value)}
+                          placeholder="🎉 or custom emoji ID"
+                          style={{ paddingRight: '35px' }}
+                        />
+                        <button
+                          type="button"
+                          className="btn position-absolute"
+                          style={{
+                            right: '2px',
+                            top: '2px',
+                            bottom: '2px',
+                            width: '30px',
+                            padding: '0',
+                            backgroundColor: 'rgba(255,255,255,0.05)',
+                            border: 'none',
+                            borderRadius: '4px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s ease'
+                          }}
+                          onClick={() => setShowEmojiPicker(index)}
+                          title="Choose emoji"
+                        >
+                          😀
+                        </button>
+                        
+                        {/* Emoji Picker Dropdown */}
+                        {showEmojiPicker === index && (
+                          <div 
+                            ref={emojiPickerRef}
+                            className="position-absolute border rounded shadow-lg p-3"
+                            style={{
+                              top: '100%',
+                              left: '0',
+                              right: '0',
+                              zIndex: 1050,
+                              maxHeight: '250px',
+                              overflowY: 'auto',
+                              marginTop: '4px',
+                              backgroundColor: 'var(--bs-dark)',
+                              border: '1px solid rgba(255,255,255,0.1)',
+                              boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
+                            }}
+                          >
+                            <div className="small text-muted mb-2 fw-semibold">Guild Emojis</div>
+                            {guildEmojis.length > 0 ? (
+                              <div className="d-flex flex-wrap gap-1 mb-3">
+                                {guildEmojis.map(emoji => (
+                                  <button
+                                    key={emoji.id}
+                                    type="button"
+                                    className="btn p-1"
+                                    style={{
+                                      backgroundColor: 'transparent',
+                                      border: '1px solid transparent',
+                                      borderRadius: '6px',
+                                      minWidth: '36px',
+                                      height: '36px',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'center',
+                                      transition: 'all 0.2s ease'
+                                    }}
+                                    onMouseEnter={(e) => {
+                                      e.target.style.backgroundColor = 'rgba(255,255,255,0.1)';
+                                      e.target.style.borderColor = 'rgba(255,255,255,0.2)';
+                                    }}
+                                    onMouseLeave={(e) => {
+                                      e.target.style.backgroundColor = 'transparent';
+                                      e.target.style.borderColor = 'transparent';
+                                    }}
+                                    onClick={() => {
+                                      updateReaction(index, 'emoji', `<:${emoji.name}:${emoji.id}>`);
+                                      setShowEmojiPicker(false);
+                                    }}
+                                    title={emoji.name}
+                                  >
+                                    <img 
+                                      src={`https://cdn.discordapp.com/emojis/${emoji.id}.${emoji.animated ? 'gif' : 'png'}`}
+                                      alt={emoji.name}
+                                      style={{ width: '24px', height: '24px' }}
+                                    />
+                                  </button>
+                                ))}
+                              </div>
+                            ) : (
+                              <div className="text-muted small mb-3">No custom emojis found</div>
+                            )}
+                            
+                            <div className="border-top pt-3" style={{ borderColor: 'rgba(255,255,255,0.1)' }}>
+                              <div className="small text-muted mb-2 fw-semibold">Common Emojis</div>
+                              <div className="d-flex flex-wrap gap-1">
+                                {['🎉', '✅', '❌', '👍', '👎', '❤️', '💜', '💙', '💚', '💛', '🔥', '⭐', '🎯', '🎮', '🎵', '📢'].map(emoji => (
+                                  <button
+                                    key={emoji}
+                                    type="button"
+                                    className="btn p-1"
+                                    style={{
+                                      backgroundColor: 'transparent',
+                                      border: '1px solid transparent',
+                                      borderRadius: '6px',
+                                      minWidth: '36px',
+                                      height: '36px',
+                                      fontSize: '20px',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'center',
+                                      transition: 'all 0.2s ease'
+                                    }}
+                                    onMouseEnter={(e) => {
+                                      e.target.style.backgroundColor = 'rgba(255,255,255,0.1)';
+                                      e.target.style.borderColor = 'rgba(255,255,255,0.2)';
+                                    }}
+                                    onMouseLeave={(e) => {
+                                      e.target.style.backgroundColor = 'transparent';
+                                      e.target.style.borderColor = 'transparent';
+                                    }}
+                                    onClick={() => {
+                                      updateReaction(index, 'emoji', emoji);
+                                      setShowEmojiPicker(false);
+                                    }}
+                                  >
+                                    {emoji}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <div className="col-md-4 mb-3">
+                      <label className="form-label small">Role</label>
+                      <select 
+                        className="form-select form-select-sm custom-dropdown"
+                        value={reaction.roleId || ''}
+                        onChange={(e) => updateReaction(index, 'roleId', e.target.value)}
+                      >
+                        <option value="">Select a role...</option>
+                        {roles.filter(role => !role.managed).map(role => (
+                          <option key={role.id} value={role.id}>{role.name}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="col-md-3 mb-3">
+                      <label className="form-label small">Type</label>
+                      <select 
+                        className="form-select form-select-sm custom-dropdown"
+                        value={reaction.type || 'toggle'}
+                        onChange={(e) => updateReaction(index, 'type', e.target.value)}
+                      >
+                        <option value="toggle">Toggle (Add/Remove)</option>
+                        <option value="add_only">Add Only</option>
+                        <option value="remove_only">Remove Only</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="d-flex justify-content-between gap-2">
+              {hasChanges() && (
+                <button 
+                  type="button" 
+                  className="btn btn-outline-warning btn-sm"
+                  onClick={resetForm}
+                  disabled={saving}
+                  title={editingRole ? "Reset to original values" : "Clear all fields"}
+                >
+                  <i className="fa-solid fa-rotate-left me-1"></i>
+                  Reset
+                </button>
+              )}
+              
+              <div className={`d-flex gap-2 ${!hasChanges() ? 'ms-auto' : ''}`}>
+                <button 
+                  type="button" 
+                  className="btn btn-secondary btn-sm"
+                  disabled={saving}
+                  onClick={() => {
+                    setShowAddForm(false);
+                    setEditingRole(null);
+                    resetForm();
+                  }}
+                >
+                  <i className="fa-solid fa-times me-1"></i>
+                  Cancel
+                </button>
+                <button 
+                  type="button" 
+                  className="btn btn-primary btn-sm"
+                  onClick={editingRole ? handleUpdateReactionRole : handleAddReactionRole}
+                  disabled={
+                    saving ||
+                    !formData.channelId || 
+                    !formData.title.trim() ||
+                    !customMessage.trim() ||
+                    formData.reactions.some(reaction => !reaction.emoji || !reaction.roleId) ||
+                    (editingRole && !formData.messageId)
+                  }
+                >
+                  {saving ? (
+                    <>
+                      <div className="spinner-border spinner-border-sm me-2" role="status">
+                        <span className="visually-hidden">Loading...</span>
+                      </div>
+                      {editingRole ? 'Updating...' : 'Saving...'}
+                    </>
+                  ) : editingRole ? (
+                    <>
+                      <i className="fa-solid fa-pen-to-square me-1"></i>
+                      Update Reaction Role
+                    </>
+                  ) : (
+                    <>
+                      <i className="fa-solid fa-floppy-disk me-1"></i>
+                      Save Reaction Role
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
-      <div className="mb-3">
-        <label className="form-label small fw-semibold mb-1">Reaction Roles Channel</label>
-        <select 
-          className="form-select form-select-sm custom-dropdown"
-          value={config.reactionChannelId || ''}
-          onChange={(e) => updateConfig('reactionChannelId', e.target.value)}
+      {/* Modern Delete Confirmation Modal */}
+      {showDeleteConfirm && deleteTarget && (
+        <div 
+          className="modal show d-block"
+          style={{ 
+            backgroundColor: 'rgba(0,0,0,0.7)',
+            zIndex: 1060
+          }}
         >
-          <option value="">Select a channel...</option>
-          {channels.filter(ch => ch.type === 0).map(channel => (
-            <option key={channel.id} value={channel.id}>#{channel.name}</option>
-          ))}
-        </select>
-      </div>
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content bg-dark text-light border-0 shadow-lg">
+              <div className="modal-body text-center p-4">
+                {/* Warning Icon */}
+                <div className="mb-3">
+                  <div 
+                    className="d-inline-flex align-items-center justify-content-center rounded-circle"
+                    style={{
+                      width: '64px',
+                      height: '64px',
+                      backgroundColor: 'rgba(220, 38, 38, 0.1)',
+                      border: '3px solid rgba(220, 38, 38, 0.3)'
+                    }}
+                  >
+                    <i 
+                      className="fa-solid fa-triangle-exclamation" 
+                      style={{ 
+                        fontSize: '24px', 
+                        color: '#dc2626' 
+                      }}
+                    />
+                  </div>
+                </div>
 
-      <div className="mb-3">
-        <div className="form-check form-switch">
-          <input 
-            className="form-check-input" 
-            type="checkbox" 
-            checked={config.autoRoles || false}
-            onChange={(e) => updateConfig('autoRoles', e.target.checked)}
-          />
-          <label className="form-check-label small fw-semibold">Auto Role Assignment</label>
+                {/* Title */}
+                <h5 className="mb-3 fw-bold">Delete Reaction Role Configuration?</h5>
+
+                {/* Message */}
+                <div className="mb-4">
+                  <p className="text-muted mb-2">
+                    You're about to permanently delete the reaction role configuration:
+                  </p>
+                  <div 
+                    className="p-3 rounded border"
+                    style={{ 
+                      backgroundColor: 'rgba(255,255,255,0.05)',
+                      borderColor: 'rgba(255,255,255,0.1)'
+                    }}
+                  >
+                    <div className="fw-semibold text-primary mb-1">
+                      {deleteTarget.title || 'Untitled Configuration'}
+                    </div>
+                    <div className="small text-muted">
+                      {getChannelName(deleteTarget.channelId)} • {deleteTarget.reactions.length} reaction{deleteTarget.reactions.length !== 1 ? 's' : ''}
+                    </div>
+                  </div>
+                  <p className="text-warning small mt-3 mb-0">
+                    <i className="fa-solid fa-exclamation-triangle me-2"></i>
+                    This action cannot be undone.
+                  </p>
+                </div>
+
+                {/* Buttons */}
+                <div className="d-flex gap-3 justify-content-center">
+                  <button
+                    type="button"
+                    className="btn btn-secondary px-4"
+                    onClick={() => {
+                      setShowDeleteConfirm(false);
+                      setDeleteTarget(null);
+                    }}
+                  >
+                    <i className="fa-solid fa-times me-2"></i>
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-danger px-4"
+                    onClick={() => handleDeleteReactionRole(deleteTarget.messageId)}
+                    style={{
+                      background: 'linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)',
+                      border: 'none',
+                      boxShadow: '0 4px 12px rgba(220, 38, 38, 0.3)'
+                    }}
+                  >
+                    <i className="fa-solid fa-trash me-2"></i>
+                    Delete Forever
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
-
-      <div className="mb-3">
-        <label className="form-label small fw-semibold mb-1">Role Menu Message</label>
-        <textarea 
-          className="form-control form-control-sm custom-input"
-          rows={3}
-          value={config.menuMessage || 'React to get your roles!'}
-          onChange={(e) => updateConfig('menuMessage', e.target.value)}
-          placeholder="Message to show above role reactions"
-        />
-      </div>
+      )}
     </div>
   );
 }
@@ -871,24 +1798,26 @@ function XPConfigForm({ config, updateConfig, channels, roles }) {
       <div className="mb-3">
         <div className="form-check form-switch">
           <input 
+            id="xp-level-roles"
             className="form-check-input" 
             type="checkbox" 
             checked={config.levelRoles || false}
             onChange={(e) => updateConfig('levelRoles', e.target.checked)}
           />
-          <label className="form-check-label small fw-semibold">Level Role Rewards</label>
+          <label htmlFor="xp-level-roles" className="form-check-label small fw-semibold">Level Role Rewards</label>
         </div>
       </div>
 
       <div className="mb-3">
         <div className="form-check form-switch">
           <input 
+            id="xp-leaderboard"
             className="form-check-input" 
             type="checkbox" 
             checked={config.leaderboard || false}
             onChange={(e) => updateConfig('leaderboard', e.target.checked)}
           />
-          <label className="form-check-label small fw-semibold">Enable Leaderboard Command</label>
+          <label htmlFor="xp-leaderboard" className="form-check-label small fw-semibold">Enable Leaderboard Command</label>
         </div>
       </div>
     </div>
@@ -916,12 +1845,13 @@ function SchedulerConfigForm({ config, updateConfig, channels }) {
       <div className="mb-3">
         <div className="form-check form-switch">
           <input 
+            id="scheduler-user-scheduling"
             className="form-check-input" 
             type="checkbox" 
             checked={config.allowUserScheduling || false}
             onChange={(e) => updateConfig('allowUserScheduling', e.target.checked)}
           />
-          <label className="form-check-label small fw-semibold">Allow Users to Schedule Messages</label>
+          <label htmlFor="scheduler-user-scheduling" className="form-check-label small fw-semibold">Allow Users to Schedule Messages</label>
         </div>
       </div>
 
@@ -940,12 +1870,13 @@ function SchedulerConfigForm({ config, updateConfig, channels }) {
       <div className="mb-3">
         <div className="form-check form-switch">
           <input 
+            id="scheduler-recurring-messages"
             className="form-check-input" 
             type="checkbox" 
             checked={config.recurringMessages || false}
             onChange={(e) => updateConfig('recurringMessages', e.target.checked)}
           />
-          <label className="form-check-label small fw-semibold">Enable Recurring Messages</label>
+          <label htmlFor="scheduler-recurring-messages" className="form-check-label small fw-semibold">Enable Recurring Messages</label>
         </div>
       </div>
     </div>
@@ -973,60 +1904,65 @@ function LoggingConfigForm({ config, updateConfig, channels }) {
       <div className="mb-3">
         <div className="form-check form-switch">
           <input 
+            id="logging-messages"
             className="form-check-input" 
             type="checkbox" 
             checked={config.logMessages || false}
             onChange={(e) => updateConfig('logMessages', e.target.checked)}
           />
-          <label className="form-check-label small fw-semibold">Log Message Events</label>
+          <label htmlFor="logging-messages" className="form-check-label small fw-semibold">Log Message Events</label>
         </div>
       </div>
 
       <div className="mb-3">
         <div className="form-check form-switch">
           <input 
+            id="logging-members"
             className="form-check-input" 
             type="checkbox" 
             checked={config.logMembers || false}
             onChange={(e) => updateConfig('logMembers', e.target.checked)}
           />
-          <label className="form-check-label small fw-semibold">Log Member Events</label>
+          <label htmlFor="logging-members" className="form-check-label small fw-semibold">Log Member Events</label>
         </div>
       </div>
 
       <div className="mb-3">
         <div className="form-check form-switch">
           <input 
+            id="logging-channels"
             className="form-check-input" 
             type="checkbox" 
             checked={config.logChannels || false}
             onChange={(e) => updateConfig('logChannels', e.target.checked)}
           />
-          <label className="form-check-label small fw-semibold">Log Channel Events</label>
+          <label htmlFor="logging-channels" className="form-check-label small fw-semibold">Log Channel Events</label>
         </div>
       </div>
 
       <div className="mb-3">
         <div className="form-check form-switch">
           <input 
+            id="logging-roles"
             className="form-check-input" 
             type="checkbox" 
             checked={config.logRoles || false}
             onChange={(e) => updateConfig('logRoles', e.target.checked)}
           />
-          <label className="form-check-label small fw-semibold">Log Role Events</label>
+          <label htmlFor="logging-roles" className="form-check-label small fw-semibold">Log Role Events</label>
         </div>
       </div>
 
       <div className="mb-3">
         <div className="form-check form-switch">
           <input 
+            id="logging-moderation-actions"
             className="form-check-input" 
             type="checkbox" 
             checked={config.logModerationActions || false}
             onChange={(e) => updateConfig('logModerationActions', e.target.checked)}
           />
-          <label className="form-check-label small fw-semibold">Log Moderation Actions</label>
+          <label htmlFor="logging-moderation-actions" className="form-check-label small fw-semibold">Log Moderation Actions</label>
         </div>
       </div>
     </div>
@@ -1064,12 +2000,13 @@ function AntiRaidConfigForm({ config, updateConfig, channels, roles }) {
       <div className="mb-3">
         <div className="form-check form-switch">
           <input 
+            id="antiraid-auto-lockdown"
             className="form-check-input" 
             type="checkbox" 
             checked={config.autoLockdown || false}
             onChange={(e) => updateConfig('autoLockdown', e.target.checked)}
           />
-          <label className="form-check-label small fw-semibold">Auto Lockdown on Raid Detection</label>
+          <label htmlFor="antiraid-auto-lockdown" className="form-check-label small fw-semibold">Auto Lockdown on Raid Detection</label>
         </div>
       </div>
 
@@ -1104,12 +2041,13 @@ function AntiRaidConfigForm({ config, updateConfig, channels, roles }) {
       <div className="mb-3">
         <div className="form-check form-switch">
           <input 
+            id="antiraid-verification-required"
             className="form-check-input" 
             type="checkbox" 
             checked={config.verificationRequired || false}
             onChange={(e) => updateConfig('verificationRequired', e.target.checked)}
           />
-          <label className="form-check-label small fw-semibold">Require Verification for New Members</label>
+          <label htmlFor="antiraid-verification-required" className="form-check-label small fw-semibold">Require Verification for New Members</label>
         </div>
       </div>
     </div>
