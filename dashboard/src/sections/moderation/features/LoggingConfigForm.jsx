@@ -44,12 +44,21 @@ export default function LoggingConfigForm({ config, updateConfig, channels }) {
 
   return (
     <div className="moderation-config-form space-y-4">
+      {/* Information Section */}
       <div className="mb-4">
-        <h6 className="mb-1">Audit Logging</h6>
-        <p className="text-muted small mb-0">
-          Track all moderation actions and server changes. Choose different channels for different log types or use one channel for everything.
+        <div className="d-flex align-items-center gap-3 mb-3">
+          <h6 className="mb-0 fw-bold">Audit Logging System</h6>
+          <span className="badge badge-soft">
+            <i className="fa-solid fa-clipboard-list me-1"></i>
+            Complete Server Monitoring
+          </span>
+        </div>
+        <p className="text-muted small mb-0" style={{ fontSize: '0.85rem', lineHeight: 1.4 }}>
+          Track all server activities including messages, member changes, channel modifications, role updates, and more. 
+          Configure separate channels for different log types or use a single channel for comprehensive monitoring.
         </p>
       </div>
+      <hr />
 
       <div className="row">
         {logTypes.map(logType => (

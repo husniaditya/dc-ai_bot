@@ -13,12 +13,76 @@ export default function AntiRaidConfigForm({ config, updateConfig, channels, rol
 
   return (
     <div className="moderation-config-form space-y-4">
+      {/* Information Section */}
       <div className="mb-4">
-        <h6 className="mb-1">Anti-Raid Protection</h6>
-        <p className="text-muted small mb-0">
-          Protect your server from raids and mass join attacks with automated security measures.
+        <div className="d-flex align-items-center gap-3 mb-3">
+          <h6 className="mb-0 fw-bold">Anti-Raid Protection System</h6>
+          <span className="badge badge-soft">
+            <i className="fa-solid fa-shield-halved me-1"></i>
+            Advanced Server Security
+          </span>
+        </div>
+        <p className="text-muted small mb-0" style={{ fontSize: '0.85rem', lineHeight: 1.4 }}>
+          Protect your server from coordinated attacks, mass joins, and suspicious activities with intelligent monitoring, 
+          automated responses, and configurable security thresholds. Monitor join patterns and account characteristics.
         </p>
       </div>
+
+      <div className="mb-4 p-3 bg-dark border rounded">
+        <h6 className="mb-2">
+          <i className="fa-solid fa-shield text-success me-2" />
+          Protection Features
+        </h6>
+        <div className="row small text-muted">
+          <div className="col-md-6">
+            <div className="mb-2">
+              <strong>Join Rate Monitoring:</strong>
+              <ul className="mb-0 mt-1">
+                <li>Track member join patterns</li>
+                <li>Detect coordinated attacks</li>
+                <li>Configurable thresholds</li>
+              </ul>
+            </div>
+            <div className="mb-2">
+              <strong>Account Analysis:</strong>
+              <ul className="mb-0 mt-1">
+                <li>Account age verification</li>
+                <li>Suspicious pattern detection</li>
+                <li>Avatar and username analysis</li>
+              </ul>
+            </div>
+          </div>
+          <div className="col-md-6">
+            <div className="mb-2">
+              <strong>Automated Response:</strong>
+              <ul className="mb-0 mt-1">
+                <li>Server lockdown capabilities</li>
+                <li>Automatic verification changes</li>
+                <li>Member removal options</li>
+              </ul>
+            </div>
+            <div className="mb-2">
+              <strong>Content Filtering:</strong>
+              <ul className="mb-0 mt-1">
+                <li>Invite spam detection</li>
+                <li>Mass mention protection</li>
+                <li>New member monitoring</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="mb-4 p-2 border border-warning rounded bg-warning bg-opacity-10">
+        <div className="d-flex align-items-start gap-2">
+          <i className="fa-solid fa-exclamation-triangle text-warning mt-1" />
+          <div className="small">
+            <strong className="text-warning">Important:</strong> Anti-raid protection uses advanced heuristics and may occasionally flag legitimate users. 
+            Monitor your alert channel regularly and adjust settings based on your server's needs.
+          </div>
+        </div>
+      </div>
+      <hr />
 
       <div className="row">
         <div className="col-md-6">
@@ -141,61 +205,6 @@ export default function AntiRaidConfigForm({ config, updateConfig, channels, rol
           roles={roles}
         />
       </FormField>
-
-      <div className="mt-4 p-3 bg-dark border rounded">
-        <h6 className="mb-2">
-          <i className="fa-solid fa-shield text-success me-2" />
-          Protection Features
-        </h6>
-        <div className="row small text-muted">
-          <div className="col-md-6">
-            <div className="mb-2">
-              <strong>Join Rate Monitoring:</strong>
-              <ul className="mb-0 mt-1">
-                <li>Track member join patterns</li>
-                <li>Detect coordinated attacks</li>
-                <li>Configurable thresholds</li>
-              </ul>
-            </div>
-            <div className="mb-2">
-              <strong>Account Analysis:</strong>
-              <ul className="mb-0 mt-1">
-                <li>Account age verification</li>
-                <li>Suspicious pattern detection</li>
-                <li>Avatar and username analysis</li>
-              </ul>
-            </div>
-          </div>
-          <div className="col-md-6">
-            <div className="mb-2">
-              <strong>Automated Response:</strong>
-              <ul className="mb-0 mt-1">
-                <li>Server lockdown capabilities</li>
-                <li>Automatic verification changes</li>
-                <li>Member removal options</li>
-              </ul>
-            </div>
-            <div className="mb-2">
-              <strong>Content Filtering:</strong>
-              <ul className="mb-0 mt-1">
-                <li>Invite spam detection</li>
-                <li>Mass mention protection</li>
-                <li>New member monitoring</li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="mt-3 p-2 border border-warning rounded bg-warning bg-opacity-10">
-        <div className="d-flex align-items-start gap-2">
-          <i className="fa-solid fa-exclamation-triangle text-warning mt-1" />
-          <div className="small">
-            <strong className="text-warning">Important:</strong> Anti-raid protection uses advanced heuristics and may occasionally flag legitimate users. 
-            Monitor your alert channel regularly and adjust settings based on your server's needs.
-          </div>
-        </div>
-      </div>
     </div>
   );
 }

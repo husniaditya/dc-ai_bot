@@ -5,6 +5,22 @@ import { ChannelSelector, FormField, SwitchToggle } from '../components/SharedCo
 export default function XPConfigForm({ config, updateConfig, channels, roles }) {
   return (
     <div className="moderation-config-form space-y-4">
+      {/* Information Section */}
+      <div className="mb-4">
+        <div className="d-flex align-items-center gap-3 mb-3">
+          <h6 className="mb-0 fw-bold">XP & Leveling System</h6>
+          <span className="badge badge-soft">
+            <i className="fa-solid fa-chart-line me-1"></i>
+            Member Engagement
+          </span>
+        </div>
+        <p className="text-muted small mb-0" style={{ fontSize: '0.85rem', lineHeight: 1.4 }}>
+          Reward member activity with experience points and level progression. Configure XP rates, cooldowns, 
+          multiplier roles for special members, and excluded channels where XP won't be gained.
+        </p>
+      </div>
+      <hr />
+
       <div className="row">
         <div className="col-md-6">
           <FormField 

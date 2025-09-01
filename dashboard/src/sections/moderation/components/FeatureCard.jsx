@@ -13,7 +13,7 @@ export default function FeatureCard({
   return (
     <div className="col-md-6 col-lg-4">
       <div 
-        className={`moderation-card card-glass h-100 p-3 position-relative ${isEnabled ? 'enabled' : ''}`}
+        className={`moderation-card card-glass h-100 p-3 position-relative d-flex flex-column ${isEnabled ? 'enabled' : ''}`}
         style={{ 
           '--feature-color': feature.color,
           '--grp-accent': feature.color
@@ -57,7 +57,7 @@ export default function FeatureCard({
           </div>
           <div className="flex-grow-1">
             <h6 className="mb-1 fw-semibold">{feature.label}</h6>
-            <div className={`status-badge ${isEnabled ? 'enabled' : 'disabled'}`}>
+            <div className={`status-badge moderation-status-badge ${isEnabled ? 'enabled' : 'disabled'}`}>
               {isSaving ? 'Updating...' : (isEnabled ? 'Enabled' : 'Disabled')}
             </div>
           </div>
@@ -86,7 +86,7 @@ export default function FeatureCard({
         <div className="mt-auto">
           <button 
             type="button"
-            className="btn btn-outline-light btn-sm w-100 d-flex align-items-center justify-content-center gap-2"
+            className="btn btn-outline-light btn-sm w-100 d-flex align-items-center justify-content-center gap-2 configure-btn"
             onClick={() => onConfigure(feature.key)}
             disabled={isSaving}
             style={{
@@ -97,7 +97,26 @@ export default function FeatureCard({
               letterSpacing: '0.3px',
               padding: '0.5rem 1rem',
               borderRadius: '8px',
-              transition: 'all 0.2s ease'
+              transition: 'all 0.2s ease',
+              '--hover-bg': `linear-gradient(145deg, ${feature.color}25, ${feature.color}18)`,
+              '--hover-border': `${feature.color}60`,
+              '--hover-color': feature.color
+            }}
+            onMouseEnter={(e) => {
+              if (!isSaving) {
+                e.target.style.background = `linear-gradient(145deg, ${feature.color}25, ${feature.color}18)`;
+                e.target.style.borderColor = `${feature.color}60`;
+                e.target.style.transform = 'translateY(-1px)';
+                e.target.style.boxShadow = `0 4px 12px ${feature.color}20`;
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (!isSaving) {
+                e.target.style.background = `linear-gradient(145deg, ${feature.color}15, ${feature.color}08)`;
+                e.target.style.borderColor = `${feature.color}40`;
+                e.target.style.transform = 'translateY(0)';
+                e.target.style.boxShadow = 'none';
+              }
             }}
           >
             {isSaving ? (

@@ -309,6 +309,29 @@ export default function ConfigurationModal({
               <i className="fa-solid fa-times me-1" />
               Close
             </button>
+            {/* Add Save button for all forms except roles */}
+            {feature.key !== 'roles' && feature.key !== 'scheduler' && (
+              <button 
+                type="button" 
+                className="btn btn-primary"
+                onClick={handleSave}
+                disabled={saving || !isDirty()}
+              >
+                {saving ? (
+                  <>
+                    <div className="spinner-border spinner-border-sm me-1" role="status">
+                      <span className="visually-hidden">Loading...</span>
+                    </div>
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <i className="fa-solid fa-save me-1" />
+                    Save Changes
+                  </>
+                )}
+              </button>
+            )}
           </div>
         </div>
       </div>

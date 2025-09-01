@@ -54,6 +54,21 @@ export default function SlashCommandRolesConfig({ config, updateConfig, channels
     });
   };
 
+  // Check if form has been modified
+  const hasChanges = () => {
+    const defaultData = {
+      commandName: '',
+      description: '',
+      channelId: '',
+      roles: [{ roleId: '', type: 'toggle' }],
+      requirePermission: false,
+      allowedRoles: [],
+      status: true
+    };
+    
+    return JSON.stringify(formData) !== JSON.stringify(defaultData);
+  };
+
   const handleAddSlashRole = async () => {
     setSaving(true);
     try {
@@ -339,7 +354,28 @@ export default function SlashCommandRolesConfig({ config, updateConfig, channels
 
         {/* Add/Edit Form */}
         {showAddForm && (
-          <div className="card mb-3" style={{ backgroundColor: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>
+          <div className="card mb-3 position-relative" style={{ backgroundColor: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>
+            {/* Loading Overlay */}
+            {saving && (
+              <div 
+                className="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center"
+                style={{
+                  backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                  borderRadius: '8px',
+                  zIndex: 1000
+                }}
+              >
+                <div className="text-center text-light">
+                  <div className="spinner-border spinner-border-sm mb-2" role="status">
+                    <span className="visually-hidden">Loading...</span>
+                  </div>
+                  <div className="small">
+                    {editingCommand ? 'Updating slash command...' : 'Creating slash command...'}
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div className="card-header d-flex justify-content-between align-items-center">
               <h6 className="mb-0">
                 {editingCommand ? 'Edit Slash Command' : 'Add New Slash Command'}
@@ -454,14 +490,16 @@ export default function SlashCommandRolesConfig({ config, updateConfig, channels
               </div>
 
               <div className="d-flex justify-content-end gap-2">
-                <button 
-                  type="button" 
-                  className="btn btn-outline-warning btn-sm"
-                  onClick={() => resetForm()}
-                >
-                  <i className="fa-solid fa-rotate-left me-1"></i>
-                  Reset
-                </button>
+                {hasChanges() && (
+                  <button 
+                    type="button" 
+                    className="btn btn-outline-warning btn-sm"
+                    onClick={() => resetForm()}
+                  >
+                    <i className="fa-solid fa-rotate-left me-1"></i>
+                    Reset
+                  </button>
+                )}
                 <button 
                   type="button" 
                   className="btn btn-outline-secondary btn-sm"
@@ -496,37 +534,8 @@ export default function SlashCommandRolesConfig({ config, updateConfig, channels
                 </button>
               </div>
             </div>
-            <div className="card-footer d-flex justify-content-end" style={{ backgroundColor: 'rgba(255,255,255,0.05)', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
-              <button 
-                type="button" 
-                className="btn btn-outline-light btn-sm"
-                onClick={() => {
-                  setShowAddForm(false);
-                  setEditingCommand(null);
-                  resetForm();
-                }}
-              >
-                <i className="fa-solid fa-times me-1"></i>
-                Close
-              </button>
-            </div>
           </div>
         )}
-        
-        {/* Modal Footer */}
-        <div className="modal-footer border-secondary">
-          <button 
-            type="button" 
-            className="btn btn-secondary"
-            onClick={() => {
-              // You can add any cleanup logic here if needed
-              console.log('Close button clicked');
-            }}
-          >
-            <i className="fa-solid fa-times me-2" />
-            Close
-          </button>
-        </div>
       </div>
     </div>
   );

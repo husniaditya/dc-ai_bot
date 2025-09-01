@@ -730,8 +730,8 @@ export default function ReactionRolesConfig({ config, updateConfig, channels, ro
               </button>
             </div>
 
-            {/* Action Buttons */}
-            <div className="d-flex justify-content-end gap-2">
+            {/* Card Footer with Action Buttons */}
+            <div className="card-footer d-flex justify-content-end gap-2" style={{ backgroundColor: 'transparent', borderTop: 'none' }}>
               {hasChanges() && (
                 <button 
                   type="button" 
@@ -739,14 +739,11 @@ export default function ReactionRolesConfig({ config, updateConfig, channels, ro
                   onClick={resetForm}
                   disabled={saving}
                 >
-                  <i className="fa-solid fa-undo me-2"></i>
+                  <i className="fa-solid fa-rotate-left me-1"></i>
                   Reset
                 </button>
               )}
-            </div>
-
-            {/* Card Footer with Action Buttons */}
-            <div className="card-footer d-flex justify-content-end gap-2" style={{ backgroundColor: 'rgba(255,255,255,0.05)', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+              
               <button 
                 type="button" 
                 className="btn btn-outline-secondary btn-sm"
@@ -765,7 +762,7 @@ export default function ReactionRolesConfig({ config, updateConfig, channels, ro
                 type="button"
                 className="btn btn-primary btn-sm"
                 onClick={editingRole ? handleUpdateReactionRole : handleAddReactionRole}
-                disabled={saving}
+                disabled={saving || !formData.title || !formData.channelId || !formData.reactions.some(r => r.emoji && r.roleId)}
               >
                 {saving ? (
                   <>

@@ -5,6 +5,22 @@ import { ChannelSelector, RoleSelector, FormField, SwitchToggle } from '../compo
 export default function WelcomeConfigForm({ config, updateConfig, channels, roles }) {
   return (
     <div className="moderation-config-form space-y-4">
+      {/* Information Section */}
+      <div className="mb-4">
+        <div className="d-flex align-items-center gap-3 mb-3">
+          <h6 className="mb-0 fw-bold">Welcome Messages System</h6>
+          <span className="badge badge-soft">
+            <i className="fa-solid fa-hand-wave me-1"></i>
+            Member Onboarding
+          </span>
+        </div>
+        <p className="text-muted small mb-0" style={{ fontSize: '0.85rem', lineHeight: 1.4 }}>
+          Configure automated welcome messages for new members, including custom cards, auto roles, and direct messages. 
+          Use variables like {'{user}'}, {'{username}'}, {'{server}'}, and {'{memberCount}'} to personalize messages.
+        </p>
+      </div>
+      <hr />
+
       <FormField 
         label="Welcome Channel"
         description="Choose where welcome messages will be sent"

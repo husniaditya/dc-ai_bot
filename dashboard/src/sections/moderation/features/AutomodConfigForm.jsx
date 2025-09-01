@@ -5,6 +5,22 @@ import { ChannelSelector, FormField, SwitchToggle, BypassRolesPicker } from '../
 export default function AutomodConfigForm({ config, updateConfig, channels, roles }) {
   return (
     <div className="moderation-config-form space-y-4">
+      {/* Information Section */}
+      <div className="mb-4">
+        <div className="d-flex align-items-center gap-3 mb-3">
+          <h6 className="mb-0 fw-bold">Auto Moderation System</h6>
+          <span className="badge badge-soft">
+            <i className="fa-solid fa-shield-halved me-1"></i>
+            Automated Content Filtering
+          </span>
+        </div>
+        <p className="text-muted small mb-0" style={{ fontSize: '0.85rem', lineHeight: 1.4 }}>
+          Automatically detect and moderate unwanted content including spam, excessive caps, unauthorized links, and inappropriate language. 
+          Configure bypass roles for trusted members and set up logging for transparency.
+        </p>
+      </div>
+      <hr />
+
       <div className="row">
         <div className="col-md-6">
           <SwitchToggle

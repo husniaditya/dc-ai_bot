@@ -81,6 +81,22 @@ export default function SchedulerConfigForm({ config, updateConfig, channels }) 
 
   return (
     <div className="moderation-config-form space-y-4">
+      {/* Information Section */}
+      <div className="mb-4">
+        <div className="d-flex align-items-center gap-3 mb-3">
+          <h6 className="mb-0 fw-bold">Scheduled Messages System</h6>
+          <span className="badge badge-soft">
+            <i className="fa-solid fa-calendar-clock me-1"></i>
+            Automated Announcements
+          </span>
+        </div>
+        <p className="text-muted small mb-0" style={{ fontSize: '0.85rem', lineHeight: 1.4 }}>
+          Schedule recurring messages and announcements using cron expressions. Perfect for daily reminders, 
+          weekly events, monthly updates, or any time-based automated communication.
+        </p>
+      </div>
+      <hr />
+
       <div className="d-flex justify-content-between align-items-center mb-4">
         <div>
           <h6 className="mb-1">Scheduled Messages</h6>
