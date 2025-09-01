@@ -37,7 +37,6 @@ let twitchHasConfigJsonColumn = null; // lazy detection
 
 // Moderation caches
 const guildModerationFeaturesCache = new Map(); // guildId -> feature states
-const guildWelcomeMessageCache = new Map(); // guildId -> welcome message config
 const guildAutoModRulesCache = new Map(); // guildId -> automod rules array
 const guildReactionRolesCache = new Map(); // guildId -> reaction roles array
 const guildXpSettingsCache = new Map(); // guildId -> xp settings
@@ -205,18 +204,6 @@ async function initMaria() {
     ) ENGINE=InnoDB`);
     // Migration: add status column if upgrading
     try { await sqlPool.query('ALTER TABLE guild_personalization ADD COLUMN status VARCHAR(16) NULL'); } catch(e){ /* ignore if exists */ }
-    // Welcome configuration table (with enabled flag)
-    await sqlPool.query(`CREATE TABLE IF NOT EXISTS guild_welcome (
-      guild_id VARCHAR(32) PRIMARY KEY,
-      channel_id VARCHAR(32) NULL,
-      message_type VARCHAR(10) NOT NULL DEFAULT 'text',
-      message_text TEXT NULL,
-      card_enabled BOOLEAN NOT NULL DEFAULT 0,
-      enabled BOOLEAN NOT NULL DEFAULT 1,
-      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-    ) ENGINE=InnoDB`);
-    // Migration: add enabled column if upgrading from older version
-    try { await sqlPool.query('ALTER TABLE guild_welcome ADD COLUMN enabled BOOLEAN NOT NULL DEFAULT 1'); } catch(e){ /* ignore if exists */ }
     // YouTube watcher per-guild configuration
     await sqlPool.query(`CREATE TABLE IF NOT EXISTS guild_youtube_watch (
       guild_id VARCHAR(32) PRIMARY KEY,
@@ -835,14 +822,23 @@ module.exports = {
     if(!guildId) return null;
     if (guildWelcomeCache.has(guildId)) return { ...guildWelcomeCache.get(guildId) };
     if (mariaAvailable && sqlPool){
-      const [rows] = await sqlPool.query('SELECT channel_id, message_type, message_text, card_enabled, enabled FROM guild_welcome WHERE guild_id=?', [guildId]);
+      const [rows] = await sqlPool.query('SELECT * FROM guild_welcome_messages WHERE guild_id=?', [guildId]);
       if (rows.length){
-        const rec = { channelId: rows[0].channel_id || null, messageType: rows[0].message_type || 'text', messageText: rows[0].message_text || '', cardEnabled: rows[0].card_enabled === 1, enabled: rows[0].enabled === undefined ? true : (rows[0].enabled === 1 || rows[0].enabled === true) };
+        const rec = { 
+          channelId: rows[0].channel_id || null, 
+          messageType: rows[0].message_type || 'text', 
+          messageText: rows[0].message_text || '', 
+          cardEnabled: rows[0].card_enabled === 1, 
+          enabled: rows[0].enabled === undefined ? true : (rows[0].enabled === 1 || rows[0].enabled === true),
+          roleId: rows[0].role_id || null,
+          dmEnabled: rows[0].dm_enabled === 1,
+          dmMessage: rows[0].dm_message || ''
+        };
         guildWelcomeCache.set(guildId, rec);
         return { ...rec };
       }
     }
-    const empty = { channelId:null, messageType:'text', messageText:'', cardEnabled:false, enabled:true };
+    const empty = { channelId:null, messageType:'text', messageText:'', cardEnabled:false, enabled:true, roleId:null, dmEnabled:false, dmMessage:'' };
     guildWelcomeCache.set(guildId, empty);
     return { ...empty };
   },
@@ -855,10 +851,18 @@ module.exports = {
     if (data.messageText !== undefined) next.messageText = data.messageText || '';
     if (data.cardEnabled !== undefined) next.cardEnabled = !!data.cardEnabled;
     if (data.enabled !== undefined) next.enabled = !!data.enabled;
+    if (data.roleId !== undefined) next.roleId = data.roleId || null;
+    if (data.dmEnabled !== undefined) next.dmEnabled = !!data.dmEnabled;
+    if (data.dmMessage !== undefined) next.dmMessage = data.dmMessage || '';
     guildWelcomeCache.set(guildId, next);
     if (mariaAvailable && sqlPool){
-      await sqlPool.query('REPLACE INTO guild_welcome(guild_id, channel_id, message_type, message_text, card_enabled, enabled) VALUES (?,?,?,?,?,?)', [
-        guildId, next.channelId, next.messageType, next.messageText, next.cardEnabled ? 1 : 0, next.enabled ? 1 : 0
+      await sqlPool.query(`INSERT INTO guild_welcome_messages (guild_id, enabled, channel_id, message_type, message_text, card_enabled, role_id, dm_enabled, dm_message)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ON DUPLICATE KEY UPDATE enabled=VALUES(enabled), channel_id=VALUES(channel_id), message_type=VALUES(message_type), 
+        message_text=VALUES(message_text), card_enabled=VALUES(card_enabled), role_id=VALUES(role_id), 
+        dm_enabled=VALUES(dm_enabled), dm_message=VALUES(dm_message)`, [
+        guildId, next.enabled ? 1 : 0, next.channelId, next.messageType, next.messageText, 
+        next.cardEnabled ? 1 : 0, next.roleId, next.dmEnabled ? 1 : 0, next.dmMessage
       ]);
     }
     return { ...next };
@@ -1468,53 +1472,6 @@ module.exports = {
   // Expose sqlPool for direct database access (for OAuth states, etc.)
   get sqlPool() {
     return sqlPool;
-  },
-
-  // Moderation feature functions
-  // Welcome Messages
-  getGuildWelcomeMessage: async (guildId) => {
-    if (!guildId) return null;
-    if (guildWelcomeMessageCache.has(guildId)) return { ...guildWelcomeMessageCache.get(guildId) };
-    
-    if (mariaAvailable && sqlPool) {
-      const [rows] = await sqlPool.query('SELECT * FROM guild_welcome_messages WHERE guild_id=?', [guildId]);
-      if (rows.length) {
-        const config = {
-          enabled: rows[0].enabled !== 0,
-          channelId: rows[0].channel_id,
-          messageType: rows[0].message_type,
-          messageText: rows[0].message_text,
-          cardEnabled: rows[0].card_enabled !== 0,
-          roleId: rows[0].role_id,
-          dmEnabled: rows[0].dm_enabled !== 0,
-          dmMessage: rows[0].dm_message
-        };
-        guildWelcomeMessageCache.set(guildId, config);
-        return { ...config };
-      }
-    }
-    const defaultConfig = { enabled: false, channelId: null, messageType: 'text', messageText: '', cardEnabled: false, roleId: null, dmEnabled: false, dmMessage: '' };
-    guildWelcomeMessageCache.set(guildId, defaultConfig);
-    return { ...defaultConfig };
-  },
-
-  updateGuildWelcomeMessage: async (guildId, data) => {
-    if (!guildId) throw new Error('guildId required');
-    const current = await module.exports.getGuildWelcomeMessage(guildId);
-    const next = { ...current, ...data };
-    guildWelcomeMessageCache.set(guildId, next);
-    
-    if (mariaAvailable && sqlPool) {
-      await sqlPool.query(`INSERT INTO guild_welcome_messages (guild_id, enabled, channel_id, message_type, message_text, card_enabled, role_id, dm_enabled, dm_message)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-        ON DUPLICATE KEY UPDATE enabled=VALUES(enabled), channel_id=VALUES(channel_id), message_type=VALUES(message_type), 
-        message_text=VALUES(message_text), card_enabled=VALUES(card_enabled), role_id=VALUES(role_id), 
-        dm_enabled=VALUES(dm_enabled), dm_message=VALUES(dm_message)`, [
-        guildId, next.enabled ? 1 : 0, next.channelId, next.messageType, next.messageText, 
-        next.cardEnabled ? 1 : 0, next.roleId, next.dmEnabled ? 1 : 0, next.dmMessage
-      ]);
-    }
-    return { ...next };
   },
 
   // Auto Moderation Rules

@@ -215,15 +215,31 @@ export default function ModerationSection({ guildId, pushToast }) {
     if (!activeFeature) return;
 
     try {
-      const response = await fetch(`/api/moderation/features/${activeFeature.key}/config`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: 'Bearer ' + localStorage.getItem('token'),
-          'X-Guild-Id': guildId
-        },
-        body: JSON.stringify(config)
-      });
+      let response;
+      
+      // Handle welcome feature with specific API endpoint
+      if (activeFeature.key === 'welcome') {
+        response = await fetch('/api/moderation/welcome/config', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: 'Bearer ' + localStorage.getItem('token'),
+            'X-Guild-Id': guildId
+          },
+          body: JSON.stringify(config)
+        });
+      } else {
+        // Handle other features with generic endpoint
+        response = await fetch(`/api/moderation/features/${activeFeature.key}/config`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: 'Bearer ' + localStorage.getItem('token'),
+            'X-Guild-Id': guildId
+          },
+          body: JSON.stringify(config)
+        });
+      }
 
       if (!response.ok) {
         throw new Error('Failed to save configuration');
@@ -458,13 +474,80 @@ function ConfigurationModal({ feature, channels, roles, guildId, onSave, onClose
   const [config, setConfig] = useState(feature.config || {});
   const [originalConfig, setOriginalConfig] = useState(feature.config || {});
   const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
 
-  // Update original config when feature config changes
+  // Fetch specific configuration when modal opens
   useEffect(() => {
-    setConfig(feature.config || {});
-    setOriginalConfig(feature.config || {});
-  }, [feature.config]);
+    const fetchConfig = async () => {
+      if (feature.key === 'welcome' && guildId) {
+        setLoading(true);
+        try {
+          const response = await fetch('/api/moderation/welcome/config', {
+            headers: {
+              Authorization: 'Bearer ' + localStorage.getItem('token'),
+              'X-Guild-Id': guildId
+            }
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            
+            // Handle different possible response structures
+            const welcomeConfig = data.config || data || {};
+            
+            setConfig(welcomeConfig);
+            setOriginalConfig(welcomeConfig);
+          } else {
+            // Use default config if none exists
+            const defaultConfig = {
+              enabled: false,
+              channelId: '',
+              messageType: 'text',
+              messageText: 'Welcome to {server}, {user}!',
+              cardEnabled: false,
+              roleId: '',
+              dmEnabled: false,
+              dmMessage: 'Welcome to {server}! Thanks for joining us.'
+            };
+            setConfig(defaultConfig);
+            setOriginalConfig(defaultConfig);
+          }
+        } catch (error) {
+          console.error('Error fetching welcome config:', error);
+          showToast('error', 'Failed to load welcome configuration');
+          
+          // Fallback to default config on error
+          const defaultConfig = {
+            enabled: false,
+            channelId: '',
+            messageType: 'text',
+            messageText: 'Welcome to {server}, {user}!',
+            cardEnabled: false,
+            roleId: '',
+            dmEnabled: false,
+            dmMessage: 'Welcome to {server}! Thanks for joining us.'
+          };
+          setConfig(defaultConfig);
+          setOriginalConfig(defaultConfig);
+        } finally {
+          setLoading(false);
+        }
+      } else if (feature.key !== 'welcome') {
+        // For other features, use the passed config immediately
+        setConfig(feature.config || {});
+        setOriginalConfig(feature.config || {});
+      }
+    };
+
+    // Only fetch if we haven't loaded this feature before
+    if (feature.key === 'welcome') {
+      fetchConfig();
+    } else {
+      setConfig(feature.config || {});
+      setOriginalConfig(feature.config || {});
+    }
+  }, [feature.key, guildId]); // Removed showToast from dependencies to prevent re-renders
 
   // Check if configuration has been modified
   const isDirty = () => {
@@ -516,7 +599,27 @@ function ConfigurationModal({ feature, channels, roles, guildId, onSave, onClose
       }}
     >
       <div className={`modal-dialog modal-lg modal-content-animated ${isClosing ? 'closing' : ''}`}>
-        <div className="modal-content bg-dark text-light">
+        <div className="modal-content bg-dark text-light position-relative">
+          {/* Loading Overlay */}
+          {saving && (
+            <div 
+              className="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center"
+              style={{
+                backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                borderRadius: '8px',
+                zIndex: 1000
+              }}
+            >
+              <div className="text-center text-light">
+                <div className="spinner-border spinner-border-lg mb-3" role="status">
+                  <span className="visually-hidden">Loading...</span>
+                </div>
+                <div className="h6 mb-0">Saving Configuration...</div>
+                <div className="small text-muted">Please wait while we update your settings</div>
+              </div>
+            </div>
+          )}
+          
           <div className="modal-header border-secondary">
             <h5 className="modal-title d-flex align-items-center gap-2">
               <i className={`fa-solid ${feature.icon}`} style={{ color: feature.color }} />
@@ -526,12 +629,53 @@ function ConfigurationModal({ feature, channels, roles, guildId, onSave, onClose
             <button type="button" className="btn-close btn-close-white" onClick={handleClose} />
           </div>
           <div className="modal-body">
-            {renderConfigForm(feature.key, config, updateConfig, channels, roles, guildId, showToast)}
+            {loading ? (
+              <div className="text-center py-5">
+                <div className="spinner-border spinner-border-lg mb-3" role="status">
+                  <span className="visually-hidden">Loading...</span>
+                </div>
+                <div className="h6 mb-0">Loading Configuration...</div>
+                <div className="small text-muted">Fetching your current settings</div>
+              </div>
+            ) : (
+              renderConfigForm(feature.key, config, updateConfig, channels, roles, guildId, showToast)
+            )}
           </div>
           <div className="modal-footer border-secondary">
+            {isDirty() && (
+              <button 
+                type="button" 
+                className="btn btn-outline-warning me-2"
+                onClick={resetConfig}
+                disabled={saving}
+              >
+                <i className="fa-solid fa-rotate-left me-2" />
+                Reset
+              </button>
+            )}
             <button type="button" className="btn btn-secondary" onClick={handleClose}>
               <i className="fa-solid fa-times me-2" />
               Close
+            </button>
+            <button 
+              type="button" 
+              className="btn btn-primary"
+              onClick={handleSave}
+              disabled={saving || !isDirty()}
+            >
+              {saving ? (
+                <>
+                  <div className="spinner-border spinner-border-sm me-2" role="status">
+                    <span className="visually-hidden">Loading...</span>
+                  </div>
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <i className="fa-solid fa-floppy-disk me-2" />
+                  Save Configuration
+                </>
+              )}
             </button>
           </div>
         </div>
@@ -630,15 +774,27 @@ function WelcomeConfigForm({ config, updateConfig, channels, roles }) {
       </div>
 
       <div className="mb-3">
+        <label className="form-label small fw-semibold mb-1">Message Type</label>
+        <select 
+          className="form-select form-select-sm custom-dropdown"
+          value={config.messageType || 'text'}
+          onChange={(e) => updateConfig('messageType', e.target.value)}
+        >
+          <option value="text">Text Message</option>
+          <option value="embed">Embed Message</option>
+        </select>
+      </div>
+
+      <div className="mb-3">
         <label className="form-label small fw-semibold mb-1">Welcome Message</label>
         <textarea 
           className="form-control form-control-sm custom-input"
-          rows={3}
-          value={config.message || 'Welcome to {server}, {user}!'}
-          onChange={(e) => updateConfig('message', e.target.value)}
+          rows={5}
+          value={config.messageText || 'Welcome to {server}, {user}!'}
+          onChange={(e) => updateConfig('messageText', e.target.value)}
           placeholder="Use {user} for mention, {username} for name, {server} for server name"
         />
-        <small className="text-muted">Available variables: {`{user}, {username}, {server}, {memberCount}`}</small>
+        <small className="text-muted">Available variables: {`{user}, {username}, {server}, {memberCount}, {rules}, {general}, {welcome}`}</small>
       </div>
 
       <div className="mb-3">
@@ -658,8 +814,8 @@ function WelcomeConfigForm({ config, updateConfig, channels, roles }) {
         <label className="form-label small fw-semibold mb-1">Auto Role (Optional)</label>
         <select 
           className="form-select form-select-sm custom-dropdown"
-          value={config.autoRoleId || ''}
-          onChange={(e) => updateConfig('autoRoleId', e.target.value)}
+          value={config.roleId || ''}
+          onChange={(e) => updateConfig('roleId', e.target.value)}
         >
           <option value="">No auto role</option>
           {roles.filter(role => !role.managed && role.name !== '@everyone').map(role => (
@@ -667,6 +823,33 @@ function WelcomeConfigForm({ config, updateConfig, channels, roles }) {
           ))}
         </select>
       </div>
+
+      <div className="mb-3">
+        <div className="form-check form-switch">
+          <input 
+            id="welcome-dm-enabled"
+            className="form-check-input" 
+            type="checkbox" 
+            checked={config.dmEnabled || false}
+            onChange={(e) => updateConfig('dmEnabled', e.target.checked)}
+          />
+          <label htmlFor="welcome-dm-enabled" className="form-check-label small fw-semibold">Send DM Welcome Message</label>
+        </div>
+      </div>
+
+      {config.dmEnabled && (
+        <div className="mb-3">
+          <label className="form-label small fw-semibold mb-1">DM Welcome Message</label>
+          <textarea 
+            className="form-control form-control-sm custom-input"
+            rows={2}
+            value={config.dmMessage || 'Welcome to {server}! Thanks for joining us.'}
+            onChange={(e) => updateConfig('dmMessage', e.target.value)}
+            placeholder="Private message sent to new members"
+          />
+          <small className="text-muted">Available variables: {`{user}, {username}, {server}, {memberCount}, {rules}, {general}, {welcome}`}</small>
+        </div>
+      )}
     </div>
   );
 }

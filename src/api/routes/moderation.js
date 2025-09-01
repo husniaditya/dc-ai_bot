@@ -200,7 +200,7 @@ function createModerationRoutes(client, store) {
         return res.status(400).json({ error: 'Guild ID required' });
       }
 
-      const config = await store.getGuildWelcomeMessage(guildId);
+      const config = await store.getGuildWelcome(guildId);
       res.json(config);
     } catch (error) {
       console.error('Error fetching welcome config:', error);
@@ -216,7 +216,8 @@ function createModerationRoutes(client, store) {
         return res.status(400).json({ error: 'Guild ID required' });
       }
 
-      const config = await store.updateGuildWelcomeMessage(guildId, req.body);
+      await store.setGuildWelcome(guildId, req.body);
+      const config = await store.getGuildWelcome(guildId);
       res.json({ success: true, config });
     } catch (error) {
       console.error('Error updating welcome config:', error);
