@@ -30,7 +30,9 @@ async function testDatabaseConnection(store) {
     }
     return true;
   } catch(e) {
-    console.error('[OAuth] Database connection test failed:', e.message);
+    if (process.env.DEBUG_PERSONALIZATION === '1') {
+      console.error('[OAuth] Database connection test failed:', e.message);
+    }
     return false;
   }
 }
@@ -38,7 +40,9 @@ async function testDatabaseConnection(store) {
 function createAuthRoutes(client, store) {
   const router = express.Router();
   const AUTH_ROUTE_VERSION = 'oauth-v3.2-signed-fallback-verify';
-  console.log('[OAuth] Auth route version loaded:', AUTH_ROUTE_VERSION);
+  if (process.env.DEBUG_PERSONALIZATION === '1') {
+    console.log('[OAuth] Auth route version loaded:', AUTH_ROUTE_VERSION);
+  }
 
   // Test database connection on startup
   (async () => {
@@ -48,7 +52,9 @@ function createAuthRoutes(client, store) {
         console.log('[OAuth] Database connection test passed');
       }
     } else {
-      console.warn('[OAuth] Database connection test failed - using in-memory fallback');
+      if (process.env.DEBUG_PERSONALIZATION === '1') {
+          console.warn('[OAuth] Database connection test failed - using in-memory fallback');
+      }
     }
   })();
 

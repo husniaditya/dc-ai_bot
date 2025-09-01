@@ -1,9 +1,20 @@
 const { askGemini } = require('../../utils/ai-client');
 const { sendLongReply, formatAIOutput } = require('../../utils/util');
 const { getAskCache } = require('../../utils/state');
+const { checkCommandAndReply } = require('../../utils/validation');
+
 module.exports = {
   name: 'ask',
   execute: async (interaction) => {
+    const store = require('../../config/store');
+    
+    // Check if the ask command is enabled
+    const canExecute = await checkCommandAndReply(interaction, 'ask', store, false);
+    
+    if (!canExecute) {
+      return; // Command is disabled
+    }
+    
     const prompt = interaction.options.getString('prompt');
     const cache = getAskCache();
     const cached = cache.get(prompt);

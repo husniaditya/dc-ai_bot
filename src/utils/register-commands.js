@@ -221,6 +221,120 @@ const commands = [
     description: 'Show recent Twitch watcher debug events (Manage Server)'
   },
   {
+    name: 'role',
+    description: 'Manage self-assignable roles',
+    options: [
+      {
+        name: 'list',
+        description: 'List all available self-assignable roles',
+        type: 1 // SUB_COMMAND
+      },
+      {
+        name: 'add',
+        description: 'Add a role to yourself or another user',
+        type: 1, // SUB_COMMAND
+        options: [
+          {
+            name: 'role',
+            description: 'Name of the role to add',
+            type: 3, // STRING
+            required: true
+          },
+          {
+            name: 'user',
+            description: 'User to add the role to (defaults to yourself)',
+            type: 6, // USER
+            required: false
+          }
+        ]
+      },
+      {
+        name: 'menu',
+        description: 'Show an interactive role selection menu',
+        type: 1 // SUB_COMMAND
+      },
+      {
+        name: 'remove',
+        description: 'Remove a role from yourself or another user',
+        type: 1, // SUB_COMMAND
+        options: [
+          {
+            name: 'role',
+            description: 'Name of the role to remove',
+            type: 3, // STRING
+            required: true
+          },
+          {
+            name: 'user',
+            description: 'User to remove the role from (defaults to yourself)',
+            type: 6, // USER
+            required: false
+          }
+        ]
+      },
+      {
+        name: 'setup',
+        description: 'Configure self-assignable roles (Manage Roles required)',
+        type: 1, // SUB_COMMAND
+        options: [
+          {
+            name: 'action',
+            description: 'Action to perform',
+            type: 3, // STRING
+            required: true,
+            choices: [
+              { name: 'Add Role', value: 'add' },
+              { name: 'Remove Role', value: 'remove' },
+              { name: 'List Configuration', value: 'list' }
+            ]
+          },
+          {
+            name: 'role',
+            description: 'Role to configure (required for add/remove)',
+            type: 8, // ROLE
+            required: false
+          },
+          {
+            name: 'command_name',
+            description: 'Command name to group roles under (default: roles)',
+            type: 3, // STRING
+            required: false
+          },
+          {
+            name: 'type',
+            description: 'How the role should behave',
+            type: 3, // STRING
+            required: false,
+            choices: [
+              { name: 'Toggle (Add/Remove)', value: 'toggle' },
+              { name: 'Add Only', value: 'add_only' },
+              { name: 'Remove Only', value: 'remove_only' }
+            ]
+          },
+          {
+            name: 'channel',
+            description: 'Channel where this role command can be used (optional)',
+            type: 7, // CHANNEL
+            required: false
+          }
+        ]
+      },
+      {
+        name: 'toggle',
+        description: 'Enable/disable a role command (Manage Roles required)',
+        type: 1, // SUB_COMMAND
+        options: [
+          {
+            name: 'command_name',
+            description: 'Name of the role command to toggle',
+            type: 3, // STRING
+            required: true
+          }
+        ]
+      }
+    ]
+  },
+  {
     name: 'Explain Image',
     type: 3 // MESSAGE context menu
   },

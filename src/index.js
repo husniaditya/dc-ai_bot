@@ -39,6 +39,9 @@ function loadCommands(client){
 
 // Load event handlers
 function loadEvents(client, store, commandMap, startTimestamp) {
+  if (process.env.DEBUG_PERSONALIZATION === '1') {
+    console.log(`[EVENT DEBUG] Loading events for client: ${client.user?.tag || 'not ready'}`);
+  }
   const eventsDir = path.join(__dirname, 'bot/events');
   if (!fs.existsSync(eventsDir)) {
     console.warn('Events directory not found:', eventsDir);
@@ -52,8 +55,13 @@ function loadEvents(client, store, commandMap, startTimestamp) {
       const eventHandler = require(path.join(eventsDir, file));
       if (typeof eventHandler === 'function') {
         // Call the setup function with required parameters
+        if (process.env.DEBUG_PERSONALIZATION === '1') {
+            console.log(`[EVENT DEBUG] Loading event: ${file.replace('.js', '')}`);
+        }
         eventHandler(client, store, startTimestamp, commandMap);
-        console.log(`Loaded event: ${file.replace('.js', '')}`);
+        if (process.env.DEBUG_PERSONALIZATION === '1') {
+            console.log(`[EVENT DEBUG] Loaded event: ${file.replace('.js', '')}`);
+        }
       }
     } catch (e) {
       console.error('Failed loading event', file, e.message);
@@ -69,12 +77,12 @@ if (!token) {
 
 // Intents: make privileged intents optional (to avoid 'Disallowed intents' login error)
 const enableAutoReply = process.env.AUTOREPLY_ENABLED === '1';
-const intents = [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages];
+const intents = [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.GuildMessageReactions];
 // Message Content intent (privileged) – required for reading message text for auto-replies & AI commands
 if (process.env.ENABLE_MESSAGE_CONTENT !== '0') intents.push(GatewayIntentBits.MessageContent);
 // Guild Members intent (privileged) – required for welcome join tracking & some member operations
 if (process.env.ENABLE_GUILD_MEMBERS === '1' || process.env.ENABLE_WELCOME === '1') intents.push(GatewayIntentBits.GuildMembers);
-const client = new Client({ intents, partials:[Partials.Channel, Partials.Message] });
+const client = new Client({ intents, partials:[Partials.Channel, Partials.Message, Partials.Reaction] });
 loadCommands(client);
 
 const store = require('./config/store');
@@ -104,8 +112,8 @@ client.login(token).catch(err => {
     console.error('Failed to login due to disallowed intents. Adjusting to safe intents and retrying...');
     // Remove privileged intents and retry once
     try { client.destroy(); } catch {}
-    const safeIntents = [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages];
-    const safeClient = new Client({ intents: safeIntents, partials:[Partials.Channel, Partials.Message] });
+    const safeIntents = [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.GuildMessageReactions];
+    const safeClient = new Client({ intents: safeIntents, partials:[Partials.Channel, Partials.Message, Partials.Reaction] });
     loadCommands(safeClient);
     loadEvents(safeClient, store, commandMap, startTimestamp);
     // Re-bind minimal events needed

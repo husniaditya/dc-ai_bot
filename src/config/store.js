@@ -35,6 +35,14 @@ let youtubeHasConfigJsonColumn = null; // lazy detection
 const guildTwitchConfigCache = new Map();
 let twitchHasConfigJsonColumn = null; // lazy detection
 
+// Moderation caches
+const guildModerationFeaturesCache = new Map(); // guildId -> feature states
+const guildAutoModRulesCache = new Map(); // guildId -> automod rules array
+const guildReactionRolesCache = new Map(); // guildId -> reaction roles array
+const guildXpSettingsCache = new Map(); // guildId -> xp settings
+const guildScheduledMessagesCache = new Map(); // guildId -> scheduled messages array
+const guildAntiRaidSettingsCache = new Map(); // guildId -> anti-raid settings
+
 // Analytics tracking
 const commandUsageStats = new Map(); // command -> { daily: count, hourly: count, lastHour: timestamp }
 const activityLog = []; // { type, action, guild, timestamp, userId }
@@ -196,18 +204,6 @@ async function initMaria() {
     ) ENGINE=InnoDB`);
     // Migration: add status column if upgrading
     try { await sqlPool.query('ALTER TABLE guild_personalization ADD COLUMN status VARCHAR(16) NULL'); } catch(e){ /* ignore if exists */ }
-    // Welcome configuration table (with enabled flag)
-    await sqlPool.query(`CREATE TABLE IF NOT EXISTS guild_welcome (
-      guild_id VARCHAR(32) PRIMARY KEY,
-      channel_id VARCHAR(32) NULL,
-      message_type VARCHAR(10) NOT NULL DEFAULT 'text',
-      message_text TEXT NULL,
-      card_enabled BOOLEAN NOT NULL DEFAULT 0,
-      enabled BOOLEAN NOT NULL DEFAULT 1,
-      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-    ) ENGINE=InnoDB`);
-    // Migration: add enabled column if upgrading from older version
-    try { await sqlPool.query('ALTER TABLE guild_welcome ADD COLUMN enabled BOOLEAN NOT NULL DEFAULT 1'); } catch(e){ /* ignore if exists */ }
     // YouTube watcher per-guild configuration
     await sqlPool.query(`CREATE TABLE IF NOT EXISTS guild_youtube_watch (
       guild_id VARCHAR(32) PRIMARY KEY,
@@ -267,6 +263,15 @@ async function initMaria() {
     }
   // Attempt migration (ignore errors if column exists) with logging
   try { await sqlPool.query('ALTER TABLE auto_responses ADD COLUMN enabled BOOLEAN NOT NULL DEFAULT 1'); console.log('Migration: added enabled column to auto_responses'); } catch (e){ if(!/Duplicate column/i.test(e.message)) console.warn('Migration auto_responses.enabled skipped:', e.message); }
+
+  // Add custom_message column to guild_reaction_roles table
+  try { await sqlPool.query('ALTER TABLE guild_reaction_roles ADD COLUMN custom_message TEXT NULL'); console.log('Migration: added custom_message column to guild_reaction_roles'); } catch (e){ if(!/Duplicate column/i.test(e.message)) console.warn('Migration guild_reaction_roles.custom_message skipped:', e.message); }
+  
+  // Add title column to guild_reaction_roles table
+  try { await sqlPool.query('ALTER TABLE guild_reaction_roles ADD COLUMN title VARCHAR(200) NULL'); console.log('Migration: added title column to guild_reaction_roles'); } catch (e){ if(!/Duplicate column/i.test(e.message)) console.warn('Migration guild_reaction_roles.title skipped:', e.message); }
+  
+  // Add status column to guild_reaction_roles table
+  try { await sqlPool.query('ALTER TABLE guild_reaction_roles ADD COLUMN status BOOLEAN NOT NULL DEFAULT 1'); console.log('Migration: added status column to guild_reaction_roles'); } catch (e){ if(!/Duplicate column/i.test(e.message)) console.warn('Migration guild_reaction_roles.status skipped:', e.message); }
   try { await sqlPool.query('ALTER TABLE guild_auto_responses ADD COLUMN enabled BOOLEAN NOT NULL DEFAULT 1'); console.log('Migration: added enabled column to guild_auto_responses'); } catch (e){ if(!/Duplicate column/i.test(e.message)) console.warn('Migration guild_auto_responses.enabled skipped:', e.message); }
     // Users table (Discord OAuth users)
     await sqlPool.query(`CREATE TABLE IF NOT EXISTS m_user (
@@ -339,6 +344,191 @@ async function initMaria() {
         };
       }
     } catch(e){ console.warn('Load command toggles failed', e.message); }
+    
+    // Moderation Tables
+    // Welcome Messages
+    await sqlPool.query(`CREATE TABLE IF NOT EXISTS guild_welcome_messages (
+      guild_id VARCHAR(32) PRIMARY KEY,
+      enabled BOOLEAN NOT NULL DEFAULT 0,
+      channel_id VARCHAR(32) NULL,
+      message_type ENUM('text', 'embed') NOT NULL DEFAULT 'text',
+      message_text TEXT NULL,
+      card_enabled BOOLEAN NOT NULL DEFAULT 0,
+      role_id VARCHAR(32) NULL,
+      dm_enabled BOOLEAN NOT NULL DEFAULT 0,
+      dm_message TEXT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB`);
+
+    // Auto Moderation Rules
+    await sqlPool.query(`CREATE TABLE IF NOT EXISTS guild_automod_rules (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      guild_id VARCHAR(32) NOT NULL,
+      name VARCHAR(100) NOT NULL,
+      trigger_type ENUM('spam', 'caps', 'links', 'invite_links', 'profanity', 'mention_spam') NOT NULL,
+      action_type ENUM('delete', 'warn', 'mute', 'kick', 'ban') NOT NULL,
+      threshold_value INT DEFAULT 5,
+      duration INT NULL,
+      enabled BOOLEAN DEFAULT 1,
+      whitelist_channels TEXT NULL,
+      whitelist_roles TEXT NULL,
+      bypass_roles TEXT NULL,
+      log_channel_id VARCHAR(32) NULL,
+      auto_delete BOOLEAN DEFAULT 0,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      INDEX idx_guild_enabled (guild_id, enabled)
+    ) ENGINE=InnoDB`);
+
+    // Role Management - Reaction Roles
+    await sqlPool.query(`CREATE TABLE IF NOT EXISTS guild_reaction_roles (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      guild_id VARCHAR(32) NOT NULL,
+      message_id VARCHAR(32) NOT NULL,
+      channel_id VARCHAR(32) NOT NULL,
+      emoji VARCHAR(100) NOT NULL,
+      role_id VARCHAR(32) NOT NULL,
+      type ENUM('toggle', 'add_only', 'remove_only') DEFAULT 'toggle',
+      custom_message TEXT NULL,
+      title VARCHAR(255) NULL,
+      status TINYINT(1) DEFAULT 1,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      INDEX idx_message (message_id),
+      INDEX idx_guild (guild_id)
+    ) ENGINE=InnoDB`);
+
+    // Check and add missing columns for guild_reaction_roles
+    try {
+      // Check if title column exists
+      const [titleColumnCheck] = await sqlPool.query(`
+        SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS 
+        WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'guild_reaction_roles' AND COLUMN_NAME = 'title'
+      `);
+      
+      if (titleColumnCheck.length === 0) {
+        await sqlPool.query('ALTER TABLE guild_reaction_roles ADD COLUMN title VARCHAR(255) NULL AFTER custom_message');
+        console.log('Added title column to guild_reaction_roles');
+      }
+
+      // Check if status column exists
+      const [statusColumnCheck] = await sqlPool.query(`
+        SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS 
+        WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'guild_reaction_roles' AND COLUMN_NAME = 'status'
+      `);
+      
+      if (statusColumnCheck.length === 0) {
+        await sqlPool.query('ALTER TABLE guild_reaction_roles ADD COLUMN status TINYINT(1) DEFAULT 1 AFTER title');
+        console.log('Added status column to guild_reaction_roles');
+      }
+    } catch (error) {
+      console.error('Error adding columns to guild_reaction_roles:', error);
+    }
+
+    // XP System - User Levels
+    await sqlPool.query(`CREATE TABLE IF NOT EXISTS guild_user_levels (
+      guild_id VARCHAR(32) NOT NULL,
+      user_id VARCHAR(32) NOT NULL,
+      xp BIGINT DEFAULT 0,
+      level INT DEFAULT 1,
+      messages_sent INT DEFAULT 0,
+      voice_minutes INT DEFAULT 0,
+      last_xp_gain TIMESTAMP NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY (guild_id, user_id),
+      INDEX idx_xp (guild_id, xp DESC),
+      INDEX idx_level (guild_id, level DESC)
+    ) ENGINE=InnoDB`);
+
+    // XP System - Level Rewards
+    await sqlPool.query(`CREATE TABLE IF NOT EXISTS guild_level_rewards (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      guild_id VARCHAR(32) NOT NULL,
+      level INT NOT NULL,
+      reward_type ENUM('role', 'currency', 'badge') NOT NULL,
+      reward_value VARCHAR(255) NOT NULL,
+      enabled BOOLEAN DEFAULT 1,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      INDEX idx_guild_level (guild_id, level)
+    ) ENGINE=InnoDB`);
+
+    // XP System - Settings
+    await sqlPool.query(`CREATE TABLE IF NOT EXISTS guild_xp_settings (
+      guild_id VARCHAR(32) PRIMARY KEY,
+      enabled BOOLEAN DEFAULT 0,
+      xp_per_message INT DEFAULT 15,
+      xp_per_voice_minute INT DEFAULT 5,
+      cooldown_seconds INT DEFAULT 60,
+      ignored_channels TEXT NULL,
+      ignored_roles TEXT NULL,
+      level_up_messages BOOLEAN DEFAULT 1,
+      level_up_channel VARCHAR(32) NULL,
+      double_xp_events TEXT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB`);
+
+    // Scheduled Messages
+    await sqlPool.query(`CREATE TABLE IF NOT EXISTS guild_scheduled_messages (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      guild_id VARCHAR(32) NOT NULL,
+      name VARCHAR(200) NOT NULL,
+      channel_id VARCHAR(32) NOT NULL,
+      message_content TEXT NOT NULL,
+      embed_data TEXT NULL,
+      schedule_type ENUM('once', 'daily', 'weekly', 'monthly', 'cron') NOT NULL,
+      schedule_value VARCHAR(100) NOT NULL,
+      next_run TIMESTAMP NULL,
+      last_run TIMESTAMP NULL,
+      enabled BOOLEAN DEFAULT 1,
+      created_by VARCHAR(32) NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      INDEX idx_guild_enabled (guild_id, enabled),
+      INDEX idx_next_run (next_run)
+    ) ENGINE=InnoDB`);
+
+    // Audit Logging
+    await sqlPool.query(`CREATE TABLE IF NOT EXISTS guild_audit_logs (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      guild_id VARCHAR(32) NOT NULL,
+      action_type ENUM('message_delete', 'message_edit', 'member_join', 'member_leave', 'role_update', 'channel_update', 'ban', 'kick', 'warn') NOT NULL,
+      user_id VARCHAR(32) NULL,
+      moderator_id VARCHAR(32) NULL,
+      target_id VARCHAR(32) NULL,
+      channel_id VARCHAR(32) NULL,
+      reason TEXT NULL,
+      metadata TEXT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      INDEX idx_guild_type (guild_id, action_type),
+      INDEX idx_created (created_at)
+    ) ENGINE=InnoDB`);
+
+    // Anti-Raid Settings
+    await sqlPool.query(`CREATE TABLE IF NOT EXISTS guild_antiraid_settings (
+      guild_id VARCHAR(32) PRIMARY KEY,
+      enabled BOOLEAN DEFAULT 0,
+      join_rate_limit INT DEFAULT 5,
+      join_rate_window INT DEFAULT 60,
+      account_age_limit INT DEFAULT 7,
+      auto_lockdown BOOLEAN DEFAULT 0,
+      lockdown_duration INT DEFAULT 300,
+      alert_channel_id VARCHAR(32) NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB`);
+
+    // Main Moderation Features Toggle Table
+    await sqlPool.query(`CREATE TABLE IF NOT EXISTS guild_moderation_features (
+      guild_id VARCHAR(32) NOT NULL,
+      feature_key VARCHAR(50) NOT NULL,
+      enabled BOOLEAN DEFAULT 0,
+      config TEXT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      PRIMARY KEY (guild_id, feature_key),
+      INDEX idx_guild_enabled (guild_id, enabled)
+    ) ENGINE=InnoDB`);
+
     mariaAvailable = true;
     console.log('Config store: MariaDB initialized');
     return true;
@@ -632,14 +822,23 @@ module.exports = {
     if(!guildId) return null;
     if (guildWelcomeCache.has(guildId)) return { ...guildWelcomeCache.get(guildId) };
     if (mariaAvailable && sqlPool){
-      const [rows] = await sqlPool.query('SELECT channel_id, message_type, message_text, card_enabled, enabled FROM guild_welcome WHERE guild_id=?', [guildId]);
+      const [rows] = await sqlPool.query('SELECT * FROM guild_welcome_messages WHERE guild_id=?', [guildId]);
       if (rows.length){
-        const rec = { channelId: rows[0].channel_id || null, messageType: rows[0].message_type || 'text', messageText: rows[0].message_text || '', cardEnabled: rows[0].card_enabled === 1, enabled: rows[0].enabled === undefined ? true : (rows[0].enabled === 1 || rows[0].enabled === true) };
+        const rec = { 
+          channelId: rows[0].channel_id || null, 
+          messageType: rows[0].message_type || 'text', 
+          messageText: rows[0].message_text || '', 
+          cardEnabled: rows[0].card_enabled === 1, 
+          enabled: rows[0].enabled === undefined ? true : (rows[0].enabled === 1 || rows[0].enabled === true),
+          roleId: rows[0].role_id || null,
+          dmEnabled: rows[0].dm_enabled === 1,
+          dmMessage: rows[0].dm_message || ''
+        };
         guildWelcomeCache.set(guildId, rec);
         return { ...rec };
       }
     }
-    const empty = { channelId:null, messageType:'text', messageText:'', cardEnabled:false, enabled:true };
+    const empty = { channelId:null, messageType:'text', messageText:'', cardEnabled:false, enabled:true, roleId:null, dmEnabled:false, dmMessage:'' };
     guildWelcomeCache.set(guildId, empty);
     return { ...empty };
   },
@@ -652,10 +851,18 @@ module.exports = {
     if (data.messageText !== undefined) next.messageText = data.messageText || '';
     if (data.cardEnabled !== undefined) next.cardEnabled = !!data.cardEnabled;
     if (data.enabled !== undefined) next.enabled = !!data.enabled;
+    if (data.roleId !== undefined) next.roleId = data.roleId || null;
+    if (data.dmEnabled !== undefined) next.dmEnabled = !!data.dmEnabled;
+    if (data.dmMessage !== undefined) next.dmMessage = data.dmMessage || '';
     guildWelcomeCache.set(guildId, next);
     if (mariaAvailable && sqlPool){
-      await sqlPool.query('REPLACE INTO guild_welcome(guild_id, channel_id, message_type, message_text, card_enabled, enabled) VALUES (?,?,?,?,?,?)', [
-        guildId, next.channelId, next.messageType, next.messageText, next.cardEnabled ? 1 : 0, next.enabled ? 1 : 0
+      await sqlPool.query(`INSERT INTO guild_welcome_messages (guild_id, enabled, channel_id, message_type, message_text, card_enabled, role_id, dm_enabled, dm_message)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ON DUPLICATE KEY UPDATE enabled=VALUES(enabled), channel_id=VALUES(channel_id), message_type=VALUES(message_type), 
+        message_text=VALUES(message_text), card_enabled=VALUES(card_enabled), role_id=VALUES(role_id), 
+        dm_enabled=VALUES(dm_enabled), dm_message=VALUES(dm_message)`, [
+        guildId, next.enabled ? 1 : 0, next.channelId, next.messageType, next.messageText, 
+        next.cardEnabled ? 1 : 0, next.roleId, next.dmEnabled ? 1 : 0, next.dmMessage
       ]);
     }
     return { ...next };
@@ -1265,5 +1472,633 @@ module.exports = {
   // Expose sqlPool for direct database access (for OAuth states, etc.)
   get sqlPool() {
     return sqlPool;
+  },
+
+  // Auto Moderation Rules
+  getGuildAutoModRules: async (guildId) => {
+    if (!guildId) return [];
+    if (guildAutoModRulesCache.has(guildId)) return guildAutoModRulesCache.get(guildId).map(r => ({ ...r }));
+    
+    if (mariaAvailable && sqlPool) {
+      const [rows] = await sqlPool.query('SELECT * FROM guild_automod_rules WHERE guild_id=? ORDER BY created_at DESC', [guildId]);
+      const rules = rows.map(r => ({
+        id: r.id,
+        name: r.name,
+        triggerType: r.trigger_type,
+        actionType: r.action_type,
+        thresholdValue: r.threshold_value,
+        duration: r.duration,
+        enabled: r.enabled !== 0,
+        whitelistChannels: r.whitelist_channels ? JSON.parse(r.whitelist_channels) : [],
+        whitelistRoles: r.whitelist_roles ? JSON.parse(r.whitelist_roles) : [],
+        bypassRoles: r.bypass_roles ? JSON.parse(r.bypass_roles) : [],
+        logChannelId: r.log_channel_id,
+        autoDelete: r.auto_delete !== 0
+      }));
+      guildAutoModRulesCache.set(guildId, rules);
+      return rules.map(r => ({ ...r }));
+    }
+    guildAutoModRulesCache.set(guildId, []);
+    return [];
+  },
+
+  // XP Settings
+  getGuildXpSettings: async (guildId) => {
+    if (!guildId) return null;
+    if (guildXpSettingsCache.has(guildId)) return { ...guildXpSettingsCache.get(guildId) };
+    
+    if (mariaAvailable && sqlPool) {
+      const [rows] = await sqlPool.query('SELECT * FROM guild_xp_settings WHERE guild_id=?', [guildId]);
+      if (rows.length) {
+        const config = {
+          enabled: rows[0].enabled !== 0,
+          xpPerMessage: rows[0].xp_per_message,
+          xpPerVoiceMinute: rows[0].xp_per_voice_minute,
+          cooldownSeconds: rows[0].cooldown_seconds,
+          ignoredChannels: rows[0].ignored_channels ? JSON.parse(rows[0].ignored_channels) : [],
+          ignoredRoles: rows[0].ignored_roles ? JSON.parse(rows[0].ignored_roles) : [],
+          levelUpMessages: rows[0].level_up_messages !== 0,
+          levelUpChannel: rows[0].level_up_channel,
+          doubleXpEvents: rows[0].double_xp_events ? JSON.parse(rows[0].double_xp_events) : []
+        };
+        guildXpSettingsCache.set(guildId, config);
+        return { ...config };
+      }
+    }
+    const defaultConfig = { 
+      enabled: false, xpPerMessage: 15, xpPerVoiceMinute: 5, cooldownSeconds: 60,
+      ignoredChannels: [], ignoredRoles: [], levelUpMessages: true, levelUpChannel: null, doubleXpEvents: []
+    };
+    guildXpSettingsCache.set(guildId, defaultConfig);
+    return { ...defaultConfig };
+  },
+
+  updateGuildXpSettings: async (guildId, data) => {
+    if (!guildId) throw new Error('guildId required');
+    const current = await module.exports.getGuildXpSettings(guildId);
+    const next = { ...current, ...data };
+    guildXpSettingsCache.set(guildId, next);
+    
+    if (mariaAvailable && sqlPool) {
+      await sqlPool.query(`INSERT INTO guild_xp_settings (guild_id, enabled, xp_per_message, xp_per_voice_minute, cooldown_seconds, ignored_channels, ignored_roles, level_up_messages, level_up_channel, double_xp_events)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ON DUPLICATE KEY UPDATE enabled=VALUES(enabled), xp_per_message=VALUES(xp_per_message), xp_per_voice_minute=VALUES(xp_per_voice_minute),
+        cooldown_seconds=VALUES(cooldown_seconds), ignored_channels=VALUES(ignored_channels), ignored_roles=VALUES(ignored_roles),
+        level_up_messages=VALUES(level_up_messages), level_up_channel=VALUES(level_up_channel), double_xp_events=VALUES(double_xp_events)`, [
+        guildId, next.enabled ? 1 : 0, next.xpPerMessage, next.xpPerVoiceMinute, next.cooldownSeconds,
+        JSON.stringify(next.ignoredChannels), JSON.stringify(next.ignoredRoles), next.levelUpMessages ? 1 : 0,
+        next.levelUpChannel, JSON.stringify(next.doubleXpEvents)
+      ]);
+    }
+    return { ...next };
+  },
+
+  // Reaction Roles
+  getGuildReactionRoles: async (guildId) => {
+    if (!guildId) return [];
+    if (guildReactionRolesCache.has(guildId)) return guildReactionRolesCache.get(guildId).map(r => ({ ...r }));
+    
+    if (mariaAvailable && sqlPool) {
+      const [rows] = await sqlPool.query(`
+        SELECT id, message_id, channel_id, emoji, role_id, type, custom_message, title, status, created_at
+        FROM guild_reaction_roles 
+        WHERE guild_id=? 
+        ORDER BY created_at DESC
+      `, [guildId]);
+      
+      const reactionRoles = rows.map(r => ({
+        id: r.id,
+        messageId: r.message_id,
+        channelId: r.channel_id,
+        emoji: r.emoji,
+        roleId: r.role_id,
+        type: r.type || 'toggle',
+        customMessage: r.custom_message,
+        title: r.title,
+        status: r.status !== 0
+      }));
+      guildReactionRolesCache.set(guildId, reactionRoles);
+      return reactionRoles.map(r => ({ ...r }));
+    }
+    guildReactionRolesCache.set(guildId, []);
+    return [];
+  },
+
+  addGuildReactionRole: async (guildId, data) => {
+    if (!guildId) return null;
+    
+    if (mariaAvailable && sqlPool) {
+      const [result] = await sqlPool.query(
+        'INSERT INTO guild_reaction_roles (guild_id, message_id, channel_id, emoji, role_id, type, custom_message, title, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+        [guildId, data.messageId, data.channelId, data.emoji, data.roleId, data.type || 'toggle', data.customMessage || null, data.title || null, data.status !== false ? 1 : 0]
+      );
+      
+      // Invalidate cache
+      guildReactionRolesCache.delete(guildId);
+      
+      return {
+        id: result.insertId,
+        messageId: data.messageId,
+        channelId: data.channelId,
+        emoji: data.emoji,
+        roleId: data.roleId,
+        type: data.type || 'toggle',
+        customMessage: data.customMessage || null,
+        title: data.title || null,
+        status: data.status !== false
+      };
+    }
+    
+    return null;
+  },
+
+  removeGuildReactionRolesByMessage: async (guildId, messageId) => {
+    if (!guildId || !messageId) return false;
+    
+    if (mariaAvailable && sqlPool) {
+      await sqlPool.query(
+        'DELETE FROM guild_reaction_roles WHERE guild_id=? AND message_id=?',
+        [guildId, messageId]
+      );
+      
+      // Invalidate cache
+      guildReactionRolesCache.delete(guildId);
+      
+      return true;
+    }
+    
+    return false;
+  },
+
+  updateGuildReactionRole: async (guildId, id, data) => {
+    if (!guildId) return null;
+    
+    if (mariaAvailable && sqlPool) {
+      // First, get the original record to find the message_id
+      const [originalRecord] = await sqlPool.query(
+        'SELECT message_id, channel_id, emoji FROM guild_reaction_roles WHERE id=? AND guild_id=? LIMIT 1',
+        [id, guildId]
+      );
+      
+      if (originalRecord.length === 0) return null;
+      
+      const messageId = originalRecord[0].message_id;
+      const channelId = originalRecord[0].channel_id;
+      const emoji = originalRecord[0].emoji;
+      
+      // Delete all existing records for this message/emoji combination
+      await sqlPool.query(
+        'DELETE FROM guild_reaction_roles WHERE guild_id=? AND message_id=? AND emoji=?',
+        [guildId, messageId, emoji]
+      );
+      
+      // Insert new records for each role
+      let lastInsertId = null;
+      for (const roleData of data.roles) {
+        if (!roleData.roleId) continue; // Skip empty roles
+        
+        const [result] = await sqlPool.query(
+          'INSERT INTO guild_reaction_roles (guild_id, message_id, channel_id, emoji, role_id, type, custom_message, title, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+          [guildId, data.messageId || messageId, data.channelId || channelId, data.emoji || emoji, roleData.roleId, roleData.type || 'toggle', data.customMessage || null, data.title || null, data.status !== false ? 1 : 0]
+        );
+        
+        if (!lastInsertId) lastInsertId = result.insertId;
+      }
+      
+      // Invalidate cache
+      guildReactionRolesCache.delete(guildId);
+      
+      return {
+        id: lastInsertId,
+        messageId: data.messageId || messageId,
+        channelId: data.channelId || channelId,
+        emoji: data.emoji || emoji,
+        roles: data.roles,
+        customMessage: data.customMessage || null,
+        title: data.title || null,
+        status: data.status !== false
+      };
+    }
+    return null;
+  },
+
+  updateGuildReactionRoleStatus: async (guildId, id, status) => {
+    if (!guildId) return null;
+    
+    if (mariaAvailable && sqlPool) {
+      await sqlPool.query(
+        'UPDATE guild_reaction_roles SET status=? WHERE id=? AND guild_id=?',
+        [status ? 1 : 0, id, guildId]
+      );
+      
+      // Invalidate cache
+      guildReactionRolesCache.delete(guildId);
+      
+      return true;
+    }
+    return false;
+  },
+
+  deleteGuildReactionRole: async (guildId, id) => {
+    if (!guildId) return false;
+    
+    if (mariaAvailable && sqlPool) {
+      await sqlPool.query('DELETE FROM guild_reaction_roles WHERE id=? AND guild_id=?', [id, guildId]);
+      
+      // Invalidate cache
+      guildReactionRolesCache.delete(guildId);
+      
+      return true;
+    }
+    return false;
+  },
+
+  deleteGuildReactionRoleByMessageId: async (guildId, messageId) => {
+    if (!guildId || !messageId) return false;
+    
+    if (mariaAvailable && sqlPool) {
+      await sqlPool.query('DELETE FROM guild_reaction_roles WHERE message_id=? AND guild_id=?', [messageId, guildId]);
+      
+      // Invalidate cache
+      guildReactionRolesCache.delete(guildId);
+      
+      return true;
+    }
+    return false;
+  },
+
+  // Anti-Raid Settings
+  getGuildAntiRaidSettings: async (guildId) => {
+    if (!guildId) return null;
+    if (guildAntiRaidSettingsCache.has(guildId)) return { ...guildAntiRaidSettingsCache.get(guildId) };
+    
+    if (mariaAvailable && sqlPool) {
+      const [rows] = await sqlPool.query('SELECT * FROM guild_antiraid_settings WHERE guild_id=?', [guildId]);
+      if (rows.length) {
+        const config = {
+          enabled: rows[0].enabled !== 0,
+          joinRateLimit: rows[0].join_rate_limit,
+          joinRateWindow: rows[0].join_rate_window,
+          accountAgeLimit: rows[0].account_age_limit,
+          autoLockdown: rows[0].auto_lockdown !== 0,
+          lockdownDuration: rows[0].lockdown_duration,
+          alertChannelId: rows[0].alert_channel_id
+        };
+        guildAntiRaidSettingsCache.set(guildId, config);
+        return { ...config };
+      }
+    }
+    const defaultConfig = { 
+      enabled: false, joinRateLimit: 5, joinRateWindow: 60, accountAgeLimit: 7,
+      autoLockdown: false, lockdownDuration: 300, alertChannelId: null
+    };
+    guildAntiRaidSettingsCache.set(guildId, defaultConfig);
+    return { ...defaultConfig };
+  },
+
+  updateGuildAntiRaidSettings: async (guildId, data) => {
+    if (!guildId) throw new Error('guildId required');
+    const current = await module.exports.getGuildAntiRaidSettings(guildId);
+    const next = { ...current, ...data };
+    guildAntiRaidSettingsCache.set(guildId, next);
+    
+    if (mariaAvailable && sqlPool) {
+      await sqlPool.query(`INSERT INTO guild_antiraid_settings (guild_id, enabled, join_rate_limit, join_rate_window, account_age_limit, auto_lockdown, lockdown_duration, alert_channel_id)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        ON DUPLICATE KEY UPDATE enabled=VALUES(enabled), join_rate_limit=VALUES(join_rate_limit), join_rate_window=VALUES(join_rate_window),
+        account_age_limit=VALUES(account_age_limit), auto_lockdown=VALUES(auto_lockdown), lockdown_duration=VALUES(lockdown_duration), alert_channel_id=VALUES(alert_channel_id)`, [
+        guildId, next.enabled ? 1 : 0, next.joinRateLimit, next.joinRateWindow, next.accountAgeLimit,
+        next.autoLockdown ? 1 : 0, next.lockdownDuration, next.alertChannelId
+      ]);
+    }
+    return { ...next };
+  },
+
+  // Scheduled Messages
+  getGuildScheduledMessages: async (guildId) => {
+    if (!guildId) return [];
+    if (guildScheduledMessagesCache.has(guildId)) return guildScheduledMessagesCache.get(guildId).map(m => ({ ...m }));
+    
+    if (mariaAvailable && sqlPool) {
+      const [rows] = await sqlPool.query('SELECT * FROM guild_scheduled_messages WHERE guild_id=? ORDER BY created_at DESC', [guildId]);
+      const messages = rows.map(m => ({
+        id: m.id,
+        name: m.name,
+        channelId: m.channel_id,
+        messageContent: m.message_content,
+        embedData: m.embed_data ? JSON.parse(m.embed_data) : null,
+        scheduleType: m.schedule_type,
+        scheduleValue: m.schedule_value,
+        nextRun: m.next_run,
+        lastRun: m.last_run,
+        enabled: m.enabled !== 0,
+        createdBy: m.created_by
+      }));
+      guildScheduledMessagesCache.set(guildId, messages);
+      return messages.map(m => ({ ...m }));
+    }
+    guildScheduledMessagesCache.set(guildId, []);
+    return [];
+  },
+
+  // Moderation Features Management
+  getModerationFeatures: async (guildId) => {
+    if (!guildId) return {};
+    if (guildModerationFeaturesCache.has(guildId)) return { ...guildModerationFeaturesCache.get(guildId) };
+    
+    if (mariaAvailable && sqlPool) {
+      const [rows] = await sqlPool.query('SELECT feature_key, enabled, config FROM guild_moderation_features WHERE guild_id=?', [guildId]);
+      const features = {};
+      rows.forEach(row => {
+        features[row.feature_key] = {
+          enabled: row.enabled !== 0,
+          config: row.config ? JSON.parse(row.config) : {}
+        };
+      });
+      
+      // Set default values for missing features
+      const defaultFeatures = ['welcome', 'automod', 'roles', 'xp', 'scheduler', 'logging', 'antiraid'];
+      defaultFeatures.forEach(feature => {
+        if (!features[feature]) {
+          features[feature] = { enabled: false, config: {} };
+        }
+      });
+      
+      guildModerationFeaturesCache.set(guildId, features);
+      return { ...features };
+    }
+    
+    // Default configuration
+    const defaultFeatures = {
+      welcome: { enabled: false, config: {} },
+      automod: { enabled: false, config: {} },
+      roles: { enabled: false, config: {} },
+      xp: { enabled: false, config: {} },
+      scheduler: { enabled: false, config: {} },
+      logging: { enabled: false, config: {} },
+      antiraid: { enabled: false, config: {} }
+    };
+    guildModerationFeaturesCache.set(guildId, defaultFeatures);
+    return { ...defaultFeatures };
+  },
+
+  toggleModerationFeature: async (guildId, featureKey, enabled) => {
+    if (!guildId) throw new Error('guildId required');
+    
+    const current = await module.exports.getModerationFeatures(guildId);
+    current[featureKey] = { ...current[featureKey], enabled: !!enabled };
+    guildModerationFeaturesCache.set(guildId, current);
+    
+    if (mariaAvailable && sqlPool) {
+      await sqlPool.query(`INSERT INTO guild_moderation_features (guild_id, feature_key, enabled, config)
+        VALUES (?, ?, ?, ?)
+        ON DUPLICATE KEY UPDATE enabled=VALUES(enabled)`, [
+        guildId, featureKey, enabled ? 1 : 0, JSON.stringify(current[featureKey].config)
+      ]);
+    }
+    return current;
+  },
+
+  updateModerationFeatureConfig: async (guildId, featureKey, config) => {
+    if (!guildId) throw new Error('guildId required');
+    
+    const current = await module.exports.getModerationFeatures(guildId);
+    current[featureKey] = { ...current[featureKey], config: config || {} };
+    guildModerationFeaturesCache.set(guildId, current);
+    
+    if (mariaAvailable && sqlPool) {
+      await sqlPool.query(`INSERT INTO guild_moderation_features (guild_id, feature_key, enabled, config)
+        VALUES (?, ?, ?, ?)
+        ON DUPLICATE KEY UPDATE config=VALUES(config)`, [
+        guildId, featureKey, current[featureKey].enabled ? 1 : 0, JSON.stringify(config || {})
+      ]);
+    }
+    return current[featureKey];
+  },
+
+  // Self-Assignable Roles (Slash Command Roles) Functions
+  getGuildSelfAssignableRoles: async (guildId) => {
+    if (!guildId) throw new Error('guildId required');
+    
+    if (mariaAvailable && sqlPool) {
+      const [rows] = await sqlPool.query(`
+        SELECT id, guild_id, command_name, description, channel_id, role_id, role_type, 
+               require_permission, allowed_roles, status, created_at, created_by, 
+               updated_at, updated_by
+        FROM guild_self_assignable_roles 
+        WHERE guild_id = ? 
+        ORDER BY command_name, role_id
+      `, [guildId]);
+      
+      // Group by command_name
+      const commands = {};
+      rows.forEach(row => {
+        const commandName = row.command_name;
+        if (!commands[commandName]) {
+          commands[commandName] = {
+            id: `${guildId}-${commandName}`,
+            commandName: row.command_name,
+            description: row.description,
+            channelId: row.channel_id,
+            requirePermission: row.require_permission,
+            allowedRoles: row.allowed_roles ? JSON.parse(row.allowed_roles) : [],
+            status: row.status,
+            roles: [],
+            created_at: row.created_at,
+            created_by: row.created_by,
+            updated_at: row.updated_at,
+            updated_by: row.updated_by
+          };
+        }
+        commands[commandName].roles.push({
+          id: row.id,
+          roleId: row.role_id,
+          type: row.role_type
+        });
+      });
+      
+      return Object.values(commands);
+    }
+    
+    return []; // Memory fallback
+  },
+
+  addGuildSelfAssignableRole: async (guildId, data, createdBy) => {
+    if (!guildId) throw new Error('guildId required');
+    if (!data.commandName) throw new Error('commandName required');
+    if (!data.roles || !Array.isArray(data.roles) || data.roles.length === 0) {
+      throw new Error('roles array required');
+    }
+    
+    if (mariaAvailable && sqlPool) {
+      const connection = await sqlPool.getConnection();
+      try {
+        await connection.beginTransaction();
+        
+        // Delete existing roles for this command
+        await connection.query(
+          'DELETE FROM guild_self_assignable_roles WHERE guild_id = ? AND command_name = ?',
+          [guildId, data.commandName]
+        );
+        
+        // Insert new roles
+        for (const role of data.roles) {
+          if (!role.roleId) continue;
+          
+          await connection.query(`
+            INSERT INTO guild_self_assignable_roles 
+            (guild_id, command_name, description, channel_id, role_id, role_type, 
+             require_permission, allowed_roles, status, created_by, updated_by)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          `, [
+            guildId,
+            data.commandName,
+            data.description || '',
+            data.channelId || null,
+            role.roleId,
+            role.type || 'toggle',
+            data.requirePermission || false,
+            JSON.stringify(data.allowedRoles || []),
+            data.status !== false,
+            createdBy || null,
+            createdBy || null
+          ]);
+        }
+        
+        await connection.commit();
+        return await module.exports.getGuildSelfAssignableRoles(guildId);
+      } catch (error) {
+        await connection.rollback();
+        throw error;
+      } finally {
+        connection.release();
+      }
+    }
+    
+    throw new Error('Database not available');
+  },
+
+  updateGuildSelfAssignableRole: async (guildId, commandName, data, updatedBy) => {
+    if (!guildId) throw new Error('guildId required');
+    if (!commandName) throw new Error('commandName required');
+    
+    if (mariaAvailable && sqlPool) {
+      const connection = await sqlPool.getConnection();
+      try {
+        await connection.beginTransaction();
+        
+        // Delete existing roles for this command
+        await connection.query(
+          'DELETE FROM guild_self_assignable_roles WHERE guild_id = ? AND command_name = ?',
+          [guildId, commandName]
+        );
+        
+        // Insert updated roles
+        if (data.roles && Array.isArray(data.roles)) {
+          for (const role of data.roles) {
+            if (!role.roleId) continue;
+            
+            await connection.query(`
+              INSERT INTO guild_self_assignable_roles 
+              (guild_id, command_name, description, channel_id, role_id, role_type, 
+               require_permission, allowed_roles, status, created_by, updated_by)
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            `, [
+              guildId,
+              commandName,
+              data.description || '',
+              data.channelId || null,
+              role.roleId,
+              role.type || 'toggle',
+              data.requirePermission || false,
+              JSON.stringify(data.allowedRoles || []),
+              data.status !== false,
+              updatedBy || null,
+              updatedBy || null
+            ]);
+          }
+        }
+        
+        await connection.commit();
+        return await module.exports.getGuildSelfAssignableRoles(guildId);
+      } catch (error) {
+        await connection.rollback();
+        throw error;
+      } finally {
+        connection.release();
+      }
+    }
+    
+    throw new Error('Database not available');
+  },
+
+  deleteGuildSelfAssignableRole: async (guildId, commandName) => {
+    if (!guildId) throw new Error('guildId required');
+    if (!commandName) throw new Error('commandName required');
+    
+    if (mariaAvailable && sqlPool) {
+      await sqlPool.query(
+        'DELETE FROM guild_self_assignable_roles WHERE guild_id = ? AND command_name = ?',
+        [guildId, commandName]
+      );
+      return true;
+    }
+    
+    throw new Error('Database not available');
+  },
+
+  toggleGuildSelfAssignableRoleStatus: async (guildId, commandName, status) => {
+    if (!guildId) throw new Error('guildId required');
+    if (!commandName) throw new Error('commandName required');
+    
+    if (mariaAvailable && sqlPool) {
+      await sqlPool.query(
+        'UPDATE guild_self_assignable_roles SET status = ? WHERE guild_id = ? AND command_name = ?',
+        [status, guildId, commandName]
+      );
+      return await module.exports.getGuildSelfAssignableRoles(guildId);
+    }
+    
+    throw new Error('Database not available');
+  },
+
+  getGuildSelfAssignableRoleByCommand: async (guildId, commandName) => {
+    if (!guildId) throw new Error('guildId required');
+    if (!commandName) throw new Error('commandName required');
+    
+    if (mariaAvailable && sqlPool) {
+      const [rows] = await sqlPool.query(`
+        SELECT id, guild_id, command_name, description, channel_id, role_id, role_type, 
+               require_permission, allowed_roles, status, created_at, created_by, 
+               updated_at, updated_by
+        FROM guild_self_assignable_roles 
+        WHERE guild_id = ? AND command_name = ?
+        ORDER BY role_id
+      `, [guildId, commandName]);
+      
+      if (rows.length === 0) return null;
+      
+      const firstRow = rows[0];
+      return {
+        id: `${guildId}-${commandName}`,
+        commandName: firstRow.command_name,
+        description: firstRow.description,
+        channelId: firstRow.channel_id,
+        requirePermission: firstRow.require_permission,
+        allowedRoles: firstRow.allowed_roles ? JSON.parse(firstRow.allowed_roles) : [],
+        status: firstRow.status,
+        roles: rows.map(row => ({
+          id: row.id,
+          roleId: row.role_id,
+          type: row.role_type
+        })),
+        created_at: firstRow.created_at,
+        created_by: firstRow.created_by,
+        updated_at: firstRow.updated_at,
+        updated_by: firstRow.updated_by
+      };
+    }
+    
+    return null;
   }
 };
