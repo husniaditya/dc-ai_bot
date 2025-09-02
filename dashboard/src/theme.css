@@ -2052,3 +2052,388 @@ html:not(.dark) {
   --hover-bg: #f5f5f5;
   --border-color: #dee2e6;
 }
+
+/* Games & Socials Section Styling */
+.games-socials-wrapper {
+  position: relative;
+}
+
+.services-grid {
+  gap: 1rem;
+}
+
+.service-card {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius);
+  backdrop-filter: blur(10px);
+  transition: all var(--transition);
+  cursor: pointer;
+  min-height: 120px;
+}
+
+.service-card:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.15);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.service-card.active {
+  border-color: var(--accent);
+  box-shadow: var(--accent-glow);
+}
+
+.service-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+}
+
+.app-config-icon {
+  height: 44px;
+  width: 44px;
+  object-fit: contain;
+  border-radius: 8px;
+}
+
+.app-config-header {
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius);
+  backdrop-filter: blur(10px);
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--text-muted);
+}
+
+.status-dot.on {
+  background: var(--success);
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
+}
+
+.status-dot.off {
+  background: var(--text-muted);
+}
+
+.dirty-badge {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.65rem;
+  font-weight: 600;
+  line-height: 1;
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: baseline;
+  border-radius: 0.375rem;
+  background: var(--warn);
+  color: #000;
+}
+
+.badge-soft {
+  background: rgba(99, 102, 241, 0.2);
+  color: var(--accent);
+  padding: 0.125rem 0.375rem;
+  border-radius: 0.25rem;
+  font-size: 0.625rem;
+  font-weight: 500;
+}
+
+/* YouTube Config Grid */
+.yt-config-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+@media (max-width: 1200px) {
+  .yt-config-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .yt-config-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.yt-config-block {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius);
+  padding: 1rem;
+  backdrop-filter: blur(10px);
+}
+
+/* Template Preview */
+.template-preview {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0.375rem;
+  padding: 0.5rem;
+  margin-top: 0.5rem;
+  font-size: 0.75rem;
+}
+
+.template-preview.empty {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.template-preview.size-lg {
+  padding: 0.75rem;
+  font-size: 0.8rem;
+}
+
+.preview-label {
+  color: var(--text-muted);
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.25rem;
+}
+
+.preview-body {
+  color: var(--text-soft);
+  line-height: 1.4;
+}
+
+/* Channel/Streamer List */
+.yt-channel-list {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.yt-channel-item {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+  margin-bottom: 0.5rem;
+  transition: all var(--transition);
+}
+
+.yt-channel-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.yt-channel-item.editing {
+  border-color: var(--accent);
+  background: rgba(99, 102, 241, 0.1);
+}
+
+.yt-channel-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.yt-channel-edit {
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Mention Targets Picker */
+.mention-targets-picker {
+  position: relative;
+}
+
+.mention-targets-box {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+  padding: 0.5rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0.375rem;
+  min-height: 38px;
+  cursor: text;
+  transition: all var(--transition);
+}
+
+.mention-targets-box:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.25);
+}
+
+.mention-targets-box input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  color: inherit;
+  outline: none;
+  min-width: 120px;
+}
+
+.mention-targets-box input::placeholder {
+  color: var(--text-muted);
+}
+
+.mention-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.125rem 0.5rem;
+  background: rgba(99, 102, 241, 0.2);
+  color: var(--accent);
+  border-radius: 1rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.mention-chip.role {
+  background: rgba(16, 185, 129, 0.2);
+  color: var(--success);
+}
+
+.mention-chip button {
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  padding: 0;
+  margin-left: 0.25rem;
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background-color var(--transition);
+}
+
+.mention-chip button:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.mention-targets-suggestions {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  background: rgba(31, 37, 71, 0.95);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0.5rem;
+  max-height: 200px;
+  overflow-y: auto;
+  margin-top: 0.25rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.mention-targets-suggestions button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  background: none;
+  border: none;
+  color: var(--text-soft);
+  text-align: left;
+  cursor: pointer;
+  transition: background-color var(--transition);
+}
+
+.mention-targets-suggestions button:hover,
+.mention-targets-suggestions button.active {
+  background: rgba(99, 102, 241, 0.2);
+  color: var(--accent);
+}
+
+.mention-targets-suggestions .meta {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  font-weight: 500;
+}
+
+/* Button styling */
+.btn-accent {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: white;
+}
+
+.btn-accent:hover {
+  background: #5855eb;
+  border-color: #5855eb;
+  color: white;
+}
+
+.btn-icon {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.375rem;
+}
+
+.btn-xs {
+  font-size: 0.65rem;
+}
+
+/* Light theme adjustments for Games & Socials */
+html:not(.dark) .service-card {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.08) 0%, rgba(168, 85, 247, 0.06) 50%, rgba(236, 72, 153, 0.04) 100%);
+  border-color: rgba(99, 102, 241, 0.15);
+  box-shadow: 0 8px 32px rgba(99, 102, 241, 0.08), 0 4px 16px rgba(168, 85, 247, 0.04), 0 0 0 1px rgba(255,255,255,0.6) inset;
+}
+
+html:not(.dark) .service-card:hover {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.12) 0%, rgba(168, 85, 247, 0.09) 50%, rgba(236, 72, 153, 0.06) 100%);
+  box-shadow: 0 12px 40px rgba(99, 102, 241, 0.12), 0 6px 20px rgba(168, 85, 247, 0.06), 0 0 0 1px rgba(255,255,255,0.7) inset;
+  border-color: rgba(99, 102, 241, 0.25);
+}
+
+html:not(.dark) .service-card.active {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(168, 85, 247, 0.12) 50%, rgba(236, 72, 153, 0.08) 100%);
+  border-color: var(--accent);
+  box-shadow: 0 8px 32px rgba(99, 102, 241, 0.15), 0 4px 16px rgba(168, 85, 247, 0.08), 0 0 0 2px var(--accent), 0 0 0 1px rgba(255,255,255,0.8) inset;
+}
+
+html:not(.dark) .yt-config-block,
+html:not(.dark) .app-config-header {
+  background: rgba(255, 255, 255, 0.7);
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+html:not(.dark) .yt-channel-item {
+  background: rgba(255, 255, 255, 0.5);
+  border-color: rgba(0, 0, 0, 0.06);
+}
+
+html:not(.dark) .yt-channel-item:hover {
+  background: rgba(255, 255, 255, 0.7);
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+html:not(.dark) .template-preview {
+  background: rgba(0, 0, 0, 0.05);
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+html:not(.dark) .mention-targets-box {
+  background: rgba(255, 255, 255, 0.7);
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+html:not(.dark) .mention-targets-suggestions {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border-color: rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
