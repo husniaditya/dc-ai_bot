@@ -629,12 +629,25 @@ async function toggleGuildSelfAssignableRoleStatus(guildId, commandName, status)
   if (!guildId) throw new Error('guildId required');
   if (!commandName) throw new Error('commandName required');
   
+  // Ensure status is properly converted to database format
+  const dbStatus = status === true || status === 'true' || status === 1 || status === '1' ? 1 : 0;
+  
   if (db.mariaAvailable && db.sqlPool) {
-    await db.sqlPool.query(
-      'UPDATE guild_self_assignable_roles SET status = ? WHERE guild_id = ? AND command_name = ?',
-      [status, guildId, commandName]
-    );
-    return await getGuildSelfAssignableRoles(guildId);
+    try {
+      const [result] = await db.sqlPool.query(
+        'UPDATE guild_self_assignable_roles SET status = ? WHERE guild_id = ? AND command_name = ?',
+        [dbStatus, guildId, commandName]
+      );
+      
+      if (result.affectedRows === 0) {
+        throw new Error(`No self-assignable role found with command name: ${commandName}`);
+      }
+      
+      return await getGuildSelfAssignableRoles(guildId);
+    } catch (e) {
+      console.error('[SelfAssignableRoles] Toggle error:', e.message);
+      throw e;
+    }
   }
   
   throw new Error('Database not available');

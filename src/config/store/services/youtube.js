@@ -7,12 +7,25 @@ async function ensureYouTubeColumns() {
   if (db.mariaAvailable && db.sqlPool) {
     try {
       // Add member-only template columns if they don't exist
-      await db.sqlPool.query('ALTER TABLE guild_youtube_watch ADD COLUMN member_only_upload_template TEXT NULL');
-      await db.sqlPool.query('ALTER TABLE guild_youtube_watch ADD COLUMN member_only_live_template TEXT NULL');
-      await db.sqlPool.query('ALTER TABLE guild_youtube_watch ADD COLUMN upload_announce_channel_id VARCHAR(32) NULL');
-      await db.sqlPool.query('ALTER TABLE guild_youtube_watch ADD COLUMN live_announce_channel_id VARCHAR(32) NULL');
+      const alterQueries = [
+        'ALTER TABLE guild_youtube_watch ADD COLUMN member_only_upload_template TEXT NULL',
+        'ALTER TABLE guild_youtube_watch ADD COLUMN member_only_live_template TEXT NULL',
+        'ALTER TABLE guild_youtube_watch ADD COLUMN upload_announce_channel_id VARCHAR(32) NULL',
+        'ALTER TABLE guild_youtube_watch ADD COLUMN live_announce_channel_id VARCHAR(32) NULL'
+      ];
+      
+      for (const query of alterQueries) {
+        try {
+          await db.sqlPool.query(query);
+        } catch (e) {
+          // Column likely already exists, which is fine
+          if (!e.message.includes('Duplicate column name')) {
+            console.warn(`[YouTube] Column alter warning: ${e.message}`);
+          }
+        }
+      }
     } catch (e) {
-      // Columns likely already exist
+      console.error('[YouTube] Error ensuring columns:', e.message);
     }
   }
 }
@@ -34,7 +47,7 @@ async function getGuildYouTubeConfig(guildId) {
         SELECT channels, announce_channel_id, upload_announce_channel_id, live_announce_channel_id,
                mention_target, enabled, interval_sec, upload_template, live_template,
                member_only_upload_template, member_only_live_template, embed_enabled,
-               channel_messages, channel_names
+               channel_messages, channel_names, config_json
         FROM guild_youtube_watch WHERE guild_id=?
       `, [guildId]);
       
@@ -111,31 +124,69 @@ async function setGuildYouTubeConfig(guildId, partial) {
   cacheData.guildYouTubeConfigCache.set(guildId, next);
   
   if (db.mariaAvailable && db.sqlPool) {
-    await ensureYouTubeColumns();
-    await db.sqlPool.query(`
-      REPLACE INTO guild_youtube_watch(
-        guild_id, channels, announce_channel_id, upload_announce_channel_id, live_announce_channel_id,
-        mention_target, enabled, interval_sec, upload_template, live_template,
-        member_only_upload_template, member_only_live_template, embed_enabled,
-        channel_messages, channel_names
-      ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
-    `, [
-      guildId,
-      next.channels.join(','),
-      next.announceChannelId,
-      next.uploadAnnounceChannelId,
-      next.liveAnnounceChannelId,
-      next.mentionTargets.join(','),
-      next.enabled ? 1 : 0,
-      next.intervalSec,
-      next.uploadTemplate,
-      next.liveTemplate,
-      next.memberOnlyUploadTemplate,
-      next.memberOnlyLiveTemplate,
-      next.embedEnabled ? 1 : 0,
-      JSON.stringify(next.channelMessages),
-      JSON.stringify(next.channelNames)
-    ]);
+    try {
+      await ensureYouTubeColumns();
+      
+      // Ensure channels is properly formatted (not JSON strings)
+      const cleanChannels = next.channels.map(channel => {
+        if (typeof channel === 'string' && channel.startsWith('[') && channel.endsWith(']')) {
+          // This is a JSON string, parse it
+          try {
+            return JSON.parse(channel);
+          } catch (e) {
+            return channel.replace(/["\[\]]/g, ''); // Remove quotes and brackets
+          }
+        }
+        return channel;
+      }).flat().filter(Boolean);
+      
+      // Create a complete config object for config_json
+      const configJson = JSON.stringify({
+        channels: cleanChannels,
+        announceChannelId: next.announceChannelId,
+        uploadAnnounceChannelId: next.uploadAnnounceChannelId,
+        liveAnnounceChannelId: next.liveAnnounceChannelId,
+        mentionTargets: next.mentionTargets,
+        enabled: next.enabled,
+        intervalSec: next.intervalSec,
+        uploadTemplate: next.uploadTemplate,
+        liveTemplate: next.liveTemplate,
+        memberOnlyUploadTemplate: next.memberOnlyUploadTemplate,
+        memberOnlyLiveTemplate: next.memberOnlyLiveTemplate,
+        embedEnabled: next.embedEnabled,
+        channelMessages: next.channelMessages,
+        channelNames: next.channelNames
+      });
+      
+      await db.sqlPool.query(`
+        REPLACE INTO guild_youtube_watch(
+          guild_id, channels, announce_channel_id, upload_announce_channel_id, live_announce_channel_id,
+          mention_target, enabled, interval_sec, upload_template, live_template,
+          member_only_upload_template, member_only_live_template, embed_enabled,
+          channel_messages, channel_names, config_json
+        ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+      `, [
+        guildId,
+        cleanChannels.join(','),
+        next.announceChannelId,
+        next.uploadAnnounceChannelId,
+        next.liveAnnounceChannelId,
+        next.mentionTargets.join(','),
+        next.enabled ? 1 : 0,
+        next.intervalSec,
+        next.uploadTemplate,
+        next.liveTemplate,
+        next.memberOnlyUploadTemplate,
+        next.memberOnlyLiveTemplate,
+        next.embedEnabled ? 1 : 0,
+        JSON.stringify(next.channelMessages),
+        JSON.stringify(next.channelNames),
+        configJson
+      ]);
+    } catch (e) {
+      console.error('[YouTube] Database error in setGuildYouTubeConfig:', e.message);
+      throw e; // Re-throw to let the API handler catch it
+    }
   }
   
   return { ...next };
