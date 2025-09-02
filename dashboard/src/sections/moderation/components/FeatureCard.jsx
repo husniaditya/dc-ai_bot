@@ -84,55 +84,57 @@ export default function FeatureCard({
         </div>
         
         <div className="mt-auto">
-          <button 
-            type="button"
-            className="btn btn-outline-light btn-sm w-100 d-flex align-items-center justify-content-center gap-2 configure-btn"
-            onClick={() => onConfigure(feature.key)}
-            disabled={isSaving}
-            style={{
-              background: `linear-gradient(145deg, ${feature.color}15, ${feature.color}08)`,
-              borderColor: `${feature.color}40`,
-              color: feature.color,
-              fontWeight: '600',
-              letterSpacing: '0.3px',
-              padding: '0.5rem 1rem',
-              borderRadius: '8px',
-              transition: 'all 0.2s ease',
-              '--hover-bg': `linear-gradient(145deg, ${feature.color}25, ${feature.color}18)`,
-              '--hover-border': `${feature.color}60`,
-              '--hover-color': feature.color
-            }}
-            onMouseEnter={(e) => {
-              if (!isSaving) {
-                e.target.style.background = `linear-gradient(145deg, ${feature.color}25, ${feature.color}18)`;
-                e.target.style.borderColor = `${feature.color}60`;
-                e.target.style.transform = 'translateY(-1px)';
-                e.target.style.boxShadow = `0 4px 12px ${feature.color}20`;
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (!isSaving) {
-                e.target.style.background = `linear-gradient(145deg, ${feature.color}15, ${feature.color}08)`;
-                e.target.style.borderColor = `${feature.color}40`;
-                e.target.style.transform = 'translateY(0)';
-                e.target.style.boxShadow = 'none';
-              }
-            }}
-          >
-            {isSaving ? (
-              <>
-                <div className="spinner-border spinner-border-sm" role="status">
-                  <span className="visually-hidden">Loading...</span>
-                </div>
-                <span>Updating...</span>
-              </>
-            ) : (
-              <>
-                <i className="fa-solid fa-cog" />
-                <span>Configure</span>
-              </>
-            )}
-          </button>
+          {isEnabled && (
+            <button 
+              type="button"
+              className="btn btn-outline-light btn-sm w-100 d-flex align-items-center justify-content-center gap-2 configure-btn"
+              onClick={() => onConfigure(feature.key)}
+              disabled={isSaving}
+              style={{
+                background: `linear-gradient(145deg, ${feature.color}15, ${feature.color}08)`,
+                borderColor: `${feature.color}40`,
+                color: feature.color,
+                fontWeight: '600',
+                letterSpacing: '0.3px',
+                padding: '0.5rem 1rem',
+                borderRadius: '8px',
+                transition: 'all 0.2s ease',
+                '--hover-bg': `linear-gradient(145deg, ${feature.color}25, ${feature.color}18)`,
+                '--hover-border': `${feature.color}60`,
+                '--hover-color': feature.color
+              }}
+              onMouseEnter={(e) => {
+                if (!isSaving) {
+                  e.target.style.background = `linear-gradient(145deg, ${feature.color}25, ${feature.color}18)`;
+                  e.target.style.borderColor = `${feature.color}60`;
+                  e.target.style.transform = 'translateY(-1px)';
+                  e.target.style.boxShadow = `0 4px 12px ${feature.color}20`;
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!isSaving) {
+                  e.target.style.background = `linear-gradient(145deg, ${feature.color}15, ${feature.color}08)`;
+                  e.target.style.borderColor = `${feature.color}40`;
+                  e.target.style.transform = 'translateY(0)';
+                  e.target.style.boxShadow = 'none';
+                }
+              }}
+            >
+              {isSaving ? (
+                <>
+                  <div className="spinner-border spinner-border-sm" role="status">
+                    <span className="visually-hidden">Loading...</span>
+                  </div>
+                  <span>Updating...</span>
+                </>
+              ) : (
+                <>
+                  <i className="fa-solid fa-cog" />
+                  <span>Configure</span>
+                </>
+              )}
+            </button>
+          )}
         </div>
       </div>
     </div>
