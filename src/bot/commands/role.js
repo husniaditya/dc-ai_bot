@@ -110,7 +110,7 @@ async function handleRoleList(interaction, store, guildId) {
         }
         
         if (roleNames.length > 0) {
-          description += `**/${roleConfig.commandName}**\n`;
+          description += `**${roleConfig.commandName}**\n`;
           description += `${roleConfig.description || 'No description'}\n`;
           description += `Roles:\n`;
           for (const roleName of roleNames) {

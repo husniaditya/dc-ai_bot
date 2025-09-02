@@ -619,29 +619,6 @@ export default function ReactionRolesConfig({ config, updateConfig, channels, ro
                   : 'The message content that will be posted by the bot'
                 }
               </small>
-              
-              {/* Message Preview with Multiple Reactions */}
-              <div className="template-preview mt-2">
-                <div className="preview-label">Preview</div>
-                <div className="preview-body">
-                  <div style={{ marginBottom: '8px' }}>
-                    {customMessage || 'React to get your roles!'}
-                  </div>
-                  {formData.reactions.map((reaction, index) => (
-                    <div key={index} className="d-flex align-items-center gap-2 mb-1">
-                      <span 
-                        style={{ fontSize: '1.2rem' }}
-                        dangerouslySetInnerHTML={{ __html: getEmojiDisplay(reaction.emoji) }}
-                      />
-                      <span>→</span>
-                      <span className="text-muted" style={{ fontSize: '0.8rem' }}>
-                        {reaction.roleId ? getRoleName(reaction.roleId) : 'Select a role'}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
 
             {/* Reactions Section */}
             <div className="mb-3">
@@ -728,6 +705,29 @@ export default function ReactionRolesConfig({ config, updateConfig, channels, ro
                 <i className="fa-solid fa-plus me-2"></i>
                 Add Reaction
               </button>
+            </div>
+
+            {/* Message Preview with Multiple Reactions */}
+              <div className="preview-label">Preview</div>
+              <div className="template-preview mt-2">
+                <div className="preview-body">
+                  <div style={{ marginBottom: '8px' }}>
+                    {customMessage || 'React to get your roles!'}
+                  </div>
+                  {formData.reactions.map((reaction, index) => (
+                    <div key={index} className="d-flex align-items-center gap-2 mb-1">
+                      <span 
+                        style={{ fontSize: '1.2rem' }}
+                        dangerouslySetInnerHTML={{ __html: getEmojiDisplay(reaction.emoji) }}
+                      />
+                      <span>→</span>
+                      <span className="text-muted" style={{ fontSize: '0.8rem' }}>
+                        {reaction.roleId ? getRoleName(reaction.roleId) : 'Select a role'}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
 
             {/* Card Footer with Action Buttons */}

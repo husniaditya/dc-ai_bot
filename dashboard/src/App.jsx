@@ -925,9 +925,11 @@ export default function App(){
   // Command toggles state
   const [commandTogglesState, setCommandTogglesState] = useState({}); // name -> enabled bool
   const [commandMeta, setCommandMeta] = useState({}); // name -> {createdAt, createdBy, updatedAt, updatedBy}
+  const [commandsLoading, setCommandsLoading] = useState(false);
   useEffect(()=>{
     if(dashSection==='commands' && selectedGuild){
       (async()=>{
+        setCommandsLoading(true);
         try {
           const data = await getCommandToggles(selectedGuild);
           if(data && Array.isArray(data.commands)){
@@ -942,6 +944,9 @@ export default function App(){
             setCommandTogglesState(data.toggles);
           }
         } catch(e){ /* ignore */ }
+        finally {
+          setCommandsLoading(false);
+        }
       })();
     }
   }, [dashSection, selectedGuild]);
@@ -1087,6 +1092,7 @@ export default function App(){
     refresh={refresh}
   refreshAnalytics={refreshAnalytics}
   adjustAutosEnabled={adjustAutosEnabled}
+  loading={loading && dashSection === 'autos'}
   />
   </React.Suspense>;
 
@@ -1168,7 +1174,7 @@ export default function App(){
   ];
   const selectedGuildObj = guilds.find(g=> g.id===selectedGuild);
   const hasManageGuild = selectedGuildObj ? !!selectedGuildObj.canManage : false;
-  const commandsContent = <CommandsSection hasManageGuild={hasManageGuild} commandGroups={commandGroups} commandTogglesState={commandTogglesState} commandMeta={commandMeta} toggleCommand={toggleCommand} />;
+  const commandsContent = <CommandsSection hasManageGuild={hasManageGuild} commandGroups={commandGroups} commandTogglesState={commandTogglesState} commandMeta={commandMeta} toggleCommand={toggleCommand} loading={commandsLoading} />;
 
   function handleAvatarFile(e){
     const file = e.target.files?.[0]; if(!file) return;
