@@ -130,6 +130,29 @@ body {
   scrollbar-gutter: stable;
 }
 
+/* Lock body when full-screen loading overlay active on small screens */
+body.overlay-lock {
+  overflow: hidden !important;
+  height: 100vh;
+  touch-action: none;
+  overscroll-behavior: none;
+}
+
+@media (max-width: 1023px) {
+  /* Allow interactions globally; specific content blocking handled by overlay self */
+  body.overlay-lock #root, body.overlay-lock .app-shell {
+    user-select: none;
+  }
+  /* Ensure navbar & sidebar always interactive */
+  body.overlay-lock .navbar,
+  body.overlay-lock .dash-menu,
+  body.overlay-lock .dash-menu-item,
+  body.overlay-lock [data-role="sidebar"],
+  body.overlay-lock .theme-toggle {
+    pointer-events: auto !important;
+  }
+}
+
 /* Top bar */
 .collapse-toggle-header { margin-left:.35rem; height:30px; padding:0 .6rem; }
 .collapse-toggle-header .chev { font-size:.75rem; }
