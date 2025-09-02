@@ -1,4 +1,5 @@
 import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
 import path from 'path';
 import dotenv from 'dotenv';
 // Load root .env so we can fallback to CLIENT_ID for the frontend without requiring a duplicate VITE_ variable
@@ -8,6 +9,7 @@ dotenv.config({ path: path.resolve(process.cwd(), '..', '.env') });
 const resolvedClientId = process.env.VITE_DISCORD_CLIENT_ID || process.env.VITE_CLIENT_ID || process.env.CLIENT_ID || '';
 
 export default defineConfig({
+  plugins: [react()],
   root: '.',
   publicDir: 'public',
   server: {

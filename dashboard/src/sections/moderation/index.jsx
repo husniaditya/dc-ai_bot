@@ -3,7 +3,7 @@ import { getChannels, getRoles } from '../../api';
 import { MODERATION_FEATURES } from './constants';
 import FeatureCard from './components/FeatureCard';
 import ConfigurationModal from './components/ConfigurationModal';
-import LoadingOverlay from '../../components/LoadingOverlay';
+import LoadingSection from '../../components/LoadingSection';
 
 export default function ModerationSection({ guildId, pushToast }) {
   const [features, setFeatures] = useState({});
@@ -205,14 +205,13 @@ export default function ModerationSection({ guildId, pushToast }) {
   };
 
   return (
-    <div className="moderation-section fade-in-soft position-relative" style={{ minHeight: '600px' }}>
-      {loading && (
-        <LoadingOverlay 
-          title="Loading Moderation Settings"
-          message="Fetching your server configuration and permissions..."
-          fullHeight={false}
-        />
-      )}
+    <LoadingSection
+      loading={loading}
+      title="Loading Moderation Settings"
+      message="Fetching your server configuration and permissions..."
+      className="moderation-section fade-in-soft position-relative"
+      style={{ minHeight: '600px' }}
+    >
       <div className="d-flex align-items-center gap-2 mb-3">
         <h5 className="mb-0">Moderation</h5>
         <span className="badge badge-soft">
@@ -273,6 +272,6 @@ export default function ModerationSection({ guildId, pushToast }) {
           showToast={showToast}
         />
       )}
-    </div>
+    </LoadingSection>
   );
 }

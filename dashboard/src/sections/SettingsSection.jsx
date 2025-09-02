@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { getSettings, updateSettings } from '../api';
-import LoadingOverlay from '../components/LoadingOverlay';
+import LoadingSection from '../components/LoadingSection';
 
 export default function SettingsSection({ guildId, pushToast }){
   const [settings, setSettings] = useState(null);
@@ -39,14 +39,14 @@ export default function SettingsSection({ guildId, pushToast }){
   if(!guildId) return <div className="text-muted small">Select a server first.</div>;
   
   const showOverlay = loading && !settings;
-  return <div className="settings-section-wrapper fade-in-soft position-relative" style={{ minHeight: showOverlay ? '500px' : 'auto' }}>
-    {showOverlay && (
-      <LoadingOverlay 
-        title="Loading Server Settings"
-        message="Fetching your server configuration and preferences..."
-        fullHeight={false}
-      />
-    )}
+  return (
+    <LoadingSection
+      loading={showOverlay}
+      title="Loading Server Settings"
+      message="Fetching your server configuration and preferences..."
+      className="settings-section-wrapper fade-in-soft position-relative"
+      style={{ minHeight: showOverlay ? '500px' : 'auto' }}
+    >
     <div className="d-flex align-items-center gap-2 mb-3">
       <h5 className="mb-0">Server Settings</h5>
       {dirty() && <span className="dirty-badge">Unsaved</span>}
@@ -116,7 +116,8 @@ export default function SettingsSection({ guildId, pushToast }){
         </div></div>
       </div>
     </div>}
-  </div>;
+    </LoadingSection>
+  );
 }
 
 function formatSampleDate(s){

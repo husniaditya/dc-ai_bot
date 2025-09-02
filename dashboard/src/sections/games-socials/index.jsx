@@ -7,7 +7,7 @@ import {
   getChannels, 
   getRoles 
 } from '../../api';
-import LoadingOverlay from '../../components/LoadingOverlay';
+import LoadingSection from '../../components/LoadingSection';
 
 // Components
 import ServiceCard from './components/ServiceCard';
@@ -217,15 +217,13 @@ export default function GamesSocialsSection({ guildId, pushToast }) {
   const twitchHasChanges = hasUnsavedChanges(twitchConfig, twitchOriginal);
 
   return (
-    <div className="p-4 games-socials-wrapper position-relative" style={{ minHeight: '600px' }}>
-      {showOverlay && (
-        <LoadingOverlay 
-          title="Loading Integration Settings"
-          message="Fetching your integration configuration and server data..."
-          fullHeight={false}
-        />
-      )}
-      
+    <LoadingSection
+      loading={showOverlay}
+      title="Loading Integration Settings"
+      message="Fetching your integration configuration and server data..."
+      className="p-4 games-socials-wrapper position-relative"
+      style={{ minHeight: '600px' }}
+    >
       {/* Header */}
       <div className="d-flex align-items-center gap-2 mb-3">
         <h5 className="mb-0">Games & Socials</h5>
@@ -340,6 +338,6 @@ export default function GamesSocialsSection({ guildId, pushToast }) {
           )}
         </>
       )}
-    </div>
+    </LoadingSection>
   );
 }
