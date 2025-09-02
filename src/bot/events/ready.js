@@ -49,7 +49,9 @@ function setupReadyHandler(client, store, startTimestamp, commandMap) {
           const websubInitialized = websubService.initializeWebSub(client);
           
           if (websubInitialized) {
-            console.log('YouTube WebSub service initialized - real-time notifications enabled');
+            if (process.env.DEBUG_PERSONALIZATION === '1') {
+                console.log('YouTube WebSub service initialized - real-time notifications enabled');
+            }
           } else {
             console.warn('WebSub service failed to initialize - check WEBSUB_CALLBACK_BASE configuration');
           }
@@ -212,7 +214,9 @@ async function applyGlobalPersonalization(client, store) {
     }
     
     if (!latest) {
-      console.log('[GlobalPersonalization] No global fields found to apply');
+      if (process.env.DEBUG_PERSONALIZATION === '1') {
+          console.log('[GlobalPersonalization] No global fields found to apply');
+      }
       return;
     }
     

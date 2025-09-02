@@ -771,7 +771,9 @@ function startYouTubeWatcher(client){
 			websubInitialized = websubService.initializeWebSub(client);
 			
 			if (websubInitialized) {
-				console.log('YouTube WebSub service initialized - real-time notifications enabled');
+				if (process.env.DEBUG_PERSONALIZATION === '1') {
+					console.log('YouTube WebSub service initialized - real-time notifications enabled');
+				}
 				pushDebug('WEBSUB: Real-time notifications enabled');
 			}
 		} catch (error) {

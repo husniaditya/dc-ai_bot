@@ -1,10 +1,22 @@
 const polls = new Map();
+const { checkCommandAndReply } = require('../../utils/validation');
+
 function getPolls() { return polls; }
 module.exports = {
   name: 'poll',
   getPolls,
   execute: async (interaction) => {
     const sub = interaction.options.getSubcommand();
+    const store = require('../../config/store');
+    
+    // Check if the specific poll subcommand is enabled
+    const commandName = `poll ${sub}`;
+    const canExecute = await checkCommandAndReply(interaction, commandName, store, false);
+    
+    if (!canExecute) {
+      return; // Command is disabled
+    }
+    
     if (sub === 'create') {
       const question = interaction.options.getString('question');
       const optsRaw = interaction.options.getString('options');

@@ -1,12 +1,15 @@
 import React from 'react';
+import LoadingSection from '../components/LoadingSection';
 
 export default function PersonalizationSection({ personalization, personalizationLoading, personalizationDirty, resetPersonalization, savePersonalization, handleAvatarFile, renderStatusDot, setPersonalization }) {
-  const showOverlay = personalizationLoading; // full overlay like Games & Socials
-  return <div className="fade-in-soft personalization-section-wrapper position-relative">
-    {showOverlay && <div className="loading-overlay">
-      <div className="spinner" />
-      <div className="loading-text small mt-3 text-muted">Loading personalization…</div>
-    </div>}
+  const showOverlay = personalizationLoading;
+  return (
+    <LoadingSection
+      loading={showOverlay}
+      title="Loading Bot Personalization"
+      message="Fetching your bot's appearance and activity settings..."
+      className="fade-in-soft personalization-section-wrapper position-relative"
+    >
     <div className="d-flex align-items-center gap-2 mb-3">
       <h5 className="mb-0">Bot Personalization</h5>
       {personalizationDirty() && <span className="dirty-badge">Unsaved</span>}
@@ -76,5 +79,6 @@ export default function PersonalizationSection({ personalization, personalizatio
       </div>
     </div>}
   {/* Standalone fallback removed in favor of full overlay */}
-  </div>;
+    </LoadingSection>
+  );
 }

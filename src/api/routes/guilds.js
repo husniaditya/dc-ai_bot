@@ -37,6 +37,40 @@ function createGuildsRoutes(client, store) {
     }
   });
 
+  // Get guild emojis
+  router.get('/:guildId/emojis', async (req, res) => {
+    try {
+      const { guildId } = req.params;
+      
+      // Check if user can manage this guild
+      const userManageableGuilds = new Set(req.user.manageableGuilds || []);
+      if (!userManageableGuilds.has(guildId)) {
+        return res.status(403).json({ error: 'Access denied' });
+      }
+      
+      // Get the guild from Discord
+      const guild = client.guilds.cache.get(guildId);
+      if (!guild) {
+        return res.status(404).json({ error: 'Guild not found or bot not present' });
+      }
+      
+      // Get all custom emojis from the guild
+      const emojis = Array.from(guild.emojis.cache.values()).map(emoji => ({
+        id: emoji.id,
+        name: emoji.name,
+        animated: emoji.animated,
+        available: emoji.available,
+        url: emoji.imageURL()
+      }));
+      
+      res.json({ emojis });
+      
+    } catch(e) {
+      console.error('Error fetching guild emojis:', e);
+      res.status(500).json({ error: 'Failed to fetch guild emojis' });
+    }
+  });
+
   return router;
 }
 

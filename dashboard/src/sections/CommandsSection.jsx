@@ -1,8 +1,15 @@
 import React from 'react';
+import LoadingSection from '../components/LoadingSection';
 
-export default function CommandsSection({ commandGroups, commandTogglesState, commandMeta, toggleCommand, hasManageGuild }){
-  return <div className="commands-section fade-in-soft">
-    <h5 className="mb-3">Commands</h5>
+export default function CommandsSection({ commandGroups, commandTogglesState, commandMeta, toggleCommand, hasManageGuild, loading }){
+  return (
+    <LoadingSection
+      loading={loading}
+      title="Loading Commands"
+      message="Fetching your server's command settings and permissions..."
+      className="commands-section fade-in-soft position-relative"
+    >
+      <h5 className="mb-3">Commands</h5>
     <div className="cmd-groups">
       {commandGroups.map(gr => <div key={gr.key} className="cmd-group-card">
         <div className="cmd-group-head" style={{'--grp-accent': gr.accent}}>
@@ -40,5 +47,6 @@ export default function CommandsSection({ commandGroups, commandTogglesState, co
       </div>)}
     </div>
     <div className="text-muted small mt-3" style={{opacity:.8}}>AI related calls may be rate limited. Image size limit 8MB each. Passive features run automatically.</div>
-  </div>;
+    </LoadingSection>
+  );
 }

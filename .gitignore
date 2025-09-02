@@ -11,6 +11,7 @@ backup/
 *.env.bak
 jwt-secrets-*.json
 jwt-rotation-*.log
+jwt-auto-config.json
 jwt-*.backup
 logs/jwt-*
 *.jwt.log

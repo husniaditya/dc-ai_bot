@@ -1,5 +1,6 @@
 const { explainImage } = require('../../utils/ai-client');
 const { sendLongReply } = require('../../utils/util');
+const { checkCommandAndReply } = require('../../utils/validation');
 const axios = require('axios');
 
 function setupInteractionCreateHandler(client, store, startTimestamp, commandMap) {
@@ -9,8 +10,12 @@ function setupInteractionCreateHandler(client, store, startTimestamp, commandMap
       await handleContextMenuCommand(interaction, store);
     } else if (interaction.isChatInputCommand()) {
       await handleChatInputCommand(interaction, client, store, commandMap);
-    } else if (interaction.isStringSelectMenu() && interaction.customId === 'help_select') {
-      await handleHelpSelect(interaction);
+    } else if (interaction.isStringSelectMenu()) {
+      if (interaction.customId === 'help_select') {
+        await handleHelpSelect(interaction);
+      } else if (interaction.customId.startsWith('role_menu_')) {
+        await handleRoleMenuSelect(interaction);
+      }
     } else if (interaction.isButton()) {
       await handleButtonInteraction(interaction, client, commandMap);
     }
@@ -188,7 +193,7 @@ async function handleContextMenuCommand(interaction, store) {
 async function handleChatInputCommand(interaction, client, store, commandMap) {
   const cmd = commandMap.get(interaction.commandName);
   if (!cmd) {
-    return interaction.reply({ content: 'Unknown command (not loaded).', flags: 64 });
+    return interaction.reply({ content: 'Unknown command (not loaded).' });
   }
 
   // Guild-level slash command master toggle
@@ -198,32 +203,17 @@ async function handleChatInputCommand(interaction, client, store, commandMap) {
       const gs = await store.getGuildSettings(guildId);
       if (gs && gs.slashCommandsEnabled === false) {
         return interaction.reply({ 
-          content: 'Slash commands are disabled for this server by an administrator.', 
-          flags: 64 
+          content: 'Slash commands are disabled for this server by an administrator.'
         });
       }
     }
   } catch {}
 
-  try {
-    // Check command toggle
-    const guildId = interaction.guildId;
-    let enabled = true;
-    
-    try {
-      if (guildId && store.getGuildCommandToggles) {
-        const toggles = await store.getGuildCommandToggles(guildId);
-        if (toggles[interaction.commandName] === false) enabled = false;
-      } else if (store.getCommandToggles) {
-        const toggles = store.getCommandToggles();
-        if (toggles[interaction.commandName] === false) enabled = false;
-      }
-    } catch {}
-    
-    if (!enabled) {
-      return interaction.reply({ content: 'This command is disabled.', flags: 64 });
-    }
-  } catch {}
+  // Use new validation system for command toggles
+  const canExecute = await checkCommandAndReply(interaction, interaction.commandName, store, false);
+  if (!canExecute) {
+    return; // Command is disabled, validation already sent the response
+  }
 
   // Track command usage
   try {
@@ -235,7 +225,7 @@ async function handleChatInputCommand(interaction, client, store, commandMap) {
   try { 
     await cmd.execute(interaction, client); 
   } catch (e) {
-    console.error('Command error', interaction.commandName, e);
+    console.error(`Command error for ${interaction.commandName}:`, e);
     
     // Track command errors
     try {
@@ -244,14 +234,15 @@ async function handleChatInputCommand(interaction, client, store, commandMap) {
       console.warn('Failed to track command error:', trackErr);
     }
     
-    if (interaction.deferred || interaction.replied) { 
-      try { 
-        await interaction.editReply('Command failed.'); 
-      } catch {} 
-    } else { 
-      try { 
-        await interaction.reply({ content: 'Command failed.', flags: 64 }); 
-      } catch {} 
+    // Try to respond with error message
+    try { 
+      if (!interaction.replied && !interaction.deferred) {
+        await interaction.reply('Command failed.');
+      } else if (interaction.deferred) {
+        await interaction.editReply('Command failed.');
+      }
+    } catch (replyError) {
+      console.error('Failed to send error reply:', replyError);
     }
   }
 }
@@ -285,6 +276,90 @@ async function handleButtonInteraction(interaction, client, commandMap) {
       await pollModule.handleButton(interaction, client); 
     } catch(e) { 
       console.error('Poll button error', e); 
+    }
+  }
+}
+
+async function handleRoleMenuSelect(interaction) {
+  try {
+    const userId = interaction.customId.split('_')[2];
+    
+    // Verify this is the correct user
+    if (userId !== interaction.user.id) {
+      return await interaction.reply({
+        content: '❌ This role menu is not for you.',
+        flags: 64
+      });
+    }
+
+    // Get role data from global storage
+    if (!global.roleMenuData || !global.roleMenuData.has(userId)) {
+      return await interaction.reply({
+        content: '❌ Role menu has expired. Use `/role menu` to get a new one.',
+        flags: 64
+      });
+    }
+
+    const roleMap = global.roleMenuData.get(userId);
+    const selectedRoleIds = interaction.values;
+    const results = [];
+    
+    await interaction.deferReply({ flags: 64 });
+
+    for (const roleId of selectedRoleIds) {
+      const roleData = roleMap.get(roleId);
+      if (!roleData) continue;
+
+      const { role, type, hasRole } = roleData;
+      
+      try {
+        if (hasRole) {
+          // Remove role
+          if (type === 'add_only') {
+            results.push(`❌ Cannot remove "${role.name}" (add-only role)`);
+            continue;
+          }
+          
+          await interaction.member.roles.remove(role);
+          results.push(`➖ Removed "${role.name}"`);
+        } else {
+          // Add role
+          if (type === 'remove_only') {
+            results.push(`❌ Cannot add "${role.name}" (remove-only role)`);
+            continue;
+          }
+          
+          await interaction.member.roles.add(role);
+          results.push(`➕ Added "${role.name}"`);
+        }
+      } catch (error) {
+        console.error(`Error managing role ${role.name}:`, error);
+        results.push(`❌ Failed to manage "${role.name}"`);
+      }
+    }
+
+    const responseText = results.length > 0 
+      ? results.join('\n')
+      : '❌ No changes were made.';
+
+    await interaction.editReply(responseText);
+
+    // Clean up the user's role menu data
+    global.roleMenuData.delete(userId);
+
+  } catch (error) {
+    console.error('Error in handleRoleMenuSelect:', error);
+    
+    // Check if interaction was already replied to or deferred
+    if (interaction.deferred) {
+      await interaction.editReply({
+        content: '❌ An error occurred while processing your role selection.'
+      });
+    } else if (!interaction.replied) {
+      await interaction.reply({
+        content: '❌ An error occurred while processing your role selection.',
+        flags: 64
+      });
     }
   }
 }

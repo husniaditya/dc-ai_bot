@@ -1,0 +1,340 @@
+import React, { useState, useEffect } from 'react';
+import WelcomeConfigForm from '../features/WelcomeConfigForm';
+import AutomodConfigForm from '../features/AutomodConfigForm';
+import RolesConfigForm from '../features/RolesConfigForm';
+import XPConfigForm from '../features/XPConfigForm';
+import SchedulerConfigForm from '../features/SchedulerConfigForm';
+import LoggingConfigForm from '../features/LoggingConfigForm';
+import AntiRaidConfigForm from '../features/AntiRaidConfigForm';
+
+// Configuration Modal Component
+export default function ConfigurationModal({ 
+  feature, 
+  channels, 
+  roles, 
+  guildId, 
+  onSave, 
+  onClose, 
+  showToast 
+}) {
+  const [config, setConfig] = useState(feature.config || {});
+  const [originalConfig, setOriginalConfig] = useState(feature.config || {});
+  const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
+
+  // Fetch specific configuration when modal opens
+  useEffect(() => {
+    const fetchConfig = async () => {
+      if (!feature.key || !guildId) return;
+      
+      setLoading(true);
+      try {
+        let response;
+        
+        // Handle welcome feature differently
+        if (feature.key === 'welcome') {
+          response = await fetch('/api/moderation/welcome/config', {
+            headers: { 
+              Authorization: `Bearer ${localStorage.getItem('token')}`,
+              'X-Guild-Id': guildId
+            }
+          });
+        } else {
+          response = await fetch(`/api/moderation/features/${feature.key}/config`, {
+            headers: { 
+              Authorization: `Bearer ${localStorage.getItem('token')}`,
+              'X-Guild-Id': guildId
+            }
+          });
+        }
+        
+        if (response.ok) {
+          const data = await response.json();
+          
+          // Handle different possible response structures
+          const configData = feature.key === 'welcome' 
+            ? (data.config || data || {})
+            : (data.config || data || {});
+          
+          setConfig(configData);
+          setOriginalConfig(configData);
+        } else {
+          // Use feature's default config if none exists
+          const defaultConfig = getDefaultConfig(feature.key);
+          setConfig(defaultConfig);
+          setOriginalConfig(defaultConfig);
+        }
+      } catch (error) {
+        console.error(`Failed to fetch ${feature.key} config:`, error);
+        showToast('error', `Failed to load ${feature.label} configuration`);
+        
+        // Fallback to default config on error
+        const defaultConfig = getDefaultConfig(feature.key);
+        setConfig(defaultConfig);
+        setOriginalConfig(defaultConfig);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchConfig();
+  }, [feature.key, guildId]);
+
+  // Get default configuration for a feature
+  const getDefaultConfig = (featureKey) => {
+    const defaults = {
+      welcome: {
+        enabled: false,
+        channelId: '',
+        messageType: 'text',
+        messageText: 'Welcome to {server}, {user}!',
+        cardEnabled: false,
+        roleId: '',
+        dmEnabled: false,
+        dmMessage: 'Welcome to {server}! Thanks for joining us.'
+      },
+      automod: {
+        enabled: false,
+        spamDetection: false,
+        capsFilter: false,
+        linkFilter: false,
+        profanityFilter: false,
+        logChannelId: '',
+        autoDelete: false,
+        bypassRoles: []
+      },
+      roles: {
+        enabled: false,
+        reactionRoles: [],
+        slashCommands: []
+      },
+      xp: {
+        enabled: false,
+        channelId: '',
+        xpPerMessage: 10,
+        cooldown: 60,
+        levelUpMessage: 'Congratulations {user}! You reached level {level}!',
+        rewardRoles: []
+      },
+      scheduler: {
+        enabled: false,
+        scheduledMessages: []
+      },
+      logging: {
+        enabled: false,
+        messageLogChannel: '',
+        memberLogChannel: '',
+        channelLogChannel: '',
+        roleLogChannel: ''
+      },
+      antiraid: {
+        enabled: false,
+        joinRateLimit: 5,
+        joinTimeWindow: 60,
+        accountAgeLimit: 7,
+        autoLockdown: false,
+        verificationLevel: 1
+      }
+    };
+
+    return defaults[featureKey] || {};
+  };
+
+  // Check if configuration has been modified
+  const isDirty = () => {
+    return JSON.stringify(config) !== JSON.stringify(originalConfig);
+  };
+
+  // Reset configuration to original values
+  const resetConfig = () => {
+    setConfig({ ...originalConfig });
+  };
+
+  // Handle ESC key to close modal
+  useEffect(() => {
+    const handleEscape = (e) => {
+      if (e.key === 'Escape') {
+        handleClose();
+      }
+    };
+
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, []);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await onSave(config);
+      setOriginalConfig({ ...config });
+      showToast('success', `${feature.label} configuration saved successfully`);
+    } catch (error) {
+      console.error('Save failed:', error);
+      showToast('error', `Failed to save ${feature.label} configuration`);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleClose = () => {
+    if (isDirty() && !saving) {
+      const confirmClose = window.confirm(
+        'You have unsaved changes. Are you sure you want to close without saving?'
+      );
+      if (!confirmClose) return;
+    }
+    
+    setIsClosing(true);
+    setTimeout(() => {
+      onClose();
+    }, 200);
+  };
+
+  const updateConfig = (key, value) => {
+    setConfig(prev => ({
+      ...prev,
+      [key]: value
+    }));
+  };
+
+  const renderConfigForm = () => {
+    const commonProps = {
+      config,
+      updateConfig,
+      channels,
+      roles,
+      guildId,
+      showToast
+    };
+
+    switch (feature.key) {
+      case 'welcome':
+        return <WelcomeConfigForm {...commonProps} />;
+      case 'automod':
+        return <AutomodConfigForm {...commonProps} />;
+      case 'roles':
+        return <RolesConfigForm {...commonProps} />;
+      case 'xp':
+        return <XPConfigForm {...commonProps} />;
+      case 'scheduler':
+        return <SchedulerConfigForm {...commonProps} />;
+      case 'logging':
+        return <LoggingConfigForm {...commonProps} />;
+      case 'antiraid':
+        return <AntiRaidConfigForm {...commonProps} />;
+      default:
+        return (
+          <div className="text-center py-4">
+            <div className="text-muted">
+              Configuration form for {feature.label} is not yet implemented.
+            </div>
+          </div>
+        );
+    }
+  };
+
+  return (
+    <div 
+      className={`modal show d-block modal-backdrop-animated ${isClosing ? 'closing' : ''}`} 
+      style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          handleClose();
+        }
+      }}
+    >
+      <div className={`modal-dialog modal-lg modal-content-animated ${isClosing ? 'closing' : ''}`}>
+        <div className="modal-content bg-dark text-light position-relative">
+          {saving && (
+            <div 
+              className="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center"
+              style={{
+                backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                borderRadius: '8px',
+                zIndex: 1000
+              }}
+            >
+              <div className="text-center text-light">
+                <div className="spinner-border spinner-border-lg mb-3" role="status">
+                  <span className="visually-hidden">Loading...</span>
+                </div>
+                <div className="h6 mb-0">Saving Configuration...</div>
+                <div className="small text-muted">Please wait while we update your settings</div>
+              </div>
+            </div>
+          )}
+          
+          <div className="modal-header border-secondary">
+            <h5 className="modal-title d-flex align-items-center gap-2">
+              <i className={`fa-solid ${feature.icon}`} style={{ color: feature.color }} />
+              {feature.label} Configuration
+              {isDirty() && <span className="dirty-badge">Unsaved</span>}
+            </h5>
+            <button type="button" className="btn-close btn-close-white" onClick={handleClose} />
+          </div>
+          <div className="modal-body">
+            {loading ? (
+              <div className="text-center py-5">
+                <div className="spinner-border spinner-border-lg mb-3" role="status">
+                  <span className="visually-hidden">Loading...</span>
+                </div>
+                <div className="h6 mb-0">Loading Configuration...</div>
+                <div className="small text-muted">Fetching your current settings</div>
+              </div>
+            ) : (
+              renderConfigForm()
+            )}
+          </div>
+          
+          {/* Modal Footer */}
+          <div className="modal-footer border-secondary">
+            {isDirty() && (
+              <button 
+                type="button" 
+                className="btn btn-outline-warning me-2"
+                onClick={resetConfig}
+                disabled={saving}
+              >
+                <i className="fa-solid fa-rotate-left me-1" />
+                Reset
+              </button>
+            )}
+            <button 
+              type="button" 
+              className="btn btn-secondary"
+              onClick={handleClose}
+              disabled={saving}
+            >
+              <i className="fa-solid fa-times me-1" />
+              Close
+            </button>
+            {/* Add Save button for all forms except roles */}
+            {feature.key !== 'roles' && feature.key !== 'scheduler' && (
+              <button 
+                type="button" 
+                className="btn btn-primary"
+                onClick={handleSave}
+                disabled={saving || !isDirty()}
+              >
+                {saving ? (
+                  <>
+                    <div className="spinner-border spinner-border-sm me-1" role="status">
+                      <span className="visually-hidden">Loading...</span>
+                    </div>
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <i className="fa-solid fa-save me-1" />
+                    Save Changes
+                  </>
+                )}
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

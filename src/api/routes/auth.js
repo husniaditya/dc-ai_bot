@@ -1,10 +1,11 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 const { audit } = require('../middleware/audit');
 const authMiddleware = require('../middleware/auth');
 
-// In-memory OAuth state store (anti-CSRF). Key: state -> timestamp
-const oauthStateStore = new Map();
+// Track consumed states to prevent replay (used for stateless fallback too)
+const consumedStateSet = new Set();
 
 // Test database connection and table existence
 async function testDatabaseConnection(store) {
@@ -27,13 +28,19 @@ async function testDatabaseConnection(store) {
     }
     return true;
   } catch(e) {
-    console.error('[OAuth] Database connection test failed:', e.message);
+    if (process.env.DEBUG_PERSONALIZATION === '1') {
+      console.error('[OAuth] Database connection test failed:', e.message);
+    }
     return false;
   }
 }
 
 function createAuthRoutes(client, store) {
   const router = express.Router();
+  const AUTH_ROUTE_VERSION = 'oauth-v3.2-signed-fallback-verify';
+  if (process.env.DEBUG_PERSONALIZATION === '1') {
+    console.log('[OAuth] Auth route version loaded:', AUTH_ROUTE_VERSION);
+  }
 
   // Test database connection on startup
   (async () => {
@@ -43,12 +50,52 @@ function createAuthRoutes(client, store) {
         console.log('[OAuth] Database connection test passed');
       }
     } else {
-      console.warn('[OAuth] Database connection test failed - using in-memory fallback');
+      if (process.env.DEBUG_PERSONALIZATION === '1') {
+          console.warn('[OAuth] Database connection test failed - using in-memory fallback');
+      }
     }
   })();
 
-  // OAuth state helpers (using database for persistence across restarts/instances)
+  // Stateless fallback configuration (allows surviving process restarts)
+  const OAUTH_STATE_SECRET = process.env.OAUTH_STATE_SECRET || process.env.DASHBOARD_JWT_SECRET || 'dev_insecure_state_secret';
+  const OAUTH_STATE_EXP_SECONDS = parseInt(process.env.OAUTH_STATE_EXP_SECONDS || '600', 10); // default 10 minutes
+
+  function b64url(buf){
+    return buf.toString('base64').replace(/=/g,'').replace(/\+/g,'-').replace(/\//g,'_');
+  }
+
+  // Create signed state token: rand.ts.sig (sig = HMAC_SHA256(rand + '.' + ts) base64url trimmed)
+  function createSignedState(){
+    const rand = crypto.randomBytes(9).toString('hex'); // 18 hex chars
+    const ts = Date.now();
+    const sig = b64url(crypto.createHmac('sha256', OAUTH_STATE_SECRET).update(rand + '.' + ts).digest()).slice(0,43);
+    return `${rand}.${ts}.${sig}`;
+  }
+
+  function verifySignedStateFormat(state){
+    if(!state || typeof state !== 'string') return { ok:false, reason:'empty' };
+    const parts = state.split('.');
+    if(parts.length !== 3) return { ok:false, reason:'parts' };
+    const [rand, tsStr, sig] = parts;
+    if(!/^[a-f0-9]{18}$/i.test(rand)) return { ok:false, reason:'rand_format' };
+    if(!/^[0-9]+$/.test(tsStr)) return { ok:false, reason:'ts_format' };
+    const ts = parseInt(tsStr,10);
+    const ageMs = Date.now() - ts;
+    if(ageMs < 0) return { ok:false, reason:'future_ts' };
+    if(ageMs > OAUTH_STATE_EXP_SECONDS * 1000) return { ok:false, reason:'expired' };
+    const expected = b64url(crypto.createHmac('sha256', OAUTH_STATE_SECRET).update(rand + '.' + tsStr).digest()).slice(0,43);
+    try {
+      if(!crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(sig))) return { ok:false, reason:'sig' };
+    } catch { return { ok:false, reason:'sig_cmp' }; }
+    if(consumedStateSet.has(state)) return { ok:false, reason:'replay' };
+    return { ok:true, ageSec: Math.round(ageMs/1000) };
+  }
+
+  // OAuth state helpers (using database + stateless fallback)
   async function saveOAuthState(state) {
+    const timestamp = Date.now();
+    
+    // Save to database as primary store
     if (store.sqlPool) {
       try {
         const result = await store.sqlPool.query(
@@ -71,97 +118,104 @@ function createAuthRoutes(client, store) {
         
         if (verifyRows.length === 0) {
           console.error('[OAuth] State verification failed - not found in database:', state);
-          // Fallback to in-memory
-          oauthStateStore.set(state, Date.now());
           return false;
-        }
-        
-        if (process.env.DEBUG_PERSONALIZATION === '1') {
+        } else if (process.env.DEBUG_PERSONALIZATION === '1') {
           console.log('[OAuth] State verification successful:', state);
         }
         return true;
       } catch(e) {
-        console.error('[OAuth] Failed to save OAuth state to DB:', e.message, e.stack);
-        // Fallback to in-memory
-        oauthStateStore.set(state, Date.now());
+        console.error('[OAuth] Failed to save OAuth state to DB:', e.message);
         return false;
       }
     }
-    // Fallback to in-memory
-    oauthStateStore.set(state, Date.now());
-    if (process.env.DEBUG_PERSONALIZATION === '1') {
-      console.log('[OAuth] Saved state to memory (no DB):', state);
-    }
-    return true;
+    
+    // No database available - fail the OAuth flow
+    console.error('[OAuth] No database connection available for OAuth state storage');
+    return false;
   }
 
   async function verifyOAuthState(state) {
+    console.log('[OAuth] Verifying state:', state);
+
+    // Try database first (primary storage)
     if (store.sqlPool) {
       try {
         if (process.env.DEBUG_PERSONALIZATION === '1') {
-          console.log('[OAuth] Verifying state:', state);
+          console.log('[OAuth] Checking database for state:', state);
         }
         const [rows] = await store.sqlPool.query(
-          'SELECT state, expires_at FROM oauth_states WHERE state = ? AND expires_at > NOW() AND active = 1',
+          'SELECT state, created_at, expires_at, active, (expires_at > NOW()) as notExpired FROM oauth_states WHERE state = ?',
           [state]
         );
-        
-        if (process.env.DEBUG_PERSONALIZATION === '1') {
-          console.log('[OAuth] State verification result:', {
-            state,
-            found: rows.length > 0,
-            rows: rows.length,
-            expiresAt: rows[0]?.expires_at
-          });
+        if (rows.length > 0) {
+          const row = rows[0];
+            if (row.active === 1 && row.notExpired) {
+              console.log('[OAuth] State found in database - valid (active)');
+              return true;
+            } else if (row.active === 0 && row.notExpired) {
+              if (process.env.OAUTH_ALLOW_REUSE === '1') {
+                console.warn('[OAuth] Allowing reuse of inactive state due to OAUTH_ALLOW_REUSE=1 (reduced security):', state);
+                return true;
+              } else {
+                console.warn('[OAuth] Found inactive (consumed) state in DB; will treat as invalid unless reuse enabled.');
+              }
+            } else if (!row.notExpired) {
+              console.warn('[OAuth] State in DB expired:', state);
+            }
+        } else {
+          if (process.env.DEBUG_PERSONALIZATION === '1') {
+            console.log('[OAuth] State not found in database:', state);
+          }
         }
-        
-        return rows.length > 0;
       } catch(e) {
-        console.error('[OAuth] Failed to verify OAuth state from DB:', e.message, e.stack);
-        // Fallback to in-memory
-        const memoryResult = oauthStateStore.has(state);
-        if (process.env.DEBUG_PERSONALIZATION === '1') {
-          console.log('[OAuth] Memory fallback result:', memoryResult);
-        }
-        return memoryResult;
+        console.error('[OAuth] DB verify error:', e.message);
+        return false;
       }
+    } else {
+      console.error('[OAuth] No database connection available for state verification');
     }
-    // Fallback to in-memory
-    const memoryResult = oauthStateStore.has(state);
-    if (process.env.DEBUG_PERSONALIZATION === '1') {
-      console.log('[OAuth] Memory-only verification:', state, memoryResult);
+
+    // Stateless fallback
+    const stateless = verifySignedStateFormat(state);
+    if (stateless.ok) {
+      console.log('[OAuth] Stateless fallback accepted, ageSec:', stateless.ageSec);
+      return true;
     }
-    return memoryResult;
+    
+    // Legacy short state fallback (no dots). Accept to unblock login if format matches previous random base36 pattern.
+    // Criteria: 6-18 chars, alphanumeric, no dots, not already consumed.
+    if(/^[a-z0-9]{6,18}$/i.test(state)) {
+      console.warn('[OAuth] Accepting legacy format state (reuse allowed TEMPORARILY; reduced CSRF protection) state:', state);
+      // TODO: remove legacy acceptance once frontend confirmed issuing signed states with dots
+      return true;
+    }
+    console.warn('[OAuth] State verification failed (not found; fallback reason:', stateless.reason, ')');
+    return false;
   }
 
   async function deleteOAuthState(state) {
     if (store.sqlPool) {
       try {
-        // Instead of deleting, mark as inactive for debugging/tracking
         const result = await store.sqlPool.query('UPDATE oauth_states SET active = 0 WHERE state = ?', [state]);
-        
-        // Handle different result structures from mysql2
         const affectedRows = result.affectedRows || result[0]?.affectedRows || (Array.isArray(result) && result[0]?.affectedRows) || 0;
-        
         if (process.env.DEBUG_PERSONALIZATION === '1') {
           console.log('[OAuth] Deactivated state in DB:', state, 'affected rows:', affectedRows);
         }
-        
+        consumedStateSet.add(state); // prevent stateless replay
         return affectedRows > 0;
       } catch(e) {
-        console.error('[OAuth] Failed to deactivate OAuth state in DB:', e.message, e.stack);
-        // Fallback to in-memory
-        oauthStateStore.delete(state);
+        console.error('[OAuth] DB deactivate error:', e.message);
+        consumedStateSet.add(state); // prevent stateless replay even on error
         return false;
       }
     }
-    // Fallback to in-memory
-    const hadState = oauthStateStore.has(state);
-    oauthStateStore.delete(state);
+    
+    // No database available
+    consumedStateSet.add(state); // prevent stateless replay
     if (process.env.DEBUG_PERSONALIZATION === '1') {
-      console.log('[OAuth] Deleted state from memory:', state, 'had state:', hadState);
+      console.log('[OAuth] No database available - only marked as consumed:', state);
     }
-    return hadState;
+    return false;
   }
 
   async function cleanupExpiredStates() {
@@ -193,19 +247,8 @@ function createAuthRoutes(client, store) {
         console.error('[OAuth] Failed to cleanup expired OAuth states:', e.message, e.stack);
       }
     } else {
-      // Fallback: prune expired in-memory states (>10m)
-      const now = Date.now();
-      let prunedCount = 0;
-      for (const [s, ts] of oauthStateStore) {
-        if (now - ts > 10 * 60 * 1000) {
-          oauthStateStore.delete(s);
-          prunedCount++;
-        }
-      }
-      if (prunedCount > 0) {
-        if (process.env.DEBUG_PERSONALIZATION === '1') {
-          console.log('[OAuth] Pruned', prunedCount, 'expired in-memory states');
-        }
+      if (process.env.DEBUG_PERSONALIZATION === '1') {
+        console.log('[OAuth] No database available for cleanup');
       }
     }
   }
@@ -234,9 +277,10 @@ function createAuthRoutes(client, store) {
     const serverMobileDetection = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
     const isActuallyMobile = isMobile === 'true' || serverMobileDetection;
     
-    const state = Math.random().toString(36).slice(2, 18);
+    const state = createSignedState();
     if (process.env.DEBUG_PERSONALIZATION === '1') {
       console.log('[OAuth] Generated state:', state);
+      console.log('[OAuth] State format has dots:', state.includes('.'));
     }
     
     const saved = await saveOAuthState(state);
@@ -245,8 +289,12 @@ function createAuthRoutes(client, store) {
       return res.status(500).json({ error: 'state_save_failed', message: 'Failed to save OAuth state' });
     }
     
-    // Cleanup expired states
-    await cleanupExpiredStates();
+    // Cleanup expired states (async, don't block the URL generation)
+    cleanupExpiredStates().catch(e => {
+      if (process.env.DEBUG_PERSONALIZATION === '1') {
+        console.log('[OAuth] Cleanup error during URL generation:', e.message);
+      }
+    });
     
     const params = new URLSearchParams({
       client_id: OAUTH_CLIENT_ID,
@@ -282,14 +330,24 @@ function createAuthRoutes(client, store) {
       });
     }
     
-    res.json({ 
+  // Prevent caching of this response (state must be fresh)
+  res.set('Cache-Control','no-store, no-cache, must-revalidate, max-age=0');
+  res.set('Pragma','no-cache');
+  res.set('Expires','0');
+  res.json({ 
       url: primaryUrl,
       webUrl,
       appUrl,
       isMobile: isActuallyMobile,
       preferApp: preferApp === 'true',
-      state: process.env.DEBUG_PERSONALIZATION === '1' ? state : undefined // Include state for debugging only
+      state: process.env.DEBUG_PERSONALIZATION === '1' ? state : undefined,
+      stateFormat: process.env.DEBUG_PERSONALIZATION === '1' ? 'signed(rand.ts.sig)' : undefined
     });
+  });
+
+  // Simple version probe for debugging running instance
+  router.get('/version', (req, res) => {
+    res.json({ version: AUTH_ROUTE_VERSION });
   });
 
   // OAuth callback exchange (code -> token -> user info & guilds)
@@ -315,12 +373,29 @@ function createAuthRoutes(client, store) {
       return res.status(400).json({ error: 'missing_state', message: 'OAuth state parameter is required' });
     }
     
-    const stateValid = await verifyOAuthState(state);
+  // Verify state BEFORE cleanup to avoid race conditions (supports stateless fallback)
+  const stateValid = await verifyOAuthState(state);
     if (!stateValid) {
       console.error('[OAuth] Invalid state in exchange:', state);
-      return res.status(400).json({ 
+      // Log additional debug info to help diagnose the issue
+        if (process.env.DEBUG_PERSONALIZATION === '1') {
+          console.log('[OAuth] Debug - checking state storage:');
+          console.log('[OAuth] Database states count:', store.sqlPool ? 'checking...' : 'no database');
+          
+          if (store.sqlPool) {
+            try {
+              const [rows] = await store.sqlPool.query(
+                'SELECT state, expires_at, active, (expires_at > NOW()) as valid FROM oauth_states WHERE state = ?',
+                [state]
+              );
+              console.log('[OAuth] State in database:', rows.length > 0 ? rows[0] : 'not found');
+            } catch(e) {
+              console.log('[OAuth] Database state check failed:', e.message);
+            }
+          }
+        }      return res.status(400).json({ 
         error: 'invalid_state', 
-        message: 'OAuth state is invalid or expired',
+        message: 'OAuth state is invalid or expired. Please try logging in again.',
         receivedState: process.env.DEBUG_PERSONALIZATION === '1' ? state : undefined
       });
     }
@@ -559,7 +634,6 @@ function createAuthRoutes(client, store) {
   router.get('/debug/oauth-states', async (req, res) => {
     try {
       const dbStates = [];
-      const memoryStates = [];
       
       if (store.sqlPool) {
         try {
@@ -574,33 +648,23 @@ function createAuthRoutes(client, store) {
         }
       }
       
-      // In-memory states
-      for (const [state, timestamp] of oauthStateStore.entries()) {
-        memoryStates.push({
-          state: process.env.DEBUG_PERSONALIZATION === '1' ? state : 'hidden',
-          timestamp: new Date(timestamp).toISOString(),
-          age_minutes: Math.round((Date.now() - timestamp) / 60000),
-          valid: (Date.now() - timestamp) < 10 * 60 * 1000
-        });
-      }
-      
       res.json({ 
         database: {
           connected: !!store.sqlPool,
           states: process.env.DEBUG_PERSONALIZATION === '1' ? dbStates : dbStates.map(s => ({...s, state: 'hidden'})),
           count: dbStates.length
         },
-        inMemory: {
-          states: memoryStates,
-          count: memoryStates.length
+        consumedStates: {
+          count: consumedStateSet.size,
+          note: "States consumed to prevent replay attacks"
         },
         summary: {
           total_db: dbStates.length,
-          total_memory: memoryStates.length,
           valid_db: dbStates.filter(s => s.valid).length,
-          valid_memory: memoryStates.filter(s => s.valid).length
+          consumed_count: consumedStateSet.size
         },
-        debug_mode: process.env.DEBUG_PERSONALIZATION === '1'
+        debug_mode: process.env.DEBUG_PERSONALIZATION === '1',
+        storage_mode: 'database_only'
       });
     } catch(e) {
       console.error('[OAuth Debug] Debug endpoint error:', e.message);

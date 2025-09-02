@@ -6,7 +6,7 @@ const AutosSectionLazy = React.lazy(()=> import('./sections/AutosSection.jsx'));
 const OverviewSection = React.lazy(()=> import('./sections/OverviewSection.jsx'));
 const CommandsSection = React.lazy(()=> import('./sections/CommandsSection.jsx'));
 const PersonalizationSection = React.lazy(()=> import('./sections/PersonalizationSection.jsx'));
-const WelcomeSection = React.lazy(()=> import('./sections/WelcomeSection.jsx'));
+const ModerationSection = React.lazy(()=> import('./sections/ModerationSection.jsx'));
 const GamesSocialsSection = React.lazy(()=> import('./sections/GamesSocialsSection.jsx'));
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './theme.css';
@@ -199,18 +199,26 @@ export default function App(){
     if (authProcessing && !code) {
       console.log('Resetting stuck authProcessing state');
       setAuthProcessing(false);
+      oauthExchangeStarted.current = false; // Reset the exchange flag too
       return;
     }
     
-  if(!token && code && state && !authProcessing && !oauthExchangeStarted.current){
+    if(!token && code && state && !authProcessing && !oauthExchangeStarted.current){
       (async()=>{
         try {
           setAuthProcessing(true);
-      oauthExchangeStarted.current = true;
+          oauthExchangeStarted.current = true;
+          
+          // Clear any previous errors before starting OAuth
+          setError('');
+          
+          if (import.meta.env.DEBUG_PERSONALIZATION === '1') {
+              console.log('[OAuth Debug] Starting exchange with code:', code?.substring(0, 10) + '...', 'state:', state);
+          }
           
           // Add timeout to prevent hanging
           const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+          const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
           
           const resp = await fetch(API_BASE + '/api/auth/oauth/discord/exchange', { 
             method:'POST', 
@@ -221,11 +229,27 @@ export default function App(){
           
           clearTimeout(timeoutId);
           const text = await resp.text();
-          let data; try { data = text? JSON.parse(text):{}; } catch { throw new Error('OAuth exchange failed (bad JSON)'); }
+          
+          if (import.meta.env.DEBUG_PERSONALIZATION === '1') {
+              console.log('[OAuth Debug] Exchange response status:', resp.status);
+              console.log('[OAuth Debug] Exchange response text:', text);
+          }
+          
+          let data; 
+          try { 
+            data = text ? JSON.parse(text) : {}; 
+          } catch { 
+            throw new Error('OAuth exchange failed (invalid server response)'); 
+          }
+          
           if(!resp.ok){ 
             console.error('OAuth exchange failed:', data);
-            throw new Error(data.error || 'OAuth exchange failed'); 
+            const errorMsg = data.error === 'invalid_state' 
+              ? 'Login session expired. Please try logging in again.' 
+              : (data.message || data.error || 'OAuth exchange failed');
+            throw new Error(errorMsg); 
           }
+          
           if(data.token){ 
             localStorage.setItem('token', data.token); 
             setToken(data.token);
@@ -243,26 +267,48 @@ export default function App(){
           window.history.replaceState({}, '', cleanUrl);
         } catch(e){ 
           console.error('OAuth exchange error:', e);
+          oauthExchangeStarted.current = false; // Reset flag on error so user can try again
           if (e.name === 'AbortError') {
             setError('Authentication timed out. Please try again.');
           } else {
             setError(e.message); 
           }
-        }
-        finally { 
-          setAuthProcessing(false); 
+          // IMPORTANT: Clear stale code/state params so we don't keep retrying the same expired state
+          try {
+            const url = new URL(window.location.href);
+            if (url.searchParams.has('code') || url.searchParams.has('state')) {
+              const cleanUrl = window.location.origin + window.location.pathname; // drop query
+              window.history.replaceState({}, '', cleanUrl);
+              if (import.meta.env.DEBUG_PERSONALIZATION === '1') {
+                console.log('[OAuth Debug] Cleared stale code/state params after failure');
+              }
+            }
+          } catch(_e) { /* ignore */ }
+        } finally { 
+          setAuthProcessing(false);
         }
       })();
     }
   }, [token, authProcessing]);
   
+  // Clear OAuth exchange flag when leaving login view or when token changes
+  useEffect(() => {
+    if (view !== 'login' || token) {
+      if (oauthExchangeStarted.current) {
+        console.log('Clearing OAuth exchange flag - view changed or token acquired');
+        oauthExchangeStarted.current = false;
+      }
+    }
+  }, [view, token]);
+
   // Failsafe: Reset authProcessing if it gets stuck
   useEffect(() => {
     if (authProcessing) {
       const timeoutId = setTimeout(() => {
         console.log('Resetting stuck authProcessing after timeout');
         setAuthProcessing(false);
-      }, 15000); // 15 second timeout
+        oauthExchangeStarted.current = false; // Also reset the exchange flag
+      }, 30000); // 30 second timeout
       
       return () => clearTimeout(timeoutId);
     }
@@ -477,48 +523,43 @@ export default function App(){
   }
 
   function startDiscordLogin(){
-    // Set loading state
     setLoginLoading(true);
-    setError(''); // Clear any previous errors
-    
-    // For development environment, always use web browser OAuth
-    // This avoids "discord://" protocol handler errors in development
-    const isDevelopment = window.location.hostname === 'localhost' || 
-                         window.location.hostname === '127.0.0.1' || 
-                         window.location.port;
-    
-    // Only prefer Discord app in production and on mobile
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
-                     (navigator.maxTouchPoints && navigator.maxTouchPoints > 2 && /MacIntel/.test(navigator.platform));
-    
-    const preferApp = !isDevelopment && isMobile;
-    
+    setError('');
+    const isDevelopment = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || !!window.location.port);
+    const ua = navigator.userAgent;
+    const isIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    const isAndroid = /Android/i.test(ua);
+    const isMobile = isIOS || isAndroid;
+  // Optional: allow Android deep link attempt if explicitly enabled (can be flaky on some devices/browsers)
+  const enableAndroidApp = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_ANDROID_APP_LOGIN === '1');
+  // Attempt discord:// on iOS by default; Android only if flag enabled. Desktop handled separately below.
+  const preferApp = !isDevelopment && (isIOS || (enableAndroidApp && isAndroid));
+    if (import.meta.env.DEBUG_PERSONALIZATION === '1') {
+      console.log('[OAuth Debug] Platform detection:', { isDevelopment, isIOS, isAndroid, isMobile, preferApp });
+    }
     const url = `/api/auth/oauth/discord/url?preferApp=${preferApp}&isMobile=${isMobile}`;
-    
     fetchJson(url)
-      .then(d => { 
-        if(d && (d.url || d.webUrl || d.appUrl)) {
-          // Add a small delay to show the loading state
-          setTimeout(() => {
-            if(!isDevelopment && isMobile && d.appUrl) {
-              // Mobile production: Try Discord app first
-              tryDiscordAppWithFallback(d.appUrl, d.webUrl || d.url, true);
-            } else if(!isDevelopment && !isMobile && d.appUrl && d.webUrl) {
-              // Desktop production: Check if Discord app is running, otherwise use browser
-              checkDiscordAppAndRedirect(d.appUrl, d.webUrl);
-            } else {
-              // Development or fallback: Always use web browser
-              const redirectUrl = d.webUrl || d.url || d.appUrl;
-              window.location.href = redirectUrl;
-            }
-          }, 800); // 800ms delay to show loading animation
+      .then(d => {
+        if (import.meta.env.DEBUG_PERSONALIZATION === '1') {
+          console.log('[OAuth Debug] URL generation response:', d);
+        }
+        if(!(d && (d.url || d.webUrl || d.appUrl))) throw new Error('No OAuth URL');
+    if(preferApp && d.appUrl){
+      // Immediate deep link attempt (no artificial delay) with fallback (mobile flag influences timing)
+      tryDiscordAppWithFallback(d.appUrl, d.webUrl || d.url || d.appUrl, isMobile);
+        } else if(!isDevelopment && !isMobile && d.appUrl && d.webUrl){
+            checkDiscordAppAndRedirect(d.appUrl, d.webUrl);
         } else {
-          throw new Error('No OAuth URL'); 
+            const redirectUrl = d.webUrl || d.url || d.appUrl;
+            if (import.meta.env.DEBUG_PERSONALIZATION === '1') {
+              console.log('[OAuth Debug] Using web OAuth URL:', redirectUrl);
+            }
+            window.location.href = redirectUrl;
         }
       })
-      .catch(e=> {
+      .catch(e => {
         setError('OAuth URL error: '+e.message+' (is backend running on 3001?)');
-        setLoginLoading(false); // Reset loading state on error
+        setLoginLoading(false);
       });
   }
 
@@ -581,7 +622,6 @@ export default function App(){
     // Fallback mechanism
     setTimeout(() => {
       if (document.hasFocus() && !document.hidden && !redirected) {
-        console.log(`Discord app failed to open after ${fallbackDelay}ms, redirecting to web browser`);
         window.location.href = webUrl;
         redirected = true;
       }
@@ -607,6 +647,58 @@ export default function App(){
         window.removeEventListener('focus', handleFocus);
       }, 5000);
     }
+  }
+
+  // Android specific sequence using discord:// then intent:// then web fallback.
+  // NOTE: Discord Android app often does NOT register the deep link for the full OAuth authorize path; success is not guaranteed.
+  function tryAndroidDeepLinkSequence(oauthData){
+    const webUrl = oauthData.webUrl || oauthData.url || oauthData.appUrl;
+    const originalAppUrl = oauthData.appUrl; // discord://discord.com/api/oauth2/authorize?... (from backend)
+    // Derive query part to build variant deep links (Discord may only register certain paths on Android)
+    const queryPart = (()=>{ try { return webUrl.split('?')[1] || ''; } catch { return ''; } })();
+    const variants = [
+      originalAppUrl,
+      `discord://discord.com/oauth2/authorize?${queryPart}`,
+      `discord://oauth2/authorize?${queryPart}`
+    ].filter(Boolean);
+    // Build intent URL (Chrome) with fallback back to the web URL (using standard /oauth2 path, not /api/oauth2)
+    const intentUrl = `intent://discord.com/oauth2/authorize?${queryPart}#Intent;scheme=discord;package=com.discord;S.browser_fallback_url=${encodeURIComponent(webUrl)};end`;
+    if (import.meta.env.DEBUG_PERSONALIZATION === '1') {
+      console.log('[OAuth Debug][Android] Deep link sequence start', { variants, intentUrl, webUrl });
+    }
+    let stage = 0; // 0 protocol, 1 intent, 2 web
+    let variantIndex = 0;
+    const tryIntent = () => {
+      if(stage !== 0) return;
+      stage = 1;
+      if (import.meta.env.DEBUG_PERSONALIZATION === '1') console.log('[OAuth Debug][Android] Trying intent URL');
+      window.location.href = intentUrl;
+    };
+    const fallbackWeb = () => {
+      if(stage === 2) return;
+      stage = 2;
+      if (import.meta.env.DEBUG_PERSONALIZATION === '1') console.log('[OAuth Debug][Android] Falling back to web URL');
+      window.location.href = webUrl;
+    };
+    // Attempt variants sequentially before intent
+    const tryNextVariant = () => {
+      if (variantIndex >= variants.length) { tryIntent(); return; }
+      const v = variants[variantIndex++];
+      if (!v) { tryNextVariant(); return; }
+      if (import.meta.env.DEBUG_PERSONALIZATION === '1') console.log('[OAuth Debug][Android] Trying variant', v);
+      try { window.location.href = v; } catch { tryNextVariant(); }
+      // Schedule next variant if still here
+      setTimeout(()=>{
+        if (document.hasFocus() && !document.hidden && stage === 0) {
+          tryNextVariant();
+        }
+      }, 600);
+    };
+    tryNextVariant();
+    // After 1s attempt intent if still here
+    setTimeout(()=>{ if(document.hasFocus() && !document.hidden && stage === 0) tryIntent(); }, 2000);
+    // After 2500ms fallback to web if still here
+    setTimeout(()=>{ if(document.hasFocus() && !document.hidden && stage < 2) fallbackWeb(); }, 4000);
   }
 
   function doLogout(){
@@ -833,9 +925,11 @@ export default function App(){
   // Command toggles state
   const [commandTogglesState, setCommandTogglesState] = useState({}); // name -> enabled bool
   const [commandMeta, setCommandMeta] = useState({}); // name -> {createdAt, createdBy, updatedAt, updatedBy}
+  const [commandsLoading, setCommandsLoading] = useState(false);
   useEffect(()=>{
     if(dashSection==='commands' && selectedGuild){
       (async()=>{
+        setCommandsLoading(true);
         try {
           const data = await getCommandToggles(selectedGuild);
           if(data && Array.isArray(data.commands)){
@@ -850,6 +944,9 @@ export default function App(){
             setCommandTogglesState(data.toggles);
           }
         } catch(e){ /* ignore */ }
+        finally {
+          setCommandsLoading(false);
+        }
       })();
     }
   }, [dashSection, selectedGuild]);
@@ -874,6 +971,8 @@ export default function App(){
       return { ...prev, [name]: enabled };
     });
     setCommandToggle(name, enabled, selectedGuild).then(()=>{
+      // Show toast with appropriate style
+      pushToast(enabled ? 'success' : 'info', `Command "${name}" ${enabled ? 'enabled' : 'disabled'} successfully`);
       // fetch authoritative analytics snapshot
       refreshAnalytics();
     }).catch(()=>{
@@ -993,6 +1092,7 @@ export default function App(){
     refresh={refresh}
   refreshAnalytics={refreshAnalytics}
   adjustAutosEnabled={adjustAutosEnabled}
+  loading={loading && dashSection === 'autos'}
   />
   </React.Suspense>;
 
@@ -1034,9 +1134,25 @@ export default function App(){
       ]
     },
     {
+      key: 'moderation', title: 'Moderation & Roles', icon: 'fa-users-gear', accent: '#8b5cf6',
+      items: [
+        { name:'role list', usage:'/role list', desc:'Show all available self-assignable roles.' },
+        { name:'role menu', usage:'/role menu', desc:'Interactive role selection menu (ephemeral).' },
+        { name:'role add', usage:'/role add <role> [user]', desc:'Add a self-assignable role to yourself or another user.' },
+        { name:'role remove', usage:'/role remove <role> [user]', desc:'Remove a self-assignable role from yourself or another user.' },
+        { name:'role setup', usage:'/role setup <action> <role> [options]', desc:'Configure self-assignable roles (requires Manage Roles).', requiresManage:true },
+        { name:'role toggle', usage:'/role toggle <command_name>', desc:'Enable/disable a role command (requires Manage Roles).', requiresManage:true }
+      ]
+    },
+    {
       key: 'passive', title: 'Passive / Automation', icon: 'fa-bolt', accent: '#ef4444',
       items: [
-        { name:'autoreply', usage:'(passive)', desc:'Automatic replies based on configured patterns.' }
+        { name:'autoreply', usage:'(passive)', desc:'Automatic replies based on configured patterns.' },
+        { name:'welcome', usage:'(passive)', desc:'Welcome new members with customizable messages and cards.' },
+        { name:'automod', usage:'(passive)', desc:'Automatic moderation for spam, caps, links, and profanity.' },
+        { name:'xp system', usage:'(passive)', desc:'XP and leveling system for active members.' },
+        { name:'audit logs', usage:'(passive)', desc:'Track all moderation actions and server changes.' },
+        { name:'anti-raid', usage:'(passive)', desc:'Protection against raids and mass join attacks.' }
       ]
     },
     // YouTube group (conditionally shown if user has Manage Server permission in guild)
@@ -1058,7 +1174,7 @@ export default function App(){
   ];
   const selectedGuildObj = guilds.find(g=> g.id===selectedGuild);
   const hasManageGuild = selectedGuildObj ? !!selectedGuildObj.canManage : false;
-  const commandsContent = <CommandsSection hasManageGuild={hasManageGuild} commandGroups={commandGroups} commandTogglesState={commandTogglesState} commandMeta={commandMeta} toggleCommand={toggleCommand} />;
+  const commandsContent = <CommandsSection hasManageGuild={hasManageGuild} commandGroups={commandGroups} commandTogglesState={commandTogglesState} commandMeta={commandMeta} toggleCommand={toggleCommand} loading={commandsLoading} />;
 
   function handleAvatarFile(e){
     const file = e.target.files?.[0]; if(!file) return;
@@ -1115,7 +1231,9 @@ export default function App(){
 
   // saveWelcome redefined above with dirty tracking
   // Channel selection placeholder (requires channel list API future). For now free text.
-  const welcomeContent = <WelcomeSection welcomeCfg={welcomeCfg} welcomeChannels={welcomeChannels} welcomeDirty={welcomeDirty} resetWelcome={resetWelcome} saveWelcome={saveWelcome} welcomeLoading={welcomeLoading} resolvedGuildName={resolvedGuildName} setWelcomeCfg={setWelcomeCfg} toggleWelcomeEnabled={toggleWelcomeEnabled} />;
+  const moderationContent = <React.Suspense fallback={<div className="text-muted small p-3">Loading Moderation…</div>}>
+    <ModerationSection guildId={selectedGuild} pushToast={pushToast} />
+  </React.Suspense>;
 
   const settingsContent = <React.Suspense fallback={<div className="text-muted small p-3">Loading settings…</div>}>
     <SettingsSection guildId={selectedGuild} pushToast={pushToast} />
@@ -1123,7 +1241,7 @@ export default function App(){
   const gamesContent = <React.Suspense fallback={<div className="text-muted small p-3">Loading Games & Socials…</div>}>
     <GamesSocialsSection guildId={selectedGuild} pushToast={pushToast} />
   </React.Suspense>;
-  const sectionMap = { overview: overviewContent, autos: autosContent, commands: commandsContent, personal: personalizationContent, welcome: welcomeContent, games: gamesContent, settings: settingsContent };
+  const sectionMap = { overview: overviewContent, autos: autosContent, commands: commandsContent, personal: personalizationContent, moderation: moderationContent, games: gamesContent, settings: settingsContent };
 
   // Preload lazily loaded sections to reduce Suspense flashes
   function preloadSection(key){
@@ -1133,7 +1251,7 @@ export default function App(){
       case 'overview': import('./sections/OverviewSection.jsx'); break;
       case 'commands': import('./sections/CommandsSection.jsx'); break;
       case 'personal': import('./sections/PersonalizationSection.jsx'); break;
-      case 'welcome': import('./sections/WelcomeSection.jsx'); break;
+      case 'moderation': import('./sections/ModerationSection.jsx'); break;
   case 'settings': import('./sections/SettingsSection.jsx'); break;
   case 'autos': import('./sections/AutosSection.jsx'); break;
   case 'games': import('./sections/GamesSocialsSection.jsx'); break;

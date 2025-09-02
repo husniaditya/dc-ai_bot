@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { getSettings, updateSettings } from '../api';
+import LoadingSection from '../components/LoadingSection';
 
 export default function SettingsSection({ guildId, pushToast }){
   const [settings, setSettings] = useState(null);
@@ -36,13 +37,21 @@ export default function SettingsSection({ guildId, pushToast }){
   }
 
   if(!guildId) return <div className="text-muted small">Select a server first.</div>;
-  return <div className="settings-section-wrapper fade-in-soft position-relative">
+  
+  const showOverlay = loading && !settings;
+  return (
+    <LoadingSection
+      loading={showOverlay}
+      title="Loading Server Settings"
+      message="Fetching your server configuration and preferences..."
+      className="settings-section-wrapper fade-in-soft position-relative"
+      style={{ minHeight: showOverlay ? '500px' : 'auto' }}
+    >
     <div className="d-flex align-items-center gap-2 mb-3">
       <h5 className="mb-0">Server Settings</h5>
       {dirty() && <span className="dirty-badge">Unsaved</span>}
     </div>
     {error && <div className="alert alert-danger py-2 mb-3">{error}</div>}
-    {!settings && loading && <div className="section-loading-standalone"><div className="spinner-border text-light" style={{width:'2.5rem',height:'2.5rem'}} role="status"><span className="visually-hidden">Loading…</span></div><div className="mt-3 small text-muted">Loading settings…</div></div>}
     {settings && <div className="row g-4">
       <div className="col-lg-6">
         <div className="card card-glass shadow-sm"><div className="card-body vstack gap-3">
@@ -107,7 +116,8 @@ export default function SettingsSection({ guildId, pushToast }){
         </div></div>
       </div>
     </div>}
-  </div>;
+    </LoadingSection>
+  );
 }
 
 function formatSampleDate(s){

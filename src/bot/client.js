@@ -6,6 +6,8 @@ const path = require('path');
 const readyHandler = require('./events/ready');
 const guildMemberAddHandler = require('./events/guildMemberAdd');
 const interactionCreateHandler = require('./events/interactionCreate');
+const messageReactionAddHandler = require('./events/messageReactionAdd');
+const messageReactionRemoveHandler = require('./events/messageReactionRemove');
 
 // Services
 const { startYouTubeWatcher } = require('./services/youtube');
@@ -20,7 +22,11 @@ function createDiscordClient(store, startTimestamp) {
 
   // Intents: make privileged intents optional (to avoid 'Disallowed intents' login error)
   const enableAutoReply = process.env.AUTOREPLY_ENABLED === '1';
-  const intents = [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages];
+  const intents = [
+    GatewayIntentBits.Guilds, 
+    GatewayIntentBits.GuildMessages, 
+    GatewayIntentBits.GuildMessageReactions
+  ];
   
   // Message Content intent (privileged) – required for reading message text for auto-replies & AI commands
   if (process.env.ENABLE_MESSAGE_CONTENT !== '0') {
@@ -34,7 +40,7 @@ function createDiscordClient(store, startTimestamp) {
 
   const client = new Client({ 
     intents, 
-    partials: [Partials.Channel, Partials.Message] 
+    partials: [Partials.Channel, Partials.Message, Partials.Reaction] 
   });
 
   // Load commands dynamically
@@ -43,7 +49,9 @@ function createDiscordClient(store, startTimestamp) {
   // Set up event handlers
   readyHandler(client, store, startTimestamp, commandMap);
   guildMemberAddHandler(client, store);
-  interactionCreateHandler(client, store, commandMap);
+  interactionCreateHandler(client, store, startTimestamp, commandMap);
+  messageReactionAddHandler(client, store);
+  messageReactionRemoveHandler(client, store);
 
   // Login with error handling
   client.login(token).catch(err => {
@@ -52,10 +60,14 @@ function createDiscordClient(store, startTimestamp) {
       // Remove privileged intents and retry once
       try { client.destroy(); } catch {}
       
-      const safeIntents = [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages];
+      const safeIntents = [
+        GatewayIntentBits.Guilds, 
+        GatewayIntentBits.GuildMessages, 
+        GatewayIntentBits.GuildMessageReactions
+      ];
       const safeClient = new Client({ 
         intents: safeIntents, 
-        partials: [Partials.Channel, Partials.Message] 
+        partials: [Partials.Channel, Partials.Message, Partials.Reaction] 
       });
       
       const safeCommandMap = loadCommands(safeClient, startTimestamp);

@@ -28,7 +28,7 @@ export default function Sidebar({
             {key:'autos', label:'Auto Responses', icon:'fa-bolt'},
             {key:'commands', label:'Commands', icon:'fa-terminal'},
             {key:'personal', label:'Bot Personalization', icon:'fa-user-gear'},
-            {key:'welcome', label:'Welcome', icon:'fa-door-open'},
+            {key:'moderation', label:'Moderation', icon:'fa-shield-halved'},
             {key:'games', label:'Games & Socials', icon:'fa-gamepad'},
             {key:'settings', label:'Settings', icon:'fa-sliders'}
           ].map(item => (

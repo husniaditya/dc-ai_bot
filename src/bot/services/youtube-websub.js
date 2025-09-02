@@ -681,8 +681,10 @@ function initializeWebSub(client) {
 
   // Set up periodic sync (every hour)
   setInterval(() => syncSubscriptions(client), 60 * 60 * 1000);
-
-  console.log('YouTube WebSub service initialized');
+  
+  if (process.env.DEBUG_PERSONALIZATION === '1') {
+      console.log('YouTube WebSub service initialized');
+  }
   return true;
 }
 
