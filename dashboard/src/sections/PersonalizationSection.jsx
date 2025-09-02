@@ -1,16 +1,15 @@
 import React from 'react';
-import LoadingOverlay from '../components/LoadingOverlay';
+import LoadingSection from '../components/LoadingSection';
 
 export default function PersonalizationSection({ personalization, personalizationLoading, personalizationDirty, resetPersonalization, savePersonalization, handleAvatarFile, renderStatusDot, setPersonalization }) {
   const showOverlay = personalizationLoading;
-  return <div className="fade-in-soft personalization-section-wrapper position-relative">
-    {showOverlay && (
-      <LoadingOverlay 
-        title="Loading Bot Personalization"
-        message="Fetching your bot's appearance and activity settings..."
-        fullHeight={false}
-      />
-    )}
+  return (
+    <LoadingSection
+      loading={showOverlay}
+      title="Loading Bot Personalization"
+      message="Fetching your bot's appearance and activity settings..."
+      className="fade-in-soft personalization-section-wrapper position-relative"
+    >
     <div className="d-flex align-items-center gap-2 mb-3">
       <h5 className="mb-0">Bot Personalization</h5>
       {personalizationDirty() && <span className="dirty-badge">Unsaved</span>}
@@ -80,5 +79,6 @@ export default function PersonalizationSection({ personalization, personalizatio
       </div>
     </div>}
   {/* Standalone fallback removed in favor of full overlay */}
-  </div>;
+    </LoadingSection>
+  );
 }

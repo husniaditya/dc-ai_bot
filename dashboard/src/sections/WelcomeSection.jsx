@@ -1,5 +1,5 @@
 import React from 'react';
-import LoadingOverlay from '../components/LoadingOverlay';
+import LoadingSection from '../components/LoadingSection';
 
 export default function WelcomeSection({ welcomeCfg, welcomeChannels, welcomeDirty, resetWelcome, saveWelcome, welcomeLoading, resolvedGuildName, setWelcomeCfg, toggleWelcomeEnabled }) {
   function substitutedPreview() {
@@ -8,11 +8,18 @@ export default function WelcomeSection({ welcomeCfg, welcomeChannels, welcomeDir
     const msgRaw = (welcomeCfg.messageText||'').trim() || 'Welcome {user} to {server}!';
     return msgRaw.replace(/\{user\}/g, sampleUser).replace(/\{server\}/g, guildName);
   }
-  return <div className="fade-in-soft welcome-section-wrapper position-relative">
-    <div className="d-flex align-items-center gap-2 mb-3">
-      <h5 className="mb-0">Welcome Messages</h5>
-      {welcomeDirty() && <span className="dirty-badge">Unsaved</span>}
-    </div>
+  
+  return (
+    <LoadingSection
+      loading={welcomeLoading}
+      title="Loading Welcome Settings"
+      message="Fetching welcome message configuration..."
+      className="fade-in-soft welcome-section-wrapper position-relative"
+    >
+      <div className="d-flex align-items-center gap-2 mb-3">
+        <h5 className="mb-0">Welcome Messages</h5>
+        {welcomeDirty() && <span className="dirty-badge">Unsaved</span>}
+      </div>
     {welcomeCfg && <div className={"row g-4 "+(welcomeCfg.enabled===false? 'welcome-config-disabled':'') }>
       <div className="col-lg-7">
         <div className="card card-glass shadow-sm position-relative"><div className="card-body vstack gap-3 position-relative wc-interactive">
@@ -49,13 +56,6 @@ export default function WelcomeSection({ welcomeCfg, welcomeChannels, welcomeDir
       <button className="btn btn-brand" disabled={welcomeCfg.enabled===false || !welcomeDirty()} onClick={saveWelcome}><i className="fa-solid fa-floppy-disk me-2"/>Save</button>
           </div>
           <div className="small text-muted">A message is sent when a new member joins. Ensure the bot can view & send to the channel.</div>
-          {welcomeLoading && (
-            <LoadingOverlay 
-              title="Loading Welcome Settings"
-              message="Fetching welcome message configuration..."
-              fullHeight={false}
-            />
-          )}
         </div></div>
       </div>
       <div className="col-lg-5">
@@ -79,12 +79,6 @@ export default function WelcomeSection({ welcomeCfg, welcomeChannels, welcomeDir
         </div></div>
       </div>
     </div>}
-    {!welcomeCfg && welcomeLoading && (
-      <LoadingOverlay 
-        title="Loading Welcome Settings"
-        message="Fetching welcome message configuration..."
-        fullHeight={false}
-      />
-    )}
-  </div>;
+    </LoadingSection>
+  );
 }

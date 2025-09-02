@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import LoadingOverlay from '../components/LoadingOverlay';
+import LoadingSection from '../components/LoadingSection';
 
 export default function AutosSection({
   autos,
@@ -86,14 +86,13 @@ export default function AutosSection({
   function removeAuto(key){ if(!window.confirm('Delete '+key+'?')) return; const prev=autos; setAutos(autos.filter(a=>a.key!==key)); deleteAuto(key, selectedGuild).then(()=>pushToast('success','Deleted')).catch(e=>{ pushToast('error', e.message); setAutos(prev); }); }
   function runTester(){ if(!testerPattern){ setTesterResult(null); return; } try { const reg=new RegExp(testerPattern, testerFlags); const lines=testerSample.split(/\r?\n/); const matches=lines.map(line=>({ line, match: reg.test(line)})); setTesterResult({ ok:true, matches }); } catch(e){ setTesterResult({ ok:false, error:e.message }); } }
 
-  return <div className="autos-section fade-in-soft autos-section-wrapper position-relative">
-    {loading && (
-      <LoadingOverlay 
-        title="Loading Auto Responses"
-        message="Fetching your server's auto response patterns and settings..."
-        fullHeight={false}
-      />
-    )}
+  return (
+    <LoadingSection
+      loading={loading}
+      title="Loading Auto Responses"
+      message="Fetching your server's auto response patterns and settings..."
+      className="autos-section fade-in-soft autos-section-wrapper position-relative"
+    >
     <h5 className="mb-3">Auto Responses</h5>
     <div className="auto-head mb-3">
       <div className="section-title visually-hidden">Auto Responses</div>
@@ -131,5 +130,6 @@ export default function AutosSection({
   {!isMobile && <div className="table-responsive table-modern-shell table-mobile-stack"><table className="table table-sm table-modern align-middle" style={{minWidth:'900px'}}><thead><tr><th style={{width:34}}><input ref={headerSelectRef} type="checkbox" aria-label="Select all filtered" checked={allFilteredSelected} onChange={headerToggleSelect} /></th>{['key','pattern','flags','replies','enabled'].map(col => { const labelMap={ key:'Key', pattern:'Pattern', flags:'Flags', replies:'Replies', enabled:'On'}; const active=sort.field===col; const dir=active? sort.dir:null; return <th key={col} onClick={()=> toggleSort(col)} style={{cursor:'pointer'}}>{labelMap[col]} {active && (dir==='asc'? '▲':'▼')}</th>; })}<th style={{width:110}}>Actions</th></tr></thead><tbody>{pageAutos.map(a => { const replies=Array.isArray(a.replies)? a.replies.join(' | '):''; const matchHighlight=(()=>{ if(!testerPattern) return false; try { return new RegExp(testerPattern, testerFlags).test(a.pattern); } catch { return false; } })(); const selected=selectedKeys.has(a.key); return <tr key={a.key} className={(a.enabled===false?'row-disabled ':'') + (matchHighlight? 'match-highlight ':'') + (selected? 'selected':'')}><td data-label="Select"><input type="checkbox" className="form-check-input" checked={selected} onChange={()=>toggleRowSelect(a.key)} /></td><td data-label="Key" className="text-primary" style={{cursor:'pointer'}} onClick={()=>editAutoByKey(a.key)}>{a.key}</td><td data-label="Pattern" style={{cursor:'pointer'}} onClick={()=>editAutoByKey(a.key)}>{a.pattern}</td><td data-label="Flags" style={{cursor:'pointer'}} onClick={()=>editAutoByKey(a.key)}>{a.flags}</td><td data-label="Replies" style={{cursor:'pointer'}} onClick={()=>editAutoByKey(a.key)}><small className="text-muted">{replies}</small></td><td data-label="On" className="text-center"><div className="form-check form-switch m-0 d-inline-flex"><input className="form-check-input" type="checkbox" checked={a.enabled!==false} onChange={e=>toggleEnabled(a, e.target.checked)} /></div></td><td data-label="Actions"><div className="btn-group btn-group-sm"><button className="btn btn-edit d-inline-flex align-items-center gap-1" onClick={()=>editAutoByKey(a.key)} title="Edit"><i className="fa-solid fa-pen" /> Edit</button><button className="btn btn-outline-danger d-inline-flex align-items-center gap-1" onClick={()=>removeAuto(a.key)} title="Delete"><i className="fa-solid fa-trash" /> Del</button></div></td></tr>; })}{pageAutos.length===0 && <tr><td colSpan={7} className="text-center text-muted small py-3">No auto responses match your search.</td></tr>}</tbody></table></div>}
   {isMobile && <div className="auto-cards-list">{pageAutos.map(a => { const repliesArr=Array.isArray(a.replies)? a.replies:[]; const replies=repliesArr.join(' | '); const selected=selectedKeys.has(a.key); const matchHighlight=(()=>{ if(!testerPattern) return false; try { return new RegExp(testerPattern, testerFlags).test(a.pattern); } catch { return false; } })(); return <div key={a.key} className={'auto-card card-glass ' + (selected? ' sel':'') + (a.enabled===false? ' disabled':'') + (matchHighlight? ' match':'')}><div className="auto-card-row top"><div className="form-check m-0"><input className="form-check-input" type="checkbox" checked={selected} onChange={()=>toggleRowSelect(a.key)} /></div><button className="auto-key-btn" onClick={()=>editAutoByKey(a.key)}>{a.key}</button><div className="ms-auto form-check form-switch m-0"><input className="form-check-input" type="checkbox" checked={a.enabled!==false} onChange={e=>toggleEnabled(a, e.target.checked)} /></div></div><div className="auto-card-row pattern" onClick={()=>editAutoByKey(a.key)}><code className="pattern-text">{a.pattern}</code>{a.flags && <span className="flags-badge">{a.flags}</span>}</div>{replies && <div className="auto-card-row replies" onClick={()=>editAutoByKey(a.key)}><div className="replies-preview">{replies.length>160? replies.slice(0,160)+'…': replies}</div></div>}<div className="auto-card-row actions"><button className="btn btn-sm btn-edit d-inline-flex align-items-center gap-1" onClick={()=>editAutoByKey(a.key)} title="Edit"><i className="fa-solid fa-pen" /> Edit</button><button className="btn btn-sm btn-outline-danger d-inline-flex align-items-center gap-1" onClick={()=>removeAuto(a.key)} title="Delete"><i className="fa-solid fa-trash" /> Del</button></div></div>; })}{pageAutos.length===0 && <div className="text-muted small py-3">No auto responses match your search.</div>}</div>}
   <div className="d-flex flex-wrap gap-2 align-items-center small mt-2"><div>Showing <strong>{pageAutos.length}</strong> of <strong>{filteredAutos.length}</strong> filtered (total {autos.length})</div><div className="ms-auto d-flex gap-1 align-items-center"><button className="btn btn-sm btn-outline-secondary d-inline-flex align-items-center" disabled={page<=1} onClick={()=>setPage(p=>Math.max(1,p-1))} title="Previous page"><i className="fa-solid fa-chevron-left" /></button><span className="px-2">Page {page} / {totalPages}</span><button className="btn btn-sm btn-outline-secondary d-inline-flex align-items-center" disabled={page>=totalPages} onClick={()=>setPage(p=>Math.min(totalPages,p+1))} title="Next page"><i className="fa-solid fa-chevron-right" /></button></div></div>
-  </div>;
+    </LoadingSection>
+  );
 }
