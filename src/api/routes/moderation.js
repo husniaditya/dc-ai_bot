@@ -50,6 +50,36 @@ function createModerationRoutes(client, store) {
     }
   });
 
+  // Get feature configuration
+  router.get('/features/:featureKey/config', async (req, res) => {
+    try {
+      const guildId = req.headers['x-guild-id'];
+      const { featureKey } = req.params;
+
+      if (!guildId) {
+        return res.status(400).json({ error: 'Guild ID required' });
+      }
+
+      const validFeatures = ['automod', 'welcome', 'roles', 'xp', 'scheduler', 'logging', 'antiraid'];
+      if (!validFeatures.includes(featureKey)) {
+        return res.status(400).json({ error: 'Invalid feature key' });
+      }
+
+      // Get all features and extract the specific one
+      const allFeatures = await store.getModerationFeatures(guildId);
+      const feature = allFeatures[featureKey] || { enabled: false, config: {} };
+      
+      res.json({ 
+        success: true, 
+        feature: featureKey, 
+        config: feature.config || {}
+      });
+    } catch (error) {
+      console.error('Error fetching feature configuration:', error);
+      res.status(500).json({ error: 'Failed to fetch feature configuration' });
+    }
+  });
+
   // Toggle a specific moderation feature
   router.post('/features/:featureKey/toggle', async (req, res) => {
     try {
