@@ -210,8 +210,31 @@ module.exports = function(client, store) {
     }
   });
 
-  // Toggle reaction role status
+  // Toggle reaction role status (PATCH method)
   router.patch('/reaction-roles/:id/status', async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { guildId, status } = req.body;
+      
+      if (!guildId || status === undefined) {
+        return res.status(400).json({ error: 'guildId and status are required' });
+      }
+
+      const success = await store.updateGuildReactionRoleStatus(guildId, parseInt(id), status);
+
+      if (!success) {
+        return res.status(500).json({ error: 'Failed to update reaction role status' });
+      }
+
+      res.json({ success: true, status: !!status });
+    } catch (error) {
+      console.error('Error updating reaction role status:', error);
+      res.status(500).json({ error: 'Failed to update reaction role status' });
+    }
+  });
+
+  // Toggle reaction role status (PUT method for compatibility)
+  router.put('/reaction-roles/:id/status', async (req, res) => {
     try {
       const { id } = req.params;
       const { guildId, status } = req.body;
@@ -396,8 +419,26 @@ module.exports = function(client, store) {
     }
   });
 
-  // Toggle self-assignable role command status
+  // Toggle self-assignable role command status (PATCH method)
   router.patch('/guild/:guildId/self-assignable-roles/:commandName/toggle', async (req, res) => {
+    try {
+      const { guildId, commandName } = req.params;
+      const { status } = req.body;
+      
+      if (!guildId || !commandName || status === undefined) {
+        return res.status(400).json({ error: 'guildId, commandName, and status are required' });
+      }
+
+      const slashRoles = await store.toggleGuildSelfAssignableRoleStatus(guildId, commandName, status);
+      res.json({ success: true, slashRoles });
+    } catch (error) {
+      console.error('Error toggling self-assignable role status:', error);
+      res.status(500).json({ error: 'Failed to toggle self-assignable role status' });
+    }
+  });
+
+  // Toggle self-assignable role command status (PUT method for compatibility)
+  router.put('/guild/:guildId/self-assignable-roles/:commandName/toggle', async (req, res) => {
     try {
       const { guildId, commandName } = req.params;
       const { status } = req.body;

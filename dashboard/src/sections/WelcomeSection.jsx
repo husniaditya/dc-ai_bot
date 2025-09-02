@@ -1,4 +1,5 @@
 import React from 'react';
+import LoadingOverlay from '../components/LoadingOverlay';
 
 export default function WelcomeSection({ welcomeCfg, welcomeChannels, welcomeDirty, resetWelcome, saveWelcome, welcomeLoading, resolvedGuildName, setWelcomeCfg, toggleWelcomeEnabled }) {
   function substitutedPreview() {
@@ -48,12 +49,13 @@ export default function WelcomeSection({ welcomeCfg, welcomeChannels, welcomeDir
       <button className="btn btn-brand" disabled={welcomeCfg.enabled===false || !welcomeDirty()} onClick={saveWelcome}><i className="fa-solid fa-floppy-disk me-2"/>Save</button>
           </div>
           <div className="small text-muted">A message is sent when a new member joins. Ensure the bot can view & send to the channel.</div>
-          {welcomeLoading && <div className="welcome-loading-overlay">
-            <div className="spinner-border text-light" role="status" style={{width:'2.75rem', height:'2.75rem'}}>
-              <span className="visually-hidden">Loading…</span>
-            </div>
-            <div className="mt-3 small text-muted">Loading welcome settings…</div>
-          </div>}
+          {welcomeLoading && (
+            <LoadingOverlay 
+              title="Loading Welcome Settings"
+              message="Fetching welcome message configuration..."
+              fullHeight={false}
+            />
+          )}
         </div></div>
       </div>
       <div className="col-lg-5">
@@ -77,9 +79,12 @@ export default function WelcomeSection({ welcomeCfg, welcomeChannels, welcomeDir
         </div></div>
       </div>
     </div>}
-    {!welcomeCfg && welcomeLoading && <div className="welcome-loading-standalone">
-      <div className="spinner-border text-light" role="status" style={{width:'2.75rem', height:'2.75rem'}}><span className="visually-hidden">Loading…</span></div>
-      <div className="mt-3 small text-muted">Loading welcome settings…</div>
-    </div>}
+    {!welcomeCfg && welcomeLoading && (
+      <LoadingOverlay 
+        title="Loading Welcome Settings"
+        message="Fetching welcome message configuration..."
+        fullHeight={false}
+      />
+    )}
   </div>;
 }
