@@ -102,11 +102,11 @@ async function checkSpamDetection(message, threshold) {
   userCache.timestamps.push(now);
   
   // Check for spam patterns
-  if (userCache.messages.length >= threshold) {
+  if (userCache.messages.length >= 3) {
     // Check for identical messages
-    const recentMessages = userCache.messages.slice(-threshold);
+    const recentMessages = userCache.messages.slice(-3);
     const identicalCount = recentMessages.filter(msg => msg === content).length;
-    if (identicalCount >= Math.ceil(threshold * 0.8)) return true;
+    if (identicalCount >= Math.ceil(3 * 0.8)) return true;
     
     // Check for very similar messages (character overlap)
     let similarityCount = 0;
@@ -115,7 +115,7 @@ async function checkSpamDetection(message, threshold) {
         similarityCount++;
       }
     }
-    if (similarityCount >= Math.ceil(threshold * 0.7)) return true;
+    if (similarityCount >= Math.ceil(3 * 0.7)) return true;
   }
   
   return false;
@@ -170,11 +170,12 @@ function checkExcessiveCaps(content, threshold) {
   
   const upperCount = (content.match(/[A-Z]/g) || []).length;
   const letterCount = (content.match(/[A-Za-z]/g) || []).length;
+  const maxPercentage = 75; // Maximum percentage of letters to consider caps
   
   if (letterCount === 0) return false;
   
   const capsPercentage = (upperCount / letterCount) * 100;
-  return capsPercentage >= threshold;
+  return capsPercentage >= maxPercentage;
 }
 
 // Check for links
@@ -244,7 +245,7 @@ function escapeRegex(string) {
 // Check for mention spam
 function checkMentionSpam(message, threshold) {
   const mentions = message.mentions.users.size + message.mentions.roles.size;
-  return mentions >= threshold;
+  return mentions >= 3;
 }
 
 // Warning escalation helpers - now using database persistence
