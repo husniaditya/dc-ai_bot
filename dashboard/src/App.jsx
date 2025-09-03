@@ -10,6 +10,7 @@ const ModerationSection = React.lazy(()=> import('./sections/ModerationSection.j
 const GamesSocialsSection = React.lazy(()=> import('./sections/GamesSocialsSection.jsx'));
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './theme.css';
+import './styles/responsive-tables.css';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 // Layout & structural components
 import Sidebar from './components/Sidebar.jsx';

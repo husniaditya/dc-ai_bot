@@ -2,10 +2,12 @@ import React, { useState, useEffect, useRef } from 'react';
 import { getGuildEmojis } from '../../../../api';
 import { ChannelSelector, FormField, SwitchToggle } from '../../components/SharedComponents';
 import DeleteConfirmationModal from '../../components/DeleteConfirmationModal';
+import useResponsiveTable from '../../../../hooks/useResponsiveTable';
 
 // Reaction Roles Configuration Component
 export default function ReactionRolesConfig({ config, updateConfig, channels, roles, guildId, showToast }) {
   const [reactionRoles, setReactionRoles] = useState([]);
+  const tableRef = useResponsiveTable();
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -414,7 +416,7 @@ export default function ReactionRolesConfig({ config, updateConfig, channels, ro
             Loading reaction roles...
           </div>
         ) : reactionRoles.length > 0 ? (
-          <div className="table-responsive">
+          <div ref={tableRef} className="table-responsive-scroll">
             <table className="table table-sm">
               <thead>
                 <tr>
@@ -442,23 +444,27 @@ export default function ReactionRolesConfig({ config, updateConfig, channels, ro
                       </div>
                     </td>
                     <td>
-                      <div className="fw-semibold text-primary" style={{ fontSize: '0.85rem' }}>
+                      <div className="fw-semibold text-primary mobile-truncate" style={{ fontSize: '0.85rem' }}>
                         {group.title || 'Untitled'}
                       </div>
                     </td>
-                    <td>{getChannelName(group.channelId)}</td>
+                    <td>
+                      <span className="mobile-truncate text-info">{getChannelName(group.channelId)}</span>
+                    </td>
                     <td>
                       {group.customMessage ? (
                         <div>
                           <span className="badge badge-success mb-1">Bot Message</span>
-                          <div className="small text-muted text-truncate" style={{maxWidth: '150px'}}>
-                            {group.customMessage}
+                          <div className="small tablet-truncate" style={{maxWidth: '150px'}} title={group.customMessage}>
+                            {group.customMessage && group.customMessage.length > 30 
+                              ? `${group.customMessage.substring(0, 20)}...` 
+                              : group.customMessage}
                           </div>
                         </div>
                       ) : (
                         <div>
                           <span className="badge badge-secondary mb-1">User Message</span>
-                          <div className="font-monospace small">{group.messageId}</div>
+                          <div className="font-monospace small mobile-truncate">{group.messageId}</div>
                         </div>
                       )}
                     </td>

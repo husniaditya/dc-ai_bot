@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FormField, SwitchToggle } from '../../components/SharedComponents';
 import DeleteConfirmationModal from '../../components/DeleteConfirmationModal';
+import useResponsiveTable from '../../../../hooks/useResponsiveTable';
 
 // Slash Command Roles Configuration Component
 export default function SlashCommandRolesConfig({ config, updateConfig, channels, roles, guildId, showToast }) {
@@ -22,6 +23,9 @@ export default function SlashCommandRolesConfig({ config, updateConfig, channels
     allowedRoles: [],
     status: true
   });
+
+  // Use responsive table hook
+  const tableRef = useResponsiveTable();
 
   // Fetch slash command roles when component mounts
   useEffect(() => {
@@ -296,7 +300,7 @@ export default function SlashCommandRolesConfig({ config, updateConfig, channels
             Loading slash command roles...
           </div>
         ) : slashRoles.length > 0 ? (
-          <div className="table-responsive mb-4">
+          <div ref={tableRef} className="table-responsive-scroll mb-4">
             <table className="table table-sm">
               <thead>
                 <tr>
@@ -325,11 +329,15 @@ export default function SlashCommandRolesConfig({ config, updateConfig, channels
                       </div>
                     </td>
                     <td>
-                      <code>{command.commandName}</code>
+                      <code className="mobile-truncate">{command.commandName}</code>
                     </td>
-                    <td>{command.description}</td>
                     <td>
-                      {command.channelId ? getChannelName(command.channelId) : 'Any Channel'}
+                      <span className="tablet-truncate text-primary">{command.description}</span>
+                    </td>
+                    <td>
+                      <span className="mobile-truncate text-black">
+                        {command.channelId ? getChannelName(command.channelId) : 'Any Channel'}
+                      </span>
                     </td>
                     <td>
                       <div className="d-flex flex-wrap gap-1">
