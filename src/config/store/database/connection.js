@@ -219,8 +219,10 @@ async function initializeModerationTables() {
     bypass_roles TEXT NULL,
     log_channel_id VARCHAR(32) NULL,
     auto_delete BOOLEAN DEFAULT 0,
+    message_action ENUM('keep', 'delete') DEFAULT 'keep',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    INDEX idx_guild_enabled (guild_id, enabled)
+    INDEX idx_guild_enabled (guild_id, enabled),
+    INDEX idx_guild_message_action (guild_id, message_action)
   ) ENGINE=InnoDB`);
 
   // Reaction Roles
@@ -361,6 +363,53 @@ async function initializeModerationTables() {
     updated_by VARCHAR(32) NULL,
     INDEX idx_guild_command (guild_id, command_name),
     INDEX idx_guild_status (guild_id, status)
+  ) ENGINE=InnoDB`);
+
+  // Profanity Detection Tables
+  await sqlPool.query(`CREATE TABLE IF NOT EXISTS guild_profanity_words (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    guild_id VARCHAR(32) NOT NULL,
+    word VARCHAR(255) NOT NULL,
+    severity ENUM('low', 'medium', 'high', 'extreme') DEFAULT 'medium',
+    language VARCHAR(10) DEFAULT 'en',
+    case_sensitive BOOLEAN DEFAULT FALSE,
+    whole_word_only BOOLEAN DEFAULT TRUE,
+    enabled BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    created_by VARCHAR(32) NULL,
+    INDEX idx_guild_enabled (guild_id, enabled),
+    INDEX idx_guild_severity (guild_id, severity),
+    UNIQUE KEY unique_guild_word (guild_id, word)
+  ) ENGINE=InnoDB`);
+
+  await sqlPool.query(`CREATE TABLE IF NOT EXISTS guild_profanity_patterns (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    guild_id VARCHAR(32) NOT NULL,
+    pattern TEXT NOT NULL,
+    description VARCHAR(255) NULL,
+    severity ENUM('low', 'medium', 'high', 'extreme') DEFAULT 'medium',
+    flags VARCHAR(10) DEFAULT 'gi',
+    enabled BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    created_by VARCHAR(32) NULL,
+    INDEX idx_guild_enabled (guild_id, enabled),
+    INDEX idx_guild_severity (guild_id, severity)
+  ) ENGINE=InnoDB`);
+
+  await sqlPool.query(`CREATE TABLE IF NOT EXISTS global_profanity_dictionary (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    word VARCHAR(255) NOT NULL,
+    language VARCHAR(10) NOT NULL,
+    category VARCHAR(50) NULL,
+    severity ENUM('low', 'medium', 'high', 'extreme') DEFAULT 'medium',
+    alternatives TEXT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_language (language),
+    INDEX idx_category (category),
+    INDEX idx_severity (severity),
+    UNIQUE KEY unique_word_lang (word, language)
   ) ENGINE=InnoDB`);
 }
 

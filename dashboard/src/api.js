@@ -205,4 +205,67 @@ export async function getCurrentUser() {
   return authFetch('/api/auth/user/me');
 }
 
+// Profanity management API functions
+export async function getProfanityWords(guildId) {
+  const headers = guildId ? { 'X-Guild-Id': guildId } : {};
+  return authFetch('/api/moderation/profanity/words', { headers });
+}
+
+export async function addProfanityWord(wordData, guildId) {
+  const headers = guildId ? { 'X-Guild-Id': guildId } : {};
+  return authFetch('/api/moderation/profanity/words', {
+    method: 'POST',
+    headers,
+    body: JSON.stringify(wordData)
+  });
+}
+
+export async function updateProfanityWord(wordId, wordData, guildId) {
+  const headers = guildId ? { 'X-Guild-Id': guildId } : {};
+  return authFetch(`/api/moderation/profanity/words/${wordId}`, {
+    method: 'PUT',
+    headers,
+    body: JSON.stringify(wordData)
+  });
+}
+
+export async function deleteProfanityWord(wordId, guildId) {
+  const headers = guildId ? { 'X-Guild-Id': guildId } : {};
+  return authFetch(`/api/moderation/profanity/words/${wordId}`, {
+    method: 'DELETE',
+    headers
+  });
+}
+
+export async function getProfanityPatterns(guildId) {
+  const headers = guildId ? { 'X-Guild-Id': guildId } : {};
+  return authFetch('/api/moderation/profanity/patterns', { headers });
+}
+
+export async function addProfanityPattern(patternData, guildId) {
+  const headers = guildId ? { 'X-Guild-Id': guildId } : {};
+  return authFetch('/api/moderation/profanity/patterns', {
+    method: 'POST',
+    headers,
+    body: JSON.stringify(patternData)
+  });
+}
+
+export async function updateProfanityPattern(patternId, patternData, guildId) {
+  const headers = guildId ? { 'X-Guild-Id': guildId } : {};
+  return authFetch(`/api/moderation/profanity/patterns/${patternId}`, {
+    method: 'PUT',
+    headers,
+    body: JSON.stringify(patternData)
+  });
+}
+
+export async function deleteProfanityPattern(patternId, guildId) {
+  const headers = guildId ? { 'X-Guild-Id': guildId } : {};
+  return authFetch(`/api/moderation/profanity/patterns/${patternId}`, {
+    method: 'DELETE',
+    headers
+  });
+}
+
 export { login, getToken, setToken, handleAuthError };

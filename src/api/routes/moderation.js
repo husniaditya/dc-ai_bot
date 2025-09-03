@@ -523,6 +523,207 @@ function createModerationRoutes(client, store) {
     }
   });
 
+  // PROFANITY MANAGEMENT ENDPOINTS
+
+  // Get profanity words for a guild
+  router.get('/profanity/words', async (req, res) => {
+    try {
+      const guildId = req.headers['x-guild-id'];
+      if (!guildId) {
+        return res.status(400).json({ error: 'Guild ID required' });
+      }
+
+      const words = await store.getGuildProfanityWords(guildId);
+      res.json({ words });
+    } catch (error) {
+      console.error('Error fetching profanity words:', error);
+      res.status(500).json({ error: 'Failed to fetch profanity words' });
+    }
+  });
+
+  // Add profanity word
+  router.post('/profanity/words', async (req, res) => {
+    try {
+      const guildId = req.headers['x-guild-id'];
+      if (!guildId) {
+        return res.status(400).json({ error: 'Guild ID required' });
+      }
+
+      const { word, severity, language, caseSensitive, wholeWordOnly, enabled } = req.body;
+      
+      if (!word || !word.trim()) {
+        return res.status(400).json({ error: 'Word is required' });
+      }
+
+      const wordData = {
+        word: word.trim().toLowerCase(),
+        severity: severity || 'medium',
+        language: language || 'en',
+        caseSensitive: caseSensitive || false,
+        wholeWordOnly: wholeWordOnly !== false,
+        enabled: enabled !== false
+      };
+
+      const userId = req.user?.id || 'system';
+      const words = await store.addGuildProfanityWord(guildId, wordData, userId);
+      res.json({ success: true, words });
+    } catch (error) {
+      console.error('Error adding profanity word:', error);
+      if (error.message.includes('already exists')) {
+        return res.status(409).json({ error: error.message });
+      }
+      res.status(500).json({ error: 'Failed to add profanity word' });
+    }
+  });
+
+  // Update profanity word
+  router.put('/profanity/words/:wordId', async (req, res) => {
+    try {
+      const guildId = req.headers['x-guild-id'];
+      const { wordId } = req.params;
+      
+      if (!guildId) {
+        return res.status(400).json({ error: 'Guild ID required' });
+      }
+
+      const userId = req.user?.id || 'system';
+      const words = await store.updateGuildProfanityWord(guildId, wordId, req.body, userId);
+      res.json({ success: true, words });
+    } catch (error) {
+      console.error('Error updating profanity word:', error);
+      if (error.message.includes('not found')) {
+        return res.status(404).json({ error: error.message });
+      }
+      res.status(500).json({ error: 'Failed to update profanity word' });
+    }
+  });
+
+  // Delete profanity word
+  router.delete('/profanity/words/:wordId', async (req, res) => {
+    try {
+      const guildId = req.headers['x-guild-id'];
+      const { wordId } = req.params;
+      
+      if (!guildId) {
+        return res.status(400).json({ error: 'Guild ID required' });
+      }
+
+      const words = await store.deleteGuildProfanityWord(guildId, wordId);
+      res.json({ success: true, words });
+    } catch (error) {
+      console.error('Error deleting profanity word:', error);
+      if (error.message.includes('not found')) {
+        return res.status(404).json({ error: error.message });
+      }
+      res.status(500).json({ error: 'Failed to delete profanity word' });
+    }
+  });
+
+  // Get profanity patterns for a guild
+  router.get('/profanity/patterns', async (req, res) => {
+    try {
+      const guildId = req.headers['x-guild-id'];
+      if (!guildId) {
+        return res.status(400).json({ error: 'Guild ID required' });
+      }
+
+      const patterns = await store.getGuildProfanityPatterns(guildId);
+      res.json({ patterns });
+    } catch (error) {
+      console.error('Error fetching profanity patterns:', error);
+      res.status(500).json({ error: 'Failed to fetch profanity patterns' });
+    }
+  });
+
+  // Add profanity pattern
+  router.post('/profanity/patterns', async (req, res) => {
+    try {
+      const guildId = req.headers['x-guild-id'];
+      if (!guildId) {
+        return res.status(400).json({ error: 'Guild ID required' });
+      }
+
+      const { pattern, description, severity, flags, enabled } = req.body;
+      
+      if (!pattern || !pattern.trim()) {
+        return res.status(400).json({ error: 'Pattern is required' });
+      }
+
+      // Test if the regex pattern is valid
+      try {
+        new RegExp(pattern, flags || 'gi');
+      } catch (regexError) {
+        return res.status(400).json({ error: 'Invalid regex pattern: ' + regexError.message });
+      }
+
+      const patternData = {
+        pattern: pattern.trim(),
+        description: description || '',
+        severity: severity || 'medium',
+        flags: flags || 'gi',
+        enabled: enabled !== false
+      };
+
+      const userId = req.user?.id || 'system';
+      const patterns = await store.addGuildProfanityPattern(guildId, patternData, userId);
+      res.json({ success: true, patterns });
+    } catch (error) {
+      console.error('Error adding profanity pattern:', error);
+      res.status(500).json({ error: 'Failed to add profanity pattern' });
+    }
+  });
+
+  // Update profanity pattern
+  router.put('/profanity/patterns/:patternId', async (req, res) => {
+    try {
+      const guildId = req.headers['x-guild-id'];
+      const { patternId } = req.params;
+      
+      if (!guildId) {
+        return res.status(400).json({ error: 'Guild ID required' });
+      }
+
+      // Validate regex if pattern is being updated
+      if (req.body.pattern) {
+        try {
+          new RegExp(req.body.pattern, req.body.flags || 'gi');
+        } catch (regexError) {
+          return res.status(400).json({ error: 'Invalid regex pattern: ' + regexError.message });
+        }
+      }
+
+      const patterns = await store.updateGuildProfanityPattern(guildId, patternId, req.body);
+      res.json({ success: true, patterns });
+    } catch (error) {
+      console.error('Error updating profanity pattern:', error);
+      if (error.message.includes('not found')) {
+        return res.status(404).json({ error: error.message });
+      }
+      res.status(500).json({ error: 'Failed to update profanity pattern' });
+    }
+  });
+
+  // Delete profanity pattern
+  router.delete('/profanity/patterns/:patternId', async (req, res) => {
+    try {
+      const guildId = req.headers['x-guild-id'];
+      const { patternId } = req.params;
+      
+      if (!guildId) {
+        return res.status(400).json({ error: 'Guild ID required' });
+      }
+
+      const patterns = await store.deleteGuildProfanityPattern(guildId, patternId);
+      res.json({ success: true, patterns });
+    } catch (error) {
+      console.error('Error deleting profanity pattern:', error);
+      if (error.message.includes('not found')) {
+        return res.status(404).json({ error: error.message });
+      }
+      res.status(500).json({ error: 'Failed to delete profanity pattern' });
+    }
+  });
+
   return router;
 }
 

@@ -213,6 +213,16 @@ module.exports = {
   toggleGuildSelfAssignableRoleStatus: moderationService.toggleGuildSelfAssignableRoleStatus,
   getGuildSelfAssignableRoleByCommand: moderationService.getGuildSelfAssignableRoleByCommand,
   
+  // Profanity Management API
+  getGuildProfanityWords: moderationService.getGuildProfanityWords,
+  addGuildProfanityWord: moderationService.addGuildProfanityWord,
+  updateGuildProfanityWord: moderationService.updateGuildProfanityWord,
+  deleteGuildProfanityWord: moderationService.deleteGuildProfanityWord,
+  getGuildProfanityPatterns: moderationService.getGuildProfanityPatterns,
+  addGuildProfanityPattern: moderationService.addGuildProfanityPattern,
+  updateGuildProfanityPattern: moderationService.updateGuildProfanityPattern,
+  deleteGuildProfanityPattern: moderationService.deleteGuildProfanityPattern,
+  
   // Direct database access for special cases
   get sqlPool() { return db.sqlPool; }
 };

@@ -805,6 +805,297 @@ async function getGuildSelfAssignableRoleByCommand(guildId, commandName) {
   return null;
 }
 
+// Profanity Words Management
+async function getGuildProfanityWords(guildId) {
+  if (!guildId) return [];
+  
+  const cacheData = cache.getCache();
+  if (cacheData.guildProfanityWordsCache && cacheData.guildProfanityWordsCache.has(guildId)) {
+    return [...cacheData.guildProfanityWordsCache.get(guildId)];
+  }
+  
+  if (db.mariaAvailable && db.sqlPool) {
+    try {
+      const [rows] = await db.sqlPool.query(`
+        SELECT id, guild_id, word, severity, language, case_sensitive, 
+               whole_word_only, enabled, created_at, updated_at, created_by
+        FROM guild_profanity_words 
+        WHERE guild_id = ? 
+        ORDER BY severity DESC, word ASC
+      `, [guildId]);
+      
+      const words = rows.map(row => ({
+        id: row.id,
+        guildId: row.guild_id,
+        word: row.word,
+        severity: row.severity,
+        language: row.language,
+        caseSensitive: row.case_sensitive,
+        wholeWordOnly: row.whole_word_only,
+        enabled: row.enabled,
+        createdAt: row.created_at,
+        updatedAt: row.updated_at,
+        createdBy: row.created_by
+      }));
+      
+      if (!cacheData.guildProfanityWordsCache) {
+        cacheData.guildProfanityWordsCache = new Map();
+      }
+      cacheData.guildProfanityWordsCache.set(guildId, words);
+      return [...words];
+    } catch (e) {
+      console.error('[Profanity] Get words error:', e.message);
+    }
+  }
+  
+  return [];
+}
+
+async function addGuildProfanityWord(guildId, data, createdBy) {
+  if (!guildId) throw new Error('guildId required');
+  if (!data.word) throw new Error('word required');
+  
+  if (db.mariaAvailable && db.sqlPool) {
+    try {
+      const [result] = await db.sqlPool.query(`
+        INSERT INTO guild_profanity_words 
+        (guild_id, word, severity, language, case_sensitive, whole_word_only, enabled, created_by)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      `, [
+        guildId, data.word, data.severity || 'medium', data.language || 'en',
+        data.caseSensitive || false, data.wholeWordOnly !== false, 
+        data.enabled !== false, createdBy
+      ]);
+      
+      // Clear cache
+      const cacheData = cache.getCache();
+      if (cacheData.guildProfanityWordsCache) {
+        cacheData.guildProfanityWordsCache.delete(guildId);
+      }
+      
+      return await getGuildProfanityWords(guildId);
+    } catch (e) {
+      console.error('[Profanity] Add word error:', e.message);
+      if (e.code === 'ER_DUP_ENTRY') {
+        throw new Error('Word already exists for this guild');
+      }
+      throw e;
+    }
+  }
+  
+  throw new Error('Database not available');
+}
+
+async function updateGuildProfanityWord(guildId, wordId, data, updatedBy) {
+  if (!guildId) throw new Error('guildId required');
+  if (!wordId) throw new Error('wordId required');
+  
+  if (db.mariaAvailable && db.sqlPool) {
+    try {
+      const [result] = await db.sqlPool.query(`
+        UPDATE guild_profanity_words 
+        SET word = ?, severity = ?, language = ?, case_sensitive = ?, 
+            whole_word_only = ?, enabled = ?, updated_at = CURRENT_TIMESTAMP
+        WHERE id = ? AND guild_id = ?
+      `, [
+        data.word, data.severity, data.language, data.caseSensitive,
+        data.wholeWordOnly, data.enabled, wordId, guildId
+      ]);
+      
+      if (result.affectedRows === 0) {
+        throw new Error('Profanity word not found');
+      }
+      
+      // Clear cache
+      const cacheData = cache.getCache();
+      if (cacheData.guildProfanityWordsCache) {
+        cacheData.guildProfanityWordsCache.delete(guildId);
+      }
+      
+      return await getGuildProfanityWords(guildId);
+    } catch (e) {
+      console.error('[Profanity] Update word error:', e.message);
+      throw e;
+    }
+  }
+  
+  throw new Error('Database not available');
+}
+
+async function deleteGuildProfanityWord(guildId, wordId) {
+  if (!guildId) throw new Error('guildId required');
+  if (!wordId) throw new Error('wordId required');
+  
+  if (db.mariaAvailable && db.sqlPool) {
+    try {
+      const [result] = await db.sqlPool.query(
+        'DELETE FROM guild_profanity_words WHERE id = ? AND guild_id = ?',
+        [wordId, guildId]
+      );
+      
+      if (result.affectedRows === 0) {
+        throw new Error('Profanity word not found');
+      }
+      
+      // Clear cache
+      const cacheData = cache.getCache();
+      if (cacheData.guildProfanityWordsCache) {
+        cacheData.guildProfanityWordsCache.delete(guildId);
+      }
+      
+      return await getGuildProfanityWords(guildId);
+    } catch (e) {
+      console.error('[Profanity] Delete word error:', e.message);
+      throw e;
+    }
+  }
+  
+  throw new Error('Database not available');
+}
+
+// Profanity Patterns Management
+async function getGuildProfanityPatterns(guildId) {
+  if (!guildId) return [];
+  
+  const cacheData = cache.getCache();
+  if (cacheData.guildProfanityPatternsCache && cacheData.guildProfanityPatternsCache.has(guildId)) {
+    return [...cacheData.guildProfanityPatternsCache.get(guildId)];
+  }
+  
+  if (db.mariaAvailable && db.sqlPool) {
+    try {
+      const [rows] = await db.sqlPool.query(`
+        SELECT id, guild_id, pattern, description, severity, flags, enabled, 
+               created_at, updated_at, created_by
+        FROM guild_profanity_patterns 
+        WHERE guild_id = ? 
+        ORDER BY severity DESC, created_at ASC
+      `, [guildId]);
+      
+      const patterns = rows.map(row => ({
+        id: row.id,
+        guildId: row.guild_id,
+        pattern: row.pattern,
+        description: row.description,
+        severity: row.severity,
+        flags: row.flags,
+        enabled: row.enabled,
+        createdAt: row.created_at,
+        updatedAt: row.updated_at,
+        createdBy: row.created_by
+      }));
+      
+      if (!cacheData.guildProfanityPatternsCache) {
+        cacheData.guildProfanityPatternsCache = new Map();
+      }
+      cacheData.guildProfanityPatternsCache.set(guildId, patterns);
+      return [...patterns];
+    } catch (e) {
+      console.error('[Profanity] Get patterns error:', e.message);
+    }
+  }
+  
+  return [];
+}
+
+async function addGuildProfanityPattern(guildId, data, createdBy) {
+  if (!guildId) throw new Error('guildId required');
+  if (!data.pattern) throw new Error('pattern required');
+  
+  if (db.mariaAvailable && db.sqlPool) {
+    try {
+      const [result] = await db.sqlPool.query(`
+        INSERT INTO guild_profanity_patterns 
+        (guild_id, pattern, description, severity, flags, enabled, created_by)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+      `, [
+        guildId, data.pattern, data.description || '', data.severity || 'medium',
+        data.flags || 'gi', data.enabled !== false, createdBy
+      ]);
+      
+      // Clear cache
+      const cacheData = cache.getCache();
+      if (cacheData.guildProfanityPatternsCache) {
+        cacheData.guildProfanityPatternsCache.delete(guildId);
+      }
+      
+      return await getGuildProfanityPatterns(guildId);
+    } catch (e) {
+      console.error('[Profanity] Add pattern error:', e.message);
+      throw e;
+    }
+  }
+  
+  throw new Error('Database not available');
+}
+
+async function updateGuildProfanityPattern(guildId, patternId, data) {
+  if (!guildId) throw new Error('guildId required');
+  if (!patternId) throw new Error('patternId required');
+  
+  if (db.mariaAvailable && db.sqlPool) {
+    try {
+      const [result] = await db.sqlPool.query(`
+        UPDATE guild_profanity_patterns 
+        SET pattern = ?, description = ?, severity = ?, flags = ?, enabled = ?, 
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = ? AND guild_id = ?
+      `, [
+        data.pattern, data.description, data.severity, data.flags, 
+        data.enabled, patternId, guildId
+      ]);
+      
+      if (result.affectedRows === 0) {
+        throw new Error('Profanity pattern not found');
+      }
+      
+      // Clear cache
+      const cacheData = cache.getCache();
+      if (cacheData.guildProfanityPatternsCache) {
+        cacheData.guildProfanityPatternsCache.delete(guildId);
+      }
+      
+      return await getGuildProfanityPatterns(guildId);
+    } catch (e) {
+      console.error('[Profanity] Update pattern error:', e.message);
+      throw e;
+    }
+  }
+  
+  throw new Error('Database not available');
+}
+
+async function deleteGuildProfanityPattern(guildId, patternId) {
+  if (!guildId) throw new Error('guildId required');
+  if (!patternId) throw new Error('patternId required');
+  
+  if (db.mariaAvailable && db.sqlPool) {
+    try {
+      const [result] = await db.sqlPool.query(
+        'DELETE FROM guild_profanity_patterns WHERE id = ? AND guild_id = ?',
+        [patternId, guildId]
+      );
+      
+      if (result.affectedRows === 0) {
+        throw new Error('Profanity pattern not found');
+      }
+      
+      // Clear cache
+      const cacheData = cache.getCache();
+      if (cacheData.guildProfanityPatternsCache) {
+        cacheData.guildProfanityPatternsCache.delete(guildId);
+      }
+      
+      return await getGuildProfanityPatterns(guildId);
+    } catch (e) {
+      console.error('[Profanity] Delete pattern error:', e.message);
+      throw e;
+    }
+  }
+  
+  throw new Error('Database not available');
+}
+
 module.exports = {
   getModerationFeatures,
   toggleModerationFeature,
@@ -831,5 +1122,14 @@ module.exports = {
   updateGuildSelfAssignableRole,
   deleteGuildSelfAssignableRole,
   toggleGuildSelfAssignableRoleStatus,
-  getGuildSelfAssignableRoleByCommand
+  getGuildSelfAssignableRoleByCommand,
+  // Profanity management
+  getGuildProfanityWords,
+  addGuildProfanityWord,
+  updateGuildProfanityWord,
+  deleteGuildProfanityWord,
+  getGuildProfanityPatterns,
+  addGuildProfanityPattern,
+  updateGuildProfanityPattern,
+  deleteGuildProfanityPattern
 };
