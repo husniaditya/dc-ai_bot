@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { getGuildEmojis } from '../../../../api';
 import { ChannelSelector, FormField, SwitchToggle } from '../../components/SharedComponents';
+import DeleteConfirmationModal from '../../components/DeleteConfirmationModal';
 
 // Reaction Roles Configuration Component
 export default function ReactionRolesConfig({ config, updateConfig, channels, roles, guildId, showToast }) {
@@ -11,6 +12,7 @@ export default function ReactionRolesConfig({ config, updateConfig, channels, ro
   const [editingRole, setEditingRole] = useState(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleting, setDeleting] = useState(false);
   const [formData, setFormData] = useState({
     messageId: '',
     channelId: '',
@@ -158,6 +160,7 @@ export default function ReactionRolesConfig({ config, updateConfig, channels, ro
   };
 
   const handleDeleteReactionRole = async (messageId) => {
+    setDeleting(true);
     try {
       const response = await fetch(`/api/roles/reaction-roles/message/${messageId}`, {
         method: 'DELETE',
@@ -173,9 +176,11 @@ export default function ReactionRolesConfig({ config, updateConfig, channels, ro
     } catch (error) {
       console.error('Failed to delete reaction role:', error);
       showToast('error', 'Failed to delete reaction role message');
+    } finally {
+      setDeleting(false);
+      setShowDeleteConfirm(false);
+      setDeleteTarget(null);
     }
-    setShowDeleteConfirm(false);
-    setDeleteTarget(null);
   };
 
   const confirmDelete = (group) => {
@@ -197,7 +202,12 @@ export default function ReactionRolesConfig({ config, updateConfig, channels, ro
       });
 
       if (response.ok) {
-        fetchReactionRoles();
+        // Update local state instead of refetching all data
+        setReactionRoles(prev => prev.map(role => 
+          role.id === roleId 
+            ? { ...role, status: !currentStatus }
+            : role
+        ));
         showToast('success', `Reaction role ${!currentStatus ? 'enabled' : 'disabled'}`);
       } else {
         showToast('error', 'Failed to update reaction role status');
@@ -262,7 +272,7 @@ export default function ReactionRolesConfig({ config, updateConfig, channels, ro
       messageId: role.messageId,
       channelId: role.channelId,
       title: role.title || '',
-      status: role.status !== false,
+      status: Boolean(role.status),
       reactions: role.reactions || [{ emoji: role.emoji || '', roleId: role.roleId || '', type: role.type || 'toggle' }] // Handle both grouped and legacy single reaction
     };
     const editCustomMessage = role.customMessage || 'React to get your roles!';
@@ -424,14 +434,11 @@ export default function ReactionRolesConfig({ config, updateConfig, channels, ro
                         <input
                           className="form-check-input"
                           type="checkbox"
-                          checked={group.status !== false}
+                          checked={Boolean(group.status)}
                           disabled={updatingStatus[group.reactions[0]?.id]}
                           onChange={() => handleToggleStatus(group.reactions[0]?.id, group.status)}
                           style={{ cursor: updatingStatus[group.reactions[0]?.id] ? 'not-allowed' : 'pointer' }}
                         />
-                        {updatingStatus[group.reactions[0]?.id] && (
-                          <small className="text-muted d-block">Updating...</small>
-                        )}
                       </div>
                     </td>
                     <td>
@@ -880,34 +887,40 @@ export default function ReactionRolesConfig({ config, updateConfig, channels, ro
       )}
 
       {/* Delete Confirmation Modal */}
-      {showDeleteConfirm && deleteTarget && (
-        <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-          <div className="modal-dialog">
-            <div className="modal-content bg-dark text-light">
-              <div className="modal-header">
-                <h5 className="modal-title">Confirm Deletion</h5>
-                <button type="button" className="btn-close btn-close-white" onClick={() => setShowDeleteConfirm(false)} />
-              </div>
-              <div className="modal-body">
-                <p>Are you sure you want to delete the reaction role message "{deleteTarget.title || 'Untitled'}"?</p>
-                <p className="text-muted small">This will remove all associated reactions and cannot be undone.</p>
-              </div>
-              <div className="modal-footer">
-                <button type="button" className="btn btn-secondary" onClick={() => setShowDeleteConfirm(false)}>
-                  Cancel
-                </button>
-                <button 
-                  type="button" 
-                  className="btn btn-danger"
-                  onClick={() => handleDeleteReactionRole(deleteTarget.messageId)}
-                >
-                  Delete
-                </button>
-              </div>
+      <DeleteConfirmationModal
+        show={showDeleteConfirm}
+        onClose={() => {
+          setShowDeleteConfirm(false);
+          setDeleteTarget(null);
+        }}
+        onConfirm={() => handleDeleteReactionRole(deleteTarget?.messageId)}
+        isDeleting={deleting}
+        title="Delete Reaction Role Message"
+        message={`Are you sure you want to delete the reaction role message "${deleteTarget?.title || 'Untitled'}"?`}
+        warningMessage="This will remove all associated reactions and cannot be undone."
+        itemDetails={deleteTarget && (
+          <div>
+            <div className="d-flex justify-content-between align-items-center mb-2">
+              <span className="text-muted">Title:</span>
+              <span className="fw-semibold">{deleteTarget.title || 'Untitled'}</span>
+            </div>
+            <div className="d-flex justify-content-between align-items-center mb-2">
+              <span className="text-muted">Channel:</span>
+              <span>{getChannelName(deleteTarget.channelId)}</span>
+            </div>
+            <div className="d-flex justify-content-between align-items-center mb-2">
+              <span className="text-muted">Reactions:</span>
+              <span className="badge bg-info">{deleteTarget.reactions?.length || 0}</span>
+            </div>
+            <div className="d-flex justify-content-between align-items-center">
+              <span className="text-muted">Message ID:</span>
+              <code className="small">{deleteTarget.messageId}</code>
             </div>
           </div>
-        </div>
-      )}
+        )}
+        confirmButtonText="Delete Message"
+        cancelButtonText="Cancel"
+      />
     </div>
   );
 }

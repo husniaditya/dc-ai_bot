@@ -130,6 +130,58 @@ body {
   scrollbar-gutter: stable;
 }
 
+/* Auto moderation form styling */
+.moderation-config-form .table-modern {
+  font-size: 0.8rem;
+}
+
+.moderation-config-form .table-modern th {
+  font-size: 0.7rem;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.moderation-config-form .modal {
+  z-index: 1055;
+}
+
+.moderation-config-form .modal-backdrop {
+  z-index: 1050;
+}
+
+.moderation-config-form .btn-group-sm .btn {
+  padding: 0.25rem 0.4rem;
+  font-size: 0.7rem;
+}
+
+.dirty-badge {
+  background: rgba(255, 193, 7, 0.2);
+  color: #ffc107;
+  padding: 0.125rem 0.5rem;
+  border-radius: 12px;
+  font-size: 0.7rem;
+  font-weight: 500;
+}
+
+.modal-content-animated {
+  transition: all 0.3s ease;
+  transform: scale(1);
+}
+
+.modal-content-animated.closing {
+  transform: scale(0.95);
+  opacity: 0;
+}
+
+.modal-backdrop-animated {
+  transition: opacity 0.3s ease;
+}
+
+.modal-backdrop-animated.closing {
+  opacity: 0;
+}
+
 /* Lock body when full-screen loading overlay active on small screens */
 body.overlay-lock {
   overflow: hidden !important;
@@ -2480,4 +2532,27 @@ html:not(.dark) .mention-targets-suggestions {
   backdrop-filter: blur(20px);
   border-color: rgba(0, 0, 0, 0.1);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Auto Moderation Form Theme Support */
+html:not(.dark) .automod-rule-form {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.08) 0%, rgba(168, 85, 247, 0.06) 50%, rgba(236, 72, 153, 0.04) 100%) !important;
+  border-color: rgba(99, 102, 241, 0.15) !important;
+  box-shadow: 0 8px 32px rgba(99, 102, 241, 0.08), 0 4px 16px rgba(168, 85, 247, 0.04), 0 0 0 1px rgba(255,255,255,0.6) inset !important;
+}
+
+html:not(.dark) .automod-rule-form .card-header {
+  background: rgba(255, 255, 255, 0.1) !important;
+  border-bottom-color: rgba(0, 0, 0, 0.1) !important;
+  color: #1f2530 !important;
+}
+
+.automod-rule-form {
+  background: rgba(255,255,255,0.05) !important;
+  border: 1px solid rgba(255,255,255,0.1) !important;
+}
+
+.automod-rule-form .card-header {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border-bottom-color: rgba(255, 255, 255, 0.1) !important;
 }

@@ -138,12 +138,89 @@ function createModerationRoutes(client, store) {
         return res.status(400).json({ error: 'Guild ID required' });
       }
 
-      // For now, just return success - this would need a proper implementation
-      const rule = { id: Date.now(), guildId, ...req.body };
+      const ruleData = req.body;
+      
+      // Validate required fields
+      if (!ruleData.name || !ruleData.triggerType || !ruleData.actionType) {
+        return res.status(400).json({ error: 'Missing required fields: name, triggerType, actionType' });
+      }
+
+      const rule = await store.createGuildAutoModRule(guildId, ruleData);
       res.json({ success: true, rule });
     } catch (error) {
       console.error('Error creating automod rule:', error);
       res.status(500).json({ error: 'Failed to create automod rule' });
+    }
+  });
+
+  // Update automod rule
+  router.put('/automod/rules/:ruleId', async (req, res) => {
+    try {
+      const guildId = req.headers['x-guild-id'];
+      const { ruleId } = req.params;
+      
+      if (!guildId) {
+        return res.status(400).json({ error: 'Guild ID required' });
+      }
+
+      const ruleData = req.body;
+      const rule = await store.updateGuildAutoModRule(guildId, ruleId, ruleData);
+      
+      if (!rule) {
+        return res.status(404).json({ error: 'Rule not found' });
+      }
+
+      res.json({ success: true, rule });
+    } catch (error) {
+      console.error('Error updating automod rule:', error);
+      res.status(500).json({ error: 'Failed to update automod rule' });
+    }
+  });
+
+  // Delete automod rule
+  router.delete('/automod/rules/:ruleId', async (req, res) => {
+    try {
+      const guildId = req.headers['x-guild-id'];
+      const { ruleId } = req.params;
+      
+      if (!guildId) {
+        return res.status(400).json({ error: 'Guild ID required' });
+      }
+
+      const success = await store.deleteGuildAutoModRule(guildId, ruleId);
+      
+      if (!success) {
+        return res.status(404).json({ error: 'Rule not found' });
+      }
+
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error deleting automod rule:', error);
+      res.status(500).json({ error: 'Failed to delete automod rule' });
+    }
+  });
+
+  // Toggle automod rule status
+  router.post('/automod/rules/:ruleId/toggle', async (req, res) => {
+    try {
+      const guildId = req.headers['x-guild-id'];
+      const { ruleId } = req.params;
+      const { enabled } = req.body;
+      
+      if (!guildId) {
+        return res.status(400).json({ error: 'Guild ID required' });
+      }
+
+      const rule = await store.toggleGuildAutoModRule(guildId, ruleId, enabled);
+      
+      if (!rule) {
+        return res.status(404).json({ error: 'Rule not found' });
+      }
+
+      res.json({ success: true, rule });
+    } catch (error) {
+      console.error('Error toggling automod rule:', error);
+      res.status(500).json({ error: 'Failed to toggle automod rule' });
     }
   });
 

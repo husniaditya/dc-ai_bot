@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FormField, SwitchToggle } from '../../components/SharedComponents';
+import DeleteConfirmationModal from '../../components/DeleteConfirmationModal';
 
 // Slash Command Roles Configuration Component
 export default function SlashCommandRolesConfig({ config, updateConfig, channels, roles, guildId, showToast }) {
@@ -8,6 +9,10 @@ export default function SlashCommandRolesConfig({ config, updateConfig, channels
   const [saving, setSaving] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingCommand, setEditingCommand] = useState(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleting, setDeleting] = useState(false);
+  const [updatingStatus, setUpdatingStatus] = useState({});
   const [formData, setFormData] = useState({
     commandName: '',
     description: '',
@@ -123,6 +128,8 @@ export default function SlashCommandRolesConfig({ config, updateConfig, channels
   };
 
   const handleToggleStatus = async (commandName, currentStatus) => {
+    setUpdatingStatus(prev => ({ ...prev, [commandName]: true }));
+    
     try {
       const response = await fetch(`/api/roles/guild/${guildId}/self-assignable-roles/${encodeURIComponent(commandName)}/toggle`, {
         method: 'PUT',
@@ -134,19 +141,28 @@ export default function SlashCommandRolesConfig({ config, updateConfig, channels
       });
 
       if (response.ok) {
-        fetchSlashRoles();
+        // Update local state instead of refetching all data
+        setSlashRoles(prev => prev.map(command => 
+          command.commandName === commandName 
+            ? { ...command, status: !currentStatus ? 1 : 0 }
+            : command
+        ));
         showToast('success', `Slash command ${!currentStatus ? 'enabled' : 'disabled'}`);
       } else {
-        const errorData = await response.json();
+        const errorData = await response.json().catch(() => ({ message: `HTTP ${response.status}` }));
+        console.error('Toggle failed:', errorData);
         showToast('error', errorData.message || 'Failed to toggle command status');
       }
     } catch (error) {
       console.error('Error toggling command status:', error);
       showToast('error', 'Failed to toggle command status');
+    } finally {
+      setUpdatingStatus(prev => ({ ...prev, [commandName]: false }));
     }
   };
 
   const handleDeleteCommand = async (commandName) => {
+    setDeleting(true);
     try {
       const response = await fetch(`/api/roles/guild/${guildId}/self-assignable-roles/${encodeURIComponent(commandName)}`, {
         method: 'DELETE',
@@ -165,7 +181,16 @@ export default function SlashCommandRolesConfig({ config, updateConfig, channels
     } catch (error) {
       console.error('Error deleting command:', error);
       showToast('error', 'Failed to delete command');
+    } finally {
+      setDeleting(false);
+      setShowDeleteConfirm(false);
+      setDeleteTarget(null);
     }
+  };
+
+  const confirmDelete = (command) => {
+    setDeleteTarget(command);
+    setShowDeleteConfirm(true);
   };
 
   const handleEditCommand = (command) => {
@@ -177,7 +202,7 @@ export default function SlashCommandRolesConfig({ config, updateConfig, channels
       roles: command.roles || [{ roleId: '', type: 'toggle' }],
       requirePermission: command.requirePermission || false,
       allowedRoles: command.allowedRoles || [],
-      status: command.status !== false
+      status: Boolean(command.status)
     });
     setShowAddForm(true);
   };
@@ -276,7 +301,7 @@ export default function SlashCommandRolesConfig({ config, updateConfig, channels
               <thead>
                 <tr>
                   <th>Status</th>
-                  <th>Command</th>
+                  <th>Title</th>
                   <th>Description</th>
                   <th>Channel</th>
                   <th>Roles</th>
@@ -291,9 +316,11 @@ export default function SlashCommandRolesConfig({ config, updateConfig, channels
                         <input
                           className="form-check-input"
                           type="checkbox"
-                          checked={command.status !== false}
+                          checked={Boolean(command.status)}
+                          disabled={updatingStatus[command.commandName]}
                           onChange={() => handleToggleStatus(command.commandName, command.status)}
                           id={`status-${index}`}
+                          style={{ cursor: updatingStatus[command.commandName] ? 'not-allowed' : 'pointer' }}
                         />
                       </div>
                     </td>
@@ -333,7 +360,7 @@ export default function SlashCommandRolesConfig({ config, updateConfig, channels
                         <button 
                           type="button" 
                           className="btn btn-outline-danger btn-sm"
-                          onClick={() => handleDeleteCommand(command.commandName)}
+                          onClick={() => confirmDelete(command)}
                           title="Delete"
                         >
                           <i className="fa-solid fa-trash"></i>
@@ -537,6 +564,42 @@ export default function SlashCommandRolesConfig({ config, updateConfig, channels
           </div>
         )}
       </div>
+
+      {/* Delete Confirmation Modal */}
+      <DeleteConfirmationModal
+        show={showDeleteConfirm}
+        onClose={() => {
+          setShowDeleteConfirm(false);
+          setDeleteTarget(null);
+        }}
+        onConfirm={() => handleDeleteCommand(deleteTarget?.commandName)}
+        isDeleting={deleting}
+        title="Delete Slash Command"
+        message={`Are you sure you want to delete the slash command "${deleteTarget?.commandName}"?`}
+        warningMessage="This will permanently remove the command and all its configurations. Users will no longer be able to use this command."
+        itemDetails={deleteTarget && (
+          <div>
+            <div className="d-flex justify-content-between align-items-center mb-2">
+              <span className="text-muted">Title:</span>
+              <code className="fw-semibold">{deleteTarget.commandName}</code>
+            </div>
+            <div className="d-flex justify-content-between align-items-center mb-2">
+              <span className="text-muted">Description:</span>
+              <span>{deleteTarget.description}</span>
+            </div>
+            <div className="d-flex justify-content-between align-items-center mb-2">
+              <span className="text-muted">Channel:</span>
+              <span>{deleteTarget.channelId ? getChannelName(deleteTarget.channelId) : 'Any Channel'}</span>
+            </div>
+            <div className="d-flex justify-content-between align-items-center">
+              <span className="text-muted">Roles:</span>
+              <span className="badge bg-info">{deleteTarget.roles?.length || 0}</span>
+            </div>
+          </div>
+        )}
+        confirmButtonText="Delete Command"
+        cancelButtonText="Cancel"
+      />
     </div>
   );
 }

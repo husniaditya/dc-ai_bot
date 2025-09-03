@@ -91,7 +91,7 @@ async function getGuildAutoModRules(guildId) {
     try {
       const [rows] = await db.sqlPool.query(`
         SELECT id, name, trigger_type, action_type, threshold_value, duration, enabled,
-               whitelist_channels, whitelist_roles, bypass_roles, log_channel_id, auto_delete
+               whitelist_channels, whitelist_roles, log_channel_id, message_action
         FROM guild_automod_rules WHERE guild_id=? ORDER BY id
       `, [guildId]);
       
@@ -105,9 +105,8 @@ async function getGuildAutoModRules(guildId) {
         enabled: !!row.enabled,
         whitelistChannels: row.whitelist_channels ? JSON.parse(row.whitelist_channels) : [],
         whitelistRoles: row.whitelist_roles ? JSON.parse(row.whitelist_roles) : [],
-        bypassRoles: row.bypass_roles ? JSON.parse(row.bypass_roles) : [],
         logChannelId: row.log_channel_id,
-        autoDelete: !!row.auto_delete
+        messageAction: row.message_action || 'keep'
       }));
       
       cacheData.guildAutoModRulesCache.set(guildId, rules);
@@ -119,6 +118,119 @@ async function getGuildAutoModRules(guildId) {
   
   cacheData.guildAutoModRulesCache.set(guildId, []);
   return [];
+}
+
+async function createGuildAutoModRule(guildId, data) {
+  if (!guildId) throw new Error('guildId required');
+  
+  if (db.mariaAvailable && db.sqlPool) {
+    try {
+      const [result] = await db.sqlPool.query(`
+        INSERT INTO guild_automod_rules(
+          guild_id, name, trigger_type, action_type, threshold_value, duration, enabled,
+          whitelist_channels, whitelist_roles, log_channel_id, message_action
+        ) VALUES (?,?,?,?,?,?,?,?,?,?,?)
+      `, [
+        guildId, data.name, data.triggerType, data.actionType, data.thresholdValue,
+        data.duration, data.enabled ? 1 : 0, data.whitelistChannels || '[]',
+        data.whitelistRoles || '[]', data.logChannelId || null,
+        data.messageAction || 'keep'
+      ]);
+      
+      // Invalidate cache
+      const cacheData = cache.getCache();
+      cacheData.guildAutoModRulesCache.delete(guildId);
+      
+      return result.insertId;
+    } catch (e) {
+      console.error('Error creating automod rule:', e.message);
+      throw e;
+    }
+  }
+  
+  throw new Error('Database not available');
+}
+
+async function updateGuildAutoModRule(guildId, ruleId, data) {
+  if (!guildId) throw new Error('guildId required');
+  if (!ruleId) throw new Error('ruleId required');
+  
+  if (db.mariaAvailable && db.sqlPool) {
+    try {
+      await db.sqlPool.query(`
+        UPDATE guild_automod_rules SET
+          name=?, trigger_type=?, action_type=?, threshold_value=?, duration=?, enabled=?,
+          whitelist_channels=?, whitelist_roles=?, log_channel_id=?, message_action=?
+        WHERE guild_id=? AND id=?
+      `, [
+        data.name, data.triggerType, data.actionType, data.thresholdValue,
+        data.duration, data.enabled ? 1 : 0, data.whitelistChannels || '[]',
+        data.whitelistRoles || '[]', data.logChannelId || null,
+        data.messageAction || 'keep', guildId, ruleId
+      ]);
+      
+      // Invalidate cache
+      const cacheData = cache.getCache();
+      cacheData.guildAutoModRulesCache.delete(guildId);
+      
+      return true;
+    } catch (e) {
+      console.error('Error updating automod rule:', e.message);
+      throw e;
+    }
+  }
+  
+  throw new Error('Database not available');
+}
+
+async function deleteGuildAutoModRule(guildId, ruleId) {
+  if (!guildId) throw new Error('guildId required');
+  if (!ruleId) throw new Error('ruleId required');
+  
+  if (db.mariaAvailable && db.sqlPool) {
+    try {
+      await db.sqlPool.query(
+        'DELETE FROM guild_automod_rules WHERE guild_id=? AND id=?',
+        [guildId, ruleId]
+      );
+      
+      // Invalidate cache
+      const cacheData = cache.getCache();
+      cacheData.guildAutoModRulesCache.delete(guildId);
+      
+      return true;
+    } catch (e) {
+      console.error('Error deleting automod rule:', e.message);
+      throw e;
+    }
+  }
+  
+  throw new Error('Database not available');
+}
+
+async function toggleGuildAutoModRule(guildId, ruleId, enabled) {
+  if (!guildId) throw new Error('guildId required');
+  if (!ruleId) throw new Error('ruleId required');
+  
+  if (db.mariaAvailable && db.sqlPool) {
+    try {
+      await db.sqlPool.query(
+        'UPDATE guild_automod_rules SET enabled=? WHERE guild_id=? AND id=?',
+        [enabled ? 1 : 0, guildId, ruleId]
+      );
+      
+      // Invalidate cache
+      const cacheData = cache.getCache();
+      cacheData.guildAutoModRulesCache.delete(guildId);
+      
+      return true;
+    } catch (e) {
+      console.error('Error toggling automod rule:', e.message);
+      throw e;
+    }
+  }
+  
+  throw new Error('Database not available');
 }
 
 // XP Settings
@@ -698,6 +810,10 @@ module.exports = {
   toggleModerationFeature,
   updateModerationFeatureConfig,
   getGuildAutoModRules,
+  createGuildAutoModRule,
+  updateGuildAutoModRule,
+  deleteGuildAutoModRule,
+  toggleGuildAutoModRule,
   getGuildXpSettings,
   updateGuildXpSettings,
   getGuildReactionRoles,
