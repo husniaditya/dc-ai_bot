@@ -376,7 +376,6 @@ export default function AutomodConfigForm({ config, updateConfig, channels, role
 
   const actionTypes = [
     { value: 'delete', label: 'Delete Message', description: 'Remove the violating message' },
-    { value: 'warn', label: 'Warning', description: 'Send a warning to the user' },
     { value: 'mute', label: 'Temporary Mute', description: 'Mute the user for a specified duration' },
     { value: 'kick', label: 'Kick User', description: 'Remove the user from the server' },
     { value: 'ban', label: 'Ban User', description: 'Permanently ban the user' }
@@ -1668,7 +1667,7 @@ export default function AutomodConfigForm({ config, updateConfig, channels, role
                   max="100"
                 />
                 <small className="text-muted">
-                  Number of violations before action is taken
+                  Number of violations before action is taken (Warn to user)
                 </small>
               </div>
             </div>

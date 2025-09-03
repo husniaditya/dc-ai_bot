@@ -6,6 +6,7 @@ const path = require('path');
 const readyHandler = require('./events/ready');
 const guildMemberAddHandler = require('./events/guildMemberAdd');
 const interactionCreateHandler = require('./events/interactionCreate');
+const messageCreateHandler = require('./events/messageCreate');
 const messageReactionAddHandler = require('./events/messageReactionAdd');
 const messageReactionRemoveHandler = require('./events/messageReactionRemove');
 
@@ -50,6 +51,7 @@ function createDiscordClient(store, startTimestamp) {
   readyHandler(client, store, startTimestamp, commandMap);
   guildMemberAddHandler(client, store);
   interactionCreateHandler(client, store, startTimestamp, commandMap);
+  messageCreateHandler(client, store);
   messageReactionAddHandler(client, store);
   messageReactionRemoveHandler(client, store);
 

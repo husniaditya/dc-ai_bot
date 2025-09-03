@@ -223,6 +223,14 @@ module.exports = {
   updateGuildProfanityPattern: moderationService.updateGuildProfanityPattern,
   deleteGuildProfanityPattern: moderationService.deleteGuildProfanityPattern,
   
+  // Violation Management API
+  recordViolation: moderationService.recordViolation,
+  getWarningCount: moderationService.getWarningCount,
+  incrementWarningCount: moderationService.incrementWarningCount,
+  resetWarningCount: moderationService.resetWarningCount,
+  getUserViolations: moderationService.getUserViolations,
+  getGuildViolations: moderationService.getGuildViolations,
+  
   // Direct database access for special cases
   get sqlPool() { return db.sqlPool; }
 };

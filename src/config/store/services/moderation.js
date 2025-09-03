@@ -1096,6 +1096,307 @@ async function deleteGuildProfanityPattern(guildId, patternId) {
   throw new Error('Database not available');
 }
 
+// === VIOLATION TRACKING FUNCTIONS ===
+
+// Record a new violation
+async function recordViolation(violationData) {
+  if (!db.mariaAvailable || !db.sqlPool) {
+    console.warn('Database not available for violation recording');
+    return null;
+  }
+
+  const {
+    guildId,
+    userId,
+    ruleId = null,
+    ruleType,
+    ruleName,
+    violationReason,
+    messageContent = null,
+    channelId,
+    messageId = null,
+    actionTaken,
+    warningIncrement = 1,
+    totalWarningsAtTime,
+    thresholdAtTime,
+    moderatorId = null,
+    isAutoMod = true,
+    severity = 'medium',
+    metadata = null
+  } = violationData;
+
+  try {
+    // Insert violation record
+    const [result] = await db.sqlPool.query(`
+      INSERT INTO guild_user_violations 
+      (guild_id, user_id, rule_id, rule_type, rule_name, violation_reason, message_content, 
+       channel_id, message_id, action_taken, warning_increment, total_warnings_at_time, 
+       threshold_at_time, moderator_id, is_auto_mod, severity, metadata)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `, [
+      guildId, userId, ruleId, ruleType, ruleName, violationReason, messageContent,
+      channelId, messageId, actionTaken, warningIncrement, totalWarningsAtTime,
+      thresholdAtTime, moderatorId, isAutoMod, severity, metadata ? JSON.stringify(metadata) : null
+    ]);
+
+    return result.insertId;
+  } catch (error) {
+    console.error('Error recording violation:', error);
+    return null;
+  }
+}
+
+// Get current warning count for a user and rule type
+async function getWarningCount(guildId, userId, ruleType) {
+  if (!db.mariaAvailable || !db.sqlPool) {
+    return { count: 0, lastViolation: null };
+  }
+
+  try {
+    const [rows] = await db.sqlPool.query(`
+      SELECT warning_count, last_violation_at, last_reset_at
+      FROM guild_user_warning_counts 
+      WHERE guild_id = ? AND user_id = ? AND rule_type = ?
+    `, [guildId, userId, ruleType]);
+
+    if (rows.length === 0) {
+      return { count: 0, lastViolation: null };
+    }
+
+    const row = rows[0];
+    
+    // Check if warnings should be auto-reset (1 hour since last violation)
+    if (row.last_violation_at) {
+      const hoursSinceLastViolation = (Date.now() - new Date(row.last_violation_at).getTime()) / (1000 * 60 * 60);
+      if (hoursSinceLastViolation >= 1) {
+        // Auto-reset warnings
+        await resetWarningCount(guildId, userId, ruleType);
+        return { count: 0, lastViolation: null };
+      }
+    }
+
+    return {
+      count: row.warning_count,
+      lastViolation: row.last_violation_at
+    };
+  } catch (error) {
+    console.error('Error getting warning count:', error);
+    return { count: 0, lastViolation: null };
+  }
+}
+
+// Increment warning count for a user and rule type
+async function incrementWarningCount(guildId, userId, ruleType, increment = 1) {
+  if (!db.mariaAvailable || !db.sqlPool) {
+    console.warn('Database not available for warning count increment');
+    return increment;
+  }
+
+  try {
+    // Use INSERT ... ON DUPLICATE KEY UPDATE for atomic operation
+    await db.sqlPool.query(`
+      INSERT INTO guild_user_warning_counts 
+      (guild_id, user_id, rule_type, warning_count, last_violation_at, total_violations)
+      VALUES (?, ?, ?, ?, NOW(), ?)
+      ON DUPLICATE KEY UPDATE
+        warning_count = warning_count + VALUES(warning_count),
+        last_violation_at = VALUES(last_violation_at),
+        total_violations = total_violations + VALUES(total_violations)
+    `, [guildId, userId, ruleType, increment, increment]);
+
+    // Get the new count
+    const result = await getWarningCount(guildId, userId, ruleType);
+    return result.count;
+  } catch (error) {
+    console.error('Error incrementing warning count:', error);
+    return increment;
+  }
+}
+
+// Reset warning count for a user and rule type
+async function resetWarningCount(guildId, userId, ruleType) {
+  if (!db.mariaAvailable || !db.sqlPool) {
+    console.warn('Database not available for warning count reset');
+    return false;
+  }
+
+  try {
+    await db.sqlPool.query(`
+      UPDATE guild_user_warning_counts 
+      SET warning_count = 0, last_reset_at = NOW()
+      WHERE guild_id = ? AND user_id = ? AND rule_type = ?
+    `, [guildId, userId, ruleType]);
+
+    return true;
+  } catch (error) {
+    console.error('Error resetting warning count:', error);
+    return false;
+  }
+}
+
+// Get user violations with pagination and filtering
+async function getUserViolations(guildId, userId, options = {}) {
+  if (!db.mariaAvailable || !db.sqlPool) {
+    return { violations: [], total: 0 };
+  }
+
+  const {
+    ruleType = null,
+    status = 'active',
+    limit = 50,
+    offset = 0,
+    orderBy = 'created_at DESC'
+  } = options;
+
+  try {
+    let whereClause = 'WHERE guild_id = ? AND user_id = ?';
+    let params = [guildId, userId];
+
+    if (ruleType) {
+      whereClause += ' AND rule_type = ?';
+      params.push(ruleType);
+    }
+
+    if (status) {
+      whereClause += ' AND status = ?';
+      params.push(status);
+    }
+
+    // Get total count
+    const [countRows] = await db.sqlPool.query(`
+      SELECT COUNT(*) as total FROM guild_user_violations ${whereClause}
+    `, params);
+
+    // Get violations
+    const [violations] = await db.sqlPool.query(`
+      SELECT * FROM guild_user_violations ${whereClause}
+      ORDER BY ${orderBy}
+      LIMIT ? OFFSET ?
+    `, [...params, limit, offset]);
+
+    return {
+      violations: violations.map(v => ({
+        ...v,
+        metadata: v.metadata ? JSON.parse(v.metadata) : null
+      })),
+      total: countRows[0].total
+    };
+  } catch (error) {
+    console.error('Error getting user violations:', error);
+    return { violations: [], total: 0 };
+  }
+}
+
+// Get guild violations with pagination and filtering
+async function getGuildViolations(guildId, options = {}) {
+  if (!db.mariaAvailable || !db.sqlPool) {
+    return { violations: [], total: 0 };
+  }
+
+  const {
+    ruleType = null,
+    userId = null,
+    status = 'active',
+    limit = 100,
+    offset = 0,
+    orderBy = 'created_at DESC'
+  } = options;
+
+  try {
+    let whereClause = 'WHERE guild_id = ?';
+    let params = [guildId];
+
+    if (ruleType) {
+      whereClause += ' AND rule_type = ?';
+      params.push(ruleType);
+    }
+
+    if (userId) {
+      whereClause += ' AND user_id = ?';
+      params.push(userId);
+    }
+
+    if (status) {
+      whereClause += ' AND status = ?';
+      params.push(status);
+    }
+
+    // Get total count
+    const [countRows] = await db.sqlPool.query(`
+      SELECT COUNT(*) as total FROM guild_user_violations ${whereClause}
+    `, params);
+
+    // Get violations
+    const [violations] = await db.sqlPool.query(`
+      SELECT * FROM guild_user_violations ${whereClause}
+      ORDER BY ${orderBy}
+      LIMIT ? OFFSET ?
+    `, [...params, limit, offset]);
+
+    return {
+      violations: violations.map(v => ({
+        ...v,
+        metadata: v.metadata ? JSON.parse(v.metadata) : null
+      })),
+      total: countRows[0].total
+    };
+  } catch (error) {
+    console.error('Error getting guild violations:', error);
+    return { violations: [], total: 0 };
+  }
+}
+
+// Update violation status (for appeals, pardons, etc.)
+async function updateViolationStatus(violationId, status, reviewerId = null, notes = null) {
+  if (!db.mariaAvailable || !db.sqlPool) {
+    console.warn('Database not available for violation status update');
+    return false;
+  }
+
+  try {
+    await db.sqlPool.query(`
+      UPDATE guild_user_violations 
+      SET status = ?, updated_at = NOW()
+      WHERE id = ?
+    `, [status, violationId]);
+
+    // If this is an appeal approval/rejection, you might want to update the appeals table too
+    if (reviewerId && notes) {
+      await db.sqlPool.query(`
+        UPDATE guild_violation_appeals 
+        SET appeal_status = ?, reviewed_by = ?, reviewer_notes = ?, updated_at = NOW()
+        WHERE violation_id = ?
+      `, [status === 'pardoned' ? 'approved' : 'rejected', reviewerId, notes, violationId]);
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Error updating violation status:', error);
+    return false;
+  }
+}
+
+// Cleanup expired violations (run periodically)
+async function cleanupExpiredViolations() {
+  if (!db.mariaAvailable || !db.sqlPool) {
+    return 0;
+  }
+
+  try {
+    const [result] = await db.sqlPool.query(`
+      UPDATE guild_user_violations 
+      SET status = 'expired'
+      WHERE expires_at IS NOT NULL AND expires_at < NOW() AND status = 'active'
+    `);
+
+    console.log(`Cleaned up ${result.affectedRows} expired violations`);
+    return result.affectedRows;
+  } catch (error) {
+    console.error('Error cleaning up expired violations:', error);
+    return 0;
+  }
+}
+
 module.exports = {
   getModerationFeatures,
   toggleModerationFeature,
@@ -1131,5 +1432,14 @@ module.exports = {
   getGuildProfanityPatterns,
   addGuildProfanityPattern,
   updateGuildProfanityPattern,
-  deleteGuildProfanityPattern
+  deleteGuildProfanityPattern,
+  // Violation tracking
+  recordViolation,
+  getWarningCount,
+  incrementWarningCount,
+  resetWarningCount,
+  getUserViolations,
+  getGuildViolations,
+  updateViolationStatus,
+  cleanupExpiredViolations
 };

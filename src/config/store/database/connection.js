@@ -411,6 +411,72 @@ async function initializeModerationTables() {
     INDEX idx_severity (severity),
     UNIQUE KEY unique_word_lang (word, language)
   ) ENGINE=InnoDB`);
+
+  // User Violations and Warning System Tables
+  await sqlPool.query(`CREATE TABLE IF NOT EXISTS guild_user_violations (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    guild_id VARCHAR(32) NOT NULL,
+    user_id VARCHAR(32) NOT NULL,
+    rule_id INT NULL,
+    rule_type ENUM('spam', 'caps', 'links', 'invite_links', 'profanity', 'mention_spam') NOT NULL,
+    rule_name VARCHAR(100) NOT NULL,
+    violation_reason TEXT NOT NULL,
+    message_content TEXT NULL,
+    channel_id VARCHAR(32) NOT NULL,
+    message_id VARCHAR(32) NULL,
+    action_taken ENUM('warn', 'mute', 'kick', 'ban', 'delete') NOT NULL,
+    warning_increment INT DEFAULT 1,
+    total_warnings_at_time INT DEFAULT 1,
+    threshold_at_time INT DEFAULT 3,
+    moderator_id VARCHAR(32) NULL,
+    is_auto_mod BOOLEAN DEFAULT 1,
+    severity ENUM('low', 'medium', 'high', 'extreme') DEFAULT 'medium',
+    metadata JSON NULL,
+    expires_at TIMESTAMP NULL,
+    status ENUM('active', 'expired', 'pardoned', 'appealed') DEFAULT 'active',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_guild_user (guild_id, user_id),
+    INDEX idx_guild_rule_type (guild_id, rule_type),
+    INDEX idx_user_rule_type (user_id, rule_type),
+    INDEX idx_created_at (created_at),
+    INDEX idx_status (status),
+    INDEX idx_auto_mod (is_auto_mod),
+    INDEX idx_expires (expires_at)
+  ) ENGINE=InnoDB`);
+
+  await sqlPool.query(`CREATE TABLE IF NOT EXISTS guild_user_warning_counts (
+    guild_id VARCHAR(32) NOT NULL,
+    user_id VARCHAR(32) NOT NULL,
+    rule_type ENUM('spam', 'caps', 'links', 'invite_links', 'profanity', 'mention_spam') NOT NULL,
+    warning_count INT DEFAULT 0,
+    last_violation_at TIMESTAMP NULL,
+    last_reset_at TIMESTAMP NULL,
+    total_violations INT DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (guild_id, user_id, rule_type),
+    INDEX idx_guild_user (guild_id, user_id),
+    INDEX idx_last_violation (last_violation_at),
+    INDEX idx_warning_count (warning_count DESC)
+  ) ENGINE=InnoDB`);
+
+  await sqlPool.query(`CREATE TABLE IF NOT EXISTS guild_violation_appeals (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    violation_id INT NOT NULL,
+    guild_id VARCHAR(32) NOT NULL,
+    user_id VARCHAR(32) NOT NULL,
+    appeal_reason TEXT NOT NULL,
+    appeal_status ENUM('pending', 'approved', 'rejected') DEFAULT 'pending',
+    reviewed_by VARCHAR(32) NULL,
+    reviewer_notes TEXT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_guild_user (guild_id, user_id),
+    INDEX idx_status (appeal_status),
+    INDEX idx_created_at (created_at),
+    FOREIGN KEY (violation_id) REFERENCES guild_user_violations(id) ON DELETE CASCADE
+  ) ENGINE=InnoDB`);
 }
 
 async function initPersistence() {
