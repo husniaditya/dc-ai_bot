@@ -81,7 +81,7 @@ module.exports = (client, store) => {
 
 // Spam detection - check for repeated messages
 const spamCache = new Map(); // userId -> { messages: [], timestamps: [] }
-async function checkSpamDetection(message, threshold) {
+async function checkSpamDetection(message, threshold = 3) {
   const userId = message.author.id;
   const content = message.content.toLowerCase();
   const now = Date.now();
@@ -102,11 +102,11 @@ async function checkSpamDetection(message, threshold) {
   userCache.timestamps.push(now);
   
   // Check for spam patterns
-  if (userCache.messages.length >= 3) {
+  if (userCache.messages.length >= threshold) {
     // Check for identical messages
-    const recentMessages = userCache.messages.slice(-3);
+    const recentMessages = userCache.messages.slice(-threshold);
     const identicalCount = recentMessages.filter(msg => msg === content).length;
-    if (identicalCount >= Math.ceil(3 * 0.8)) return true;
+    if (identicalCount >= Math.ceil(threshold * 0.8)) return true;
     
     // Check for very similar messages (character overlap)
     let similarityCount = 0;
@@ -115,7 +115,7 @@ async function checkSpamDetection(message, threshold) {
         similarityCount++;
       }
     }
-    if (similarityCount >= Math.ceil(3 * 0.7)) return true;
+    if (similarityCount >= Math.ceil(threshold * 0.7)) return true;
   }
   
   return false;
@@ -165,17 +165,16 @@ function levenshteinDistance(str1, str2) {
 }
 
 // Check for excessive caps
-function checkExcessiveCaps(content, threshold) {
+function checkExcessiveCaps(content, threshold = 75) {
   if (!content || content.length < 10) return false; // Ignore short messages
   
   const upperCount = (content.match(/[A-Z]/g) || []).length;
   const letterCount = (content.match(/[A-Za-z]/g) || []).length;
-  const maxPercentage = 75; // Maximum percentage of letters to consider caps
   
   if (letterCount === 0) return false;
   
   const capsPercentage = (upperCount / letterCount) * 100;
-  return capsPercentage >= maxPercentage;
+  return capsPercentage >= threshold;
 }
 
 // Check for links
@@ -243,9 +242,9 @@ function escapeRegex(string) {
 }
 
 // Check for mention spam
-function checkMentionSpam(message, threshold) {
+function checkMentionSpam(message, threshold = 3) {
   const mentions = message.mentions.users.size + message.mentions.roles.size;
-  return mentions >= 3;
+  return mentions >= threshold;
 }
 
 // Warning escalation helpers - now using database persistence
