@@ -368,8 +368,8 @@ export default function AutomodConfigForm({ config, updateConfig, channels, role
   const triggerTypes = [
     { value: 'spam', label: 'Spam Detection', description: 'Detect repeated messages and spam patterns' },
     { value: 'caps', label: 'Excessive Caps', description: 'Filter messages with too many capital letters' },
-    { value: 'links', label: 'Link Filter', description: 'Block unauthorized links and URLs' },
-    { value: 'invite_links', label: 'Invite Links', description: 'Block Discord server invites' },
+    { value: 'links', label: 'Link Filter', description: 'Scans, Block malicious links and URLs' },
+    { value: 'invite_links', label: 'Invite Links', description: 'Scans, Block malicious Discord server invites' },
     { value: 'profanity', label: 'Profanity Filter', description: 'Filter inappropriate language' },
     { value: 'mention_spam', label: 'Mention Spam', description: 'Prevent excessive user/role mentions' }
   ];
@@ -636,7 +636,8 @@ export default function AutomodConfigForm({ config, updateConfig, channels, role
       const ruleData = {
         ...ruleForm,
         whitelistChannels: JSON.stringify(ruleForm.whitelistChannels || []),
-        whitelistRoles: JSON.stringify(ruleForm.whitelistRoles || [])
+        whitelistRoles: JSON.stringify(ruleForm.whitelistRoles || []),
+        logChannelId: ruleForm.logChannelId || config.logChannelId || null // Use global log channel if no specific channel selected
       };
 
       const url = editingRule 
@@ -783,7 +784,7 @@ export default function AutomodConfigForm({ config, updateConfig, channels, role
         </div>
         <p className="text-muted small mb-0" style={{ fontSize: '0.85rem', lineHeight: 1.4 }}>
           Create custom auto moderation rules to automatically detect and handle unwanted content including spam, 
-          excessive caps, unauthorized links, and inappropriate language. Configure actions, thresholds, and bypass settings.
+          excessive caps, unauthorized links, and inappropriate language. Configure actions, thresholds, and bypass settings. URL Link scanning are powered by <a href="https://www.virustotal.com" target="_blank" rel="noreferrer" className="text-decoration-underline">VirusTotal</a>, <a href="https://safebrowsing.googleapis.com" target="_blank" rel="noreferrer" className="text-decoration-underline">Google Safe Browsing</a> . 
         </p>
       </div>
       <hr />
@@ -797,7 +798,7 @@ export default function AutomodConfigForm({ config, updateConfig, channels, role
           >
             <ChannelSelector
               value={config.logChannelId || ''}
-              onChange={(value) => updateConfig('logChannelId', value)}
+              onChange={(value) => updateConfig('logChannelId', value || null)}
               channels={channels}
               placeholder="No global logging"
             />
@@ -1696,7 +1697,7 @@ export default function AutomodConfigForm({ config, updateConfig, channels, role
                 <label className="form-label small fw-semibold">Log Channel</label>
                 <ChannelSelector
                   value={ruleForm.logChannelId || ''}
-                  onChange={(value) => updateRuleForm('logChannelId', value)}
+                  onChange={(value) => updateRuleForm('logChannelId', value || null)}
                   channels={channels}
                   placeholder="Use global log channel"
                 />
