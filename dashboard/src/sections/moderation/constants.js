@@ -72,13 +72,14 @@ export const FEATURE_DEFAULTS = {
   },
   automod: {
     enabled: false,
+    logChannelId: '',
+    bypassRoles: [],
+    // Legacy simple toggles for backward compatibility
     spamDetection: false,
     capsFilter: false,
     linkFilter: false,
     profanityFilter: false,
-    logChannelId: '',
-    autoDelete: false,
-    bypassRoles: []
+    autoDelete: false
   },
   roles: {
     enabled: false,

@@ -88,16 +88,30 @@ loadCommands(client);
 const store = require('./config/store');
 const persistenceModeRef = { mode:null };
 store.persistenceModeRef = persistenceModeRef;
-store.initPersistence().then(mode => { 
-  persistenceModeRef.mode = mode; 
-  store.persistenceModeRef.mode = mode;
-  console.log('Persistence mode:', mode); 
-});
 
-// Create and start the API server
-const app = createApiServer(client, store, commandMap, startTimestamp);
-const DASHBOARD_PORT = process.env.DASHBOARD_PORT || 3001;
-app.listen(DASHBOARD_PORT, () => console.log('Dashboard API listening on :' + DASHBOARD_PORT));
+// Initialize database before starting API server
+async function initializeApp() {
+  try {
+    const mode = await store.initPersistence();
+    persistenceModeRef.mode = mode; 
+    store.persistenceModeRef.mode = mode;
+    console.log('Persistence mode:', mode);
+    
+    // Create and start the API server AFTER database is ready
+    const app = createApiServer(client, store, commandMap, startTimestamp);
+    const DASHBOARD_PORT = process.env.DASHBOARD_PORT || 3001;
+    app.listen(DASHBOARD_PORT, () => console.log('Dashboard API listening on :' + DASHBOARD_PORT));
+  } catch (error) {
+    console.error('Failed to initialize database:', error);
+    // Still start API server with in-memory fallback
+    const app = createApiServer(client, store, commandMap, startTimestamp);
+    const DASHBOARD_PORT = process.env.DASHBOARD_PORT || 3001;
+    app.listen(DASHBOARD_PORT, () => console.log('Dashboard API listening on :' + DASHBOARD_PORT + ' (in-memory mode)'));
+  }
+}
+
+// Start initialization
+initializeApp();
 
 // Load events (including ready event that starts YouTube/Twitch watchers)
 loadEvents(client, store, commandMap, startTimestamp);

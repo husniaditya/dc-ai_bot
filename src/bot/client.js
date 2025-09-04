@@ -6,8 +6,10 @@ const path = require('path');
 const readyHandler = require('./events/ready');
 const guildMemberAddHandler = require('./events/guildMemberAdd');
 const interactionCreateHandler = require('./events/interactionCreate');
+const messageCreateHandler = require('./events/messageCreate');
 const messageReactionAddHandler = require('./events/messageReactionAdd');
 const messageReactionRemoveHandler = require('./events/messageReactionRemove');
+const voiceStateUpdateHandler = require('./events/voiceStateUpdate');
 
 // Services
 const { startYouTubeWatcher } = require('./services/youtube');
@@ -25,7 +27,8 @@ function createDiscordClient(store, startTimestamp) {
   const intents = [
     GatewayIntentBits.Guilds, 
     GatewayIntentBits.GuildMessages, 
-    GatewayIntentBits.GuildMessageReactions
+    GatewayIntentBits.GuildMessageReactions,
+    GatewayIntentBits.GuildVoiceStates // For voice XP tracking
   ];
   
   // Message Content intent (privileged) – required for reading message text for auto-replies & AI commands
@@ -50,8 +53,10 @@ function createDiscordClient(store, startTimestamp) {
   readyHandler(client, store, startTimestamp, commandMap);
   guildMemberAddHandler(client, store);
   interactionCreateHandler(client, store, startTimestamp, commandMap);
+  messageCreateHandler(client, store);
   messageReactionAddHandler(client, store);
   messageReactionRemoveHandler(client, store);
+  voiceStateUpdateHandler(client, store);
 
   // Login with error handling
   client.login(token).catch(err => {
