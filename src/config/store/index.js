@@ -229,6 +229,13 @@ module.exports = {
   updateGuildAntiRaidSettings: moderationService.updateGuildAntiRaidSettings,
   getGuildScheduledMessages: moderationService.getGuildScheduledMessages,
   
+  // Audit Logging API
+  getGuildAuditLogConfig: moderationService.getGuildAuditLogConfig,
+  updateGuildAuditLogConfig: moderationService.updateGuildAuditLogConfig,
+  getGuildAuditLogs: moderationService.getGuildAuditLogs,
+  createAuditLogEntry: moderationService.createAuditLogEntry,
+  deleteAuditLogEntry: moderationService.deleteAuditLogEntry,
+  
   // Self-Assignable Roles API
   getGuildSelfAssignableRoles: moderationService.getGuildSelfAssignableRoles,
   addGuildSelfAssignableRole: moderationService.addGuildSelfAssignableRole,

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import WelcomeConfigForm from '../features/WelcomeConfigForm';
 import AutomodConfigForm from '../features/AutomodConfigForm';
 import RolesConfigForm from '../features/RolesConfigForm';
@@ -22,6 +22,9 @@ export default function ConfigurationModal({
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
+  
+  // Ref for forms that handle their own save/reset
+  const loggingFormRef = useRef(null);
 
   // Fetch specific configuration when modal opens
   useEffect(() => {
@@ -54,6 +57,13 @@ export default function ConfigurationModal({
               'X-Guild-Id': guildId
             }
           });
+        } else if (feature.key === 'logging') {
+          response = await fetch('/api/moderation/audit-logs/config', {
+            headers: { 
+              Authorization: `Bearer ${localStorage.getItem('token')}`,
+              'X-Guild-Id': guildId
+            }
+          });
         } else {
           response = await fetch(`/api/moderation/features/${feature.key}/config`, {
             headers: { 
@@ -67,7 +77,7 @@ export default function ConfigurationModal({
           const data = await response.json();
           
           // Handle different possible response structures
-          const configData = (feature.key === 'welcome' || feature.key === 'xp' || feature.key === 'antiraid') 
+          const configData = (feature.key === 'welcome' || feature.key === 'xp' || feature.key === 'antiraid' || feature.key === 'logging') 
             ? (data.config || data || {})
             : (data.config || data || {});
           
@@ -141,10 +151,15 @@ export default function ConfigurationModal({
       },
       logging: {
         enabled: false,
-        messageLogChannel: '',
-        memberLogChannel: '',
-        channelLogChannel: '',
-        roleLogChannel: ''
+        globalChannel: null,
+        messageChannel: null,
+        memberChannel: null,
+        channelChannel: null,
+        roleChannel: null,
+        serverChannel: null,
+        voiceChannel: null,
+        includeBots: true,
+        enhancedDetails: true
       },
       antiraid: {
         enabled: false,
@@ -161,11 +176,13 @@ export default function ConfigurationModal({
 
   // Check if configuration has been modified
   const isDirty = () => {
+    // Use standard config comparison for all forms
     return JSON.stringify(config) !== JSON.stringify(originalConfig);
   };
 
   // Reset configuration to original values
   const resetConfig = () => {
+    // Use standard config reset for all forms
     setConfig({ ...originalConfig });
   };
 
@@ -223,6 +240,25 @@ export default function ConfigurationModal({
         const data = await response.json();
         setConfig(data.config || data);
         setOriginalConfig(data.config || data);
+      } else if (feature.key === 'logging') {
+        // Handle logging configuration save
+        const response = await fetch('/api/moderation/audit-logs/config', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+            'X-Guild-Id': guildId
+          },
+          body: JSON.stringify(config)
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to save audit logging configuration');
+        }
+
+        const data = await response.json();
+        setConfig(data || {});
+        setOriginalConfig(data || {});
       } else {
         await onSave(config);
       }
@@ -279,7 +315,7 @@ export default function ConfigurationModal({
       case 'scheduler':
         return <SchedulerConfigForm {...commonProps} />;
       case 'logging':
-        return <LoggingConfigForm {...commonProps} />;
+        return <LoggingConfigForm ref={loggingFormRef} {...commonProps} />;
       case 'antiraid':
         return <AntiRaidConfigForm {...commonProps} />;
       default:

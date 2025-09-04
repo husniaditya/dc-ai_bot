@@ -349,6 +349,25 @@ async function initializeModerationTables() {
     INDEX idx_created (created_at)
   ) ENGINE=InnoDB`);
 
+  // Audit Logging Configuration
+  await sqlPool.query(`CREATE TABLE IF NOT EXISTS guild_audit_logs_config (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    guild_id VARCHAR(32) NOT NULL UNIQUE,
+    global_channel VARCHAR(32) NULL,
+    message_channel VARCHAR(32) NULL,
+    member_channel VARCHAR(32) NULL,
+    channel_channel VARCHAR(32) NULL,
+    role_channel VARCHAR(32) NULL,
+    server_channel VARCHAR(32) NULL,
+    voice_channel VARCHAR(32) NULL,
+    include_bots BOOLEAN DEFAULT 1,
+    enhanced_details BOOLEAN DEFAULT 1,
+    enabled BOOLEAN DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_guild_enabled (guild_id, enabled)
+  ) ENGINE=InnoDB`);
+
   // Anti-Raid Settings
   await sqlPool.query(`CREATE TABLE IF NOT EXISTS guild_antiraid_settings (
     guild_id VARCHAR(32) PRIMARY KEY,

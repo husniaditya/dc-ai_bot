@@ -166,7 +166,10 @@ export default function ReactionRolesConfig({ config, updateConfig, channels, ro
     try {
       const response = await fetch(`/api/roles/reaction-roles/message/${messageId}`, {
         method: 'DELETE',
-        headers: { Authorization: 'Bearer ' + localStorage.getItem('token') }
+        headers: { 
+          'Authorization': 'Bearer ' + localStorage.getItem('token'),
+          'x-guild-id': guildId
+        }
       });
 
       if (response.ok) {

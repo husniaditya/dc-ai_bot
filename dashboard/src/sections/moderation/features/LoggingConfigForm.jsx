@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { forwardRef, useImperativeHandle } from 'react';
 import { ChannelSelector, FormField, SwitchToggle } from '../components/SharedComponents';
 
 // Audit Logging Configuration
-export default function LoggingConfigForm({ config, updateConfig, channels }) {
+const LoggingConfigForm = forwardRef(({ config, updateConfig, channels }, ref) => {
   const logTypes = [
     {
       key: 'messageChannel',
@@ -42,6 +42,35 @@ export default function LoggingConfigForm({ config, updateConfig, channels }) {
     }
   ];
 
+  const handleGlobalChannelChange = (value) => {
+    updateConfig('globalChannel', value);
+    
+    // If global channel is set, copy it to all log types that don't have a channel
+    if (value) {
+      logTypes.forEach(logType => {
+        if (!config[logType.key]) {
+          updateConfig(logType.key, value);
+        }
+      });
+    }
+  };
+
+  // Expose functions to parent component (for compatibility with existing usage)
+  useImperativeHandle(ref, () => ({
+    save: () => {
+      console.log('Save called on LoggingConfigForm');
+      return Promise.resolve();
+    },
+    reset: () => {
+      console.log('Reset called on LoggingConfigForm');
+    },
+    isDirty: () => {
+      // Let the parent component handle dirty state tracking
+      return false;
+    },
+    isSaving: () => false
+  }), []);
+
   return (
     <div className="moderation-config-form space-y-4">
       {/* Information Section */}
@@ -57,56 +86,6 @@ export default function LoggingConfigForm({ config, updateConfig, channels }) {
           Track all server activities including messages, member changes, channel modifications, role updates, and more. 
           Configure separate channels for different log types or use a single channel for comprehensive monitoring.
         </p>
-      </div>
-      <hr />
-
-      <div className="row">
-        {logTypes.map(logType => (
-          <div key={logType.key} className="col-lg-6 mb-4">
-            <div className="log-type-card p-3 border rounded">
-              <div className="d-flex align-items-center gap-2 mb-2">
-                <i className={`fa-solid ${logType.icon} text-primary`} />
-                <h6 className="mb-0">{logType.label}</h6>
-              </div>
-              <p className="text-muted small mb-3">{logType.description}</p>
-              
-              <ChannelSelector
-                value={config[logType.key]}
-                onChange={(value) => updateConfig(logType.key, value)}
-                channels={channels}
-                placeholder="No logging"
-              />
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <div className="mt-4">
-        <FormField label="Global Log Channel (Optional)">
-          <ChannelSelector
-            value={config.globalChannel}
-            onChange={(value) => {
-              // If global channel is set, copy it to all log types that don't have a channel
-              updateConfig('globalChannel', value);
-              if (value) {
-                const updates = {};
-                logTypes.forEach(logType => {
-                  if (!config[logType.key]) {
-                    updates[logType.key] = value;
-                  }
-                });
-                Object.keys(updates).forEach(key => {
-                  updateConfig(key, updates[key]);
-                });
-              }
-            }}
-            channels={channels}
-            placeholder="Set all empty channels to this"
-          />
-          <small className="text-muted d-block mt-1">
-            This will set all log types without a specific channel to use this channel
-          </small>
-        </FormField>
       </div>
 
       <div className="mt-4 p-3 bg-dark border rounded">
@@ -169,26 +148,65 @@ export default function LoggingConfigForm({ config, updateConfig, channels }) {
           </div>
         </div>
       </div>
+      <hr />
 
-      <div className="mt-3">
-        <SwitchToggle
-          id="logging-include-bots"
-          label="Include Bot Actions"
-          checked={config.includeBots !== false}
-          onChange={(checked) => updateConfig('includeBots', checked)}
-          description="Log actions performed by bots and integrations"
+      <FormField 
+        label="Global Log Channel (Optional)"
+        description="Set all empty channels to this channel"
+      >
+        <ChannelSelector
+          value={config.globalChannel}
+          onChange={handleGlobalChannelChange}
+          channels={channels}
+          placeholder="Set all empty channels to this"
         />
+      </FormField>
+      
+      <div className="row">
+        <div className="col-md-6">
+          <SwitchToggle
+            id="logging-include-bots"
+            label="Include Bot Actions"
+            checked={config.includeBots !== false}
+            onChange={(checked) => updateConfig('includeBots', checked)}
+            description="Log actions performed by bots and integrations"
+          />
+        </div>
+        <div className="col-md-6">
+          <SwitchToggle
+            id="logging-enhanced-details"
+            label="Enhanced Details"
+            checked={config.enhancedDetails !== false}
+            onChange={(checked) => updateConfig('enhancedDetails', checked)}
+            description="Include additional context and metadata in logs"
+          />
+        </div>
       </div>
-
-      <div className="mt-3">
-        <SwitchToggle
-          id="logging-enhanced-details"
-          label="Enhanced Details"
-          checked={config.enhancedDetails !== false}
-          onChange={(checked) => updateConfig('enhancedDetails', checked)}
-          description="Include additional context and metadata in logs"
-        />
+      
+      <div className="row">
+        {logTypes.map(logType => (
+          <div key={logType.key} className="col-lg-6 mb-4">
+            <div className="log-type-card p-3 border rounded">
+              <div className="d-flex align-items-center gap-2 mb-2">
+                <i className={`fa-solid ${logType.icon} text-primary`} />
+                <h6 className="mb-0">{logType.label}</h6>
+              </div>
+              <p className="text-muted small mb-3">{logType.description}</p>
+              
+              <ChannelSelector
+                value={config[logType.key]}
+                onChange={(value) => updateConfig(logType.key, value)}
+                channels={channels}
+                placeholder="No logging"
+              />
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
-}
+});
+
+LoggingConfigForm.displayName = 'LoggingConfigForm';
+
+export default LoggingConfigForm;
