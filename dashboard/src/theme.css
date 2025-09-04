@@ -131,9 +131,92 @@ html:not(.dark) .service-card.active {
 html:not(.dark) .navbar-brand { color: var(--text-base) !important; }
 html:not(.dark) .toggle-theme-btn { background: rgba(0,0,0,0.06) !important; color:#2a3140 !important; border:1px solid rgba(0,0,0,0.12) !important; }
 html:not(.dark) .toggle-theme-btn:hover { background: rgba(0,0,0,0.1) !important; }
-html:not(.dark) .table-modern thead th { color:#445066 !important; }
-html:not(.dark) .table-modern tbody td { color:#222 !important; }
-html:not(.dark) .table-modern tbody tr:hover { background: linear-gradient(90deg, rgba(0,0,0,0.06), rgba(0,0,0,0.02)) !important; }
+html:not(.dark) .table-modern thead th { 
+  color:#445066 !important; 
+  background: rgba(248,250,252,0.8) !important;
+  border-bottom: 1px solid rgba(0,0,0,0.1) !important;
+}
+html:not(.dark) .table-modern tbody td { 
+  color:#222 !important; 
+  background: rgba(255,255,255,0.6) !important;
+  border-bottom: 1px solid rgba(0,0,0,0.05) !important;
+}
+html:not(.dark) .table-modern tbody tr { 
+  background: rgba(255,255,255,0.6) !important;
+  border-bottom: 1px solid rgba(0,0,0,0.05) !important;
+}
+html:not(.dark) .table-modern tbody tr:hover { 
+  background: linear-gradient(90deg, rgba(0,0,0,0.08), rgba(0,0,0,0.04)) !important; 
+}
+html:not(.dark) .table-modern tbody tr:hover td { 
+  color:#1a1a1a !important; 
+  background: transparent !important;
+}
+html:not(.dark) .table-modern tbody tr:hover td small,
+html:not(.dark) .table-modern tbody tr:hover td a { 
+  color:#2a2a2a !important; 
+}
+html:not(.dark) .table-modern .card-sm { 
+  background: rgba(255,255,255,0.9) !important;
+  border: 1px solid rgba(0,0,0,0.08) !important;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1) !important;
+}
+html:not(.dark) .table-modern .card-sm:hover { 
+  background: rgba(255,255,255,1) !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15) !important;
+}
+html:not(.dark) .table-modern-shell {
+  background: rgba(248,250,252,0.8) !important;
+  border: 1px solid rgba(0,0,0,0.08) !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08) !important;
+}
+html:not(.dark) .table-modern-shell::-webkit-scrollbar-thumb { 
+  background: rgba(0,0,0,0.2) !important; 
+}
+html:not(.dark) .table-modern-shell::-webkit-scrollbar-track { 
+  background: rgba(0,0,0,0.05) !important; 
+}
+
+/* Light theme scheduler card overrides */
+html:not(.dark) .moderation-config-form .card-sm {
+  background: rgba(255,255,255,0.9) !important;
+  border: 1px solid rgba(0,0,0,0.08) !important;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1) !important;
+  color: #1f2530 !important;
+}
+html:not(.dark) .moderation-config-form .card-sm:hover {
+  background: rgba(255,255,255,1) !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15) !important;
+  border-color: rgba(0,0,0,0.12) !important;
+}
+html:not(.dark) .moderation-config-form .card-sm .card-body {
+  background: transparent !important;
+  color: #1f2530 !important;
+}
+html:not(.dark) .moderation-config-form .card-sm h6 {
+  color: #1f2530 !important;
+}
+html:not(.dark) .moderation-config-form .card-sm p {
+  color: #445066 !important;
+}
+html:not(.dark) .moderation-config-form .card-sm .text-muted {
+  color: #7c8899 !important;
+}
+html:not(.dark) .moderation-config-form .card-sm .badge {
+  background: rgba(0,0,0,0.06) !important;
+  color: #445066 !important;
+  border: 1px solid rgba(0,0,0,0.08) !important;
+}
+html:not(.dark) .moderation-config-form .card-sm .badge-soft {
+  background: rgba(99,102,241,0.1) !important;
+  color: #6366f1 !important;
+  border: 1px solid rgba(99,102,241,0.2) !important;
+}
+html:not(.dark) .moderation-config-form .card-sm .badge-success {
+  background: rgba(16,185,129,0.1) !important;
+  color: #059669 !important;
+  border: 1px solid rgba(16,185,129,0.2) !important;
+}
 html:not(.dark) .dash-menu-item { background: rgba(255,255,255,0.9); border-color: rgba(0,0,0,0.08); color:#445066; }
 html:not(.dark) .dash-menu-item:hover { background:#fff; color:#1f2530; }
 html:not(.dark) .dash-menu-item.active { background: linear-gradient(120deg, rgba(99,102,241,0.15), rgba(99,102,241,0.05)); color:#1f2530; border-color: var(--accent); }
@@ -240,17 +323,50 @@ html:not(.dark) .card-xp-roles .text-muted-primary {
 .moderation-config-form .form-control,
 .moderation-config-form .form-select,
 .moderation-config-form textarea.form-control {
-  background: rgba(255,255,255,0.06) !important;
-  border: 1px solid rgba(255,255,255,0.18) !important;
+  background: rgba(255,255,255,0.08) !important;
+  border: 1px solid rgba(255,255,255,0.25) !important;
   color: var(--text-base) !important;
-  border-radius: 6px;
+  border-radius: 8px;
+  backdrop-filter: blur(10px) saturate(160%);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 8px -2px rgba(0,0,0,0.15), 0 0 0 1px rgba(255,255,255,0.1) inset;
+}
+
+/* Specific styling for cards within moderation config form */
+.moderation-config-form .card {
+  background: linear-gradient(140deg,#1f2536 0%, #202a40 55%, #1a2132 100%) !important;
+  border: 1px solid rgba(255,255,255,0.14) !important;
+  backdrop-filter: blur(18px) saturate(160%);
+}
+
+.moderation-config-form .card-header {
+  background: rgba(255,255,255,0.04);
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  color: var(--text-base);
+}
+
+.moderation-config-form .card-body {
+  background: transparent;
+}
+
+.moderation-config-form .card-header h6 {
+  color: var(--text-base) !important;
 }
 
 .moderation-config-form .form-control:focus,
 .moderation-config-form .form-select:focus,
 .moderation-config-form textarea.form-control:focus {
+  background: rgba(255,255,255,0.12) !important;
   border-color: var(--accent) !important;
-  box-shadow: 0 0 0 2px rgba(99,102,241,0.45) !important;
+  box-shadow: 0 0 0 3px rgba(99,102,241,0.35), 0 4px 12px -2px rgba(99,102,241,0.25), 0 0 0 1px rgba(255,255,255,0.15) inset !important;
+  transform: translateY(-1px);
+}
+
+.moderation-config-form .form-control:hover:not(:focus),
+.moderation-config-form .form-select:hover:not(:focus),
+.moderation-config-form textarea.form-control:hover:not(:focus) {
+  background: rgba(255,255,255,0.1) !important;
+  border-color: rgba(255,255,255,0.35) !important;
 }
 
 /* Light theme overrides for moderation form */
@@ -269,6 +385,22 @@ html:not(.dark) .moderation-config-form textarea.form-control:focus {
   box-shadow: 0 0 0 2px rgba(99,102,241,0.4) !important;
 }
 
+/* Light theme card styling */
+html:not(.dark) .moderation-config-form .card {
+  background: #ffffff !important;
+  border: 1px solid rgba(0,0,0,0.1) !important;
+}
+
+html:not(.dark) .moderation-config-form .card-header {
+  background: rgba(0,0,0,0.02);
+  border-bottom: 1px solid rgba(0,0,0,0.06);
+  color: #1f2530;
+}
+
+html:not(.dark) .moderation-config-form .card-header h6 {
+  color: #1f2530 !important;
+}
+
 /* XP form specific styling */
 .moderation-config-form .add-multiplier-form .form-control,
 .moderation-config-form .add-multiplier-form .form-select {
@@ -285,11 +417,123 @@ html:not(.dark) .moderation-config-form .add-multiplier-form .form-select {
 .moderation-config-form label {
   color: var(--text-soft) !important;
   font-weight: 500;
+  margin-bottom: 6px;
+  font-size: 0.875rem;
+}
+
+.moderation-config-form .form-label .text-danger,
+.moderation-config-form label .text-danger {
+  color: #ff6b6b !important;
+}
+
+/* Enhanced placeholder styling for dark theme */
+.moderation-config-form .form-control::placeholder,
+.moderation-config-form .form-select::placeholder,
+.moderation-config-form textarea.form-control::placeholder {
+  color: rgba(255,255,255,0.45) !important;
+  opacity: 1;
+}
+
+/* Modal form label styling */
+.modal-content .form-label,
+.modal-content label {
+  color: var(--text-soft) !important;
+  font-weight: 500;
+  margin-bottom: 6px;
+  font-size: 0.875rem;
+}
+
+.modal-content .form-control::placeholder,
+.modal-content .form-select::placeholder,
+.modal-content textarea.form-control::placeholder {
+  color: rgba(255,255,255,0.45) !important;
+  opacity: 1;
+}
+
+/* Dark theme modal text and labels */
+html.dark .modal-content .form-label,
+html.dark .modal-content label {
+  color: var(--text-soft) !important;
+}
+
+html.dark .modal-content .form-control::placeholder,
+html.dark .modal-content .form-select::placeholder,
+html.dark .modal-content textarea.form-control::placeholder {
+  color: rgba(255,255,255,0.45) !important;
+}
+
+html.dark .modal-content .text-muted,
+html.dark .modal-content small {
+  color: var(--text-muted) !important;
+}
+
+html.dark .modal-content p,
+html.dark .modal-content span {
+  color: var(--text-base) !important;
 }
 
 html:not(.dark) .moderation-config-form .form-label,
 html:not(.dark) .moderation-config-form label {
   color: #445066 !important;
+}
+
+/* Enhanced scheduler form styling */
+.moderation-config-form .btn-outline-secondary {
+  background: rgba(255,255,255,0.06) !important;
+  border: 1px solid rgba(255,255,255,0.2) !important;
+  color: var(--text-soft) !important;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 6px;
+}
+
+.moderation-config-form .btn-outline-secondary:hover {
+  background: rgba(255,255,255,0.12) !important;
+  border-color: rgba(255,255,255,0.35) !important;
+  color: var(--text-base) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px -4px rgba(0,0,0,0.3);
+}
+
+.moderation-config-form .btn-outline-secondary.active,
+.moderation-config-form .btn-outline-secondary:active {
+  background: var(--accent) !important;
+  border-color: var(--accent) !important;
+  color: #ffffff !important;
+  box-shadow: 0 0 0 3px rgba(99,102,241,0.25);
+}
+
+/* Form section spacing */
+.moderation-config-form .row {
+  margin-bottom: 1rem;
+}
+
+.moderation-config-form .col-md-6:not(:last-child) {
+  margin-bottom: 0.75rem;
+}
+
+/* Small text styling */
+.moderation-config-form small,
+.moderation-config-form .small {
+  color: rgba(255,255,255,0.6) !important;
+  font-size: 0.75rem;
+}
+
+/* Light theme overrides for enhanced scheduler styling */
+html:not(.dark) .moderation-config-form .btn-outline-secondary {
+  background: rgba(0,0,0,0.04) !important;
+  border: 1px solid rgba(0,0,0,0.15) !important;
+  color: #445066 !important;
+}
+
+html:not(.dark) .moderation-config-form .btn-outline-secondary:hover {
+  background: rgba(0,0,0,0.08) !important;
+  border-color: rgba(0,0,0,0.25) !important;
+  color: #1f2530 !important;
+}
+
+html:not(.dark) .moderation-config-form small,
+html:not(.dark) .moderation-config-form .small {
+  color: rgba(0,0,0,0.6) !important;
 }
 
 /* Auto moderation form styling */
@@ -715,18 +959,85 @@ html:not(.dark) #profanity-patterns-modal .modal-title {
   text-transform: uppercase;
   border: none !important;
   color: var(--text-soft);
+  background: rgba(255,255,255,0.06) !important;
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid rgba(255,255,255,0.1) !important;
 }
 .table-modern tbody tr {
   transition: var(--transition);
+  background: rgba(255,255,255,0.02) !important;
+  border-bottom: 1px solid rgba(255,255,255,0.06) !important;
 }
 .table-modern tbody tr:hover {
-  background: linear-gradient(90deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.03) 100%) !important;
+  background: linear-gradient(90deg, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.06) 100%) !important;
 }
-.table-modern tbody tr:hover td, .table-modern tbody tr:hover td small, .table-modern tbody tr:hover td a { color:#fff !important; }
-.table-modern tbody tr.match-highlight:hover { background: linear-gradient(90deg,rgba(16,185,129,0.38),rgba(16,185,129,0.25)) !important; }
-.table-modern td { color: var(--text-base); }
-.table-modern tbody td { color:#000 !important; }
-.table-modern tbody td a, .table-modern tbody td small { color:#111 !important; }
+.table-modern tbody tr:hover td, .table-modern tbody tr:hover td small, .table-modern tbody tr:hover td a { 
+  color: var(--text-base) !important; 
+}
+.table-modern tbody tr.match-highlight:hover { 
+  background: linear-gradient(90deg,rgba(16,185,129,0.38),rgba(16,185,129,0.25)) !important; 
+}
+.table-modern td { 
+  color: var(--text-base); 
+  background: transparent !important;
+  border-bottom: 1px solid rgba(255,255,255,0.06) !important;
+}
+.table-modern tbody td { 
+  color: var(--text-base) !important; 
+  background: transparent !important;
+}
+.table-modern tbody td a, .table-modern tbody td small { 
+  color: var(--text-soft) !important; 
+}
+
+/* Card styles within tables */
+.table-modern .card-sm { 
+  background: rgba(255,255,255,0.06) !important;
+  border: 1px solid rgba(255,255,255,0.12) !important;
+  backdrop-filter: blur(8px);
+  transition: all 0.3s ease;
+}
+.table-modern .card-sm:hover { 
+  background: rgba(255,255,255,0.1) !important;
+  border-color: rgba(255,255,255,0.2) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3) !important;
+}
+.table-modern .card-sm .card-body {
+  color: var(--text-base) !important;
+}
+
+/* Scheduler specific card styling */
+.moderation-config-form .card-sm {
+  background: rgba(255,255,255,0.06) !important;
+  border: 1px solid rgba(255,255,255,0.12) !important;
+  backdrop-filter: blur(8px);
+  color: var(--text-base) !important;
+}
+.moderation-config-form .card-sm:hover {
+  background: rgba(255,255,255,0.1) !important;
+  border-color: rgba(255,255,255,0.2) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3) !important;
+}
+.moderation-config-form .card-sm .card-body {
+  background: transparent !important;
+  color: var(--text-base) !important;
+}
+.moderation-config-form .card-sm h6 {
+  color: var(--text-base) !important;
+}
+.moderation-config-form .card-sm p {
+  color: var(--text-base) !important;
+}
+.moderation-config-form .card-sm .text-muted {
+  color: var(--text-soft) !important;
+}
+.moderation-config-form .card-sm .badge {
+  background: rgba(255,255,255,0.1) !important;
+  color: var(--text-soft) !important;
+  border: 1px solid rgba(255,255,255,0.15) !important;
+}
 
 /* Light green Edit button */
 .btn-edit { color:#059669 !important; border:1px solid #059669 !important; background:rgba(5,150,105,0.08) !important; }
@@ -736,7 +1047,17 @@ html:not(.dark) #profanity-patterns-modal .modal-title {
 .text-muted { color: var(--text-muted) !important; }
 .table-modern tbody tr.match-highlight { background: rgba(16,185,129,0.15); }
 .table-modern tbody tr.match-highlight:hover { background: rgba(16,185,129,0.22); }
-.table-modern-shell { position:relative; border:1px solid rgba(255,255,255,0.12); border-radius: var(--radius-sm); padding:.35rem .35rem .5rem; background: rgba(255,255,255,0.04); backdrop-filter: blur(8px) saturate(140%); max-height:60vh; overflow:auto; }
+.table-modern-shell { 
+  position: relative; 
+  border: 1px solid rgba(255,255,255,0.12); 
+  border-radius: var(--radius-sm); 
+  padding: .35rem .35rem .5rem; 
+  background: rgba(255,255,255,0.04); 
+  backdrop-filter: blur(8px) saturate(140%); 
+  max-height: 60vh; 
+  overflow: auto;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
 .table-modern { margin-bottom:0; }
 .table-modern thead tr { background: linear-gradient(90deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02)); }
 .table-modern thead th { position:sticky; top:0; backdrop-filter: blur(6px); z-index:2; }
@@ -882,6 +1203,29 @@ html.dark .form-check-input:checked { background-color: var(--accent); border-co
   border:1px solid rgba(255,255,255,0.14) !important;
   backdrop-filter: blur(18px) saturate(160%);
 }
+
+/* Ensure dark theme modal styling takes precedence */
+html.dark .modal-content {
+  background: linear-gradient(140deg,#1f2536 0%, #202a40 55%, #1a2132 100%) !important;
+  border: 1px solid rgba(255,255,255,0.14) !important;
+  color: var(--text-base) !important;
+}
+
+html.dark .modal-header {
+  background: rgba(255,255,255,0.04);
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  color: var(--text-base);
+}
+
+html.dark .modal-footer {
+  background: rgba(255,255,255,0.035);
+  border-top: 1px solid rgba(255,255,255,0.08);
+  color: var(--text-base);
+}
+
+html.dark .modal-title {
+  color: var(--text-base) !important;
+}
 .modal-header {
   background: rgba(255,255,255,0.04);
   border-bottom:1px solid rgba(255,255,255,0.08);
@@ -892,12 +1236,42 @@ html.dark .form-check-input:checked { background-color: var(--accent); border-co
 }
 .modal-body { background: transparent; }
 .modal-content .form-control, .modal-content .form-select, .modal-content textarea.form-control {
-  background: rgba(255,255,255,0.07) !important;
-  border:1px solid rgba(255,255,255,0.22) !important;
+  background: rgba(255,255,255,0.08) !important;
+  border: 1px solid rgba(255,255,255,0.25) !important;
+  color: var(--text-base) !important;
+  border-radius: 8px;
+  backdrop-filter: blur(10px) saturate(160%);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 8px -2px rgba(0,0,0,0.15), 0 0 0 1px rgba(255,255,255,0.1) inset;
+}
+
+/* Specific dark theme modal form styling */
+html.dark .modal-content .form-control, 
+html.dark .modal-content .form-select, 
+html.dark .modal-content textarea.form-control {
+  background: rgba(255,255,255,0.08) !important;
+  border: 1px solid rgba(255,255,255,0.25) !important;
   color: var(--text-base) !important;
 }
 .modal-content .form-control:focus, .modal-content .form-select:focus, .modal-content textarea.form-control:focus {
-  box-shadow: 0 0 0 2px rgba(99,102,241,0.45) !important;
+  background: rgba(255,255,255,0.12) !important;
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 3px rgba(99,102,241,0.35), 0 4px 12px -2px rgba(99,102,241,0.25), 0 0 0 1px rgba(255,255,255,0.15) inset !important;
+  transform: translateY(-1px);
+}
+
+html.dark .modal-content .form-control:focus, 
+html.dark .modal-content .form-select:focus, 
+html.dark .modal-content textarea.form-control:focus {
+  background: rgba(255,255,255,0.12) !important;
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 3px rgba(99,102,241,0.35), 0 4px 12px -2px rgba(99,102,241,0.25), 0 0 0 1px rgba(255,255,255,0.15) inset !important;
+}
+.modal-content .form-control:hover:not(:focus), 
+.modal-content .form-select:hover:not(:focus), 
+.modal-content textarea.form-control:hover:not(:focus) {
+  background: rgba(255,255,255,0.1) !important;
+  border-color: rgba(255,255,255,0.35) !important;
 }
 .modal .btn-close { filter: invert(1) grayscale(100%) brightness(180%); opacity:.7; }
 .modal .btn-close:hover { opacity:1; }

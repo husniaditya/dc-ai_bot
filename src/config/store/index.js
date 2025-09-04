@@ -228,6 +228,9 @@ module.exports = {
   getGuildAntiRaidSettings: moderationService.getGuildAntiRaidSettings,
   updateGuildAntiRaidSettings: moderationService.updateGuildAntiRaidSettings,
   getGuildScheduledMessages: moderationService.getGuildScheduledMessages,
+  createGuildScheduledMessage: moderationService.createGuildScheduledMessage,
+  updateGuildScheduledMessage: moderationService.updateGuildScheduledMessage,
+  deleteGuildScheduledMessage: moderationService.deleteGuildScheduledMessage,
   
   // Audit Logging API
   getGuildAuditLogConfig: moderationService.getGuildAuditLogConfig,

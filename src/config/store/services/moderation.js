@@ -953,14 +953,14 @@ async function getGuildScheduledMessages(guildId) {
   if (db.mariaAvailable && db.sqlPool) {
     try {
       const [rows] = await db.sqlPool.query(`
-        SELECT id, name, channel_id, message_content, embed_data, schedule_type,
-               schedule_value, next_run, last_run, enabled, created_by
+        SELECT id, title, channel_id, message_content, embed_data, schedule_type,
+               schedule_value, next_run, last_run, enabled, created_by, created_at, updated_at
         FROM guild_scheduled_messages WHERE guild_id=? ORDER BY id
       `, [guildId]);
       
       const messages = rows.map(row => ({
         id: row.id,
-        name: row.name,
+        title: row.title,
         channelId: row.channel_id,
         messageContent: row.message_content,
         embedData: row.embed_data ? JSON.parse(row.embed_data) : null,
@@ -969,7 +969,9 @@ async function getGuildScheduledMessages(guildId) {
         nextRun: row.next_run,
         lastRun: row.last_run,
         enabled: !!row.enabled,
-        createdBy: row.created_by
+        createdBy: row.created_by,
+        createdAt: row.created_at,
+        updatedAt: row.updated_at
       }));
       
       cacheData.guildScheduledMessagesCache.set(guildId, messages);
@@ -981,6 +983,142 @@ async function getGuildScheduledMessages(guildId) {
   
   cacheData.guildScheduledMessagesCache.set(guildId, []);
   return [];
+}
+
+async function createGuildScheduledMessage(guildId, messageData, createdBy = 'system') {
+  if (!guildId || !messageData.title || !messageData.channelId || (!messageData.messageContent && !messageData.message)) {
+    throw new Error('Missing required fields: title, channelId, messageContent');
+  }
+
+  if (db.mariaAvailable && db.sqlPool) {
+    try {
+      const [result] = await db.sqlPool.query(`
+        INSERT INTO guild_scheduled_messages 
+        (guild_id, title, channel_id, message_content, embed_data, schedule_type, schedule_value, enabled, created_by)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `, [
+        guildId,
+        messageData.title,
+        messageData.channelId,
+        messageData.messageContent || messageData.message,
+        messageData.embedData ? JSON.stringify(messageData.embedData) : null,
+        messageData.scheduleType || 'cron',
+        messageData.scheduleValue,
+        1, // Always enabled - no toggle functionality
+        createdBy
+      ]);
+
+      // Clear cache
+      const cacheData = cache.getCache();
+      cacheData.guildScheduledMessagesCache.delete(guildId);
+
+      // Return the created message
+      const messages = await getGuildScheduledMessages(guildId);
+      return messages.find(msg => msg.id === result.insertId);
+    } catch (e) {
+      console.error('Error creating scheduled message:', e.message);
+      throw new Error('Failed to create scheduled message');
+    }
+  }
+
+  throw new Error('Database not available');
+}
+
+async function updateGuildScheduledMessage(guildId, messageId, messageData) {
+  if (!guildId || !messageId) {
+    throw new Error('Guild ID and message ID are required');
+  }
+
+  if (db.mariaAvailable && db.sqlPool) {
+    try {
+      const updateFields = [];
+      const updateValues = [];
+
+      if (messageData.title !== undefined) {
+        updateFields.push('title = ?');
+        updateValues.push(messageData.title);
+      }
+      if (messageData.channelId !== undefined) {
+        updateFields.push('channel_id = ?');
+        updateValues.push(messageData.channelId);
+      }
+      if (messageData.messageContent !== undefined || messageData.message !== undefined) {
+        updateFields.push('message_content = ?');
+        updateValues.push(messageData.messageContent || messageData.message);
+      }
+      if (messageData.embedData !== undefined) {
+        updateFields.push('embed_data = ?');
+        updateValues.push(messageData.embedData ? JSON.stringify(messageData.embedData) : null);
+      }
+      if (messageData.scheduleType !== undefined) {
+        updateFields.push('schedule_type = ?');
+        updateValues.push(messageData.scheduleType);
+      }
+      if (messageData.scheduleValue !== undefined) {
+        updateFields.push('schedule_value = ?');
+        updateValues.push(messageData.scheduleValue);
+      }
+
+      if (updateFields.length === 0) {
+        throw new Error('No fields to update');
+      }
+
+      updateValues.push(guildId, messageId);
+
+      const [result] = await db.sqlPool.query(`
+        UPDATE guild_scheduled_messages 
+        SET ${updateFields.join(', ')}, updated_at = CURRENT_TIMESTAMP
+        WHERE guild_id = ? AND id = ?
+      `, updateValues);
+
+      if (result.affectedRows === 0) {
+        throw new Error('Scheduled message not found');
+      }
+
+      // Clear cache
+      const cacheData = cache.getCache();
+      cacheData.guildScheduledMessagesCache.delete(guildId);
+
+      // Return the updated message
+      const messages = await getGuildScheduledMessages(guildId);
+      return messages.find(msg => msg.id == messageId);
+    } catch (e) {
+      console.error('Error updating scheduled message:', e.message);
+      throw e;
+    }
+  }
+
+  throw new Error('Database not available');
+}
+
+async function deleteGuildScheduledMessage(guildId, messageId) {
+  if (!guildId || !messageId) {
+    throw new Error('Guild ID and message ID are required');
+  }
+
+  if (db.mariaAvailable && db.sqlPool) {
+    try {
+      const [result] = await db.sqlPool.query(`
+        DELETE FROM guild_scheduled_messages 
+        WHERE guild_id = ? AND id = ?
+      `, [guildId, messageId]);
+
+      if (result.affectedRows === 0) {
+        throw new Error('Scheduled message not found');
+      }
+
+      // Clear cache
+      const cacheData = cache.getCache();
+      cacheData.guildScheduledMessagesCache.delete(guildId);
+
+      return true;
+    } catch (e) {
+      console.error('Error deleting scheduled message:', e.message);
+      throw e;
+    }
+  }
+
+  throw new Error('Database not available');
 }
 
 // Self-Assignable Roles
@@ -2130,6 +2268,9 @@ module.exports = {
   getGuildAntiRaidSettings,
   updateGuildAntiRaidSettings,
   getGuildScheduledMessages,
+  createGuildScheduledMessage,
+  updateGuildScheduledMessage,
+  deleteGuildScheduledMessage,
   getGuildSelfAssignableRoles,
   addGuildSelfAssignableRole,
   updateGuildSelfAssignableRole,

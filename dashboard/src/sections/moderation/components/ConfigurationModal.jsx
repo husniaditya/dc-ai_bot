@@ -27,6 +27,7 @@ export default function ConfigurationModal({
   
   // Ref for forms that handle their own save/reset
   const loggingFormRef = useRef(null);
+  const schedulerFormRef = useRef(null);
 
   // Fetch specific configuration when modal opens
   useEffect(() => {
@@ -66,6 +67,13 @@ export default function ConfigurationModal({
               'X-Guild-Id': guildId
             }
           });
+        } else if (feature.key === 'scheduler') {
+          response = await fetch('/api/moderation/scheduler/config', {
+            headers: { 
+              Authorization: `Bearer ${localStorage.getItem('token')}`,
+              'X-Guild-Id': guildId
+            }
+          });
         } else {
           response = await fetch(`/api/moderation/features/${feature.key}/config`, {
             headers: { 
@@ -79,7 +87,7 @@ export default function ConfigurationModal({
           const data = await response.json();
           
           // Handle different possible response structures
-          const configData = (feature.key === 'welcome' || feature.key === 'xp' || feature.key === 'antiraid' || feature.key === 'logging') 
+          const configData = (feature.key === 'welcome' || feature.key === 'xp' || feature.key === 'antiraid' || feature.key === 'logging' || feature.key === 'scheduler') 
             ? (data.config || data || {})
             : (data.config || data || {});
           
@@ -149,7 +157,7 @@ export default function ConfigurationModal({
       },
       scheduler: {
         enabled: false,
-        scheduledMessages: []
+        messages: []
       },
       logging: {
         enabled: false,
@@ -183,6 +191,12 @@ export default function ConfigurationModal({
 
   // Check if configuration has been modified
   const isDirty = () => {
+    // For scheduler, also check if there's an open form
+    if (feature.key === 'scheduler' && schedulerFormRef?.current) {
+      const schedulerDirty = schedulerFormRef.current.isDirty?.() || false;
+      if (schedulerDirty) return true;
+    }
+    
     // Use standard config comparison for all forms
     return JSON.stringify(config) !== JSON.stringify(originalConfig);
   };
@@ -274,6 +288,21 @@ export default function ConfigurationModal({
       showToast
     };
 
+    // Add onConfigSaved callback for forms that handle their own saving
+    const schedulerProps = {
+      ...commonProps,
+      ref: schedulerFormRef,
+      onConfigSaved: (savedConfig) => {
+        setOriginalConfig(savedConfig);
+      },
+      onClose: () => {
+        setIsClosing(true);
+        setTimeout(() => {
+          onClose();
+        }, 200);
+      }
+    };
+
     switch (feature.key) {
       case 'welcome':
         return <WelcomeConfigForm {...commonProps} />;
@@ -284,7 +313,7 @@ export default function ConfigurationModal({
       case 'xp':
         return <XPConfigForm {...commonProps} />;
       case 'scheduler':
-        return <SchedulerConfigForm {...commonProps} />;
+        return <SchedulerConfigForm {...schedulerProps} />;
       case 'logging':
         return <LoggingConfigForm ref={loggingFormRef} {...commonProps} />;
       case 'antiraid':
@@ -355,7 +384,7 @@ export default function ConfigurationModal({
           
           {/* Modal Footer */}
           <div className="modal-footer border-secondary">
-            {isDirty() && (
+            {isDirty() && feature.key !== 'scheduler' && (
               <button 
                 type="button" 
                 className="btn btn-outline-warning me-2"

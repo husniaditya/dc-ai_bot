@@ -565,7 +565,96 @@ function createModerationRoutes(client, store) {
     }
   });
 
-  // Create scheduled message (placeholder)
+  // Get scheduled messages
+  router.get('/scheduler/messages', async (req, res) => {
+    try {
+      const guildId = req.headers['x-guild-id'];
+      if (!guildId) {
+        return res.status(400).json({ error: 'Guild ID required' });
+      }
+
+      const messages = await store.getGuildScheduledMessages(guildId);
+      res.json({ messages });
+    } catch (error) {
+      console.error('Error fetching scheduled messages:', error);
+      res.status(500).json({ error: 'Failed to fetch scheduled messages' });
+    }
+  });
+
+  // Get scheduler configuration (for compatibility with other features)
+  router.get('/scheduler/config', async (req, res) => {
+    try {
+      const guildId = req.headers['x-guild-id'];
+      if (!guildId) {
+        return res.status(400).json({ error: 'Guild ID required' });
+      }
+
+      const messages = await store.getGuildScheduledMessages(guildId);
+      res.json({ messages });
+    } catch (error) {
+      console.error('Error fetching scheduler config:', error);
+      res.status(500).json({ error: 'Failed to fetch scheduler config' });
+    }
+  });
+
+  // Update scheduler configuration (for compatibility with moderation features)
+  router.put('/scheduler/config', async (req, res) => {
+    try {
+      const guildId = req.headers['x-guild-id'];
+      if (!guildId) {
+        return res.status(400).json({ error: 'Guild ID required' });
+      }
+
+      // If messages array is provided, we need to handle CRUD operations
+      if (req.body.messages) {
+        const existingMessages = await store.getGuildScheduledMessages(guildId);
+        const newMessages = req.body.messages;
+
+        // Process updates, creates, and deletes
+        for (const message of newMessages) {
+          if (message.id && !isNaN(parseInt(message.id))) {
+            // Update existing message
+            const messageData = {
+              title: message.title,
+              channelId: message.channelId,
+              messageContent: message.message || message.messageContent,
+              scheduleValue: message.cronExpression || message.scheduleValue,
+              enabled: message.enabled
+            };
+            await store.updateGuildScheduledMessage(guildId, message.id, messageData);
+          } else {
+            // Create new message
+            const messageData = {
+              title: message.title,
+              channelId: message.channelId,
+              messageContent: message.message || message.messageContent,
+              scheduleValue: message.cronExpression || message.scheduleValue,
+              scheduleType: 'cron',
+              enabled: message.enabled !== false
+            };
+            await store.createGuildScheduledMessage(guildId, messageData);
+          }
+        }
+
+        // Delete messages that are no longer in the array
+        const newMessageIds = newMessages.filter(m => m.id && !isNaN(parseInt(m.id))).map(m => parseInt(m.id));
+        for (const existingMessage of existingMessages) {
+          if (!newMessageIds.includes(existingMessage.id)) {
+            await store.deleteGuildScheduledMessage(guildId, existingMessage.id);
+          }
+        }
+      }
+
+      // Return updated messages
+      const messages = await store.getGuildScheduledMessages(guildId);
+      res.json({ success: true, messages });
+    } catch (error) {
+      console.error('Error updating scheduler config:', error);
+      res.status(500).json({ error: 'Failed to update scheduler config' });
+    }
+  });
+
+  // Create scheduled message
   router.post('/scheduler/messages', async (req, res) => {
     try {
       const guildId = req.headers['x-guild-id'];
@@ -573,12 +662,76 @@ function createModerationRoutes(client, store) {
         return res.status(400).json({ error: 'Guild ID required' });
       }
 
-      // For now, just return success - this would need a proper implementation
-      const message = { id: Date.now(), guildId, ...req.body };
-      res.json({ success: true, message });
+      const { title, channelId, message, scheduleType, scheduleValue, embedData } = req.body;
+      
+      if (!title || !channelId || !message || !scheduleValue) {
+        return res.status(400).json({ error: 'Missing required fields: title, channelId, message, scheduleValue' });
+      }
+
+      const messageData = {
+        title,
+        channelId,
+        messageContent: message,
+        scheduleType: scheduleType || 'cron',
+        scheduleValue,
+        embedData: embedData || null
+      };
+
+      const createdMessage = await store.createGuildScheduledMessage(guildId, messageData, req.user?.id || 'system');
+      res.json({ success: true, message: createdMessage });
     } catch (error) {
       console.error('Error creating scheduled message:', error);
       res.status(500).json({ error: 'Failed to create scheduled message' });
+    }
+  });
+
+  // Update scheduled message
+  router.put('/scheduler/messages/:messageId', async (req, res) => {
+    try {
+      const guildId = req.headers['x-guild-id'];
+      const { messageId } = req.params;
+      
+      if (!guildId) {
+        return res.status(400).json({ error: 'Guild ID required' });
+      }
+
+      const messageData = {};
+      if (req.body.title !== undefined) messageData.title = req.body.title;
+      if (req.body.channelId !== undefined) messageData.channelId = req.body.channelId;
+      if (req.body.message !== undefined) messageData.messageContent = req.body.message;
+      if (req.body.scheduleType !== undefined) messageData.scheduleType = req.body.scheduleType;
+      if (req.body.scheduleValue !== undefined) messageData.scheduleValue = req.body.scheduleValue;
+      if (req.body.embedData !== undefined) messageData.embedData = req.body.embedData;
+
+      const updatedMessage = await store.updateGuildScheduledMessage(guildId, messageId, messageData);
+      res.json({ success: true, message: updatedMessage });
+    } catch (error) {
+      console.error('Error updating scheduled message:', error);
+      if (error.message.includes('not found')) {
+        return res.status(404).json({ error: error.message });
+      }
+      res.status(500).json({ error: 'Failed to update scheduled message' });
+    }
+  });
+
+  // Delete scheduled message
+  router.delete('/scheduler/messages/:messageId', async (req, res) => {
+    try {
+      const guildId = req.headers['x-guild-id'];
+      const { messageId } = req.params;
+      
+      if (!guildId) {
+        return res.status(400).json({ error: 'Guild ID required' });
+      }
+
+      await store.deleteGuildScheduledMessage(guildId, messageId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error deleting scheduled message:', error);
+      if (error.message.includes('not found')) {
+        return res.status(404).json({ error: error.message });
+      }
+      res.status(500).json({ error: 'Failed to delete scheduled message' });
     }
   });
 

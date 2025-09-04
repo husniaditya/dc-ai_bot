@@ -317,7 +317,7 @@ async function initializeModerationTables() {
   await sqlPool.query(`CREATE TABLE IF NOT EXISTS guild_scheduled_messages (
     id INT AUTO_INCREMENT PRIMARY KEY,
     guild_id VARCHAR(32) NOT NULL,
-    name VARCHAR(200) NOT NULL,
+    title VARCHAR(200) NOT NULL,
     channel_id VARCHAR(32) NOT NULL,
     message_content TEXT NOT NULL,
     embed_data TEXT NULL,

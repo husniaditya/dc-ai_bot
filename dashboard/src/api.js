@@ -396,4 +396,50 @@ export async function deleteProfanityPattern(patternId, guildId) {
   });
 }
 
+// Scheduler API functions
+export async function getSchedulerConfig(guildId) {
+  const headers = guildId ? { 'X-Guild-Id': guildId } : {};
+  return authFetch('/api/moderation/scheduler/config', { headers });
+}
+
+export async function updateSchedulerConfig(config, guildId) {
+  const headers = guildId ? { 'X-Guild-Id': guildId } : {};
+  return authFetch('/api/moderation/scheduler/config', {
+    method: 'PUT',
+    headers,
+    body: JSON.stringify(config)
+  });
+}
+
+export async function getScheduledMessages(guildId) {
+  const headers = guildId ? { 'X-Guild-Id': guildId } : {};
+  return authFetch('/api/moderation/scheduler/messages', { headers });
+}
+
+export async function createScheduledMessage(messageData, guildId) {
+  const headers = guildId ? { 'X-Guild-Id': guildId } : {};
+  return authFetch('/api/moderation/scheduler/messages', {
+    method: 'POST',
+    headers,
+    body: JSON.stringify(messageData)
+  });
+}
+
+export async function updateScheduledMessage(messageId, messageData, guildId) {
+  const headers = guildId ? { 'X-Guild-Id': guildId } : {};
+  return authFetch(`/api/moderation/scheduler/messages/${messageId}`, {
+    method: 'PUT',
+    headers,
+    body: JSON.stringify(messageData)
+  });
+}
+
+export async function deleteScheduledMessage(messageId, guildId) {
+  const headers = guildId ? { 'X-Guild-Id': guildId } : {};
+  return authFetch(`/api/moderation/scheduler/messages/${messageId}`, {
+    method: 'DELETE',
+    headers
+  });
+}
+
 export { login, getToken, setToken, handleAuthError };
