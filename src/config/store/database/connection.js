@@ -378,6 +378,12 @@ async function initializeModerationTables() {
     auto_lockdown BOOLEAN DEFAULT 0,
     lockdown_duration INT DEFAULT 300,
     alert_channel_id VARCHAR(32) NULL,
+    raid_action ENUM('mute','kick','ban','lockdown','none') DEFAULT 'mute',
+    raid_active BOOLEAN DEFAULT 0,
+    raid_started_at TIMESTAMP NULL,
+    delete_spam_invites BOOLEAN DEFAULT 0,
+    new_member_period INT DEFAULT 30,
+    whitelist_roles TEXT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
   ) ENGINE=InnoDB`);
