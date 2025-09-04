@@ -163,6 +163,26 @@ export default function ModerationSection({ guildId, pushToast }) {
           },
           body: JSON.stringify(config)
         });
+      } else if (activeFeature.key === 'logging') {
+        response = await fetch('/api/moderation/audit-logs/config', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+            'X-Guild-Id': guildId
+          },
+          body: JSON.stringify(config)
+        });
+      } else if (activeFeature.key === 'xp') {
+        response = await fetch('/api/moderation/xp/config', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+            'X-Guild-Id': guildId
+          },
+          body: JSON.stringify(config)
+        });
       } else {
         response = await fetch(`/api/moderation/features/${activeFeature.key}/config`, {
           method: 'POST',
@@ -184,6 +204,10 @@ export default function ModerationSection({ guildId, pushToast }) {
       // Handle different response structures
       let updatedConfig;
       if (activeFeature.key === 'welcome') {
+        updatedConfig = data.config || data || config;
+      } else if (activeFeature.key === 'logging') {
+        updatedConfig = data.config || data || config;
+      } else if (activeFeature.key === 'xp') {
         updatedConfig = data.config || data || config;
       } else {
         updatedConfig = data || config;

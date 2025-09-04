@@ -204,24 +204,12 @@ export default function ConfigurationModal({
       // Handle different features with specific endpoints
       if (feature.key === 'welcome') {
         await onSave(config);
+      } else if (feature.key === 'logging') {
+        // Use same pattern as welcome - let onSave handle it
+        await onSave(config);
       } else if (feature.key === 'xp') {
-        const response = await fetch('/api/moderation/xp/config', {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
-            'X-Guild-Id': guildId
-          },
-          body: JSON.stringify(config)
-        });
-
-        if (!response.ok) {
-          throw new Error('Failed to save XP configuration');
-        }
-
-        const data = await response.json();
-        setConfig(data.config || data);
-        setOriginalConfig(data.config || data);
+        // Use same pattern as welcome - let onSave handle it
+        await onSave(config);
       } else if (feature.key === 'antiraid') {
         const response = await fetch('/api/moderation/antiraid/config', {
           method: 'PUT',
@@ -240,25 +228,6 @@ export default function ConfigurationModal({
         const data = await response.json();
         setConfig(data.config || data);
         setOriginalConfig(data.config || data);
-      } else if (feature.key === 'logging') {
-        // Handle logging configuration save
-        const response = await fetch('/api/moderation/audit-logs/config', {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
-            'X-Guild-Id': guildId
-          },
-          body: JSON.stringify(config)
-        });
-
-        if (!response.ok) {
-          throw new Error('Failed to save audit logging configuration');
-        }
-
-        const data = await response.json();
-        setConfig(data || {});
-        setOriginalConfig(data || {});
       } else {
         await onSave(config);
       }
