@@ -6,6 +6,7 @@ import XPConfigForm from '../features/XPConfigForm';
 import SchedulerConfigForm from '../features/SchedulerConfigForm';
 import LoggingConfigForm from '../features/LoggingConfigForm';
 import AntiRaidConfigForm from '../features/AntiRaidConfigForm';
+import UnsavedChangesModal from './UnsavedChangesModal';
 
 // Configuration Modal Component
 export default function ConfigurationModal({ 
@@ -22,6 +23,7 @@ export default function ConfigurationModal({
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
+  const [showUnsavedModal, setShowUnsavedModal] = useState(false);
   
   // Ref for forms that handle their own save/reset
   const loggingFormRef = useRef(null);
@@ -163,11 +165,16 @@ export default function ConfigurationModal({
       },
       antiraid: {
         enabled: false,
-        joinRateLimit: 5,
-        joinTimeWindow: 60,
-        accountAgeLimit: 7,
+        joinRate: 5,
+        joinWindow: 10,
+        accountAge: 7,
         autoLockdown: false,
-        verificationLevel: 1
+        verificationLevel: 'medium',
+        alertChannel: null,
+        kickSuspicious: false,
+        deleteInviteSpam: true,
+        gracePeriod: 30,
+        bypassRoles: []
       }
     };
 
@@ -211,23 +218,8 @@ export default function ConfigurationModal({
         // Use same pattern as welcome - let onSave handle it
         await onSave(config);
       } else if (feature.key === 'antiraid') {
-        const response = await fetch('/api/moderation/antiraid/config', {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
-            'X-Guild-Id': guildId
-          },
-          body: JSON.stringify(config)
-        });
-
-        if (!response.ok) {
-          throw new Error('Failed to save anti-raid configuration');
-        }
-
-        const data = await response.json();
-        setConfig(data.config || data);
-        setOriginalConfig(data.config || data);
+        // Use same pattern as welcome - let onSave handle it
+        await onSave(config);
       } else {
         await onSave(config);
       }
@@ -243,16 +235,26 @@ export default function ConfigurationModal({
 
   const handleClose = () => {
     if (isDirty() && !saving) {
-      const confirmClose = window.confirm(
-        'You have unsaved changes. Are you sure you want to close without saving?'
-      );
-      if (!confirmClose) return;
+      setShowUnsavedModal(true);
+      return;
     }
     
     setIsClosing(true);
     setTimeout(() => {
       onClose();
     }, 200);
+  };
+
+  const handleConfirmClose = () => {
+    setShowUnsavedModal(false);
+    setIsClosing(true);
+    setTimeout(() => {
+      onClose();
+    }, 200);
+  };
+
+  const handleCancelClose = () => {
+    setShowUnsavedModal(false);
   };
 
   const updateConfig = (key, value) => {
@@ -399,6 +401,14 @@ export default function ConfigurationModal({
           </div>
         </div>
       </div>
+      
+      {/* Unsaved Changes Confirmation Modal */}
+      <UnsavedChangesModal
+        isOpen={showUnsavedModal}
+        onConfirm={handleConfirmClose}
+        onCancel={handleCancelClose}
+        featureName={feature.label}
+      />
     </div>
   );
 }

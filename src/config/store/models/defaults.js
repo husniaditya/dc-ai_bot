@@ -106,12 +106,19 @@ const defaultConfigs = {
 
   guildAntiRaidSettings: {
     enabled: false,
-    joinRateLimit: 5,
-    joinRateWindow: 60,
-    accountAgeLimit: 7,
+    joinRate: 5,
+    joinWindow: 10,
+    accountAge: 7,
     autoLockdown: false,
-    lockdownDuration: 300,
-    alertChannelId: null
+    autoKick: false,
+    verificationLevel: 'medium',
+    alertChannel: null,
+    raidAction: 'lockdown',
+    raidActionDuration: 60,
+    kickSuspicious: false,
+    deleteInviteSpam: true,
+    gracePeriod: 30,
+    bypassRoles: []
   },
 
   guildModerationFeatures: {

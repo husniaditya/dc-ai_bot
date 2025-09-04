@@ -183,6 +183,16 @@ export default function ModerationSection({ guildId, pushToast }) {
           },
           body: JSON.stringify(config)
         });
+      } else if (activeFeature.key === 'antiraid') {
+        response = await fetch('/api/moderation/antiraid/config', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+            'X-Guild-Id': guildId
+          },
+          body: JSON.stringify(config)
+        });
       } else {
         response = await fetch(`/api/moderation/features/${activeFeature.key}/config`, {
           method: 'POST',
@@ -208,6 +218,8 @@ export default function ModerationSection({ guildId, pushToast }) {
       } else if (activeFeature.key === 'logging') {
         updatedConfig = data.config || data || config;
       } else if (activeFeature.key === 'xp') {
+        updatedConfig = data.config || data || config;
+      } else if (activeFeature.key === 'antiraid') {
         updatedConfig = data.config || data || config;
       } else {
         updatedConfig = data || config;

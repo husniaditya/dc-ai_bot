@@ -204,6 +204,21 @@ export async function deleteAuditLogEntry(logId, guildId) {
     headers
   });
 }
+
+// Anti-Raid Configuration API functions
+export async function getAntiRaidConfig(guildId) {
+  const headers = guildId ? { 'X-Guild-Id': guildId } : {};
+  return authFetch('/api/moderation/antiraid/config', { headers });
+}
+
+export async function updateAntiRaidConfig(config, guildId) {
+  const headers = guildId ? { 'X-Guild-Id': guildId } : {};
+  return authFetch('/api/moderation/antiraid/config', {
+    method: 'PUT',
+    headers,
+    body: JSON.stringify(config)
+  });
+}
 export async function getCommandToggles(guildId){ return authFetch('/api/commands' + (guildId?`?guildId=${guildId}`:'')); }
 export async function setCommandToggle(name, enabled, guildId){ return authFetch('/api/commands/toggle' + (guildId?`?guildId=${guildId}`:''), { method:'POST', body: JSON.stringify({ name, enabled }) }); }
 export async function getPersonalization(guildId){ return authFetch('/api/personalization' + (guildId?`?guildId=${guildId}`:'')); }

@@ -182,6 +182,7 @@ const LoggingConfigForm = forwardRef(({ config, updateConfig, channels }, ref) =
           />
         </div>
       </div>
+      <br />
       
       <div className="row">
         {logTypes.map(logType => (

@@ -96,6 +96,21 @@ async function toggleModerationFeature(guildId, featureKey, enabled) {
         cacheData.guildAuditConfigCache.delete(guildId);
       }
     }
+    
+    // Special handling for antiraid feature - sync with guild_antiraid_settings table
+    if (featureKey === 'antiraid') {
+      // Sync guild_antiraid_settings enabled column
+      await db.sqlPool.query(`
+        INSERT INTO guild_antiraid_settings (guild_id, enabled) 
+        VALUES (?, ?)
+        ON DUPLICATE KEY UPDATE enabled = VALUES(enabled)
+      `, [guildId, enabled ? 1 : 0]);
+      
+      // Clear antiraid cache to ensure consistency
+      if (cacheData.guildAntiRaidSettingsCache) {
+        cacheData.guildAntiRaidSettingsCache.delete(guildId);
+      }
+    }
   }
   
   return current;
@@ -809,27 +824,57 @@ async function getGuildAntiRaidSettings(guildId) {
   
   if (db.mariaAvailable && db.sqlPool) {
     try {
+      // Get anti-raid settings from guild_antiraid_settings table
       const [rows] = await db.sqlPool.query(`
         SELECT enabled, join_rate_limit, join_rate_window, account_age_limit,
-               auto_lockdown, lockdown_duration, alert_channel_id
+               auto_lockdown, auto_kick, lockdown_duration, alert_channel_id, raid_action, raid_action_duration,
+               delete_spam_invites, new_member_period, whitelist_roles
         FROM guild_antiraid_settings WHERE guild_id=?
       `, [guildId]);
       
+      // Also check moderation features table for enabled status
+      const [featureRows] = await db.sqlPool.query(`
+        SELECT enabled FROM guild_moderation_features 
+        WHERE guild_id=? AND feature_key='antiraid'
+      `, [guildId]);
+      
+      let config = { ...defaultConfigs.guildAntiRaidSettings };
+      
       if (rows.length > 0) {
         const row = rows[0];
-        const config = {
+        config = {
           enabled: !!row.enabled,
-          joinRateLimit: row.join_rate_limit,
-          joinRateWindow: row.join_rate_window,
-          accountAgeLimit: row.account_age_limit,
+          joinRate: row.join_rate_limit || 5,
+          joinWindow: row.join_rate_window || 60,
+          accountAge: row.account_age_limit || 7,
           autoLockdown: !!row.auto_lockdown,
-          lockdownDuration: row.lockdown_duration,
-          alertChannelId: row.alert_channel_id
+          autoKick: !!row.auto_kick,
+          lockdownDuration: row.lockdown_duration || 300,
+          alertChannel: row.alert_channel_id,
+          raidAction: row.raid_action || 'lockdown',
+          raidActionDuration: row.raid_action_duration || 60,
+          deleteInviteSpam: !!row.delete_spam_invites,
+          gracePeriod: row.new_member_period || 30,
+          bypassRoles: row.whitelist_roles ? JSON.parse(row.whitelist_roles) : [],
+          verificationLevel: 'medium', // Default value, not stored in DB
+          kickSuspicious: false // Default value, derived from raid_action
         };
         
-        cacheData.guildAntiRaidSettingsCache.set(guildId, config);
-        return { ...config };
+        // Set kickSuspicious based on raid_action
+        if (config.raidAction === 'kick' || config.raidAction === 'ban') {
+          config.kickSuspicious = true;
+        }
       }
+      
+      // If moderation features table has different enabled status, use the more restrictive one
+      if (featureRows.length > 0) {
+        const featureEnabled = !!featureRows[0].enabled;
+        // Both tables must be enabled for the feature to be truly enabled
+        config.enabled = config.enabled && featureEnabled;
+      }
+      
+      cacheData.guildAntiRaidSettingsCache.set(guildId, config);
+      return { ...config };
     } catch (e) {
       console.error('Error loading anti-raid settings:', e.message);
     }
@@ -846,6 +891,23 @@ async function updateGuildAntiRaidSettings(guildId, data) {
   const current = await getGuildAntiRaidSettings(guildId);
   const next = { ...current, ...data };
   
+  // Map front-end field names to database column names
+  const dbData = {
+    enabled: next.enabled ? 1 : 0,
+    join_rate_limit: next.joinRate || 5,
+    join_rate_window: next.joinWindow || 60,
+    account_age_limit: next.accountAge || 7,
+    auto_lockdown: next.autoLockdown ? 1 : 0,
+    auto_kick: next.autoKick ? 1 : 0,
+    lockdown_duration: next.lockdownDuration || 300,
+    alert_channel_id: next.alertChannel || null,
+    raid_action: next.raidAction || 'lockdown',
+    raid_action_duration: next.raidActionDuration || 60,
+    delete_spam_invites: next.deleteInviteSpam ? 1 : 0,
+    new_member_period: next.gracePeriod || 30,
+    whitelist_roles: next.bypassRoles && next.bypassRoles.length > 0 ? JSON.stringify(next.bypassRoles) : null
+  };
+  
   const cacheData = cache.getCache();
   cacheData.guildAntiRaidSettingsCache.set(guildId, next);
   
@@ -853,12 +915,27 @@ async function updateGuildAntiRaidSettings(guildId, data) {
     await db.sqlPool.query(`
       REPLACE INTO guild_antiraid_settings(
         guild_id, enabled, join_rate_limit, join_rate_window, account_age_limit,
-        auto_lockdown, lockdown_duration, alert_channel_id
-      ) VALUES (?,?,?,?,?,?,?,?)
+        auto_lockdown, auto_kick, lockdown_duration, alert_channel_id, raid_action, raid_action_duration,
+        delete_spam_invites, new_member_period, whitelist_roles
+      ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)
     `, [
-      guildId, next.enabled ? 1 : 0, next.joinRateLimit, next.joinRateWindow,
-      next.accountAgeLimit, next.autoLockdown ? 1 : 0, next.lockdownDuration, next.alertChannelId
+      guildId, dbData.enabled, dbData.join_rate_limit, dbData.join_rate_window,
+      dbData.account_age_limit, dbData.auto_lockdown, dbData.auto_kick, dbData.lockdown_duration,
+      dbData.alert_channel_id, dbData.raid_action, dbData.raid_action_duration,
+      dbData.delete_spam_invites, dbData.new_member_period, dbData.whitelist_roles
     ]);
+    
+    // If enabled status changed, sync with guild_moderation_features table
+    if (data.hasOwnProperty('enabled') && current.enabled !== next.enabled) {
+      await db.sqlPool.query(`
+        INSERT INTO guild_moderation_features (guild_id, feature_key, enabled, config) 
+        VALUES (?, 'antiraid', ?, '{}')
+        ON DUPLICATE KEY UPDATE enabled = VALUES(enabled)
+      `, [guildId, dbData.enabled]);
+      
+      // Clear moderation features cache to ensure consistency
+      cacheData.guildModerationFeaturesCache.delete(guildId);
+    }
   }
   
   return { ...next };
