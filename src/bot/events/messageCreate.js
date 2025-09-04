@@ -1,12 +1,19 @@
 const { PermissionsBitField } = require('discord.js');
+const XPHandler = require('../handlers/xpHandler');
 
 module.exports = (client, store) => {
+  // Initialize XP handler
+  const xpHandler = new XPHandler(store);
+  
   client.on('messageCreate', async (message) => {
     try {
       // Ignore bots and DMs
       if (!message.guild || message.author.bot) return;
 
       const guildId = message.guild.id;
+      
+      // Process XP gain for this message (before moderation checks)
+      await xpHandler.processMessage(message);
       
       // Get guild auto moderation rules
       const autoModRules = await store.getGuildAutoModRules(guildId);

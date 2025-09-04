@@ -223,7 +223,7 @@ async function handleChatInputCommand(interaction, client, store, commandMap) {
   }
 
   try { 
-    await cmd.execute(interaction, client); 
+    await cmd.execute(interaction, store); 
   } catch (e) {
     console.error(`Command error for ${interaction.commandName}:`, e);
     

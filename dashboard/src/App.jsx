@@ -1135,6 +1135,16 @@ export default function App(){
       ]
     },
     {
+      key: 'xp', title: 'XP & Leveling', icon: 'fa-chart-line', accent: '#00d4aa',
+      items: [
+        { name:'level', usage:'/level [user]', desc:'Check your level or someone else\'s XP level.' },
+        { name:'xp', usage:'/xp check|leaderboard [user]', desc:'Check XP or view server leaderboard.' },
+        { name:'rank', usage:'/rank [user]', desc:'Check your rank in the server.' },
+        { name:'leaderboard', usage:'/leaderboard [limit]', desc:'Show the server XP leaderboard.' },
+        { name:'xpadmin', usage:'/xpadmin give|remove|set <user> <amount>', desc:'Manage user XP (requires Manage Server).', requiresManage:true }
+      ]
+    },
+    {
       key: 'moderation', title: 'Moderation & Roles', icon: 'fa-users-gear', accent: '#8b5cf6',
       items: [
         { name:'role list', usage:'/role list', desc:'Show all available self-assignable roles.' },
@@ -1151,7 +1161,6 @@ export default function App(){
         { name:'autoreply', usage:'(passive)', desc:'Automatic replies based on configured patterns.' },
         { name:'welcome', usage:'(passive)', desc:'Welcome new members with customizable messages and cards.' },
         { name:'automod', usage:'(passive)', desc:'Automatic moderation for spam, caps, links, and profanity.' },
-        { name:'xp system', usage:'(passive)', desc:'XP and leveling system for active members.' },
         { name:'audit logs', usage:'(passive)', desc:'Track all moderation actions and server changes.' },
         { name:'anti-raid', usage:'(passive)', desc:'Protection against raids and mass join attacks.' }
       ]

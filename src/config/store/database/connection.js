@@ -283,6 +283,36 @@ async function initializeModerationTables() {
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
   ) ENGINE=InnoDB`);
 
+  // User XP tracking per guild
+  await sqlPool.query(`CREATE TABLE IF NOT EXISTS guild_user_xp (
+    guild_id VARCHAR(32) NOT NULL,
+    user_id VARCHAR(32) NOT NULL,
+    total_xp BIGINT DEFAULT 0,
+    current_level INT DEFAULT 0,
+    last_message_xp TIMESTAMP NULL,
+    last_voice_xp TIMESTAMP NULL,
+    total_messages INT DEFAULT 0,
+    total_voice_minutes INT DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (guild_id, user_id),
+    INDEX idx_guild_level (guild_id, current_level DESC),
+    INDEX idx_guild_xp (guild_id, total_xp DESC)
+  ) ENGINE=InnoDB`);
+
+  // Level-based role rewards (optional but recommended)
+  await sqlPool.query(`CREATE TABLE IF NOT EXISTS guild_xp_level_rewards (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    guild_id VARCHAR(32) NOT NULL,
+    level INT NOT NULL,
+    role_id VARCHAR(32) NOT NULL,
+    remove_previous BOOLEAN DEFAULT 0,
+    enabled BOOLEAN DEFAULT 1,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY unique_guild_level (guild_id, level),
+    INDEX idx_guild_rewards (guild_id, enabled)
+  ) ENGINE=InnoDB`);
+
   // Scheduled Messages
   await sqlPool.query(`CREATE TABLE IF NOT EXISTS guild_scheduled_messages (
     id INT AUTO_INCREMENT PRIMARY KEY,

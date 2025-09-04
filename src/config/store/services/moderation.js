@@ -54,6 +54,33 @@ async function toggleModerationFeature(guildId, featureKey, enabled) {
       'REPLACE INTO guild_moderation_features(guild_id, feature_key, enabled, config) VALUES (?,?,?,?)',
       [guildId, featureKey, enabled ? 1 : 0, JSON.stringify(current[featureKey].config || {})]
     );
+    
+    // Special handling for XP feature - sync with guild_xp_settings and command toggles
+    if (featureKey === 'xp') {
+      // Sync guild_xp_settings enabled column
+      await db.sqlPool.query(`
+        INSERT INTO guild_xp_settings (guild_id, enabled) 
+        VALUES (?, ?)
+        ON DUPLICATE KEY UPDATE enabled = VALUES(enabled)
+      `, [guildId, enabled ? 1 : 0]);
+      
+      // Toggle XP-related commands
+      const xpCommands = ['level', 'xp', 'rank', 'leaderboard', 'xpadmin'];
+      for (const commandName of xpCommands) {
+        await db.sqlPool.query(`
+          INSERT INTO guild_command_toggles (guild_id, command_name, enabled, created_at, created_by, updated_at, updated_by)
+          VALUES (?, ?, ?, NOW(), 'system', NOW(), 'xp-feature-toggle')
+          ON DUPLICATE KEY UPDATE 
+            enabled = VALUES(enabled),
+            updated_at = NOW(),
+            updated_by = 'xp-feature-toggle'
+        `, [guildId, commandName, enabled ? 1 : 0]);
+      }
+      
+      // Clear caches to ensure consistency
+      cacheData.guildXpSettingsCache.delete(guildId);
+      cacheData.guildCommandToggles.delete(guildId);
+    }
   }
   
   return current;
@@ -257,8 +284,8 @@ async function getGuildXpSettings(guildId) {
           xpPerMessage: row.xp_per_message,
           xpPerVoiceMinute: row.xp_per_voice_minute,
           cooldownSeconds: row.cooldown_seconds,
-          ignoredChannels: row.ignored_channels ? JSON.parse(row.ignored_channels) : [],
-          ignoredRoles: row.ignored_roles ? JSON.parse(row.ignored_roles) : [],
+          excludedChannels: row.ignored_channels ? JSON.parse(row.ignored_channels) : [],
+          excludedRoles: row.ignored_roles ? JSON.parse(row.ignored_roles) : [],
           levelUpMessages: !!row.level_up_messages,
           levelUpChannel: row.level_up_channel,
           doubleXpEvents: row.double_xp_events ? JSON.parse(row.double_xp_events) : []
@@ -272,7 +299,18 @@ async function getGuildXpSettings(guildId) {
     }
   }
   
+  // No specific XP settings found, check moderation feature status
   const defaultConfig = { ...defaultConfigs.guildXpSettings };
+  
+  try {
+    const moderationFeatures = await getModerationFeatures(guildId);
+    if (moderationFeatures.xp && moderationFeatures.xp.enabled) {
+      defaultConfig.enabled = true;
+    }
+  } catch (e) {
+    console.error('Error checking moderation features for XP:', e.message);
+  }
+  
   cacheData.guildXpSettingsCache.set(guildId, defaultConfig);
   return { ...defaultConfig };
 }
@@ -294,12 +332,273 @@ async function updateGuildXpSettings(guildId, data) {
       ) VALUES (?,?,?,?,?,?,?,?,?,?)
     `, [
       guildId, next.enabled ? 1 : 0, next.xpPerMessage, next.xpPerVoiceMinute, next.cooldownSeconds,
-      JSON.stringify(next.ignoredChannels), JSON.stringify(next.ignoredRoles),
-      next.levelUpMessages ? 1 : 0, next.levelUpChannel, JSON.stringify(next.doubleXpEvents)
+      JSON.stringify(next.excludedChannels || []), JSON.stringify(next.excludedRoles || []),
+      next.levelUpMessages ? 1 : 0, next.levelUpChannel, JSON.stringify(next.doubleXpEvents || [])
     ]);
+    
+    // Sync with guild_moderation_features if enabled status changed
+    if (data.hasOwnProperty('enabled')) {
+      await db.sqlPool.query(`
+        INSERT INTO guild_moderation_features (guild_id, feature_key, enabled, config) 
+        VALUES (?, 'xp', ?, '{}')
+        ON DUPLICATE KEY UPDATE enabled = VALUES(enabled)
+      `, [guildId, next.enabled ? 1 : 0]);
+      
+      // Clear moderation features cache to ensure consistency
+      cacheData.guildModerationFeaturesCache.delete(guildId);
+    }
   }
   
   return { ...next };
+}
+
+// User XP Management
+async function getUserXp(guildId, userId) {
+  if (!guildId || !userId) throw new Error('guildId and userId required');
+  
+  if (db.mariaAvailable && db.sqlPool) {
+    try {
+      const [rows] = await db.sqlPool.query(`
+        SELECT total_xp, current_level, last_message_xp, last_voice_xp, total_messages, total_voice_minutes
+        FROM guild_user_xp WHERE guild_id=? AND user_id=?
+      `, [guildId, userId]);
+      
+      if (rows.length > 0) {
+        const row = rows[0];
+        return {
+          total_xp: row.total_xp,
+          level: row.current_level,
+          last_message_xp: row.last_message_xp,
+          last_voice_xp: row.last_voice_xp,
+          total_messages: row.total_messages,
+          total_voice_minutes: row.total_voice_minutes
+        };
+      }
+    } catch (e) {
+      console.error('Error getting user XP:', e.message);
+    }
+  }
+  
+  return {
+    total_xp: 0,
+    level: 0,
+    last_message_xp: null,
+    last_voice_xp: null,
+    total_messages: 0,
+    total_voice_minutes: 0
+  };
+}
+
+async function addUserXp(guildId, userId, xpAmount, source = 'message') {
+  if (!guildId || !userId || typeof xpAmount !== 'number') {
+    throw new Error('guildId, userId, and xpAmount required');
+  }
+  
+  if (db.mariaAvailable && db.sqlPool) {
+    try {
+      const current = await getUserXp(guildId, userId);
+      const newTotalXp = (current.total_xp || 0) + xpAmount;
+      const newLevel = calculateLevel(newTotalXp);
+      const leveledUp = newLevel > (current.level || 0);
+      
+      const now = new Date();
+      const updateFields = [];
+      const updateValues = [];
+      
+      updateFields.push('total_xp=?', 'current_level=?', 'updated_at=?');
+      updateValues.push(newTotalXp, newLevel, now);
+      
+      if (source === 'message') {
+        updateFields.push('last_message_xp=?', 'total_messages=total_messages+1');
+        updateValues.push(now);
+      } else if (source === 'voice') {
+        updateFields.push('last_voice_xp=?', 'total_voice_minutes=total_voice_minutes+1');
+        updateValues.push(now);
+      }
+      
+      updateValues.push(guildId, userId, guildId, userId);
+      
+      await db.sqlPool.query(`
+        INSERT INTO guild_user_xp (guild_id, user_id, total_xp, current_level, ${source === 'message' ? 'last_message_xp, total_messages' : 'last_voice_xp, total_voice_minutes'})
+        VALUES (?, ?, ?, ?, ${source === 'message' ? '?, 1' : '?, 1'})
+        ON DUPLICATE KEY UPDATE ${updateFields.join(', ')}
+      `, [guildId, userId, newTotalXp, newLevel, now, ...updateValues]);
+      
+      return {
+        previousLevel: current.level || 0,
+        newLevel,
+        total_xp: newTotalXp,
+        xpGained: xpAmount,
+        leveledUp
+      };
+    } catch (e) {
+      console.error('Error adding user XP:', e.message);
+      throw e;
+    }
+  }
+  
+  throw new Error('Database not available');
+}
+
+async function getGuildLeaderboard(guildId, limit = 10, offset = 0) {
+  if (!guildId) throw new Error('guildId required');
+  
+  if (db.mariaAvailable && db.sqlPool) {
+    try {
+      const [rows] = await db.sqlPool.query(`
+        SELECT user_id, total_xp, current_level, total_messages, total_voice_minutes
+        FROM guild_user_xp 
+        WHERE guild_id=? 
+        ORDER BY total_xp DESC, current_level DESC
+        LIMIT ? OFFSET ?
+      `, [guildId, limit, offset]);
+      
+      return rows.map((row, index) => ({
+        rank: offset + index + 1,
+        user_id: row.user_id,
+        total_xp: row.total_xp,
+        level: row.current_level,
+        total_messages: row.total_messages,
+        total_voice_minutes: row.total_voice_minutes
+      }));
+    } catch (e) {
+      console.error('Error getting leaderboard:', e.message);
+      return [];
+    }
+  }
+  
+  return [];
+}
+
+async function resetUserXp(guildId, userId) {
+  if (!guildId || !userId) throw new Error('guildId and userId required');
+  
+  if (db.mariaAvailable && db.sqlPool) {
+    try {
+      await db.sqlPool.query(`
+        UPDATE guild_user_xp 
+        SET total_xp=0, current_level=0, last_message_xp=NULL, last_voice_xp=NULL, 
+            total_messages=0, total_voice_minutes=0
+        WHERE guild_id=? AND user_id=?
+      `, [guildId, userId]);
+      
+      return true;
+    } catch (e) {
+      console.error('Error resetting user XP:', e.message);
+      throw e;
+    }
+  }
+  
+  throw new Error('Database not available');
+}
+
+async function setUserXp(guildId, userId, xpAmount) {
+  if (!guildId || !userId) throw new Error('guildId and userId required');
+  if (typeof xpAmount !== 'number' || xpAmount < 0) throw new Error('xpAmount must be a non-negative number');
+  
+  if (db.mariaAvailable && db.sqlPool) {
+    try {
+      const newLevel = calculateLevel(xpAmount);
+      
+      await db.sqlPool.query(`
+        INSERT INTO guild_user_xp 
+        (guild_id, user_id, total_xp, current_level, last_message_xp, last_voice_xp, total_messages, total_voice_minutes, created_at, updated_at)
+        VALUES (?, ?, ?, ?, NULL, NULL, 0, 0, NOW(), NOW())
+        ON DUPLICATE KEY UPDATE 
+        total_xp = VALUES(total_xp),
+        current_level = VALUES(current_level),
+        updated_at = NOW()
+      `, [guildId, userId, xpAmount, newLevel]);
+      
+      return true;
+    } catch (e) {
+      console.error('Error setting user XP:', e.message);
+      throw e;
+    }
+  }
+  
+  throw new Error('Database not available');
+}
+
+// Level calculation helper (standard formula: level = floor(sqrt(totalXp / 100)))
+function calculateLevel(totalXp) {
+  return Math.floor(Math.sqrt(totalXp / 100));
+}
+
+// Calculate XP needed for next level
+function getXpForLevel(level) {
+  return Math.pow(level, 2) * 100;
+}
+
+// Level Rewards Management
+async function getGuildLevelRewards(guildId) {
+  if (!guildId) return [];
+  
+  if (db.mariaAvailable && db.sqlPool) {
+    try {
+      const [rows] = await db.sqlPool.query(`
+        SELECT id, level, role_id, remove_previous, enabled
+        FROM guild_xp_level_rewards 
+        WHERE guild_id=? AND enabled=1
+        ORDER BY level ASC
+      `, [guildId]);
+      
+      return rows.map(row => ({
+        id: row.id,
+        level: row.level,
+        roleId: row.role_id,
+        removePrevious: !!row.remove_previous,
+        enabled: !!row.enabled
+      }));
+    } catch (e) {
+      console.error('Error getting level rewards:', e.message);
+      return [];
+    }
+  }
+  
+  return [];
+}
+
+async function addGuildLevelReward(guildId, level, roleId, removePrevious = false) {
+  if (!guildId || !level || !roleId) {
+    throw new Error('guildId, level, and roleId required');
+  }
+  
+  if (db.mariaAvailable && db.sqlPool) {
+    try {
+      const [result] = await db.sqlPool.query(`
+        INSERT INTO guild_xp_level_rewards (guild_id, level, role_id, remove_previous)
+        VALUES (?, ?, ?, ?)
+        ON DUPLICATE KEY UPDATE role_id=VALUES(role_id), remove_previous=VALUES(remove_previous)
+      `, [guildId, level, roleId, removePrevious ? 1 : 0]);
+      
+      return result.insertId || true;
+    } catch (e) {
+      console.error('Error adding level reward:', e.message);
+      throw e;
+    }
+  }
+  
+  throw new Error('Database not available');
+}
+
+async function removeGuildLevelReward(guildId, level) {
+  if (!guildId || !level) throw new Error('guildId and level required');
+  
+  if (db.mariaAvailable && db.sqlPool) {
+    try {
+      await db.sqlPool.query(`
+        DELETE FROM guild_xp_level_rewards WHERE guild_id=? AND level=?
+      `, [guildId, level]);
+      
+      return true;
+    } catch (e) {
+      console.error('Error removing level reward:', e.message);
+      throw e;
+    }
+  }
+  
+  throw new Error('Database not available');
 }
 
 // Reaction Roles
@@ -1408,6 +1707,18 @@ module.exports = {
   toggleGuildAutoModRule,
   getGuildXpSettings,
   updateGuildXpSettings,
+  // User XP management
+  getUserXp,
+  addUserXp,
+  getGuildLeaderboard,
+  resetUserXp,
+  setUserXp,
+  calculateLevel,
+  getXpForLevel,
+  // Level rewards
+  getGuildLevelRewards,
+  addGuildLevelReward,
+  removeGuildLevelReward,
   getGuildReactionRoles,
   addGuildReactionRole,
   removeGuildReactionRolesByMessage,

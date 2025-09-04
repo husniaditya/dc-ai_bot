@@ -32,9 +32,23 @@ export default function ConfigurationModal({
       try {
         let response;
         
-        // Handle welcome feature differently
+        // Handle different features with specific endpoints
         if (feature.key === 'welcome') {
           response = await fetch('/api/moderation/welcome/config', {
+            headers: { 
+              Authorization: `Bearer ${localStorage.getItem('token')}`,
+              'X-Guild-Id': guildId
+            }
+          });
+        } else if (feature.key === 'xp') {
+          response = await fetch('/api/moderation/xp/config', {
+            headers: { 
+              Authorization: `Bearer ${localStorage.getItem('token')}`,
+              'X-Guild-Id': guildId
+            }
+          });
+        } else if (feature.key === 'antiraid') {
+          response = await fetch('/api/moderation/antiraid/config', {
             headers: { 
               Authorization: `Bearer ${localStorage.getItem('token')}`,
               'X-Guild-Id': guildId
@@ -53,7 +67,7 @@ export default function ConfigurationModal({
           const data = await response.json();
           
           // Handle different possible response structures
-          const configData = feature.key === 'welcome' 
+          const configData = (feature.key === 'welcome' || feature.key === 'xp' || feature.key === 'antiraid') 
             ? (data.config || data || {})
             : (data.config || data || {});
           
@@ -112,11 +126,14 @@ export default function ConfigurationModal({
       },
       xp: {
         enabled: false,
-        channelId: '',
-        xpPerMessage: 10,
-        cooldown: 60,
-        levelUpMessage: 'Congratulations {user}! You reached level {level}!',
-        rewardRoles: []
+        xpPerMessage: 15,
+        xpPerVoiceMinute: 5,
+        cooldownSeconds: 60,
+        excludedChannels: [],
+        excludedRoles: [],
+        levelUpMessages: true,
+        levelUpChannel: null,
+        doubleXpEvents: []
       },
       scheduler: {
         enabled: false,
@@ -167,8 +184,49 @@ export default function ConfigurationModal({
   const handleSave = async () => {
     setSaving(true);
     try {
-      await onSave(config);
-      setOriginalConfig({ ...config });
+      // Handle different features with specific endpoints
+      if (feature.key === 'welcome') {
+        await onSave(config);
+      } else if (feature.key === 'xp') {
+        const response = await fetch('/api/moderation/xp/config', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+            'X-Guild-Id': guildId
+          },
+          body: JSON.stringify(config)
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to save XP configuration');
+        }
+
+        const data = await response.json();
+        setConfig(data.config || data);
+        setOriginalConfig(data.config || data);
+      } else if (feature.key === 'antiraid') {
+        const response = await fetch('/api/moderation/antiraid/config', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+            'X-Guild-Id': guildId
+          },
+          body: JSON.stringify(config)
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to save anti-raid configuration');
+        }
+
+        const data = await response.json();
+        setConfig(data.config || data);
+        setOriginalConfig(data.config || data);
+      } else {
+        await onSave(config);
+      }
+      
       showToast('success', `${feature.label} configuration saved successfully`);
     } catch (error) {
       console.error('Save failed:', error);

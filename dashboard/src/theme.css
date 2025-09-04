@@ -130,6 +130,111 @@ body {
   scrollbar-gutter: stable;
 }
 
+/* XP Multiplier Role Cards */
+.card-xp-roles {
+  background: linear-gradient(135deg, rgba(255,255,255,0.12), rgba(255,255,255,0.06));
+  border: 1px solid rgba(255,255,255,0.18);
+  border-radius: var(--radius-sm);
+  backdrop-filter: blur(8px) saturate(140%);
+  transition: var(--transition);
+}
+
+.card-xp-roles:hover {
+  transform: translateY(-2px);
+  background: linear-gradient(135deg, rgba(255,255,255,0.16), rgba(255,255,255,0.08));
+  border-color: rgba(255,255,255,0.25);
+  box-shadow: 0 4px 12px -2px rgba(0,0,0,0.4);
+}
+
+.card-xp-body {
+  padding: 0.75rem;
+}
+
+.card-xp-roles .text-success {
+  color: var(--success) !important;
+}
+
+.card-xp-roles .text-muted-primary {
+  color: var(--text-muted) !important;
+}
+
+/* Light theme overrides for XP cards */
+html:not(.dark) .card-xp-roles {
+  background: linear-gradient(135deg, rgba(255,255,255,0.95), rgba(255,255,255,0.85));
+  border: 1px solid rgba(0,0,0,0.12);
+  box-shadow: 0 2px 8px -2px rgba(0,0,0,0.08);
+}
+
+html:not(.dark) .card-xp-roles:hover {
+  background: linear-gradient(135deg, rgba(255,255,255,1), rgba(255,255,255,0.95));
+  border-color: rgba(0,0,0,0.18);
+  box-shadow: 0 4px 12px -2px rgba(0,0,0,0.15);
+}
+
+html:not(.dark) .card-xp-roles .text-success {
+  color: #059669 !important;
+}
+
+html:not(.dark) .card-xp-roles .text-muted-primary {
+  color: #6b7280 !important;
+}
+
+/* XP Configuration Form Styling */
+.moderation-config-form .form-control,
+.moderation-config-form .form-select,
+.moderation-config-form textarea.form-control {
+  background: rgba(255,255,255,0.06) !important;
+  border: 1px solid rgba(255,255,255,0.18) !important;
+  color: var(--text-base) !important;
+  border-radius: 6px;
+}
+
+.moderation-config-form .form-control:focus,
+.moderation-config-form .form-select:focus,
+.moderation-config-form textarea.form-control:focus {
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 2px rgba(99,102,241,0.45) !important;
+}
+
+/* Light theme overrides for moderation form */
+html:not(.dark) .moderation-config-form .form-control,
+html:not(.dark) .moderation-config-form .form-select,
+html:not(.dark) .moderation-config-form textarea.form-control {
+  background: rgba(255,255,255,0.85) !important;
+  border: 1px solid rgba(0,0,0,0.12) !important;
+  color: #1f2530 !important;
+}
+
+html:not(.dark) .moderation-config-form .form-control:focus,
+html:not(.dark) .moderation-config-form .form-select:focus,
+html:not(.dark) .moderation-config-form textarea.form-control:focus {
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 2px rgba(99,102,241,0.4) !important;
+}
+
+/* XP form specific styling */
+.moderation-config-form .add-multiplier-form .form-control,
+.moderation-config-form .add-multiplier-form .form-select {
+  border: 1px solid rgba(255,255,255,0.22) !important;
+}
+
+html:not(.dark) .moderation-config-form .add-multiplier-form .form-control,
+html:not(.dark) .moderation-config-form .add-multiplier-form .form-select {
+  border: 1px solid rgba(0,0,0,0.15) !important;
+}
+
+/* Ensure form labels are visible */
+.moderation-config-form .form-label,
+.moderation-config-form label {
+  color: var(--text-soft) !important;
+  font-weight: 500;
+}
+
+html:not(.dark) .moderation-config-form .form-label,
+html:not(.dark) .moderation-config-form label {
+  color: #445066 !important;
+}
+
 /* Auto moderation form styling */
 .moderation-config-form .table-modern {
   font-size: 0.8rem;

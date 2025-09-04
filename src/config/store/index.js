@@ -31,6 +31,29 @@ async function initPersistence() {
   return result;
 }
 
+async function initializeGuildSettings(guildId) {
+  try {
+    if (!guildId) return;
+    
+    if (db.mariaAvailable && db.sqlPool) {
+      // Initialize guild_settings if not exists
+      await db.sqlPool.query(`
+        INSERT IGNORE INTO guild_settings (guild_id) VALUES (?)
+      `, [guildId]);
+      
+      // Initialize guild_xp_settings if not exists
+      await db.sqlPool.query(`
+        INSERT IGNORE INTO guild_xp_settings (guild_id, enabled, xp_per_message, xp_per_voice_minute, cooldown_seconds, level_up_messages) 
+        VALUES (?, 0, 15, 5, 60, 1)
+      `, [guildId]);
+      
+      console.log(`Initialized settings for guild: ${guildId}`);
+    }
+  } catch (error) {
+    console.error(`Failed to initialize guild settings for ${guildId}:`, error);
+  }
+}
+
 async function loadInitialData() {
   try {
     // Load global settings
@@ -121,6 +144,7 @@ module.exports = {
   initMongo: db.initMongo, // kept for backward compatibility
   initMaria: db.initMaria,
   initPersistence,
+  initializeGuildSettings,
   
   // Settings API
   getSettings: settingsService.getSettings,
@@ -230,6 +254,20 @@ module.exports = {
   resetWarningCount: moderationService.resetWarningCount,
   getUserViolations: moderationService.getUserViolations,
   getGuildViolations: moderationService.getGuildViolations,
+  
+  // XP Management API
+  getUserXp: moderationService.getUserXp,
+  addUserXp: moderationService.addUserXp,
+  updateUserXp: moderationService.updateUserXp,
+  setUserXp: moderationService.setUserXp,
+  resetUserXp: moderationService.resetUserXp,
+  getUserLeaderboard: moderationService.getGuildLeaderboard,
+  getUserRank: moderationService.getUserRank,
+  getUserLevel: moderationService.getUserLevel,
+  getXpForLevel: moderationService.getXpForLevel,
+  getGuildLevelRewards: moderationService.getGuildLevelRewards,
+  addGuildLevelReward: moderationService.addGuildLevelReward,
+  removeGuildLevelReward: moderationService.removeGuildLevelReward,
   
   // Direct database access for special cases
   get sqlPool() { return db.sqlPool; }

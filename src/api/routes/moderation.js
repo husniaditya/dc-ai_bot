@@ -397,7 +397,7 @@ function createModerationRoutes(client, store) {
     }
   });
 
-  // Get XP leaderboard (placeholder)
+  // Get XP leaderboard
   router.get('/xp/leaderboard', async (req, res) => {
     try {
       const guildId = req.headers['x-guild-id'];
@@ -408,12 +408,127 @@ function createModerationRoutes(client, store) {
         return res.status(400).json({ error: 'Guild ID required' });
       }
 
-      // Return empty leaderboard for now
-      const leaderboard = [];
+      const leaderboard = await store.getGuildLeaderboard(guildId, limit, offset);
       res.json({ leaderboard });
     } catch (error) {
       console.error('Error fetching XP leaderboard:', error);
       res.status(500).json({ error: 'Failed to fetch XP leaderboard' });
+    }
+  });
+
+  // Get user XP
+  router.get('/xp/user/:userId', async (req, res) => {
+    try {
+      const guildId = req.headers['x-guild-id'];
+      const { userId } = req.params;
+      
+      if (!guildId || !userId) {
+        return res.status(400).json({ error: 'Guild ID and User ID required' });
+      }
+
+      const userXp = await store.getUserXp(guildId, userId);
+      res.json(userXp);
+    } catch (error) {
+      console.error('Error fetching user XP:', error);
+      res.status(500).json({ error: 'Failed to fetch user XP' });
+    }
+  });
+
+  // Add XP to user (admin only)
+  router.post('/xp/user/:userId/add', async (req, res) => {
+    try {
+      const guildId = req.headers['x-guild-id'];
+      const { userId } = req.params;
+      const { amount, source = 'manual' } = req.body;
+      
+      if (!guildId || !userId || typeof amount !== 'number') {
+        return res.status(400).json({ error: 'Guild ID, User ID, and amount required' });
+      }
+
+      if (amount <= 0 || amount > 10000) {
+        return res.status(400).json({ error: 'Amount must be between 1 and 10000' });
+      }
+
+      const result = await store.addUserXp(guildId, userId, amount, source);
+      res.json(result);
+    } catch (error) {
+      console.error('Error adding user XP:', error);
+      res.status(500).json({ error: 'Failed to add user XP' });
+    }
+  });
+
+  // Reset user XP (admin only)
+  router.delete('/xp/user/:userId', async (req, res) => {
+    try {
+      const guildId = req.headers['x-guild-id'];
+      const { userId } = req.params;
+      
+      if (!guildId || !userId) {
+        return res.status(400).json({ error: 'Guild ID and User ID required' });
+      }
+
+      await store.resetUserXp(guildId, userId);
+      res.json({ success: true, message: 'User XP reset successfully' });
+    } catch (error) {
+      console.error('Error resetting user XP:', error);
+      res.status(500).json({ error: 'Failed to reset user XP' });
+    }
+  });
+
+  // Get level rewards
+  router.get('/xp/rewards', async (req, res) => {
+    try {
+      const guildId = req.headers['x-guild-id'];
+      
+      if (!guildId) {
+        return res.status(400).json({ error: 'Guild ID required' });
+      }
+
+      const rewards = await store.getGuildLevelRewards(guildId);
+      res.json({ rewards });
+    } catch (error) {
+      console.error('Error fetching level rewards:', error);
+      res.status(500).json({ error: 'Failed to fetch level rewards' });
+    }
+  });
+
+  // Add level reward
+  router.post('/xp/rewards', async (req, res) => {
+    try {
+      const guildId = req.headers['x-guild-id'];
+      const { level, roleId, removePrevious = false } = req.body;
+      
+      if (!guildId || !level || !roleId) {
+        return res.status(400).json({ error: 'Guild ID, level, and role ID required' });
+      }
+
+      if (level < 1 || level > 1000) {
+        return res.status(400).json({ error: 'Level must be between 1 and 1000' });
+      }
+
+      const result = await store.addGuildLevelReward(guildId, level, roleId, removePrevious);
+      res.json({ success: true, id: result });
+    } catch (error) {
+      console.error('Error adding level reward:', error);
+      res.status(500).json({ error: 'Failed to add level reward' });
+    }
+  });
+
+  // Remove level reward
+  router.delete('/xp/rewards/:level', async (req, res) => {
+    try {
+      const guildId = req.headers['x-guild-id'];
+      const { level } = req.params;
+      
+      if (!guildId || !level) {
+        return res.status(400).json({ error: 'Guild ID and level required' });
+      }
+
+      await store.removeGuildLevelReward(guildId, parseInt(level));
+      res.json({ success: true, message: 'Level reward removed successfully' });
+    } catch (error) {
+      console.error('Error removing level reward:', error);
+      res.status(500).json({ error: 'Failed to remove level reward' });
     }
   });
 

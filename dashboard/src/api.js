@@ -178,6 +178,72 @@ export async function getTwitchConfig(guildId){ return authFetch('/api/twitch/co
 export async function updateTwitchConfig(partial, guildId){ return authFetch('/api/twitch/config' + (guildId?`?guildId=${guildId}`:''), { method:'PUT', body: JSON.stringify(partial) }); }
 export async function resolveTwitchStreamer(input){ return authFetch('/api/twitch/resolve-streamer', { method:'POST', body: JSON.stringify({ input }) }); }
 
+// XP System config helpers
+export async function getXpConfig(guildId){ 
+  const headers = guildId ? { 'X-Guild-Id': guildId } : {};
+  return authFetch('/api/moderation/xp/config', { headers }); 
+}
+export async function updateXpConfig(config, guildId){ 
+  const headers = guildId ? { 'X-Guild-Id': guildId } : {};
+  return authFetch('/api/moderation/xp/config', { 
+    method:'PUT', 
+    headers,
+    body: JSON.stringify(config) 
+  }); 
+}
+
+// XP User management
+export async function getXpLeaderboard(guildId, limit = 10, offset = 0) {
+  const headers = guildId ? { 'X-Guild-Id': guildId } : {};
+  const params = new URLSearchParams({ limit: limit.toString(), offset: offset.toString() });
+  return authFetch(`/api/moderation/xp/leaderboard?${params}`, { headers });
+}
+
+export async function getUserXp(guildId, userId) {
+  const headers = guildId ? { 'X-Guild-Id': guildId } : {};
+  return authFetch(`/api/moderation/xp/user/${userId}`, { headers });
+}
+
+export async function addUserXp(guildId, userId, amount, source = 'manual') {
+  const headers = guildId ? { 'X-Guild-Id': guildId } : {};
+  return authFetch(`/api/moderation/xp/user/${userId}/add`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({ amount, source })
+  });
+}
+
+export async function resetUserXp(guildId, userId) {
+  const headers = guildId ? { 'X-Guild-Id': guildId } : {};
+  return authFetch(`/api/moderation/xp/user/${userId}`, {
+    method: 'DELETE',
+    headers
+  });
+}
+
+// XP Level rewards
+export async function getXpLevelRewards(guildId) {
+  const headers = guildId ? { 'X-Guild-Id': guildId } : {};
+  return authFetch('/api/moderation/xp/rewards', { headers });
+}
+
+export async function addXpLevelReward(guildId, level, roleId, removePrevious = false) {
+  const headers = guildId ? { 'X-Guild-Id': guildId } : {};
+  return authFetch('/api/moderation/xp/rewards', {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({ level, roleId, removePrevious })
+  });
+}
+
+export async function removeXpLevelReward(guildId, level) {
+  const headers = guildId ? { 'X-Guild-Id': guildId } : {};
+  return authFetch(`/api/moderation/xp/rewards/${level}`, {
+    method: 'DELETE',
+    headers
+  });
+}
+
 // Authentication management
 export async function logout() {
   try {

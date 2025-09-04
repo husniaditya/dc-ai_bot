@@ -97,8 +97,8 @@ const defaultConfigs = {
     xpPerMessage: 15,
     xpPerVoiceMinute: 5,
     cooldownSeconds: 60,
-    ignoredChannels: [],
-    ignoredRoles: [],
+    excludedChannels: [],
+    excludedRoles: [],
     levelUpMessages: true,
     levelUpChannel: null,
     doubleXpEvents: []
