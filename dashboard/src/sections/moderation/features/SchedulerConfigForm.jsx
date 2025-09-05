@@ -1,4 +1,6 @@
 import React, { useState, useEffect, forwardRef, useImperativeHandle } from 'react';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
 import { ChannelSelector, FormField } from '../components/SharedComponents';
 import { createScheduledMessage, updateScheduledMessage, deleteScheduledMessage } from '../../../api';
 
@@ -51,8 +53,65 @@ export default forwardRef(function SchedulerConfigForm({ config, updateConfig, c
     embedData: null,
     useEmbed: false
   });
+  const [timeFormatMode, setTimeFormatMode] = useState('24h'); // '24h' | '12h'
 
   const scheduledMessages = config.messages || [];
+
+  // Helpers for new pipe-based schedule formats (option 2)
+  const parseWeekly = (value) => {
+    if (!value) return { day: '0', time: '09:00' };
+    const sep = value.includes('|') ? '|' : ':'; // backward compatibility
+    const [day, time] = value.split(sep);
+    return { day: day ?? '0', time: time ?? '09:00' };
+  };
+
+  const parseMonthly = (value) => {
+    if (!value) return { day: '01', time: '09:00' };
+    const sep = value.includes('|') ? '|' : ':'; // backward compatibility
+    const [day, time] = value.split(sep);
+    const dayNum = (day || '1').toString();
+    const paddedDay = dayNum.padStart(2, '0');
+    return { day: paddedDay, time: time ?? '09:00' };
+  };
+
+  const toWeeklyValue = (day, time) => `${day}|${time}`;
+  const toMonthlyValue = (day, time) => `${day.toString().padStart(2, '0')}|${time}`;
+
+  // Helpers for date construction when using date pickers
+  const pad = (n) => n.toString().padStart(2, '0');
+
+  const parseDaily = (value) => {
+    if (!value || !/^[0-2]?\d:[0-5]\d$/.test(value)) return { hour: '09', minute: '00' };
+    const [h, m] = value.split(':');
+    return { hour: pad(h), minute: pad(m) };
+  };
+
+  const buildDateFromHM = (hour, minute) => {
+    const d = new Date();
+    d.setSeconds(0, 0);
+    d.setHours(parseInt(hour, 10), parseInt(minute, 10), 0, 0);
+    return d;
+  };
+
+  const getWeeklyDate = (day, time) => {
+    const { hour, minute } = parseDaily(time);
+    const now = new Date();
+    const target = new Date(now);
+    const currentDow = now.getDay();
+    let diff = parseInt(day, 10) - currentDow;
+    if (diff < 0) diff += 7; // upcoming occurrence
+    target.setDate(now.getDate() + diff);
+    target.setHours(parseInt(hour, 10), parseInt(minute, 10), 0, 0);
+    return target;
+  };
+
+  const getMonthlyDate = (day, time) => {
+    const { hour, minute } = parseDaily(time);
+    const now = new Date();
+    const target = new Date(now.getFullYear(), now.getMonth(), parseInt(day, 10), parseInt(hour, 10), parseInt(minute, 10), 0, 0);
+    // If date already passed this month, keep it (only used for picking), user can re-pick
+    return target;
+  };
 
   // Expose methods to parent component
   useImperativeHandle(ref, () => ({
@@ -192,6 +251,15 @@ export default forwardRef(function SchedulerConfigForm({ config, updateConfig, c
       },
       useEmbed: !!message.embedData
     };
+    // Migrate legacy colon format to pipe for weekly/monthly
+    if (editFormData.scheduleType === 'weekly') {
+      const { day, time } = parseWeekly(editFormData.scheduleValue);
+      editFormData.scheduleValue = toWeeklyValue(day, time);
+    }
+    if (editFormData.scheduleType === 'monthly') {
+      const { day, time } = parseMonthly(editFormData.scheduleValue);
+      editFormData.scheduleValue = toMonthlyValue(day, time);
+    }
     setFormData(editFormData);
     setOriginalFormData(editFormData); // Store original values for reset
     setIsFormDirty(false);
@@ -239,88 +307,101 @@ export default forwardRef(function SchedulerConfigForm({ config, updateConfig, c
   ];
 
   const renderScheduleInput = () => {
+    const is12h = timeFormatMode === '12h';
+    const onceDateFormat = is12h ? 'yyyy-MM-dd h:mm aa' : 'yyyy-MM-dd HH:mm';
+    const dailyDateFormat = is12h ? 'h:mm aa' : 'HH:mm';
+    const weeklyDateFormat = is12h ? 'EEEE h:mm aa' : 'EEEE HH:mm';
+    const monthlyDateFormat = is12h ? 'd MMM h:mm aa' : 'd MMM HH:mm';
     switch (formData.scheduleType) {
       case 'once':
         return (
-          <input 
-            type="datetime-local"
+          <DatePicker
+            selected={formData.scheduleValue ? new Date(formData.scheduleValue) : null}
+            onChange={(date) => {
+              if (!date) return updateFormData({ scheduleValue: '' });
+              // Store ISO string truncated to minutes to remain compatible with backend expectation
+              const iso = new Date(date.getTime() - date.getTimezoneOffset() * 60000)
+                .toISOString()
+                .slice(0, 16);
+              updateFormData({ scheduleValue: iso });
+            }}
+            showTimeSelect
+            timeIntervals={30}
+            timeFormat={is12h ? 'h:mm aa' : 'HH:mm'}
+            dateFormat={onceDateFormat}
+            minDate={new Date()}
             className="form-control form-control-sm"
-            value={formData.scheduleValue}
-            onChange={(e) => updateFormData({ scheduleValue: e.target.value })}
-            min={new Date().toISOString().slice(0, 16)}
+            placeholderText="Select date & time"
           />
         );
       case 'daily':
+        const daily = parseDaily(formData.scheduleValue);
         return (
-          <input 
-            type="time"
-            className="form-control form-control-sm"
-            value={formData.scheduleValue}
-            onChange={(e) => setFormData(prev => ({ ...prev, scheduleValue: e.target.value }))}
-          />
+          <div>
+            <DatePicker
+              selected={buildDateFromHM(daily.hour, daily.minute)}
+              onChange={(date) => {
+                if (!date) return updateFormData({ scheduleValue: '' });
+                const hh = pad(date.getHours());
+                const mm = pad(date.getMinutes());
+                updateFormData({ scheduleValue: `${hh}:${mm}` });
+              }}
+              showTimeSelect
+              showTimeSelectOnly
+              timeIntervals={30}
+              timeCaption="Time"
+              timeFormat={is12h ? 'h:mm aa' : 'HH:mm'}
+              dateFormat={dailyDateFormat}
+              className="form-control form-control-sm"
+              placeholderText="Select time"
+            />
+            <div className="form-text small">Stored as HH:MM (24h).</div>
+          </div>
         );
       case 'weekly':
+        const weeklyParts = parseWeekly(formData.scheduleValue);
         return (
-          <div className="row">
-            <div className="col-6">
-              <select 
-                className="form-select form-select-sm"
-                value={formData.scheduleValue.split(':')[0] || '0'}
-                onChange={(e) => {
-                  const time = formData.scheduleValue.split(':')[1] || '09:00';
-                  setFormData(prev => ({ ...prev, scheduleValue: `${e.target.value}:${time}` }));
-                }}
-              >
-                <option value="0">Sunday</option>
-                <option value="1">Monday</option>
-                <option value="2">Tuesday</option>
-                <option value="3">Wednesday</option>
-                <option value="4">Thursday</option>
-                <option value="5">Friday</option>
-                <option value="6">Saturday</option>
-              </select>
-            </div>
-            <div className="col-6">
-              <input 
-                type="time"
-                className="form-control form-control-sm"
-                value={formData.scheduleValue.split(':')[1] || '09:00'}
-                onChange={(e) => {
-                  const day = formData.scheduleValue.split(':')[0] || '0';
-                  setFormData(prev => ({ ...prev, scheduleValue: `${day}:${e.target.value}` }));
-                }}
-              />
-            </div>
+          <div>
+            <DatePicker
+              selected={getWeeklyDate(weeklyParts.day, weeklyParts.time)}
+              onChange={(date) => {
+                if (!date) return updateFormData({ scheduleValue: '' });
+                const dow = date.getDay();
+                const hh = pad(date.getHours());
+                const mm = pad(date.getMinutes());
+                updateFormData({ scheduleValue: toWeeklyValue(dow.toString(), `${hh}:${mm}`) });
+              }}
+              showTimeSelect
+              timeIntervals={30}
+              timeFormat={is12h ? 'h:mm aa' : 'HH:mm'}
+              dateFormat={weeklyDateFormat}
+              className="form-control form-control-sm"
+              placeholderText="Select weekday & time"
+            />
+            <div className="form-text small">Pick any date; only weekday + time stored as D|HH:MM (0=Sun).</div>
           </div>
         );
       case 'monthly':
+        const monthlyParts = parseMonthly(formData.scheduleValue);
         return (
-          <div className="row">
-            <div className="col-6">
-              <input 
-                type="number"
-                className="form-control form-control-sm"
-                min="1"
-                max="31"
-                placeholder="Day"
-                value={formData.scheduleValue.split(':')[0] || '1'}
-                onChange={(e) => {
-                  const time = formData.scheduleValue.split(':')[1] || '09:00';
-                  setFormData(prev => ({ ...prev, scheduleValue: `${e.target.value}:${time}` }));
-                }}
-              />
-            </div>
-            <div className="col-6">
-              <input 
-                type="time"
-                className="form-control form-control-sm"
-                value={formData.scheduleValue.split(':')[1] || '09:00'}
-                onChange={(e) => {
-                  const day = formData.scheduleValue.split(':')[0] || '1';
-                  setFormData(prev => ({ ...prev, scheduleValue: `${day}:${e.target.value}` }));
-                }}
-              />
-            </div>
+          <div>
+            <DatePicker
+              selected={getMonthlyDate(monthlyParts.day, monthlyParts.time)}
+              onChange={(date) => {
+                if (!date) return updateFormData({ scheduleValue: '' });
+                const day = pad(date.getDate());
+                const hh = pad(date.getHours());
+                const mm = pad(date.getMinutes());
+                updateFormData({ scheduleValue: toMonthlyValue(day, `${hh}:${mm}`) });
+              }}
+              showTimeSelect
+              timeIntervals={30}
+              timeFormat={is12h ? 'h:mm aa' : 'HH:mm'}
+              dateFormat={monthlyDateFormat}
+              className="form-control form-control-sm"
+              placeholderText="Select day & time"
+            />
+            <div className="form-text small">Pick any month; stored as DD|HH:MM.</div>
           </div>
         );
       case 'cron':
@@ -488,7 +569,7 @@ export default forwardRef(function SchedulerConfigForm({ config, updateConfig, c
               </div>
 
               <div className="row mb-3">
-                <div className="col-md-6">
+                <div className="col-md-4">
                   <FormField label="Schedule Type" required>
                     <select
                       className="form-select form-select-sm"
@@ -503,7 +584,19 @@ export default forwardRef(function SchedulerConfigForm({ config, updateConfig, c
                     </select>
                   </FormField>
                 </div>
-                <div className="col-md-6">
+                <div className="col-md-4">
+                  <FormField label="Time Display" required={false}>
+                    <select
+                      className="form-select form-select-sm"
+                      value={timeFormatMode}
+                      onChange={(e) => setTimeFormatMode(e.target.value)}
+                    >
+                      <option value="24h">24-hour</option>
+                      <option value="12h">12-hour (AM/PM)</option>
+                    </select>
+                  </FormField>
+                </div>
+                <div className="col-md-4">
                   <FormField label="Schedule Value" required>
                     {renderScheduleInput()}
                   </FormField>

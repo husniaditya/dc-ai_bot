@@ -199,6 +199,191 @@ html:not(.dark) .moderation-config-form .card-sm h6 {
 html:not(.dark) .moderation-config-form .card-sm p {
   color: #445066 !important;
 }
+
+/* --------------------------------------------- */
+/* Scheduler DatePicker Theming & Alignment      */
+/* --------------------------------------------- */
+.moderation-config-form .react-datepicker-wrapper,
+.moderation-config-form .react-datepicker__input-container {
+  width: 100% !important;
+  display: block;
+}
+
+.moderation-config-form .react-datepicker__input-container input.form-control,
+.moderation-config-form .react-datepicker__input-container input.form-control-sm {
+  width: 100% !important;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.2);
+  color: var(--text-base);
+  font-size: 0.8125rem;
+  line-height: 1.25rem;
+}
+
+.moderation-config-form .react-datepicker__input-container input.form-control:focus,
+.moderation-config-form .react-datepicker__input-container input.form-control-sm:focus {
+  background: rgba(255,255,255,0.08);
+  border-color: var(--accent);
+  box-shadow: var(--accent-glow);
+  outline: none;
+  color: var(--text-base);
+}
+
+/* Dark (default) popper */
+.moderation-config-form .react-datepicker-popper { z-index: 2000; }
+.moderation-config-form .react-datepicker {
+  background: rgba(30,34,54,0.95);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 8px 24px -4px rgba(0,0,0,0.6), 0 4px 12px -2px rgba(0,0,0,0.4);
+  backdrop-filter: blur(14px) saturate(160%);
+  color: var(--text-base);
+  font-size: 12.5px;
+}
+
+.moderation-config-form .react-datepicker__header {
+  background: rgba(255,255,255,0.05);
+  border-bottom: 1px solid rgba(255,255,255,0.12);
+  padding-top: 0.5rem;
+}
+
+.moderation-config-form .react-datepicker__current-month,
+.moderation-config-form .react-datepicker-time__header,
+.moderation-config-form .react-datepicker-year-header {
+  color: var(--text-base);
+  font-weight: 600;
+  letter-spacing: .3px;
+}
+
+.moderation-config-form .react-datepicker__day-name,
+.moderation-config-form .react-datepicker__day,
+.moderation-config-form .react-datepicker__time-list-item { color: var(--text-soft); }
+
+.moderation-config-form .react-datepicker__day:hover,
+.moderation-config-form .react-datepicker__time-list-item:hover { background: rgba(255,255,255,0.08); }
+
+.moderation-config-form .react-datepicker__day--selected,
+.moderation-config-form .react-datepicker__day--keyboard-selected,
+.moderation-config-form .react-datepicker__time-list-item--selected {
+  background: var(--accent) !important;
+  color: #fff !important;
+  font-weight: 600;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.35);
+}
+
+.moderation-config-form .react-datepicker__navigation-icon::before { border-color: var(--text-soft); }
+.moderation-config-form .react-datepicker__close-icon::after { background: var(--danger); }
+
+/* Light theme overrides */
+html:not(.dark) .moderation-config-form .react-datepicker__input-container input.form-control,
+html:not(.dark) .moderation-config-form .react-datepicker__input-container input.form-control-sm {
+  background: rgba(255,255,255,0.9);
+  border: 1px solid rgba(0,0,0,0.18);
+  color: #1f2530;
+}
+html:not(.dark) .moderation-config-form .react-datepicker__input-container input.form-control:focus,
+html:not(.dark) .moderation-config-form .react-datepicker__input-container input.form-control-sm:focus {
+  background: #fff;
+  border-color: var(--accent);
+  color: #1f2530;
+}
+html:not(.dark) .moderation-config-form .react-datepicker {
+  background: #ffffff;
+  border: 1px solid rgba(0,0,0,0.15);
+  box-shadow: 0 8px 30px rgba(0,0,0,0.15), 0 2px 8px rgba(0,0,0,0.08);
+  color: #1f2530;
+}
+html:not(.dark) .moderation-config-form .react-datepicker__header {
+  background: #f3f5f9;
+  border-bottom: 1px solid rgba(0,0,0,0.08);
+}
+html:not(.dark) .moderation-config-form .react-datepicker__day-name,
+html:not(.dark) .moderation-config-form .react-datepicker__day,
+html:not(.dark) .moderation-config-form .react-datepicker__time-list-item { color: #445066; }
+html:not(.dark) .moderation-config-form .react-datepicker__day:hover,
+html:not(.dark) .moderation-config-form .react-datepicker__time-list-item:hover { background: rgba(0,0,0,0.06); }
+html:not(.dark) .moderation-config-form .react-datepicker__day--selected,
+html:not(.dark) .moderation-config-form .react-datepicker__day--keyboard-selected,
+html:not(.dark) .moderation-config-form .react-datepicker__time-list-item--selected {
+  background: var(--accent) !important;
+  color: #fff !important;
+}
+
+/* Time column enhancements (dark) */
+.moderation-config-form .react-datepicker__time-container { 
+  background: linear-gradient(180deg, rgba(26,30,46,0.95) 0%, rgba(20,24,38,0.95) 60%, rgba(16,20,32,0.95) 100%);
+  border-left: 1px solid rgba(255,255,255,0.12);
+}
+.moderation-config-form .react-datepicker__time-list-item { 
+  color: var(--text-soft);
+  transition: background var(--transition), color var(--transition);
+  border-radius: 4px;
+  margin: 2px 4px;
+  padding: 4px 0;
+}
+.moderation-config-form .react-datepicker__time-list-item:hover { 
+  background: rgba(255,255,255,0.08); 
+  color: var(--text-base);
+}
+.moderation-config-form .react-datepicker__time-list-item--selected { 
+  background: linear-gradient(135deg,var(--accent) 0%, #7a7df5 100%) !important; 
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.15) inset, 0 4px 10px -2px rgba(0,0,0,0.5);
+}
+.moderation-config-form .react-datepicker__time-list-item--disabled { 
+  opacity: .35; 
+  cursor: not-allowed; 
+  text-decoration: line-through;
+}
+
+/* Time list container (dark) */
+.moderation-config-form .react-datepicker__time-list { 
+  background: linear-gradient(180deg, rgba(18,22,34,0.95) 0%, rgba(16,20,30,0.95) 60%, rgba(14,18,28,0.95) 100%);
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.2) transparent;
+}
+.moderation-config-form .react-datepicker__time-list::-webkit-scrollbar { width: 8px; }
+.moderation-config-form .react-datepicker__time-list::-webkit-scrollbar-track { background: transparent; }
+.moderation-config-form .react-datepicker__time-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 6px; }
+.moderation-config-form .react-datepicker__time-list::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.25); }
+
+/* Refining default time list item color in dark mode */
+.moderation-config-form .react-datepicker__time-list-item { color: var(--text-soft); }
+
+
+/* Time column enhancements (light) */
+html:not(.dark) .moderation-config-form .react-datepicker__time-container { 
+  background: linear-gradient(180deg,#fafbfd 0%, #f3f6fa 70%, #edf1f7 100%); 
+  border-left: 1px solid rgba(0,0,0,0.08);
+}
+html:not(.dark) .moderation-config-form .react-datepicker__time-list-item { 
+  color: #445066; 
+  margin: 2px 4px; 
+  border-radius: 4px; 
+  padding: 4px 0;
+}
+html:not(.dark) .moderation-config-form .react-datepicker__time-list-item:hover { 
+  background: rgba(0,0,0,0.06); 
+  color: #1f2530;
+}
+html:not(.dark) .moderation-config-form .react-datepicker__time-list-item--selected { 
+  background: linear-gradient(135deg,var(--accent) 0%, #818cf8 100%) !important; 
+  color: #fff !important; 
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.7) inset, 0 4px 12px -3px rgba(0,0,0,0.25);
+}
+html:not(.dark) .moderation-config-form .react-datepicker__time-list-item--disabled { 
+  opacity: .4; 
+  text-decoration: line-through; 
+  cursor: not-allowed;
+}
+html:not(.dark) .moderation-config-form .react-datepicker__time-list { 
+  background: linear-gradient(180deg,#f9fbfe 0%, #f2f5f9 55%, #eef2f7 100%); 
+  scrollbar-width: thin; 
+  scrollbar-color: rgba(0,0,0,0.25) transparent; 
+}
+html:not(.dark) .moderation-config-form .react-datepicker__time-list::-webkit-scrollbar { width: 8px; }
+html:not(.dark) .moderation-config-form .react-datepicker__time-list::-webkit-scrollbar-track { background: transparent; }
+html:not(.dark) .moderation-config-form .react-datepicker__time-list::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 6px; }
+html:not(.dark) .moderation-config-form .react-datepicker__time-list::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.28); }
+html:not(.dark) .moderation-config-form .react-datepicker__time-list-item { color: #445066; }
 html:not(.dark) .moderation-config-form .card-sm .text-muted {
   color: #7c8899 !important;
 }
