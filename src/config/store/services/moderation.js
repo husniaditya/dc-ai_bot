@@ -2,6 +2,9 @@
 const db = require('../database/connection');
 const cache = require('../cache/manager');
 const { defaultConfigs } = require('../models/defaults');
+// Scheduler hooks
+const { schedulerNotifyCreateOrUpdate, schedulerNotifyDelete, parseCanonicalNext } = require('./schedulerService');
+const settingsService = require('./settings');
 
 // Moderation Features Management
 async function getModerationFeatures(guildId) {
@@ -80,6 +83,36 @@ async function toggleModerationFeature(guildId, featureKey, enabled) {
       // Clear caches to ensure consistency
       cacheData.guildXpSettingsCache.delete(guildId);
       cacheData.guildCommandToggles.delete(guildId);
+    }
+    
+    // Special handling for logging feature - sync with guild_audit_logs_config table
+    if (featureKey === 'logging') {
+      // Sync guild_audit_logs_config enabled column
+      await db.sqlPool.query(`
+        INSERT INTO guild_audit_logs_config (guild_id, enabled) 
+        VALUES (?, ?)
+        ON DUPLICATE KEY UPDATE enabled = VALUES(enabled)
+      `, [guildId, enabled ? 1 : 0]);
+      
+      // Clear audit log cache to ensure consistency
+      if (cacheData.guildAuditConfigCache) {
+        cacheData.guildAuditConfigCache.delete(guildId);
+      }
+    }
+    
+    // Special handling for antiraid feature - sync with guild_antiraid_settings table
+    if (featureKey === 'antiraid') {
+      // Sync guild_antiraid_settings enabled column
+      await db.sqlPool.query(`
+        INSERT INTO guild_antiraid_settings (guild_id, enabled) 
+        VALUES (?, ?)
+        ON DUPLICATE KEY UPDATE enabled = VALUES(enabled)
+      `, [guildId, enabled ? 1 : 0]);
+      
+      // Clear antiraid cache to ensure consistency
+      if (cacheData.guildAntiRaidSettingsCache) {
+        cacheData.guildAntiRaidSettingsCache.delete(guildId);
+      }
     }
   }
   
@@ -770,7 +803,9 @@ async function deleteGuildReactionRoleByMessageId(guildId, messageId) {
       
       // Invalidate cache
       const cacheData = cache.getCache();
-      cacheData.guildReactionRolesCache.delete(guildId);
+      if (cacheData.guildReactionRolesCache) {
+        cacheData.guildReactionRolesCache.delete(guildId);
+      }
       
       return true;
     } catch (e) {
@@ -792,27 +827,57 @@ async function getGuildAntiRaidSettings(guildId) {
   
   if (db.mariaAvailable && db.sqlPool) {
     try {
+      // Get anti-raid settings from guild_antiraid_settings table
       const [rows] = await db.sqlPool.query(`
         SELECT enabled, join_rate_limit, join_rate_window, account_age_limit,
-               auto_lockdown, lockdown_duration, alert_channel_id
+               auto_lockdown, auto_kick, lockdown_duration, alert_channel_id, raid_action, raid_action_duration,
+               delete_spam_invites, new_member_period, whitelist_roles
         FROM guild_antiraid_settings WHERE guild_id=?
       `, [guildId]);
       
+      // Also check moderation features table for enabled status
+      const [featureRows] = await db.sqlPool.query(`
+        SELECT enabled FROM guild_moderation_features 
+        WHERE guild_id=? AND feature_key='antiraid'
+      `, [guildId]);
+      
+      let config = { ...defaultConfigs.guildAntiRaidSettings };
+      
       if (rows.length > 0) {
         const row = rows[0];
-        const config = {
+        config = {
           enabled: !!row.enabled,
-          joinRateLimit: row.join_rate_limit,
-          joinRateWindow: row.join_rate_window,
-          accountAgeLimit: row.account_age_limit,
+          joinRate: row.join_rate_limit || 5,
+          joinWindow: row.join_rate_window || 60,
+          accountAge: row.account_age_limit || 7,
           autoLockdown: !!row.auto_lockdown,
-          lockdownDuration: row.lockdown_duration,
-          alertChannelId: row.alert_channel_id
+          autoKick: !!row.auto_kick,
+          lockdownDuration: row.lockdown_duration || 300,
+          alertChannel: row.alert_channel_id,
+          raidAction: row.raid_action || 'lockdown',
+          raidActionDuration: row.raid_action_duration || 60,
+          deleteInviteSpam: !!row.delete_spam_invites,
+          gracePeriod: row.new_member_period || 30,
+          bypassRoles: row.whitelist_roles ? JSON.parse(row.whitelist_roles) : [],
+          verificationLevel: 'medium', // Default value, not stored in DB
+          kickSuspicious: false // Default value, derived from raid_action
         };
         
-        cacheData.guildAntiRaidSettingsCache.set(guildId, config);
-        return { ...config };
+        // Set kickSuspicious based on raid_action
+        if (config.raidAction === 'kick' || config.raidAction === 'ban') {
+          config.kickSuspicious = true;
+        }
       }
+      
+      // If moderation features table has different enabled status, use the more restrictive one
+      if (featureRows.length > 0) {
+        const featureEnabled = !!featureRows[0].enabled;
+        // Both tables must be enabled for the feature to be truly enabled
+        config.enabled = config.enabled && featureEnabled;
+      }
+      
+      cacheData.guildAntiRaidSettingsCache.set(guildId, config);
+      return { ...config };
     } catch (e) {
       console.error('Error loading anti-raid settings:', e.message);
     }
@@ -829,6 +894,23 @@ async function updateGuildAntiRaidSettings(guildId, data) {
   const current = await getGuildAntiRaidSettings(guildId);
   const next = { ...current, ...data };
   
+  // Map front-end field names to database column names
+  const dbData = {
+    enabled: next.enabled ? 1 : 0,
+    join_rate_limit: next.joinRate || 5,
+    join_rate_window: next.joinWindow || 60,
+    account_age_limit: next.accountAge || 7,
+    auto_lockdown: next.autoLockdown ? 1 : 0,
+    auto_kick: next.autoKick ? 1 : 0,
+    lockdown_duration: next.lockdownDuration || 300,
+    alert_channel_id: next.alertChannel || null,
+    raid_action: next.raidAction || 'lockdown',
+    raid_action_duration: next.raidActionDuration || 60,
+    delete_spam_invites: next.deleteInviteSpam ? 1 : 0,
+    new_member_period: next.gracePeriod || 30,
+    whitelist_roles: next.bypassRoles && next.bypassRoles.length > 0 ? JSON.stringify(next.bypassRoles) : null
+  };
+  
   const cacheData = cache.getCache();
   cacheData.guildAntiRaidSettingsCache.set(guildId, next);
   
@@ -836,12 +918,27 @@ async function updateGuildAntiRaidSettings(guildId, data) {
     await db.sqlPool.query(`
       REPLACE INTO guild_antiraid_settings(
         guild_id, enabled, join_rate_limit, join_rate_window, account_age_limit,
-        auto_lockdown, lockdown_duration, alert_channel_id
-      ) VALUES (?,?,?,?,?,?,?,?)
+        auto_lockdown, auto_kick, lockdown_duration, alert_channel_id, raid_action, raid_action_duration,
+        delete_spam_invites, new_member_period, whitelist_roles
+      ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)
     `, [
-      guildId, next.enabled ? 1 : 0, next.joinRateLimit, next.joinRateWindow,
-      next.accountAgeLimit, next.autoLockdown ? 1 : 0, next.lockdownDuration, next.alertChannelId
+      guildId, dbData.enabled, dbData.join_rate_limit, dbData.join_rate_window,
+      dbData.account_age_limit, dbData.auto_lockdown, dbData.auto_kick, dbData.lockdown_duration,
+      dbData.alert_channel_id, dbData.raid_action, dbData.raid_action_duration,
+      dbData.delete_spam_invites, dbData.new_member_period, dbData.whitelist_roles
     ]);
+    
+    // If enabled status changed, sync with guild_moderation_features table
+    if (data.hasOwnProperty('enabled') && current.enabled !== next.enabled) {
+      await db.sqlPool.query(`
+        INSERT INTO guild_moderation_features (guild_id, feature_key, enabled, config) 
+        VALUES (?, 'antiraid', ?, '{}')
+        ON DUPLICATE KEY UPDATE enabled = VALUES(enabled)
+      `, [guildId, dbData.enabled]);
+      
+      // Clear moderation features cache to ensure consistency
+      cacheData.guildModerationFeaturesCache.delete(guildId);
+    }
   }
   
   return { ...next };
@@ -859,14 +956,14 @@ async function getGuildScheduledMessages(guildId) {
   if (db.mariaAvailable && db.sqlPool) {
     try {
       const [rows] = await db.sqlPool.query(`
-        SELECT id, name, channel_id, message_content, embed_data, schedule_type,
-               schedule_value, next_run, last_run, enabled, created_by
+        SELECT id, title, channel_id, message_content, embed_data, schedule_type,
+               schedule_value, next_run, last_run, enabled, created_by, created_at, updated_at
         FROM guild_scheduled_messages WHERE guild_id=? ORDER BY id
       `, [guildId]);
       
       const messages = rows.map(row => ({
         id: row.id,
-        name: row.name,
+        title: row.title,
         channelId: row.channel_id,
         messageContent: row.message_content,
         embedData: row.embed_data ? JSON.parse(row.embed_data) : null,
@@ -875,7 +972,9 @@ async function getGuildScheduledMessages(guildId) {
         nextRun: row.next_run,
         lastRun: row.last_run,
         enabled: !!row.enabled,
-        createdBy: row.created_by
+        createdBy: row.created_by,
+        createdAt: row.created_at,
+        updatedAt: row.updated_at
       }));
       
       cacheData.guildScheduledMessagesCache.set(guildId, messages);
@@ -887,6 +986,177 @@ async function getGuildScheduledMessages(guildId) {
   
   cacheData.guildScheduledMessagesCache.set(guildId, []);
   return [];
+}
+
+async function createGuildScheduledMessage(guildId, messageData, createdBy = 'system') {
+  if (!guildId || !messageData.title || !messageData.channelId || (!messageData.messageContent && !messageData.message)) {
+    throw new Error('Missing required fields: title, channelId, messageContent');
+  }
+
+  if (db.mariaAvailable && db.sqlPool) {
+    try {
+      const [result] = await db.sqlPool.query(`
+        INSERT INTO guild_scheduled_messages 
+        (guild_id, title, channel_id, message_content, embed_data, schedule_type, schedule_value, enabled, created_by)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `, [
+        guildId,
+        messageData.title,
+        messageData.channelId,
+        messageData.messageContent || messageData.message,
+        messageData.embedData ? JSON.stringify(messageData.embedData) : null,
+        messageData.scheduleType || 'cron',
+        messageData.scheduleValue,
+        1, // Always enabled - no toggle functionality
+        createdBy
+      ]);
+
+      // Clear cache
+      const cacheData = cache.getCache();
+      cacheData.guildScheduledMessagesCache.delete(guildId);
+
+      // Fetch created message
+      const messages = await getGuildScheduledMessages(guildId);
+      const created = messages.find(msg => msg.id === result.insertId);
+
+      // Timezone aware next_run (option 1) using guild timezone
+      try {
+        const guildSettings = await settingsService.getGuildSettings(guildId);
+        const tz = guildSettings.timezone || 'UTC';
+        // For once/daily/weekly/monthly we interpret schedule in guild TZ then convert to server Date
+        if (created && created.scheduleType !== 'cron') {
+          const nextDate = parseCanonicalNext(created.scheduleType, created.scheduleValue);
+          if (nextDate) {
+            await db.sqlPool.query('UPDATE guild_scheduled_messages SET next_run=? WHERE id=? AND guild_id=?',[nextDate, created.id, guildId]);
+            created.nextRun = nextDate;
+          }
+        }
+      } catch (e) { /* non-fatal */ }
+
+      // Notify scheduler (option 3)
+      if (created) {
+        try { schedulerNotifyCreateOrUpdate(global.discordClient || null, guildId, created); } catch {}
+      }
+      return created;
+    } catch (e) {
+      console.error('Error creating scheduled message:', e.message);
+      throw new Error('Failed to create scheduled message');
+    }
+  }
+
+  throw new Error('Database not available');
+}
+
+async function updateGuildScheduledMessage(guildId, messageId, messageData) {
+  if (!guildId || !messageId) {
+    throw new Error('Guild ID and message ID are required');
+  }
+
+  if (db.mariaAvailable && db.sqlPool) {
+    try {
+      const updateFields = [];
+      const updateValues = [];
+
+      if (messageData.title !== undefined) {
+        updateFields.push('title = ?');
+        updateValues.push(messageData.title);
+      }
+      if (messageData.channelId !== undefined) {
+        updateFields.push('channel_id = ?');
+        updateValues.push(messageData.channelId);
+      }
+      if (messageData.messageContent !== undefined || messageData.message !== undefined) {
+        updateFields.push('message_content = ?');
+        updateValues.push(messageData.messageContent || messageData.message);
+      }
+      if (messageData.embedData !== undefined) {
+        updateFields.push('embed_data = ?');
+        updateValues.push(messageData.embedData ? JSON.stringify(messageData.embedData) : null);
+      }
+      if (messageData.scheduleType !== undefined) {
+        updateFields.push('schedule_type = ?');
+        updateValues.push(messageData.scheduleType);
+      }
+      if (messageData.scheduleValue !== undefined) {
+        updateFields.push('schedule_value = ?');
+        updateValues.push(messageData.scheduleValue);
+      }
+
+      if (updateFields.length === 0) {
+        throw new Error('No fields to update');
+      }
+
+      updateValues.push(guildId, messageId);
+
+      const [result] = await db.sqlPool.query(`
+        UPDATE guild_scheduled_messages 
+        SET ${updateFields.join(', ')}, updated_at = CURRENT_TIMESTAMP
+        WHERE guild_id = ? AND id = ?
+      `, updateValues);
+
+      if (result.affectedRows === 0) {
+        throw new Error('Scheduled message not found');
+      }
+
+      // Clear cache
+      const cacheData = cache.getCache();
+      cacheData.guildScheduledMessagesCache.delete(guildId);
+
+      // Return the updated message
+      const messages = await getGuildScheduledMessages(guildId);
+      const updated = messages.find(msg => msg.id == messageId);
+
+      // Recompute next_run if schedule changed (option 3)
+      if (updated && (messageData.scheduleType !== undefined || messageData.scheduleValue !== undefined)) {
+        try {
+          const nextDate = parseCanonicalNext(updated.scheduleType, updated.scheduleValue);
+          if (nextDate) {
+            await db.sqlPool.query('UPDATE guild_scheduled_messages SET next_run=? WHERE id=? AND guild_id=?',[nextDate, updated.id, guildId]);
+            updated.nextRun = nextDate;
+          }
+        } catch {}
+      }
+      if (updated) {
+        try { schedulerNotifyCreateOrUpdate(global.discordClient || null, guildId, updated); } catch {}
+      }
+      return updated;
+    } catch (e) {
+      console.error('Error updating scheduled message:', e.message);
+      throw e;
+    }
+  }
+
+  throw new Error('Database not available');
+}
+
+async function deleteGuildScheduledMessage(guildId, messageId) {
+  if (!guildId || !messageId) {
+    throw new Error('Guild ID and message ID are required');
+  }
+
+  if (db.mariaAvailable && db.sqlPool) {
+    try {
+      const [result] = await db.sqlPool.query(`
+        DELETE FROM guild_scheduled_messages 
+        WHERE guild_id = ? AND id = ?
+      `, [guildId, messageId]);
+
+      if (result.affectedRows === 0) {
+        throw new Error('Scheduled message not found');
+      }
+
+  // Clear cache
+  const cacheData = cache.getCache();
+  cacheData.guildScheduledMessagesCache.delete(guildId);
+  try { schedulerNotifyDelete(guildId, messageId); } catch {}
+  return true;
+    } catch (e) {
+      console.error('Error deleting scheduled message:', e.message);
+      throw e;
+    }
+  }
+
+  throw new Error('Database not available');
 }
 
 // Self-Assignable Roles
@@ -1683,17 +1953,324 @@ async function cleanupExpiredViolations() {
 
   try {
     const [result] = await db.sqlPool.query(`
-      UPDATE guild_user_violations 
-      SET status = 'expired'
-      WHERE expires_at IS NOT NULL AND expires_at < NOW() AND status = 'active'
+      DELETE FROM guild_violations 
+      WHERE expires_at IS NOT NULL AND expires_at < NOW()
     `);
-
-    console.log(`Cleaned up ${result.affectedRows} expired violations`);
-    return result.affectedRows;
+    return result.affectedRows || 0;
   } catch (error) {
     console.error('Error cleaning up expired violations:', error);
     return 0;
   }
+}
+
+// === AUDIT LOGGING FUNCTIONS ===
+
+// Get guild audit log configuration
+async function getGuildAuditLogConfig(guildId) {
+  if (!guildId) return {
+    globalChannel: null,
+    messageChannel: null,
+    memberChannel: null,
+    channelChannel: null,
+    roleChannel: null,
+    serverChannel: null,
+    voiceChannel: null,
+    includeBots: true,
+    enhancedDetails: true,
+    enabled: false
+  };
+  
+  const cacheData = cache.getCache();
+  const cacheKey = `audit_config_${guildId}`;
+  
+  if (cacheData.guildAuditConfigCache && cacheData.guildAuditConfigCache.has(guildId)) {
+    return { ...cacheData.guildAuditConfigCache.get(guildId) };
+  }
+  
+  if (db.mariaAvailable && db.sqlPool) {
+    try {
+      // Get config from guild_audit_logs_config table
+      const [rows] = await db.sqlPool.query(`
+        SELECT 
+          global_channel as globalChannel,
+          message_channel as messageChannel,
+          member_channel as memberChannel,
+          channel_channel as channelChannel,
+          role_channel as roleChannel,
+          server_channel as serverChannel,
+          voice_channel as voiceChannel,
+          include_bots as includeBots,
+          enhanced_details as enhancedDetails,
+          enabled
+        FROM guild_audit_logs_config 
+        WHERE guild_id = ?
+      `, [guildId]);
+      
+      let config;
+      if (rows.length > 0) {
+        config = {
+          globalChannel: rows[0].globalChannel,
+          messageChannel: rows[0].messageChannel,
+          memberChannel: rows[0].memberChannel,
+          channelChannel: rows[0].channelChannel,
+          roleChannel: rows[0].roleChannel,
+          serverChannel: rows[0].serverChannel,
+          voiceChannel: rows[0].voiceChannel,
+          includeBots: Boolean(rows[0].includeBots),
+          enhancedDetails: Boolean(rows[0].enhancedDetails),
+          enabled: Boolean(rows[0].enabled)
+        };
+      } else {
+        // If no config in guild_audit_logs_config, check guild_moderation_features for enabled status
+        const [moderationRows] = await db.sqlPool.query(`
+          SELECT enabled 
+          FROM guild_moderation_features 
+          WHERE guild_id = ? AND feature_key = 'logging'
+        `, [guildId]);
+        
+        const enabledFromModeration = moderationRows.length > 0 ? Boolean(moderationRows[0].enabled) : false;
+        
+        // Return default config with enabled status from moderation features
+        config = {
+          globalChannel: null,
+          messageChannel: null,
+          memberChannel: null,
+          channelChannel: null,
+          roleChannel: null,
+          serverChannel: null,
+          voiceChannel: null,
+          includeBots: true,
+          enhancedDetails: true,
+          enabled: enabledFromModeration
+        };
+      }
+      
+      // Cache the result
+      if (!cacheData.guildAuditConfigCache) {
+        cacheData.guildAuditConfigCache = new Map();
+      }
+      cacheData.guildAuditConfigCache.set(guildId, config);
+      
+      return config;
+    } catch (error) {
+      console.error('Error getting audit log config:', error);
+      return {
+        globalChannel: null,
+        messageChannel: null,
+        memberChannel: null,
+        channelChannel: null,
+        roleChannel: null,
+        serverChannel: null,
+        voiceChannel: null,
+        includeBots: true,
+        enhancedDetails: true,
+        enabled: false
+      };
+    }
+  }
+
+  // Return default config if no database or error
+  return {
+    globalChannel: null,
+    messageChannel: null,
+    memberChannel: null,
+    channelChannel: null,
+    roleChannel: null,
+    serverChannel: null,
+    voiceChannel: null,
+    includeBots: true,
+    enhancedDetails: true,
+    enabled: false
+  };
+}
+
+// Update guild audit log configuration
+async function updateGuildAuditLogConfig(guildId, config) {
+  if (!guildId) throw new Error('guildId required');
+  
+  // Get current config to merge with updates
+  const current = await getGuildAuditLogConfig(guildId);
+  const updated = { ...current, ...config };
+  
+  // Clear cache
+  const cacheData = cache.getCache();
+  if (cacheData.guildAuditConfigCache) {
+    cacheData.guildAuditConfigCache.delete(guildId);
+  }
+  
+  if (db.mariaAvailable && db.sqlPool) {
+    try {
+      // Insert or update the configuration in guild_audit_logs_config table
+      await db.sqlPool.query(`
+        INSERT INTO guild_audit_logs_config (
+          guild_id, global_channel, message_channel, member_channel, 
+          channel_channel, role_channel, server_channel, voice_channel,
+          include_bots, enhanced_details, enabled
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ON DUPLICATE KEY UPDATE
+          global_channel = VALUES(global_channel),
+          message_channel = VALUES(message_channel),
+          member_channel = VALUES(member_channel),
+          channel_channel = VALUES(channel_channel),
+          role_channel = VALUES(role_channel),
+          server_channel = VALUES(server_channel),
+          voice_channel = VALUES(voice_channel),
+          include_bots = VALUES(include_bots),
+          enhanced_details = VALUES(enhanced_details),
+          enabled = VALUES(enabled),
+          updated_at = NOW()
+      `, [
+        guildId,
+        updated.globalChannel,
+        updated.messageChannel,
+        updated.memberChannel,
+        updated.channelChannel,
+        updated.roleChannel,
+        updated.serverChannel,
+        updated.voiceChannel,
+        updated.includeBots ? 1 : 0,
+        updated.enhancedDetails ? 1 : 0,
+        updated.enabled ? 1 : 0
+      ]);
+      
+      // If enabled field was updated, also sync with guild_moderation_features table
+      if (config.hasOwnProperty('enabled')) {
+        await db.sqlPool.query(`
+          INSERT INTO guild_moderation_features (guild_id, feature_key, enabled, config)
+          VALUES (?, 'logging', ?, '{}')
+          ON DUPLICATE KEY UPDATE 
+            enabled = VALUES(enabled),
+            updated_at = NOW()
+        `, [guildId, updated.enabled ? 1 : 0]);
+        
+        // Clear moderation features cache too
+        if (cacheData.guildModerationFeaturesCache) {
+          cacheData.guildModerationFeaturesCache.delete(guildId);
+        }
+      }
+      
+      // Cache the updated config
+      if (!cacheData.guildAuditConfigCache) {
+        cacheData.guildAuditConfigCache = new Map();
+      }
+      cacheData.guildAuditConfigCache.set(guildId, updated);
+      
+      return { ...updated };
+    } catch (error) {
+      console.error('Error saving audit log config:', error);
+      throw error;
+    }
+  }
+}
+
+// Get guild audit logs with pagination and filtering
+async function getGuildAuditLogs(guildId, options = {}) {
+  if (!guildId) return { logs: [], total: 0 };
+  
+  const {
+    actionType = null,
+    userId = null,
+    channelId = null,
+    limit = 50,
+    offset = 0,
+    orderBy = 'created_at DESC'
+  } = options;
+  
+  if (db.mariaAvailable && db.sqlPool) {
+    try {
+      let whereClause = 'WHERE guild_id = ?';
+      let params = [guildId];
+      
+      if (actionType) {
+        whereClause += ' AND action_type = ?';
+        params.push(actionType);
+      }
+      
+      if (userId) {
+        whereClause += ' AND user_id = ?';
+        params.push(userId);
+      }
+      
+      if (channelId) {
+        whereClause += ' AND channel_id = ?';
+        params.push(channelId);
+      }
+      
+      // Get total count
+      const [countRows] = await db.sqlPool.query(`
+        SELECT COUNT(*) as total FROM guild_audit_logs ${whereClause}
+      `, params);
+      
+      // Get logs
+      const [logs] = await db.sqlPool.query(`
+        SELECT * FROM guild_audit_logs ${whereClause}
+        ORDER BY ${orderBy}
+        LIMIT ? OFFSET ?
+      `, [...params, limit, offset]);
+      
+      return {
+        logs: logs.map(log => ({
+          ...log,
+          metadata: log.metadata ? JSON.parse(log.metadata) : null
+        })),
+        total: countRows[0].total
+      };
+    } catch (e) {
+      console.error('Error getting audit logs:', e.message);
+      return { logs: [], total: 0 };
+    }
+  }
+  
+  return { logs: [], total: 0 };
+}
+
+// Create new audit log entry
+async function createAuditLogEntry(guildId, logData) {
+  if (!guildId) throw new Error('guildId required');
+  if (!logData.actionType) throw new Error('actionType required');
+  
+  if (db.mariaAvailable && db.sqlPool) {
+    try {
+      const [result] = await db.sqlPool.query(`
+        INSERT INTO guild_audit_logs(
+          guild_id, action_type, user_id, moderator_id, target_id, channel_id, reason, metadata
+        ) VALUES (?,?,?,?,?,?,?,?)
+      `, [
+        guildId, logData.actionType, logData.userId || null, logData.moderatorId || null,
+        logData.targetId || null, logData.channelId || null, logData.reason || null,
+        logData.metadata ? JSON.stringify(logData.metadata) : null
+      ]);
+      
+      return result.insertId;
+    } catch (e) {
+      console.error('Error creating audit log entry:', e.message);
+      throw e;
+    }
+  }
+  
+  throw new Error('Database not available');
+}
+
+// Delete audit log entry
+async function deleteAuditLogEntry(guildId, logId) {
+  if (!guildId) throw new Error('guildId required');
+  if (!logId) throw new Error('logId required');
+  
+  if (db.mariaAvailable && db.sqlPool) {
+    try {
+      const [result] = await db.sqlPool.query(
+        'DELETE FROM guild_audit_logs WHERE guild_id=? AND id=?',
+        [guildId, logId]
+      );
+      
+      return result.affectedRows > 0;
+    } catch (e) {
+      console.error('Error deleting audit log entry:', e.message);
+      throw e;
+    }
+  }
+  
+  throw new Error('Database not available');
 }
 
 module.exports = {
@@ -1729,6 +2306,9 @@ module.exports = {
   getGuildAntiRaidSettings,
   updateGuildAntiRaidSettings,
   getGuildScheduledMessages,
+  createGuildScheduledMessage,
+  updateGuildScheduledMessage,
+  deleteGuildScheduledMessage,
   getGuildSelfAssignableRoles,
   addGuildSelfAssignableRole,
   updateGuildSelfAssignableRole,
@@ -1752,5 +2332,11 @@ module.exports = {
   getUserViolations,
   getGuildViolations,
   updateViolationStatus,
-  cleanupExpiredViolations
+  cleanupExpiredViolations,
+  // Audit logging
+  getGuildAuditLogConfig,
+  updateGuildAuditLogConfig,
+  getGuildAuditLogs,
+  createAuditLogEntry,
+  deleteAuditLogEntry
 };

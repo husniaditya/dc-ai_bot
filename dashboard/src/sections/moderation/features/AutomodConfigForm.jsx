@@ -279,6 +279,14 @@ export default function AutomodConfigForm({ config, updateConfig, channels, role
   const [profanityWords, setProfanityWords] = useState([]);
   const [profanityPatterns, setProfanityPatterns] = useState([]);
   const [loadingProfanity, setLoadingProfanity] = useState(false);
+  
+  // Profanity delete confirmation state
+  const [showDeleteWordModal, setShowDeleteWordModal] = useState(false);
+  const [showDeletePatternModal, setShowDeletePatternModal] = useState(false);
+  const [wordToDelete, setWordToDelete] = useState(null);
+  const [patternToDelete, setPatternToDelete] = useState(null);
+  const [deletingWord, setDeletingWord] = useState(false);
+  const [deletingPattern, setDeletingPattern] = useState(false);
   const [showProfanityWordForm, setShowProfanityWordForm] = useState(false);
   const [showProfanityPatternForm, setShowProfanityPatternForm] = useState(false);
   const [editingWord, setEditingWord] = useState(null);
@@ -482,7 +490,7 @@ export default function AutomodConfigForm({ config, updateConfig, channels, role
       setEditingWord(null);
     }
     setShowProfanityWordForm(true);
-  focusModal('profanity-words-modal');
+  // focusModal('profanity-words-modal');
   };
 
   const closeWordForm = () => {
@@ -505,6 +513,35 @@ export default function AutomodConfigForm({ config, updateConfig, channels, role
     } catch (error) {
       console.error('Failed to save profanity word:', error);
       showToast?.('error', `Failed to save profanity word. ${error.message || 'Please try again.'}`);
+    }
+  };
+
+  // Delete confirmation handlers for words
+  const requestDeleteWord = (wordId, word) => {
+    setWordToDelete({ id: wordId, word });
+    setShowDeleteWordModal(true);
+  };
+
+  const cancelDeleteWord = () => {
+    setShowDeleteWordModal(false);
+    setWordToDelete(null);
+  };
+
+  const confirmDeleteWord = async () => {
+    if (!wordToDelete) return;
+    
+    setDeletingWord(true);
+    try {
+      await deleteProfanityWord(wordToDelete.id, guildId);
+      await loadProfanityData();
+      showToast?.('success', `Profanity word "${wordToDelete.word}" deleted successfully!`);
+      setShowDeleteWordModal(false);
+      setWordToDelete(null);
+    } catch (error) {
+      console.error('Failed to delete profanity word:', error);
+      showToast?.('error', `Failed to delete profanity word. ${error.message || 'Please try again.'}`);
+    } finally {
+      setDeletingWord(false);
     }
   };
 
@@ -563,7 +600,7 @@ export default function AutomodConfigForm({ config, updateConfig, channels, role
       setEditingPattern(null);
     }
     setShowProfanityPatternForm(true);
-  focusModal('profanity-patterns-modal');
+  // focusModal('profanity-patterns-modal');
   };
 
   const closePatternForm = () => {
@@ -594,6 +631,35 @@ export default function AutomodConfigForm({ config, updateConfig, channels, role
     } catch (error) {
       console.error('Failed to save profanity pattern:', error);
       showToast?.('error', `Failed to save profanity pattern. ${error.message || 'Please try again.'}`);
+    }
+  };
+
+  // Delete confirmation handlers for patterns
+  const requestDeletePattern = (patternId, description) => {
+    setPatternToDelete({ id: patternId, description });
+    setShowDeletePatternModal(true);
+  };
+
+  const cancelDeletePattern = () => {
+    setShowDeletePatternModal(false);
+    setPatternToDelete(null);
+  };
+
+  const confirmDeletePattern = async () => {
+    if (!patternToDelete) return;
+    
+    setDeletingPattern(true);
+    try {
+      await deleteProfanityPattern(patternToDelete.id, guildId);
+      await loadProfanityData();
+      showToast?.('success', `Profanity pattern ${patternToDelete.description ? `"${patternToDelete.description}"` : ''} deleted successfully!`);
+      setShowDeletePatternModal(false);
+      setPatternToDelete(null);
+    } catch (error) {
+      console.error('Failed to delete profanity pattern:', error);
+      showToast?.('error', `Failed to delete profanity pattern. ${error.message || 'Please try again.'}`);
+    } finally {
+      setDeletingPattern(false);
     }
   };
 
@@ -1162,7 +1228,7 @@ export default function AutomodConfigForm({ config, updateConfig, channels, role
                                     type="button"
                                     className="btn btn-outline-danger btn-sm"
                                     style={{ fontSize: '0.65rem', padding: '0.125rem 0.25rem' }}
-                                    onClick={() => deleteWord(word.id, word.word)}
+                                    onClick={() => requestDeleteWord(word.id, word.word)}
                                     title="Delete Word"
                                   >
                                     <i className="fa-solid fa-trash"></i>
@@ -1307,7 +1373,7 @@ export default function AutomodConfigForm({ config, updateConfig, channels, role
                                     type="button"
                                     className="btn btn-outline-danger btn-sm"
                                     style={{ fontSize: '0.65rem', padding: '0.125rem 0.25rem' }}
-                                    onClick={() => deletePattern(pattern.id, pattern.description)}
+                                    onClick={() => requestDeletePattern(pattern.id, pattern.description)}
                                     title="Delete Pattern"
                                   >
                                     <i className="fa-solid fa-trash"></i>
@@ -1657,7 +1723,7 @@ export default function AutomodConfigForm({ config, updateConfig, channels, role
                 </small>
               </div>
               <div className="col-md-6 mb-3">
-                <label className="form-label small fw-semibold">Threshold Value</label>
+                <label className="form-label small fw-semibold">Warning Threshold Value</label>
                 <input
                   type="number"
                   className="form-control form-control-sm"
@@ -1811,6 +1877,49 @@ export default function AutomodConfigForm({ config, updateConfig, channels, role
               )}
             </div>
           </>
+        )}
+      />
+
+      {/* Profanity Word Delete Confirmation Modal */}
+      <DeleteConfirmationModal
+        show={showDeleteWordModal}
+        onClose={cancelDeleteWord}
+        onConfirm={confirmDeleteWord}
+        isDeleting={deletingWord}
+        title="Confirm Word Deletion"
+        message="Are you sure you want to delete this profanity word?"
+        warningMessage="This action cannot be undone."
+        confirmButtonText="Delete Word"
+        itemDetails={wordToDelete && (
+          <div className="fw-semibold text-warning">
+            <i className="fa-solid fa-exclamation-triangle me-2"></i>
+            "{wordToDelete.word}"
+          </div>
+        )}
+      />
+
+      {/* Profanity Pattern Delete Confirmation Modal */}
+      <DeleteConfirmationModal
+        show={showDeletePatternModal}
+        onClose={cancelDeletePattern}
+        onConfirm={confirmDeletePattern}
+        isDeleting={deletingPattern}
+        title="Confirm Pattern Deletion"
+        message="Are you sure you want to delete this profanity pattern?"
+        warningMessage="This action cannot be undone."
+        confirmButtonText="Delete Pattern"
+        itemDetails={patternToDelete && (
+          <div>
+            <div className="fw-semibold text-warning mb-2">
+              <i className="fa-solid fa-code me-2"></i>
+              Pattern: <code>/{patternToDelete.id && profanityPatterns.find(p => p.id === patternToDelete.id)?.pattern}/{profanityPatterns.find(p => p.id === patternToDelete.id)?.flags}</code>
+            </div>
+            {patternToDelete.description && (
+              <div className="small text-muted">
+                Description: {patternToDelete.description}
+              </div>
+            )}
+          </div>
         )}
       />
     </div>

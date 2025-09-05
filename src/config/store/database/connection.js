@@ -317,7 +317,7 @@ async function initializeModerationTables() {
   await sqlPool.query(`CREATE TABLE IF NOT EXISTS guild_scheduled_messages (
     id INT AUTO_INCREMENT PRIMARY KEY,
     guild_id VARCHAR(32) NOT NULL,
-    name VARCHAR(200) NOT NULL,
+    title VARCHAR(200) NOT NULL,
     channel_id VARCHAR(32) NOT NULL,
     message_content TEXT NOT NULL,
     embed_data TEXT NULL,
@@ -337,16 +337,53 @@ async function initializeModerationTables() {
   await sqlPool.query(`CREATE TABLE IF NOT EXISTS guild_audit_logs (
     id INT AUTO_INCREMENT PRIMARY KEY,
     guild_id VARCHAR(32) NOT NULL,
-    action_type ENUM('message_delete', 'message_edit', 'member_join', 'member_leave', 'role_update', 'channel_update', 'ban', 'kick', 'warn') NOT NULL,
+    action_type ENUM(
+      'messageDelete', 'messageUpdate', 'messageBulkDelete',
+      'guildMemberAdd', 'guildMemberRemove', 'guildMemberUpdate',
+      'guildBanAdd', 'guildBanRemove',
+      'channelCreate', 'channelDelete', 'channelUpdate',
+      'roleCreate', 'roleDelete', 'roleUpdate',
+      'voiceStateUpdate', 'guildUpdate',
+      'emojiCreate', 'emojiDelete', 'emojiUpdate',
+      'webhookUpdate', 'guildIntegrationsUpdate',
+      'warn', 'kick', 'ban', 'mute', 'unmute'
+    ) NOT NULL,
     user_id VARCHAR(32) NULL,
     moderator_id VARCHAR(32) NULL,
     target_id VARCHAR(32) NULL,
     channel_id VARCHAR(32) NULL,
+    message_id VARCHAR(32) NULL,
+    role_id VARCHAR(32) NULL,
+    emoji_id VARCHAR(32) NULL,
+    before_data TEXT NULL,
+    after_data TEXT NULL,
     reason TEXT NULL,
-    metadata TEXT NULL,
+    metadata JSON NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     INDEX idx_guild_type (guild_id, action_type),
-    INDEX idx_created (created_at)
+    INDEX idx_created (created_at),
+    INDEX idx_user (user_id),
+    INDEX idx_moderator (moderator_id),
+    INDEX idx_channel (channel_id)
+  ) ENGINE=InnoDB`);
+
+  // Audit Logging Configuration
+  await sqlPool.query(`CREATE TABLE IF NOT EXISTS guild_audit_logs_config (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    guild_id VARCHAR(32) NOT NULL UNIQUE,
+    global_channel VARCHAR(32) NULL,
+    message_channel VARCHAR(32) NULL,
+    member_channel VARCHAR(32) NULL,
+    channel_channel VARCHAR(32) NULL,
+    role_channel VARCHAR(32) NULL,
+    server_channel VARCHAR(32) NULL,
+    voice_channel VARCHAR(32) NULL,
+    include_bots BOOLEAN DEFAULT 1,
+    enhanced_details BOOLEAN DEFAULT 1,
+    enabled BOOLEAN DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_guild_enabled (guild_id, enabled)
   ) ENGINE=InnoDB`);
 
   // Anti-Raid Settings
@@ -357,8 +394,16 @@ async function initializeModerationTables() {
     join_rate_window INT DEFAULT 60,
     account_age_limit INT DEFAULT 7,
     auto_lockdown BOOLEAN DEFAULT 0,
+    auto_kick BOOLEAN DEFAULT 0,
     lockdown_duration INT DEFAULT 300,
     alert_channel_id VARCHAR(32) NULL,
+    raid_action ENUM('mute','kick','ban','lockdown','none') DEFAULT 'mute',
+    raid_action_duration INT DEFAULT 5,
+    raid_active BOOLEAN DEFAULT 0,
+    raid_started_at TIMESTAMP NULL,
+    delete_spam_invites BOOLEAN DEFAULT 0,
+    new_member_period INT DEFAULT 30,
+    whitelist_roles TEXT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
   ) ENGINE=InnoDB`);

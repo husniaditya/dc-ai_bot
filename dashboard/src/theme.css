@@ -46,6 +46,63 @@ html:not(.dark) {
   height: 100% !important;
   z-index: 999 !important;
 }
+
+/* Toast notifications for audit logging */
+.toast-container {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 1055;
+}
+
+.toast.audit-toast {
+  min-width: 300px;
+  max-width: 400px;
+}
+
+.toast.audit-toast .toast-body {
+  padding: 0.75rem;
+  font-size: 0.875rem;
+}
+
+.toast.audit-toast.bg-success {
+  background-color: rgba(25, 135, 84, 0.95) !important;
+}
+
+.toast.audit-toast.bg-danger {
+  background-color: rgba(220, 53, 69, 0.95) !important;
+}
+
+.toast.audit-toast.bg-primary {
+  background-color: rgba(13, 110, 253, 0.95) !important;
+}
+
+.toast.audit-toast.bg-warning {
+  background-color: rgba(255, 193, 7, 0.95) !important;
+  color: #000 !important;
+}
+
+/* Audit logging form specific styling */
+.log-type-card {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  transition: all 0.2s ease;
+}
+
+.log-type-card:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+html:not(.dark) .log-type-card {
+  background: rgba(0, 0, 0, 0.02);
+  border: 1px solid rgba(0, 0, 0, 0.1) !important;
+}
+
+html:not(.dark) .log-type-card:hover {
+  background: rgba(0, 0, 0, 0.04);
+  border-color: rgba(0, 0, 0, 0.15) !important;
+}
 html:not(.dark) body { color: var(--text-base); }
 html:not(.dark) .nav-glass, html:not(.dark) .card-glass, html:not(.dark) .modal-content {
   background: var(--glass-bg) !important;
@@ -74,9 +131,277 @@ html:not(.dark) .service-card.active {
 html:not(.dark) .navbar-brand { color: var(--text-base) !important; }
 html:not(.dark) .toggle-theme-btn { background: rgba(0,0,0,0.06) !important; color:#2a3140 !important; border:1px solid rgba(0,0,0,0.12) !important; }
 html:not(.dark) .toggle-theme-btn:hover { background: rgba(0,0,0,0.1) !important; }
-html:not(.dark) .table-modern thead th { color:#445066 !important; }
-html:not(.dark) .table-modern tbody td { color:#222 !important; }
-html:not(.dark) .table-modern tbody tr:hover { background: linear-gradient(90deg, rgba(0,0,0,0.06), rgba(0,0,0,0.02)) !important; }
+html:not(.dark) .table-modern thead th { 
+  color:#445066 !important; 
+  background: rgba(248,250,252,0.8) !important;
+  border-bottom: 1px solid rgba(0,0,0,0.1) !important;
+}
+html:not(.dark) .table-modern tbody td { 
+  color:#222 !important; 
+  background: rgba(255,255,255,0.6) !important;
+  border-bottom: 1px solid rgba(0,0,0,0.05) !important;
+}
+html:not(.dark) .table-modern tbody tr { 
+  background: rgba(255,255,255,0.6) !important;
+  border-bottom: 1px solid rgba(0,0,0,0.05) !important;
+}
+html:not(.dark) .table-modern tbody tr:hover { 
+  background: linear-gradient(90deg, rgba(0,0,0,0.08), rgba(0,0,0,0.04)) !important; 
+}
+html:not(.dark) .table-modern tbody tr:hover td { 
+  color:#1a1a1a !important; 
+  background: transparent !important;
+}
+html:not(.dark) .table-modern tbody tr:hover td small,
+html:not(.dark) .table-modern tbody tr:hover td a { 
+  color:#2a2a2a !important; 
+}
+html:not(.dark) .table-modern .card-sm { 
+  background: rgba(255,255,255,0.9) !important;
+  border: 1px solid rgba(0,0,0,0.08) !important;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1) !important;
+}
+html:not(.dark) .table-modern .card-sm:hover { 
+  background: rgba(255,255,255,1) !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15) !important;
+}
+html:not(.dark) .table-modern-shell {
+  background: rgba(248,250,252,0.8) !important;
+  border: 1px solid rgba(0,0,0,0.08) !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08) !important;
+}
+html:not(.dark) .table-modern-shell::-webkit-scrollbar-thumb { 
+  background: rgba(0,0,0,0.2) !important; 
+}
+html:not(.dark) .table-modern-shell::-webkit-scrollbar-track { 
+  background: rgba(0,0,0,0.05) !important; 
+}
+
+/* Light theme scheduler card overrides */
+html:not(.dark) .moderation-config-form .card-sm {
+  background: rgba(255,255,255,0.9) !important;
+  border: 1px solid rgba(0,0,0,0.08) !important;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1) !important;
+  color: #1f2530 !important;
+}
+html:not(.dark) .moderation-config-form .card-sm:hover {
+  background: rgba(255,255,255,1) !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15) !important;
+  border-color: rgba(0,0,0,0.12) !important;
+}
+html:not(.dark) .moderation-config-form .card-sm .card-body {
+  background: transparent !important;
+  color: #1f2530 !important;
+}
+html:not(.dark) .moderation-config-form .card-sm h6 {
+  color: #1f2530 !important;
+}
+html:not(.dark) .moderation-config-form .card-sm p {
+  color: #445066 !important;
+}
+
+/* --------------------------------------------- */
+/* Scheduler DatePicker Theming & Alignment      */
+/* --------------------------------------------- */
+.moderation-config-form .react-datepicker-wrapper,
+.moderation-config-form .react-datepicker__input-container {
+  width: 100% !important;
+  display: block;
+}
+
+.moderation-config-form .react-datepicker__input-container input.form-control,
+.moderation-config-form .react-datepicker__input-container input.form-control-sm {
+  width: 100% !important;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.2);
+  color: var(--text-base);
+  font-size: 0.8125rem;
+  line-height: 1.25rem;
+}
+
+.moderation-config-form .react-datepicker__input-container input.form-control:focus,
+.moderation-config-form .react-datepicker__input-container input.form-control-sm:focus {
+  background: rgba(255,255,255,0.08);
+  border-color: var(--accent);
+  box-shadow: var(--accent-glow);
+  outline: none;
+  color: var(--text-base);
+}
+
+/* Dark (default) popper */
+.moderation-config-form .react-datepicker-popper { z-index: 2000; }
+.moderation-config-form .react-datepicker {
+  background: rgba(30,34,54,0.95);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 8px 24px -4px rgba(0,0,0,0.6), 0 4px 12px -2px rgba(0,0,0,0.4);
+  backdrop-filter: blur(14px) saturate(160%);
+  color: var(--text-base);
+  font-size: 12.5px;
+}
+
+.moderation-config-form .react-datepicker__header {
+  background: rgba(255,255,255,0.05);
+  border-bottom: 1px solid rgba(255,255,255,0.12);
+  padding-top: 0.5rem;
+}
+
+.moderation-config-form .react-datepicker__current-month,
+.moderation-config-form .react-datepicker-time__header,
+.moderation-config-form .react-datepicker-year-header {
+  color: var(--text-base);
+  font-weight: 600;
+  letter-spacing: .3px;
+}
+
+.moderation-config-form .react-datepicker__day-name,
+.moderation-config-form .react-datepicker__day,
+.moderation-config-form .react-datepicker__time-list-item { color: var(--text-soft); }
+
+.moderation-config-form .react-datepicker__day:hover,
+.moderation-config-form .react-datepicker__time-list-item:hover { background: rgba(255,255,255,0.08); }
+
+.moderation-config-form .react-datepicker__day--selected,
+.moderation-config-form .react-datepicker__day--keyboard-selected,
+.moderation-config-form .react-datepicker__time-list-item--selected {
+  background: var(--accent) !important;
+  color: #fff !important;
+  font-weight: 600;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.35);
+}
+
+.moderation-config-form .react-datepicker__navigation-icon::before { border-color: var(--text-soft); }
+.moderation-config-form .react-datepicker__close-icon::after { background: var(--danger); }
+
+/* Light theme overrides */
+html:not(.dark) .moderation-config-form .react-datepicker__input-container input.form-control,
+html:not(.dark) .moderation-config-form .react-datepicker__input-container input.form-control-sm {
+  background: rgba(255,255,255,0.9);
+  border: 1px solid rgba(0,0,0,0.18);
+  color: #1f2530;
+}
+html:not(.dark) .moderation-config-form .react-datepicker__input-container input.form-control:focus,
+html:not(.dark) .moderation-config-form .react-datepicker__input-container input.form-control-sm:focus {
+  background: #fff;
+  border-color: var(--accent);
+  color: #1f2530;
+}
+html:not(.dark) .moderation-config-form .react-datepicker {
+  background: #ffffff;
+  border: 1px solid rgba(0,0,0,0.15);
+  box-shadow: 0 8px 30px rgba(0,0,0,0.15), 0 2px 8px rgba(0,0,0,0.08);
+  color: #1f2530;
+}
+html:not(.dark) .moderation-config-form .react-datepicker__header {
+  background: #f3f5f9;
+  border-bottom: 1px solid rgba(0,0,0,0.08);
+}
+html:not(.dark) .moderation-config-form .react-datepicker__day-name,
+html:not(.dark) .moderation-config-form .react-datepicker__day,
+html:not(.dark) .moderation-config-form .react-datepicker__time-list-item { color: #445066; }
+html:not(.dark) .moderation-config-form .react-datepicker__day:hover,
+html:not(.dark) .moderation-config-form .react-datepicker__time-list-item:hover { background: rgba(0,0,0,0.06); }
+html:not(.dark) .moderation-config-form .react-datepicker__day--selected,
+html:not(.dark) .moderation-config-form .react-datepicker__day--keyboard-selected,
+html:not(.dark) .moderation-config-form .react-datepicker__time-list-item--selected {
+  background: var(--accent) !important;
+  color: #fff !important;
+}
+
+/* Time column enhancements (dark) */
+.moderation-config-form .react-datepicker__time-container { 
+  background: linear-gradient(180deg, rgba(26,30,46,0.95) 0%, rgba(20,24,38,0.95) 60%, rgba(16,20,32,0.95) 100%);
+  border-left: 1px solid rgba(255,255,255,0.12);
+}
+.moderation-config-form .react-datepicker__time-list-item { 
+  color: var(--text-soft);
+  transition: background var(--transition), color var(--transition);
+  border-radius: 4px;
+  margin: 2px 4px;
+  padding: 4px 0;
+}
+.moderation-config-form .react-datepicker__time-list-item:hover { 
+  background: rgba(255,255,255,0.08); 
+  color: var(--text-base);
+}
+.moderation-config-form .react-datepicker__time-list-item--selected { 
+  background: linear-gradient(135deg,var(--accent) 0%, #7a7df5 100%) !important; 
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.15) inset, 0 4px 10px -2px rgba(0,0,0,0.5);
+}
+.moderation-config-form .react-datepicker__time-list-item--disabled { 
+  opacity: .35; 
+  cursor: not-allowed; 
+  text-decoration: line-through;
+}
+
+/* Time list container (dark) */
+.moderation-config-form .react-datepicker__time-list { 
+  background: linear-gradient(180deg, rgba(18,22,34,0.95) 0%, rgba(16,20,30,0.95) 60%, rgba(14,18,28,0.95) 100%);
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.2) transparent;
+}
+.moderation-config-form .react-datepicker__time-list::-webkit-scrollbar { width: 8px; }
+.moderation-config-form .react-datepicker__time-list::-webkit-scrollbar-track { background: transparent; }
+.moderation-config-form .react-datepicker__time-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 6px; }
+.moderation-config-form .react-datepicker__time-list::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.25); }
+
+/* Refining default time list item color in dark mode */
+.moderation-config-form .react-datepicker__time-list-item { color: var(--text-soft); }
+
+
+/* Time column enhancements (light) */
+html:not(.dark) .moderation-config-form .react-datepicker__time-container { 
+  background: linear-gradient(180deg,#fafbfd 0%, #f3f6fa 70%, #edf1f7 100%); 
+  border-left: 1px solid rgba(0,0,0,0.08);
+}
+html:not(.dark) .moderation-config-form .react-datepicker__time-list-item { 
+  color: #445066; 
+  margin: 2px 4px; 
+  border-radius: 4px; 
+  padding: 4px 0;
+}
+html:not(.dark) .moderation-config-form .react-datepicker__time-list-item:hover { 
+  background: rgba(0,0,0,0.06); 
+  color: #1f2530;
+}
+html:not(.dark) .moderation-config-form .react-datepicker__time-list-item--selected { 
+  background: linear-gradient(135deg,var(--accent) 0%, #818cf8 100%) !important; 
+  color: #fff !important; 
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.7) inset, 0 4px 12px -3px rgba(0,0,0,0.25);
+}
+html:not(.dark) .moderation-config-form .react-datepicker__time-list-item--disabled { 
+  opacity: .4; 
+  text-decoration: line-through; 
+  cursor: not-allowed;
+}
+html:not(.dark) .moderation-config-form .react-datepicker__time-list { 
+  background: linear-gradient(180deg,#f9fbfe 0%, #f2f5f9 55%, #eef2f7 100%); 
+  scrollbar-width: thin; 
+  scrollbar-color: rgba(0,0,0,0.25) transparent; 
+}
+html:not(.dark) .moderation-config-form .react-datepicker__time-list::-webkit-scrollbar { width: 8px; }
+html:not(.dark) .moderation-config-form .react-datepicker__time-list::-webkit-scrollbar-track { background: transparent; }
+html:not(.dark) .moderation-config-form .react-datepicker__time-list::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 6px; }
+html:not(.dark) .moderation-config-form .react-datepicker__time-list::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.28); }
+html:not(.dark) .moderation-config-form .react-datepicker__time-list-item { color: #445066; }
+html:not(.dark) .moderation-config-form .card-sm .text-muted {
+  color: #7c8899 !important;
+}
+html:not(.dark) .moderation-config-form .card-sm .badge {
+  background: rgba(0,0,0,0.06) !important;
+  color: #445066 !important;
+  border: 1px solid rgba(0,0,0,0.08) !important;
+}
+html:not(.dark) .moderation-config-form .card-sm .badge-soft {
+  background: rgba(99,102,241,0.1) !important;
+  color: #6366f1 !important;
+  border: 1px solid rgba(99,102,241,0.2) !important;
+}
+html:not(.dark) .moderation-config-form .card-sm .badge-success {
+  background: rgba(16,185,129,0.1) !important;
+  color: #059669 !important;
+  border: 1px solid rgba(16,185,129,0.2) !important;
+}
 html:not(.dark) .dash-menu-item { background: rgba(255,255,255,0.9); border-color: rgba(0,0,0,0.08); color:#445066; }
 html:not(.dark) .dash-menu-item:hover { background:#fff; color:#1f2530; }
 html:not(.dark) .dash-menu-item.active { background: linear-gradient(120deg, rgba(99,102,241,0.15), rgba(99,102,241,0.05)); color:#1f2530; border-color: var(--accent); }
@@ -183,17 +508,50 @@ html:not(.dark) .card-xp-roles .text-muted-primary {
 .moderation-config-form .form-control,
 .moderation-config-form .form-select,
 .moderation-config-form textarea.form-control {
-  background: rgba(255,255,255,0.06) !important;
-  border: 1px solid rgba(255,255,255,0.18) !important;
+  background: rgba(255,255,255,0.08) !important;
+  border: 1px solid rgba(255,255,255,0.25) !important;
   color: var(--text-base) !important;
-  border-radius: 6px;
+  border-radius: 8px;
+  backdrop-filter: blur(10px) saturate(160%);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 8px -2px rgba(0,0,0,0.15), 0 0 0 1px rgba(255,255,255,0.1) inset;
+}
+
+/* Specific styling for cards within moderation config form */
+.moderation-config-form .card {
+  background: linear-gradient(140deg,#1f2536 0%, #202a40 55%, #1a2132 100%) !important;
+  border: 1px solid rgba(255,255,255,0.14) !important;
+  backdrop-filter: blur(18px) saturate(160%);
+}
+
+.moderation-config-form .card-header {
+  background: rgba(255,255,255,0.04);
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  color: var(--text-base);
+}
+
+.moderation-config-form .card-body {
+  background: transparent;
+}
+
+.moderation-config-form .card-header h6 {
+  color: var(--text-base) !important;
 }
 
 .moderation-config-form .form-control:focus,
 .moderation-config-form .form-select:focus,
 .moderation-config-form textarea.form-control:focus {
+  background: rgba(255,255,255,0.12) !important;
   border-color: var(--accent) !important;
-  box-shadow: 0 0 0 2px rgba(99,102,241,0.45) !important;
+  box-shadow: 0 0 0 3px rgba(99,102,241,0.35), 0 4px 12px -2px rgba(99,102,241,0.25), 0 0 0 1px rgba(255,255,255,0.15) inset !important;
+  transform: translateY(-1px);
+}
+
+.moderation-config-form .form-control:hover:not(:focus),
+.moderation-config-form .form-select:hover:not(:focus),
+.moderation-config-form textarea.form-control:hover:not(:focus) {
+  background: rgba(255,255,255,0.1) !important;
+  border-color: rgba(255,255,255,0.35) !important;
 }
 
 /* Light theme overrides for moderation form */
@@ -212,6 +570,22 @@ html:not(.dark) .moderation-config-form textarea.form-control:focus {
   box-shadow: 0 0 0 2px rgba(99,102,241,0.4) !important;
 }
 
+/* Light theme card styling */
+html:not(.dark) .moderation-config-form .card {
+  background: #ffffff !important;
+  border: 1px solid rgba(0,0,0,0.1) !important;
+}
+
+html:not(.dark) .moderation-config-form .card-header {
+  background: rgba(0,0,0,0.02);
+  border-bottom: 1px solid rgba(0,0,0,0.06);
+  color: #1f2530;
+}
+
+html:not(.dark) .moderation-config-form .card-header h6 {
+  color: #1f2530 !important;
+}
+
 /* XP form specific styling */
 .moderation-config-form .add-multiplier-form .form-control,
 .moderation-config-form .add-multiplier-form .form-select {
@@ -228,11 +602,123 @@ html:not(.dark) .moderation-config-form .add-multiplier-form .form-select {
 .moderation-config-form label {
   color: var(--text-soft) !important;
   font-weight: 500;
+  margin-bottom: 6px;
+  font-size: 0.875rem;
+}
+
+.moderation-config-form .form-label .text-danger,
+.moderation-config-form label .text-danger {
+  color: #ff6b6b !important;
+}
+
+/* Enhanced placeholder styling for dark theme */
+.moderation-config-form .form-control::placeholder,
+.moderation-config-form .form-select::placeholder,
+.moderation-config-form textarea.form-control::placeholder {
+  color: rgba(255,255,255,0.45) !important;
+  opacity: 1;
+}
+
+/* Modal form label styling */
+.modal-content .form-label,
+.modal-content label {
+  color: var(--text-soft) !important;
+  font-weight: 500;
+  margin-bottom: 6px;
+  font-size: 0.875rem;
+}
+
+.modal-content .form-control::placeholder,
+.modal-content .form-select::placeholder,
+.modal-content textarea.form-control::placeholder {
+  color: rgba(255,255,255,0.45) !important;
+  opacity: 1;
+}
+
+/* Dark theme modal text and labels */
+html.dark .modal-content .form-label,
+html.dark .modal-content label {
+  color: var(--text-soft) !important;
+}
+
+html.dark .modal-content .form-control::placeholder,
+html.dark .modal-content .form-select::placeholder,
+html.dark .modal-content textarea.form-control::placeholder {
+  color: rgba(255,255,255,0.45) !important;
+}
+
+html.dark .modal-content .text-muted,
+html.dark .modal-content small {
+  color: var(--text-muted) !important;
+}
+
+html.dark .modal-content p,
+html.dark .modal-content span {
+  color: var(--text-base) !important;
 }
 
 html:not(.dark) .moderation-config-form .form-label,
 html:not(.dark) .moderation-config-form label {
   color: #445066 !important;
+}
+
+/* Enhanced scheduler form styling */
+.moderation-config-form .btn-outline-secondary {
+  background: rgba(255,255,255,0.06) !important;
+  border: 1px solid rgba(255,255,255,0.2) !important;
+  color: var(--text-soft) !important;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 6px;
+}
+
+.moderation-config-form .btn-outline-secondary:hover {
+  background: rgba(255,255,255,0.12) !important;
+  border-color: rgba(255,255,255,0.35) !important;
+  color: var(--text-base) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px -4px rgba(0,0,0,0.3);
+}
+
+.moderation-config-form .btn-outline-secondary.active,
+.moderation-config-form .btn-outline-secondary:active {
+  background: var(--accent) !important;
+  border-color: var(--accent) !important;
+  color: #ffffff !important;
+  box-shadow: 0 0 0 3px rgba(99,102,241,0.25);
+}
+
+/* Form section spacing */
+.moderation-config-form .row {
+  margin-bottom: 1rem;
+}
+
+.moderation-config-form .col-md-6:not(:last-child) {
+  margin-bottom: 0.75rem;
+}
+
+/* Small text styling */
+.moderation-config-form small,
+.moderation-config-form .small {
+  color: rgba(255,255,255,0.6) !important;
+  font-size: 0.75rem;
+}
+
+/* Light theme overrides for enhanced scheduler styling */
+html:not(.dark) .moderation-config-form .btn-outline-secondary {
+  background: rgba(0,0,0,0.04) !important;
+  border: 1px solid rgba(0,0,0,0.15) !important;
+  color: #445066 !important;
+}
+
+html:not(.dark) .moderation-config-form .btn-outline-secondary:hover {
+  background: rgba(0,0,0,0.08) !important;
+  border-color: rgba(0,0,0,0.25) !important;
+  color: #1f2530 !important;
+}
+
+html:not(.dark) .moderation-config-form small,
+html:not(.dark) .moderation-config-form .small {
+  color: rgba(0,0,0,0.6) !important;
 }
 
 /* Auto moderation form styling */
@@ -308,6 +794,278 @@ body.overlay-lock {
   body.overlay-lock .theme-toggle {
     pointer-events: auto !important;
   }
+}
+
+/* Unsaved Changes Modal */
+.unsaved-changes-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1060;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.unsaved-changes-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+}
+
+.unsaved-changes-modal {
+  position: relative;
+  background: linear-gradient(145deg, #1f2537 0%, #2a3240 100%);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 16px;
+  box-shadow: 
+    0 20px 60px rgba(0, 0, 0, 0.5),
+    0 8px 32px rgba(0, 0, 0, 0.3),
+    0 0 0 1px rgba(255, 255, 255, 0.1);
+  max-width: 480px;
+  width: 100%;
+  overflow: hidden;
+  animation: slideInUp 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transform-origin: center;
+}
+
+.unsaved-changes-header {
+  padding: 2rem 2rem 1rem;
+  text-align: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(239, 68, 68, 0.05) 100%);
+}
+
+.unsaved-changes-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.2) 0%, rgba(239, 68, 68, 0.1) 100%);
+  border: 2px solid rgba(239, 68, 68, 0.3);
+  border-radius: 50%;
+  margin-bottom: 1rem;
+  position: relative;
+}
+
+.unsaved-changes-icon::before {
+  content: '';
+  position: absolute;
+  inset: -8px;
+  border-radius: 50%;
+  background: rgba(239, 68, 68, 0.1);
+  animation: pulse 2s infinite;
+}
+
+.unsaved-changes-icon i {
+  font-size: 1.5rem;
+  color: #ef4444;
+  z-index: 1;
+  position: relative;
+}
+
+.unsaved-changes-title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-base);
+  letter-spacing: -0.02em;
+}
+
+.unsaved-changes-body {
+  padding: 1.5rem 2rem;
+}
+
+.unsaved-changes-message {
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: var(--text-soft);
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.unsaved-changes-warning {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  font-size: 0.85rem;
+  color: #fca5a5;
+  display: flex;
+  align-items: center;
+}
+
+.unsaved-changes-actions {
+  padding: 1rem 2rem 2rem;
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.unsaved-cancel-btn,
+.unsaved-confirm-btn {
+  flex: 1;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+}
+
+.unsaved-cancel-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: var(--text-base);
+}
+
+.unsaved-cancel-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.25);
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+.unsaved-confirm-btn {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #fff;
+  box-shadow: 0 4px 16px rgba(239, 68, 68, 0.3);
+}
+
+.unsaved-confirm-btn:hover {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  border-color: rgba(239, 68, 68, 0.5);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 0.4;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.1);
+  }
+}
+
+/* Light theme overrides for unsaved changes modal */
+html:not(.dark) .unsaved-changes-modal {
+  background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+  border-color: rgba(0, 0, 0, 0.12);
+  box-shadow: 
+    0 20px 60px rgba(0, 0, 0, 0.15),
+    0 8px 32px rgba(0, 0, 0, 0.1),
+    0 0 0 1px rgba(0, 0, 0, 0.05);
+}
+
+html:not(.dark) .unsaved-changes-header {
+  border-bottom-color: rgba(0, 0, 0, 0.08);
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.08) 0%, rgba(239, 68, 68, 0.03) 100%);
+}
+
+html:not(.dark) .unsaved-changes-title {
+  color: #1f2937;
+}
+
+html:not(.dark) .unsaved-changes-message {
+  color: #4b5563;
+}
+
+html:not(.dark) .unsaved-changes-warning {
+  background: rgba(239, 68, 68, 0.08);
+  border-color: rgba(239, 68, 68, 0.15);
+  color: #dc2626;
+}
+
+html:not(.dark) .unsaved-cancel-btn {
+  background: rgba(0, 0, 0, 0.04);
+  border-color: rgba(0, 0, 0, 0.12);
+  color: #374151;
+}
+
+html:not(.dark) .unsaved-cancel-btn:hover {
+  background: rgba(0, 0, 0, 0.08);
+  border-color: rgba(0, 0, 0, 0.18);
+  color: #1f2937;
+}
+
+/* Profanity Modals Centering */
+#profanity-words-modal,
+#profanity-patterns-modal {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 1rem;
+}
+
+#profanity-words-modal .modal-dialog,
+#profanity-patterns-modal .modal-dialog {
+  margin: 0 !important;
+  max-width: 95%;
+  width: 100%;
+}
+
+#profanity-words-modal .modal-content,
+#profanity-patterns-modal .modal-content {
+  border-radius: 16px;
+  box-shadow: 
+    0 20px 60px rgba(0, 0, 0, 0.4),
+    0 8px 32px rgba(0, 0, 0, 0.25),
+    0 0 0 1px rgba(255, 255, 255, 0.1);
+  animation: slideInUp 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transform-origin: center;
+}
+
+#profanity-words-modal .modal-header,
+#profanity-patterns-modal .modal-header {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(99, 102, 241, 0.05) 100%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px 16px 0 0;
+}
+
+#profanity-words-modal .modal-title,
+#profanity-patterns-modal .modal-title {
+  font-weight: 600;
+  color: var(--text-base);
+}
+
+/* Light theme overrides for profanity modals */
+html:not(.dark) #profanity-words-modal .modal-content,
+html:not(.dark) #profanity-patterns-modal .modal-content {
+  box-shadow: 
+    0 20px 60px rgba(0, 0, 0, 0.15),
+    0 8px 32px rgba(0, 0, 0, 0.1),
+    0 0 0 1px rgba(0, 0, 0, 0.05);
+}
+
+html:not(.dark) #profanity-words-modal .modal-header,
+html:not(.dark) #profanity-patterns-modal .modal-header {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.08) 0%, rgba(99, 102, 241, 0.03) 100%);
+  border-bottom-color: rgba(0, 0, 0, 0.08);
+}
+
+html:not(.dark) #profanity-words-modal .modal-title,
+html:not(.dark) #profanity-patterns-modal .modal-title {
+  color: #1f2937;
 }
 
 /* Top bar */
@@ -386,18 +1144,90 @@ body.overlay-lock {
   text-transform: uppercase;
   border: none !important;
   color: var(--text-soft);
+  background: rgba(255,255,255,0.06) !important;
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid rgba(255,255,255,0.1) !important;
 }
 .table-modern tbody tr {
   transition: var(--transition);
+  background: rgba(255,255,255,0.02) !important;
+  border-bottom: 1px solid rgba(255,255,255,0.06) !important;
 }
 .table-modern tbody tr:hover {
-  background: linear-gradient(90deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.03) 100%) !important;
+  background: linear-gradient(90deg, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.06) 100%) !important;
 }
-.table-modern tbody tr:hover td, .table-modern tbody tr:hover td small, .table-modern tbody tr:hover td a { color:#fff !important; }
-.table-modern tbody tr.match-highlight:hover { background: linear-gradient(90deg,rgba(16,185,129,0.38),rgba(16,185,129,0.25)) !important; }
-.table-modern td { color: var(--text-base); }
-.table-modern tbody td { color:#000 !important; }
-.table-modern tbody td a, .table-modern tbody td small { color:#111 !important; }
+.table-modern tbody tr:hover td, .table-modern tbody tr:hover td small, .table-modern tbody tr:hover td a { 
+  color: var(--text-base) !important; 
+}
+.table-modern tbody tr.match-highlight:hover { 
+  background: linear-gradient(90deg,rgba(16,185,129,0.38),rgba(16,185,129,0.25)) !important; 
+}
+.table-modern td { 
+  color: var(--text-base); 
+  background: transparent !important;
+  border-bottom: 1px solid rgba(255,255,255,0.06) !important;
+}
+.table-modern tbody td { 
+  color: var(--text-base) !important; 
+  background: transparent !important;
+}
+.table-modern tbody td a, .table-modern tbody td small { 
+  color: var(--text-soft) !important; 
+}
+
+/* Card styles within tables */
+.table-modern .card-sm { 
+  background: rgba(255,255,255,0.06) !important;
+  border: 1px solid rgba(255,255,255,0.12) !important;
+  backdrop-filter: blur(8px);
+  transition: all 0.3s ease;
+}
+.table-modern .card-sm:hover { 
+  background: rgba(255,255,255,0.1) !important;
+  border-color: rgba(255,255,255,0.2) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3) !important;
+}
+.table-modern .card-sm .card-body {
+  color: var(--text-base) !important;
+}
+
+/* Scheduler specific card styling */
+.moderation-config-form .card-sm {
+  background: rgba(255,255,255,0.06) !important;
+  border: 1px solid rgba(255,255,255,0.12) !important;
+  backdrop-filter: blur(8px);
+  color: var(--text-base) !important;
+}
+.moderation-config-form .card-sm:hover {
+  background: rgba(255,255,255,0.1) !important;
+  border-color: rgba(255,255,255,0.2) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3) !important;
+}
+.moderation-config-form .card-sm .card-body {
+  background: transparent !important;
+  color: var(--text-base) !important;
+}
+.moderation-config-form .card-sm h6 {
+  color: var(--text-base) !important;
+}
+.moderation-config-form .card-sm p {
+  color: var(--text-base) !important;
+}
+.moderation-config-form .card-sm .text-muted {
+  color: var(--text-soft) !important;
+}
+.moderation-config-form .card-sm .badge {
+  background: rgba(255,255,255,0.1) !important;
+  color: var(--text-soft) !important;
+  border: 1px solid rgba(255,255,255,0.15) !important;
+}
+.moderation-config-form .card-sm .badge-success {
+  background: rgba(16,185,129,0.15) !important;
+  color: #10b981 !important;
+  border: 1px solid rgba(16,185,129,0.3) !important;
+}
 
 /* Light green Edit button */
 .btn-edit { color:#059669 !important; border:1px solid #059669 !important; background:rgba(5,150,105,0.08) !important; }
@@ -407,7 +1237,17 @@ body.overlay-lock {
 .text-muted { color: var(--text-muted) !important; }
 .table-modern tbody tr.match-highlight { background: rgba(16,185,129,0.15); }
 .table-modern tbody tr.match-highlight:hover { background: rgba(16,185,129,0.22); }
-.table-modern-shell { position:relative; border:1px solid rgba(255,255,255,0.12); border-radius: var(--radius-sm); padding:.35rem .35rem .5rem; background: rgba(255,255,255,0.04); backdrop-filter: blur(8px) saturate(140%); max-height:60vh; overflow:auto; }
+.table-modern-shell { 
+  position: relative; 
+  border: 1px solid rgba(255,255,255,0.12); 
+  border-radius: var(--radius-sm); 
+  padding: .35rem .35rem .5rem; 
+  background: rgba(255,255,255,0.04); 
+  backdrop-filter: blur(8px) saturate(140%); 
+  max-height: 60vh; 
+  overflow: auto;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
 .table-modern { margin-bottom:0; }
 .table-modern thead tr { background: linear-gradient(90deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02)); }
 .table-modern thead th { position:sticky; top:0; backdrop-filter: blur(6px); z-index:2; }
@@ -553,6 +1393,29 @@ html.dark .form-check-input:checked { background-color: var(--accent); border-co
   border:1px solid rgba(255,255,255,0.14) !important;
   backdrop-filter: blur(18px) saturate(160%);
 }
+
+/* Ensure dark theme modal styling takes precedence */
+html.dark .modal-content {
+  background: linear-gradient(140deg,#1f2536 0%, #202a40 55%, #1a2132 100%) !important;
+  border: 1px solid rgba(255,255,255,0.14) !important;
+  color: var(--text-base) !important;
+}
+
+html.dark .modal-header {
+  background: rgba(255,255,255,0.04);
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  color: var(--text-base);
+}
+
+html.dark .modal-footer {
+  background: rgba(255,255,255,0.035);
+  border-top: 1px solid rgba(255,255,255,0.08);
+  color: var(--text-base);
+}
+
+html.dark .modal-title {
+  color: var(--text-base) !important;
+}
 .modal-header {
   background: rgba(255,255,255,0.04);
   border-bottom:1px solid rgba(255,255,255,0.08);
@@ -563,12 +1426,42 @@ html.dark .form-check-input:checked { background-color: var(--accent); border-co
 }
 .modal-body { background: transparent; }
 .modal-content .form-control, .modal-content .form-select, .modal-content textarea.form-control {
-  background: rgba(255,255,255,0.07) !important;
-  border:1px solid rgba(255,255,255,0.22) !important;
+  background: rgba(255,255,255,0.08) !important;
+  border: 1px solid rgba(255,255,255,0.25) !important;
+  color: var(--text-base) !important;
+  border-radius: 8px;
+  backdrop-filter: blur(10px) saturate(160%);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 8px -2px rgba(0,0,0,0.15), 0 0 0 1px rgba(255,255,255,0.1) inset;
+}
+
+/* Specific dark theme modal form styling */
+html.dark .modal-content .form-control, 
+html.dark .modal-content .form-select, 
+html.dark .modal-content textarea.form-control {
+  background: rgba(255,255,255,0.08) !important;
+  border: 1px solid rgba(255,255,255,0.25) !important;
   color: var(--text-base) !important;
 }
 .modal-content .form-control:focus, .modal-content .form-select:focus, .modal-content textarea.form-control:focus {
-  box-shadow: 0 0 0 2px rgba(99,102,241,0.45) !important;
+  background: rgba(255,255,255,0.12) !important;
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 3px rgba(99,102,241,0.35), 0 4px 12px -2px rgba(99,102,241,0.25), 0 0 0 1px rgba(255,255,255,0.15) inset !important;
+  transform: translateY(-1px);
+}
+
+html.dark .modal-content .form-control:focus, 
+html.dark .modal-content .form-select:focus, 
+html.dark .modal-content textarea.form-control:focus {
+  background: rgba(255,255,255,0.12) !important;
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 3px rgba(99,102,241,0.35), 0 4px 12px -2px rgba(99,102,241,0.25), 0 0 0 1px rgba(255,255,255,0.15) inset !important;
+}
+.modal-content .form-control:hover:not(:focus), 
+.modal-content .form-select:hover:not(:focus), 
+.modal-content textarea.form-control:hover:not(:focus) {
+  background: rgba(255,255,255,0.1) !important;
+  border-color: rgba(255,255,255,0.35) !important;
 }
 .modal .btn-close { filter: invert(1) grayscale(100%) brightness(180%); opacity:.7; }
 .modal .btn-close:hover { opacity:1; }

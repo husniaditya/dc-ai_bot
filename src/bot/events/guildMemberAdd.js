@@ -1,10 +1,15 @@
 const { generateWelcomeCard } = require('../../utils/welcome-card-generator');
+const antiRaidService = require('../services/anti-raid');
 
 function setupGuildMemberAddHandler(client, store, startTimestamp, commandMap) {
   // Welcome event
   client.on('guildMemberAdd', async (member) => {
     try {
       const guildId = member.guild.id;
+      
+      // ANTI-RAID PROTECTION - Check first before welcome messages
+      await antiRaidService.handleMemberJoin(member, store, client);
+      
       const cfg = await store.getGuildWelcome(guildId);
       
       if (!cfg || cfg.enabled === false) return;

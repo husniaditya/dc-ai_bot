@@ -204,57 +204,57 @@ export default function XPConfigForm({ config, updateConfig, channels, roles }) 
           )}
           
           <div className="add-multiplier-form">
-            <div className="row g-2 align-items-end">
+            {/* Use consistent label + spacing styles to align with other FormField inputs */}
+            <div className="row g-2">
               <div className="col-md-6">
-                <label className="form-label" style={{ fontSize: '0.85rem', fontWeight: '500' }}>Role</label>
-                <select 
-                  id="new-multiplier-role"
-                  className="form-select form-select-sm"
-                  defaultValue=""
-                >
-                  <option value="">Select role...</option>
-                  {roles
-                    .filter(role => 
-                      !role.managed && 
-                      role.name !== '@everyone' && 
-                      !config.doubleXpEvents?.some(event => event.roleId === role.id)
-                    )
-                    .map(role => (
-                      <option key={role.id} value={role.id}>{role.name}</option>
-                    ))}
-                </select>
+                <div className="mb-2 mb-md-0">
+                  <label className="form-label small fw-semibold mb-1" htmlFor="new-multiplier-role">Role</label>
+                  <select 
+                    id="new-multiplier-role"
+                    className="form-select form-select-sm"
+                    defaultValue=""
+                  >
+                    <option value="">Select role...</option>
+                    {roles
+                      .filter(role => 
+                        !role.managed && 
+                        role.name !== '@everyone' && 
+                        !config.doubleXpEvents?.some(event => event.roleId === role.id)
+                      )
+                      .map(role => (
+                        <option key={role.id} value={role.id}>{role.name}</option>
+                      ))}
+                  </select>
+                </div>
               </div>
               <div className="col-md-4">
-                <label className="form-label" style={{ fontSize: '0.85rem', fontWeight: '500' }}>Multiplier</label>
-                <input 
-                  id="new-multiplier-value"
-                  type="number"
-                  className="form-control form-control-sm"
-                  placeholder="1.5"
-                  min="0.1"
-                  max="10"
-                  step="0.1"
-                />
+                <div className="mb-2 mb-md-0">
+                  <label className="form-label small fw-semibold mb-1" htmlFor="new-multiplier-value">Multiplier</label>
+                  <input 
+                    id="new-multiplier-value"
+                    type="number"
+                    className="form-control form-control-sm"
+                    placeholder="1.5"
+                    min="0.1"
+                    max="10"
+                    step="0.1"
+                  />
+                </div>
               </div>
               <div className="col-md-2">
+                {/* Invisible label to preserve vertical rhythm with other fields */}
+                <label className="form-label small fw-semibold mb-1 invisible">Add</label>
                 <button
                   type="button"
                   className="btn btn-primary btn-sm w-100"
                   onClick={() => {
                     const roleSelect = document.getElementById('new-multiplier-role');
                     const multiplierInput = document.getElementById('new-multiplier-value');
-                    
                     const roleId = roleSelect.value;
                     const multiplier = parseFloat(multiplierInput.value);
-                    
                     if (roleId && multiplier && multiplier > 0) {
-                      const newEvents = [...(config.doubleXpEvents || []), {
-                        roleId: roleId,
-                        multiplier: multiplier
-                      }];
+                      const newEvents = [...(config.doubleXpEvents || []), { roleId, multiplier }];
                       updateConfig('doubleXpEvents', newEvents);
-                      
-                      // Reset form
                       roleSelect.value = '';
                       multiplierInput.value = '';
                     }

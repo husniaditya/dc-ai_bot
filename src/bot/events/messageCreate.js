@@ -1,5 +1,6 @@
 const { PermissionsBitField } = require('discord.js');
 const XPHandler = require('../handlers/xpHandler');
+const antiRaidService = require('../services/anti-raid');
 
 module.exports = (client, store) => {
   // Initialize XP handler
@@ -11,6 +12,14 @@ module.exports = (client, store) => {
       if (!message.guild || message.author.bot) return;
 
       const guildId = message.guild.id;
+      
+      // ANTI-RAID PROTECTION - Check messages from new members
+      if (antiRaidService.isNewMemberMonitored(guildId, message.author.id)) {
+        const antiRaidConfig = await store.getGuildAntiRaidSettings(guildId);
+        await antiRaidService.handleNewMemberMessage(message, antiRaidConfig, store, client);
+        // If message was deleted or user was kicked, stop processing
+        if (!message.guild.members.cache.has(message.author.id)) return;
+      }
       
       // Process XP gain for this message (before moderation checks)
       await xpHandler.processMessage(message);

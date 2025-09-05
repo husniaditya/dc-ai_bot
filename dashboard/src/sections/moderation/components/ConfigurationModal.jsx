@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import WelcomeConfigForm from '../features/WelcomeConfigForm';
 import AutomodConfigForm from '../features/AutomodConfigForm';
 import RolesConfigForm from '../features/RolesConfigForm';
@@ -6,6 +6,7 @@ import XPConfigForm from '../features/XPConfigForm';
 import SchedulerConfigForm from '../features/SchedulerConfigForm';
 import LoggingConfigForm from '../features/LoggingConfigForm';
 import AntiRaidConfigForm from '../features/AntiRaidConfigForm';
+import UnsavedChangesModal from './UnsavedChangesModal';
 
 // Configuration Modal Component
 export default function ConfigurationModal({ 
@@ -22,6 +23,11 @@ export default function ConfigurationModal({
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
+  const [showUnsavedModal, setShowUnsavedModal] = useState(false);
+  
+  // Ref for forms that handle their own save/reset
+  const loggingFormRef = useRef(null);
+  const schedulerFormRef = useRef(null);
 
   // Fetch specific configuration when modal opens
   useEffect(() => {
@@ -54,6 +60,20 @@ export default function ConfigurationModal({
               'X-Guild-Id': guildId
             }
           });
+        } else if (feature.key === 'logging') {
+          response = await fetch('/api/moderation/audit-logs/config', {
+            headers: { 
+              Authorization: `Bearer ${localStorage.getItem('token')}`,
+              'X-Guild-Id': guildId
+            }
+          });
+        } else if (feature.key === 'scheduler') {
+          response = await fetch('/api/moderation/scheduler/config', {
+            headers: { 
+              Authorization: `Bearer ${localStorage.getItem('token')}`,
+              'X-Guild-Id': guildId
+            }
+          });
         } else {
           response = await fetch(`/api/moderation/features/${feature.key}/config`, {
             headers: { 
@@ -67,7 +87,7 @@ export default function ConfigurationModal({
           const data = await response.json();
           
           // Handle different possible response structures
-          const configData = (feature.key === 'welcome' || feature.key === 'xp' || feature.key === 'antiraid') 
+          const configData = (feature.key === 'welcome' || feature.key === 'xp' || feature.key === 'antiraid' || feature.key === 'logging' || feature.key === 'scheduler') 
             ? (data.config || data || {})
             : (data.config || data || {});
           
@@ -137,22 +157,32 @@ export default function ConfigurationModal({
       },
       scheduler: {
         enabled: false,
-        scheduledMessages: []
+        messages: []
       },
       logging: {
         enabled: false,
-        messageLogChannel: '',
-        memberLogChannel: '',
-        channelLogChannel: '',
-        roleLogChannel: ''
+        globalChannel: null,
+        messageChannel: null,
+        memberChannel: null,
+        channelChannel: null,
+        roleChannel: null,
+        serverChannel: null,
+        voiceChannel: null,
+        includeBots: true,
+        enhancedDetails: true
       },
       antiraid: {
         enabled: false,
-        joinRateLimit: 5,
-        joinTimeWindow: 60,
-        accountAgeLimit: 7,
+        joinRate: 5,
+        joinWindow: 10,
+        accountAge: 7,
         autoLockdown: false,
-        verificationLevel: 1
+        verificationLevel: 'medium',
+        alertChannel: null,
+        kickSuspicious: false,
+        deleteInviteSpam: true,
+        gracePeriod: 30,
+        bypassRoles: []
       }
     };
 
@@ -161,11 +191,19 @@ export default function ConfigurationModal({
 
   // Check if configuration has been modified
   const isDirty = () => {
+    // For scheduler, also check if there's an open form
+    if (feature.key === 'scheduler' && schedulerFormRef?.current) {
+      const schedulerDirty = schedulerFormRef.current.isDirty?.() || false;
+      if (schedulerDirty) return true;
+    }
+    
+    // Use standard config comparison for all forms
     return JSON.stringify(config) !== JSON.stringify(originalConfig);
   };
 
   // Reset configuration to original values
   const resetConfig = () => {
+    // Use standard config reset for all forms
     setConfig({ ...originalConfig });
   };
 
@@ -187,42 +225,15 @@ export default function ConfigurationModal({
       // Handle different features with specific endpoints
       if (feature.key === 'welcome') {
         await onSave(config);
+      } else if (feature.key === 'logging') {
+        // Use same pattern as welcome - let onSave handle it
+        await onSave(config);
       } else if (feature.key === 'xp') {
-        const response = await fetch('/api/moderation/xp/config', {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
-            'X-Guild-Id': guildId
-          },
-          body: JSON.stringify(config)
-        });
-
-        if (!response.ok) {
-          throw new Error('Failed to save XP configuration');
-        }
-
-        const data = await response.json();
-        setConfig(data.config || data);
-        setOriginalConfig(data.config || data);
+        // Use same pattern as welcome - let onSave handle it
+        await onSave(config);
       } else if (feature.key === 'antiraid') {
-        const response = await fetch('/api/moderation/antiraid/config', {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
-            'X-Guild-Id': guildId
-          },
-          body: JSON.stringify(config)
-        });
-
-        if (!response.ok) {
-          throw new Error('Failed to save anti-raid configuration');
-        }
-
-        const data = await response.json();
-        setConfig(data.config || data);
-        setOriginalConfig(data.config || data);
+        // Use same pattern as welcome - let onSave handle it
+        await onSave(config);
       } else {
         await onSave(config);
       }
@@ -238,16 +249,26 @@ export default function ConfigurationModal({
 
   const handleClose = () => {
     if (isDirty() && !saving) {
-      const confirmClose = window.confirm(
-        'You have unsaved changes. Are you sure you want to close without saving?'
-      );
-      if (!confirmClose) return;
+      setShowUnsavedModal(true);
+      return;
     }
     
     setIsClosing(true);
     setTimeout(() => {
       onClose();
     }, 200);
+  };
+
+  const handleConfirmClose = () => {
+    setShowUnsavedModal(false);
+    setIsClosing(true);
+    setTimeout(() => {
+      onClose();
+    }, 200);
+  };
+
+  const handleCancelClose = () => {
+    setShowUnsavedModal(false);
   };
 
   const updateConfig = (key, value) => {
@@ -267,6 +288,21 @@ export default function ConfigurationModal({
       showToast
     };
 
+    // Add onConfigSaved callback for forms that handle their own saving
+    const schedulerProps = {
+      ...commonProps,
+      ref: schedulerFormRef,
+      onConfigSaved: (savedConfig) => {
+        setOriginalConfig(savedConfig);
+      },
+      onClose: () => {
+        setIsClosing(true);
+        setTimeout(() => {
+          onClose();
+        }, 200);
+      }
+    };
+
     switch (feature.key) {
       case 'welcome':
         return <WelcomeConfigForm {...commonProps} />;
@@ -277,9 +313,9 @@ export default function ConfigurationModal({
       case 'xp':
         return <XPConfigForm {...commonProps} />;
       case 'scheduler':
-        return <SchedulerConfigForm {...commonProps} />;
+        return <SchedulerConfigForm {...schedulerProps} />;
       case 'logging':
-        return <LoggingConfigForm {...commonProps} />;
+        return <LoggingConfigForm ref={loggingFormRef} {...commonProps} />;
       case 'antiraid':
         return <AntiRaidConfigForm {...commonProps} />;
       default:
@@ -348,7 +384,7 @@ export default function ConfigurationModal({
           
           {/* Modal Footer */}
           <div className="modal-footer border-secondary">
-            {isDirty() && (
+            {isDirty() && feature.key !== 'scheduler' && (
               <button 
                 type="button" 
                 className="btn btn-outline-warning me-2"
@@ -394,6 +430,14 @@ export default function ConfigurationModal({
           </div>
         </div>
       </div>
+      
+      {/* Unsaved Changes Confirmation Modal */}
+      <UnsavedChangesModal
+        isOpen={showUnsavedModal}
+        onConfirm={handleConfirmClose}
+        onCancel={handleCancelClose}
+        featureName={feature.label}
+      />
     </div>
   );
 }

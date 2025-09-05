@@ -1,5 +1,129 @@
-import React from 'react';
-import { ChannelSelector, FormField, SwitchToggle, BypassRolesPicker } from '../components/SharedComponents';
+import React, { useState, useRef, useEffect } from 'react';
+import { ChannelSelector, FormField, SwitchToggle } from '../components/SharedComponents';
+
+/**
+ * WhitelistRolesPicker - Component for selecting whitelist roles similar to MentionTargetsPicker
+ */
+function WhitelistRolesPicker({ value, onChange, roles }) {
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState('');
+  const boxRef = useRef(null);
+  const inputRef = useRef(null);
+  const list = value || [];
+  
+  useEffect(() => {
+    function onDoc(e) { 
+      if (!boxRef.current) return; 
+      if (!boxRef.current.contains(e.target)) setOpen(false); 
+    }
+    document.addEventListener('mousedown', onDoc);
+    return () => document.removeEventListener('mousedown', onDoc);
+  }, []);
+  
+  const filtered = (roles || [])
+    .filter(role => !query || role.name.toLowerCase().includes(query.toLowerCase()))
+    .filter(role => !list.includes(role.id));
+  
+  const [activeIdx, setActiveIdx] = useState(0);
+  
+  useEffect(() => { 
+    setActiveIdx(0); 
+  }, [query, open]);
+  
+  function add(roleId) { 
+    if (!list.includes(roleId)) onChange([...list, roleId]); 
+    setQuery(''); 
+    setOpen(false); 
+    setTimeout(() => inputRef.current && inputRef.current.focus(), 0); 
+  }
+  
+  function remove(roleId) { 
+    onChange(list.filter(x => x !== roleId)); 
+  }
+  
+  function handleKey(e) {
+    if (e.key === 'Backspace' && !query) { 
+      onChange(list.slice(0, -1)); 
+    } else if (e.key === 'Enter') { 
+      e.preventDefault(); 
+      if (open && filtered[activeIdx]) add(filtered[activeIdx].id); 
+    } else if (e.key === 'ArrowDown') { 
+      e.preventDefault(); 
+      setOpen(true); 
+      setActiveIdx(i => Math.min(filtered.length - 1, i + 1)); 
+    } else if (e.key === 'ArrowUp') { 
+      e.preventDefault(); 
+      setActiveIdx(i => Math.max(0, i - 1)); 
+    }
+  }
+  
+  return (
+    <div className="mention-targets-picker" ref={boxRef}>
+      <div 
+        className="mention-targets-box" 
+        onClick={() => { 
+          setOpen(true); 
+          inputRef.current && inputRef.current.focus(); 
+        }}
+      >
+        {list.map(roleId => {
+          const role = roles.find(r => r.id === roleId);
+          const label = role ? role.name : roleId;
+          return (
+            <span key={roleId} className="mention-chip role">
+              @{label}
+              <button 
+                type="button" 
+                onClick={e => { 
+                  e.stopPropagation(); 
+                  remove(roleId); 
+                }}
+              >
+                &times;
+              </button>
+            </span>
+          );
+        })}
+        <input 
+          ref={inputRef} 
+          value={query} 
+          placeholder={list.length ? '' : 'Add roles to whitelist…'} 
+          onFocus={() => setOpen(true)} 
+          onChange={e => { 
+            setQuery(e.target.value); 
+            setOpen(true); 
+          }} 
+          onKeyDown={handleKey} 
+        />
+      </div>
+      
+      {open && filtered.length > 0 && (
+        <div className="mention-targets-suggestions">
+          {filtered.slice(0, 40).map((role, idx) => (
+            <button 
+              type="button" 
+              key={role.id} 
+              className={idx === activeIdx ? 'active' : ''} 
+              onMouseEnter={() => setActiveIdx(idx)} 
+              onClick={() => add(role.id)}
+            >
+              {role.name}
+              <span className="meta">role</span>
+            </button>
+          ))}
+        </div>
+      )}
+      
+      {open && filtered.length === 0 && (
+        <div className="mention-targets-suggestions">
+          <div className="text-muted small p-2" style={{fontSize: '.55rem'}}>
+            {query ? 'No matching roles' : 'All roles already added'}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 // Anti-Raid Protection Configuration
 export default function AntiRaidConfigForm({ config, updateConfig, channels, roles }) {
@@ -131,13 +255,45 @@ export default function AntiRaidConfigForm({ config, updateConfig, channels, rol
         />
       </FormField>
 
-      <SwitchToggle
-        id="antiraid-auto-lockdown"
-        label="Auto Lockdown"
-        checked={config.autoLockdown !== false}
-        onChange={(checked) => updateConfig('autoLockdown', checked)}
-        description="Automatically lock the server when a raid is detected"
-      />
+      <div className="row">
+        <div className="col-md-6">
+          <FormField 
+            label="Raid Action"
+            description="Action to take when a raid is detected"
+          >
+            <select 
+              className="form-select form-select-sm custom-dropdown"
+              value={config.raidAction || 'lockdown'}
+              onChange={(e) => updateConfig('raidAction', e.target.value)}
+            >
+              <option value="lockdown">Lockdown Server</option>
+              <option value="kick">Kick Suspicious Members</option>
+              <option value="ban">Ban Suspicious Members</option>
+              <option value="timeout">Timeout Suspicious Members</option>
+              <option value="alert">Alert Only</option>
+            </select>
+          </FormField>
+        </div>
+        <div className="col-md-6">
+          <FormField 
+            label="Action Duration (minutes)"
+            description="Duration for temporary actions (timeout/lockdown)"
+          >
+            <input 
+              type="number"
+              className="form-control form-control-sm"
+              min="1"
+              max="10080"
+              value={config.raidActionDuration || 60}
+              onChange={(e) => updateConfig('raidActionDuration', parseInt(e.target.value) || 60)}
+              disabled={config.raidAction === 'kick' || config.raidAction === 'ban' || config.raidAction === 'alert'}
+            />
+            {(config.raidAction === 'kick' || config.raidAction === 'ban' || config.raidAction === 'alert') && (
+              <small className="text-muted">Duration not applicable for this action</small>
+            )}
+          </FormField>
+        </div>
+      </div>
 
       <FormField label="Verification Level During Lockdown">
         <select 
@@ -166,19 +322,11 @@ export default function AntiRaidConfigForm({ config, updateConfig, channels, rol
       </FormField>
 
       <SwitchToggle
-        id="antiraid-kick-suspicious"
+        id="antiraid-auto-kick"
         label="Auto-Kick Suspicious Accounts"
-        checked={config.kickSuspicious || false}
-        onChange={(checked) => updateConfig('kickSuspicious', checked)}
+        checked={config.autoKick || false}
+        onChange={(checked) => updateConfig('autoKick', checked)}
         description="Automatically kick accounts that meet suspicious criteria"
-      />
-
-      <SwitchToggle
-        id="antiraid-delete-invite-spam"
-        label="Delete Invite Spam"
-        checked={config.deleteInviteSpam !== false}
-        onChange={(checked) => updateConfig('deleteInviteSpam', checked)}
-        description="Automatically delete messages containing Discord invites from new members"
       />
 
       <FormField 
@@ -196,10 +344,10 @@ export default function AntiRaidConfigForm({ config, updateConfig, channels, rol
       </FormField>
 
       <FormField 
-        label="Bypass Roles"
+        label="Whitelist Roles"
         description="Members with these roles will bypass anti-raid protection"
       >
-        <BypassRolesPicker
+        <WhitelistRolesPicker
           value={config.bypassRoles || []}
           onChange={(list) => updateConfig('bypassRoles', list)}
           roles={roles}

@@ -157,6 +157,68 @@ export async function updateSettings(p, guildId){ return authFetch('/api/setting
 export async function listAuto(guildId){ return authFetch('/api/auto-responses' + (guildId?`?guildId=${guildId}`:'')); }
 export async function upsertAuto(entry, guildId){ return authFetch('/api/auto-responses' + (guildId?`?guildId=${guildId}`:''), { method:'POST', body: JSON.stringify(entry) }); }
 export async function deleteAuto(key, guildId){ return authFetch('/api/auto-responses/' + encodeURIComponent(key) + (guildId?`?guildId=${guildId}`:''), { method:'DELETE' }); }
+
+// Audit Logging API functions
+export async function getAuditLogConfig(guildId) {
+  const headers = guildId ? { 'X-Guild-Id': guildId } : {};
+  return authFetch('/api/moderation/logging/config', { headers });
+}
+
+export async function updateAuditLogConfig(config, guildId) {
+  const headers = guildId ? { 'X-Guild-Id': guildId } : {};
+  return authFetch('/api/moderation/logging/config', {
+    method: 'PUT',
+    headers,
+    body: JSON.stringify(config)
+  });
+}
+
+export async function getAuditLogs(guildId, options = {}) {
+  const headers = guildId ? { 'X-Guild-Id': guildId } : {};
+  const params = new URLSearchParams();
+  
+  if (options.actionType) params.append('actionType', options.actionType);
+  if (options.userId) params.append('userId', options.userId);
+  if (options.channelId) params.append('channelId', options.channelId);
+  if (options.limit) params.append('limit', options.limit.toString());
+  if (options.offset) params.append('offset', options.offset.toString());
+  if (options.orderBy) params.append('orderBy', options.orderBy);
+  
+  const query = params.toString() ? `?${params.toString()}` : '';
+  return authFetch(`/api/moderation/logging/logs${query}`, { headers });
+}
+
+export async function createAuditLogEntry(logData, guildId) {
+  const headers = guildId ? { 'X-Guild-Id': guildId } : {};
+  return authFetch('/api/moderation/logging/logs', {
+    method: 'POST',
+    headers,
+    body: JSON.stringify(logData)
+  });
+}
+
+export async function deleteAuditLogEntry(logId, guildId) {
+  const headers = guildId ? { 'X-Guild-Id': guildId } : {};
+  return authFetch(`/api/moderation/logging/logs/${logId}`, {
+    method: 'DELETE',
+    headers
+  });
+}
+
+// Anti-Raid Configuration API functions
+export async function getAntiRaidConfig(guildId) {
+  const headers = guildId ? { 'X-Guild-Id': guildId } : {};
+  return authFetch('/api/moderation/antiraid/config', { headers });
+}
+
+export async function updateAntiRaidConfig(config, guildId) {
+  const headers = guildId ? { 'X-Guild-Id': guildId } : {};
+  return authFetch('/api/moderation/antiraid/config', {
+    method: 'PUT',
+    headers,
+    body: JSON.stringify(config)
+  });
+}
 export async function getCommandToggles(guildId){ return authFetch('/api/commands' + (guildId?`?guildId=${guildId}`:'')); }
 export async function setCommandToggle(name, enabled, guildId){ return authFetch('/api/commands/toggle' + (guildId?`?guildId=${guildId}`:''), { method:'POST', body: JSON.stringify({ name, enabled }) }); }
 export async function getPersonalization(guildId){ return authFetch('/api/personalization' + (guildId?`?guildId=${guildId}`:'')); }
@@ -329,6 +391,52 @@ export async function updateProfanityPattern(patternId, patternData, guildId) {
 export async function deleteProfanityPattern(patternId, guildId) {
   const headers = guildId ? { 'X-Guild-Id': guildId } : {};
   return authFetch(`/api/moderation/profanity/patterns/${patternId}`, {
+    method: 'DELETE',
+    headers
+  });
+}
+
+// Scheduler API functions
+export async function getSchedulerConfig(guildId) {
+  const headers = guildId ? { 'X-Guild-Id': guildId } : {};
+  return authFetch('/api/moderation/scheduler/config', { headers });
+}
+
+export async function updateSchedulerConfig(config, guildId) {
+  const headers = guildId ? { 'X-Guild-Id': guildId } : {};
+  return authFetch('/api/moderation/scheduler/config', {
+    method: 'PUT',
+    headers,
+    body: JSON.stringify(config)
+  });
+}
+
+export async function getScheduledMessages(guildId) {
+  const headers = guildId ? { 'X-Guild-Id': guildId } : {};
+  return authFetch('/api/moderation/scheduler/messages', { headers });
+}
+
+export async function createScheduledMessage(messageData, guildId) {
+  const headers = guildId ? { 'X-Guild-Id': guildId } : {};
+  return authFetch('/api/moderation/scheduler/messages', {
+    method: 'POST',
+    headers,
+    body: JSON.stringify(messageData)
+  });
+}
+
+export async function updateScheduledMessage(messageId, messageData, guildId) {
+  const headers = guildId ? { 'X-Guild-Id': guildId } : {};
+  return authFetch(`/api/moderation/scheduler/messages/${messageId}`, {
+    method: 'PUT',
+    headers,
+    body: JSON.stringify(messageData)
+  });
+}
+
+export async function deleteScheduledMessage(messageId, guildId) {
+  const headers = guildId ? { 'X-Guild-Id': guildId } : {};
+  return authFetch(`/api/moderation/scheduler/messages/${messageId}`, {
     method: 'DELETE',
     headers
   });

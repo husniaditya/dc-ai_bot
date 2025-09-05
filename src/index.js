@@ -83,11 +83,15 @@ if (process.env.ENABLE_MESSAGE_CONTENT !== '0') intents.push(GatewayIntentBits.M
 // Guild Members intent (privileged) – required for welcome join tracking & some member operations
 if (process.env.ENABLE_GUILD_MEMBERS === '1' || process.env.ENABLE_WELCOME === '1') intents.push(GatewayIntentBits.GuildMembers);
 const client = new Client({ intents, partials:[Partials.Channel, Partials.Message, Partials.Reaction] });
+// Expose globally for services needing client (scheduler hooks)
+global.discordClient = client;
 loadCommands(client);
 
 const store = require('./config/store');
 const persistenceModeRef = { mode:null };
 store.persistenceModeRef = persistenceModeRef;
+// Initialize scheduler service (moved into services folder)
+const { initScheduler } = require('./config/store/services/schedulerService');
 
 // Initialize database before starting API server
 async function initializeApp() {
@@ -115,6 +119,9 @@ initializeApp();
 
 // Load events (including ready event that starts YouTube/Twitch watchers)
 loadEvents(client, store, commandMap, startTimestamp);
+
+// Start scheduler (after events so ready listener in scheduler can attach)
+initScheduler(client);
 
 // Fallback ready event if no ready.js event file exists
 client.once('ready', () => {
