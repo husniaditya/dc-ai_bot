@@ -337,16 +337,34 @@ async function initializeModerationTables() {
   await sqlPool.query(`CREATE TABLE IF NOT EXISTS guild_audit_logs (
     id INT AUTO_INCREMENT PRIMARY KEY,
     guild_id VARCHAR(32) NOT NULL,
-    action_type ENUM('message_delete', 'message_edit', 'member_join', 'member_leave', 'role_update', 'channel_update', 'ban', 'kick', 'warn') NOT NULL,
+    action_type ENUM(
+      'messageDelete', 'messageUpdate', 'messageBulkDelete',
+      'guildMemberAdd', 'guildMemberRemove', 'guildMemberUpdate',
+      'guildBanAdd', 'guildBanRemove',
+      'channelCreate', 'channelDelete', 'channelUpdate',
+      'roleCreate', 'roleDelete', 'roleUpdate',
+      'voiceStateUpdate', 'guildUpdate',
+      'emojiCreate', 'emojiDelete', 'emojiUpdate',
+      'webhookUpdate', 'guildIntegrationsUpdate',
+      'warn', 'kick', 'ban', 'mute', 'unmute'
+    ) NOT NULL,
     user_id VARCHAR(32) NULL,
     moderator_id VARCHAR(32) NULL,
     target_id VARCHAR(32) NULL,
     channel_id VARCHAR(32) NULL,
+    message_id VARCHAR(32) NULL,
+    role_id VARCHAR(32) NULL,
+    emoji_id VARCHAR(32) NULL,
+    before_data TEXT NULL,
+    after_data TEXT NULL,
     reason TEXT NULL,
-    metadata TEXT NULL,
+    metadata JSON NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     INDEX idx_guild_type (guild_id, action_type),
-    INDEX idx_created (created_at)
+    INDEX idx_created (created_at),
+    INDEX idx_user (user_id),
+    INDEX idx_moderator (moderator_id),
+    INDEX idx_channel (channel_id)
   ) ENGINE=InnoDB`);
 
   // Audit Logging Configuration

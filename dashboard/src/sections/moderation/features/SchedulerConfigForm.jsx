@@ -584,19 +584,21 @@ export default forwardRef(function SchedulerConfigForm({ config, updateConfig, c
                     </select>
                   </FormField>
                 </div>
-                <div className="col-md-4">
-                  <FormField label="Time Display" required={false}>
-                    <select
-                      className="form-select form-select-sm"
-                      value={timeFormatMode}
-                      onChange={(e) => setTimeFormatMode(e.target.value)}
-                    >
-                      <option value="24h">24-hour</option>
-                      <option value="12h">12-hour (AM/PM)</option>
-                    </select>
-                  </FormField>
-                </div>
-                <div className="col-md-4">
+                {formData.scheduleType !== 'cron' && (
+                  <div className="col-md-4">
+                    <FormField label="Time Display" required={false}>
+                      <select
+                        className="form-select form-select-sm"
+                        value={timeFormatMode}
+                        onChange={(e) => setTimeFormatMode(e.target.value)}
+                      >
+                        <option value="24h">24-hour</option>
+                        <option value="12h">12-hour (AM/PM)</option>
+                      </select>
+                    </FormField>
+                  </div>
+                )}
+                <div className={`col-md-${formData.scheduleType === 'cron' ? '8' : '4'}`}>
                   <FormField label="Schedule Value" required>
                     {renderScheduleInput()}
                   </FormField>

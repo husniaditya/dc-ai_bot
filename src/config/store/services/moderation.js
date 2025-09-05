@@ -2,6 +2,9 @@
 const db = require('../database/connection');
 const cache = require('../cache/manager');
 const { defaultConfigs } = require('../models/defaults');
+// Scheduler hooks
+const { schedulerNotifyCreateOrUpdate, schedulerNotifyDelete, parseCanonicalNext } = require('./schedulerService');
+const settingsService = require('./settings');
 
 // Moderation Features Management
 async function getModerationFeatures(guildId) {
@@ -1012,9 +1015,29 @@ async function createGuildScheduledMessage(guildId, messageData, createdBy = 'sy
       const cacheData = cache.getCache();
       cacheData.guildScheduledMessagesCache.delete(guildId);
 
-      // Return the created message
+      // Fetch created message
       const messages = await getGuildScheduledMessages(guildId);
-      return messages.find(msg => msg.id === result.insertId);
+      const created = messages.find(msg => msg.id === result.insertId);
+
+      // Timezone aware next_run (option 1) using guild timezone
+      try {
+        const guildSettings = await settingsService.getGuildSettings(guildId);
+        const tz = guildSettings.timezone || 'UTC';
+        // For once/daily/weekly/monthly we interpret schedule in guild TZ then convert to server Date
+        if (created && created.scheduleType !== 'cron') {
+          const nextDate = parseCanonicalNext(created.scheduleType, created.scheduleValue);
+          if (nextDate) {
+            await db.sqlPool.query('UPDATE guild_scheduled_messages SET next_run=? WHERE id=? AND guild_id=?',[nextDate, created.id, guildId]);
+            created.nextRun = nextDate;
+          }
+        }
+      } catch (e) { /* non-fatal */ }
+
+      // Notify scheduler (option 3)
+      if (created) {
+        try { schedulerNotifyCreateOrUpdate(global.discordClient || null, guildId, created); } catch {}
+      }
+      return created;
     } catch (e) {
       console.error('Error creating scheduled message:', e.message);
       throw new Error('Failed to create scheduled message');
@@ -1081,7 +1104,22 @@ async function updateGuildScheduledMessage(guildId, messageId, messageData) {
 
       // Return the updated message
       const messages = await getGuildScheduledMessages(guildId);
-      return messages.find(msg => msg.id == messageId);
+      const updated = messages.find(msg => msg.id == messageId);
+
+      // Recompute next_run if schedule changed (option 3)
+      if (updated && (messageData.scheduleType !== undefined || messageData.scheduleValue !== undefined)) {
+        try {
+          const nextDate = parseCanonicalNext(updated.scheduleType, updated.scheduleValue);
+          if (nextDate) {
+            await db.sqlPool.query('UPDATE guild_scheduled_messages SET next_run=? WHERE id=? AND guild_id=?',[nextDate, updated.id, guildId]);
+            updated.nextRun = nextDate;
+          }
+        } catch {}
+      }
+      if (updated) {
+        try { schedulerNotifyCreateOrUpdate(global.discordClient || null, guildId, updated); } catch {}
+      }
+      return updated;
     } catch (e) {
       console.error('Error updating scheduled message:', e.message);
       throw e;
@@ -1107,11 +1145,11 @@ async function deleteGuildScheduledMessage(guildId, messageId) {
         throw new Error('Scheduled message not found');
       }
 
-      // Clear cache
-      const cacheData = cache.getCache();
-      cacheData.guildScheduledMessagesCache.delete(guildId);
-
-      return true;
+  // Clear cache
+  const cacheData = cache.getCache();
+  cacheData.guildScheduledMessagesCache.delete(guildId);
+  try { schedulerNotifyDelete(guildId, messageId); } catch {}
+  return true;
     } catch (e) {
       console.error('Error deleting scheduled message:', e.message);
       throw e;

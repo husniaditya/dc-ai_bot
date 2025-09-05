@@ -1723,7 +1723,7 @@ export default function AutomodConfigForm({ config, updateConfig, channels, role
                 </small>
               </div>
               <div className="col-md-6 mb-3">
-                <label className="form-label small fw-semibold">Threshold Value</label>
+                <label className="form-label small fw-semibold">Warning Threshold Value</label>
                 <input
                   type="number"
                   className="form-control form-control-sm"
