@@ -507,8 +507,8 @@ export default forwardRef(function SchedulerConfigForm({ config, updateConfig, c
                           <i className="fa-solid fa-clock me-1"></i>
                           Schedule: {message.scheduleValue}
                         </span>
-                        <span className={`badge ${message.isActive ? 'badge-success' : 'badge-secondary'}`}>
-                          {message.isActive ? 'Active' : 'Inactive'}
+                        <span className={`badge ${message.enabled ? 'badge-success' : 'badge-soft'}`}>
+                          {message.enabled ? 'Active' : 'Inactive'}
                         </span>
                       </div>
                     </div>
