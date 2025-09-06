@@ -85,6 +85,28 @@ async function getGuildCommandToggles(guildId) {
   for (const k of Object.keys(existing)) {
     merged[k] = existing[k].enabled;
   }
+  
+  // Check XP feature status and disable XP commands if feature is disabled
+  try {
+    // Import here to avoid circular dependencies
+    const moderationService = require('./moderation');
+    const moderationFeatures = await moderationService.getModerationFeatures(guildId);
+    
+    if (!moderationFeatures.xp?.enabled) {
+      // XP feature is disabled, so disable all XP commands
+      const xpCommands = ['level', 'xp', 'rank', 'leaderboard', 'xpadmin'];
+      for (const cmd of xpCommands) {
+        // Only override if not explicitly set in database
+        if (!(cmd in existing)) {
+          merged[cmd] = false;
+        }
+      }
+    }
+  } catch (error) {
+    // If we can't check moderation features, don't modify command states
+    console.warn('Could not check XP feature status for command toggles:', error.message);
+  }
+  
   return merged;
 }
 
@@ -99,6 +121,34 @@ async function getAllGuildCommandToggles(guildId) {
   for (const k of Object.keys(existing)) {
     merged[k] = { ...existing[k] };
   }
+  
+  // Check XP feature status and disable XP commands if feature is disabled
+  try {
+    // Import here to avoid circular dependencies
+    const moderationService = require('./moderation');
+    const moderationFeatures = await moderationService.getModerationFeatures(guildId);
+    
+    if (!moderationFeatures.xp?.enabled) {
+      // XP feature is disabled, so disable all XP commands
+      const xpCommands = ['level', 'xp', 'rank', 'leaderboard', 'xpadmin'];
+      for (const cmd of xpCommands) {
+        // Only override if not explicitly set in database
+        if (!(cmd in existing)) {
+          merged[cmd] = {
+            enabled: false,
+            created_at: new Date(),
+            created_by: 'xp-feature-auto-disable',
+            updated_at: new Date(),
+            updated_by: 'xp-feature-auto-disable'
+          };
+        }
+      }
+    }
+  } catch (error) {
+    // If we can't check moderation features, don't modify command states
+    console.warn('Could not check XP feature status for command metadata:', error.message);
+  }
+  
   return merged;
 }
 

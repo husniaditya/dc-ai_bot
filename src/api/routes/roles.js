@@ -260,12 +260,34 @@ module.exports = function(client, store) {
   router.delete('/reaction-roles/message/:messageId', async (req, res) => {
     try {
       const { messageId } = req.params;
-      const { guildId } = req.body;
+      const guildId = req.headers['x-guild-id'] || req.body.guildId;
       
       if (!guildId) {
-        return res.status(400).json({ error: 'guildId is required' });
+        return res.status(400).json({ error: 'guildId is required (in x-guild-id header or request body)' });
       }
 
+      // First, try to get the reaction role data to find the channel
+      const reactionRoles = await store.getGuildReactionRoles(guildId);
+      const messageReactionRoles = reactionRoles.filter(role => role.messageId === messageId);
+      
+      // Try to delete the Discord message if we can find the channel
+      if (messageReactionRoles.length > 0 && client && client.isReady()) {
+        try {
+          const channelId = messageReactionRoles[0].channelId;
+          const channel = await client.channels.fetch(channelId);
+          if (channel) {
+            const message = await channel.messages.fetch(messageId);
+            if (message) {
+              await message.delete();
+            }
+          }
+        } catch (discordError) {
+          console.warn('Could not delete Discord message (continuing with database cleanup):', discordError.message);
+          // Don't fail the request if Discord message deletion fails
+        }
+      }
+
+      // Delete from database
       const success = await store.deleteGuildReactionRoleByMessageId(guildId, messageId);
 
       if (!success) {
@@ -283,10 +305,10 @@ module.exports = function(client, store) {
   router.delete('/reaction-roles/:id', async (req, res) => {
     try {
       const { id } = req.params;
-      const { guildId } = req.body;
+      const guildId = req.headers['x-guild-id'] || req.body.guildId;
       
       if (!guildId) {
-        return res.status(400).json({ error: 'guildId is required' });
+        return res.status(400).json({ error: 'guildId is required (in x-guild-id header or request body)' });
       }
 
       const success = await store.deleteGuildReactionRole(guildId, parseInt(id));

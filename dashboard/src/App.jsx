@@ -10,6 +10,7 @@ const ModerationSection = React.lazy(()=> import('./sections/ModerationSection.j
 const GamesSocialsSection = React.lazy(()=> import('./sections/GamesSocialsSection.jsx'));
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './theme.css';
+import './styles/responsive-tables.css';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 // Layout & structural components
 import Sidebar from './components/Sidebar.jsx';
@@ -1134,7 +1135,17 @@ export default function App(){
       ]
     },
     {
-      key: 'moderation', title: 'Moderation & Roles', icon: 'fa-users-gear', accent: '#8b5cf6',
+      key: 'xp', title: 'XP & Leveling', icon: 'fa-chart-line', accent: '#00d4aa',
+      items: [
+        { name:'level', usage:'/level [user]', desc:'Check your level or someone else\'s XP level.' },
+        { name:'xp', usage:'/xp check|leaderboard [user]', desc:'Check XP or view server leaderboard.' },
+        { name:'rank', usage:'/rank [user]', desc:'Check your rank in the server.' },
+        { name:'leaderboard', usage:'/leaderboard [limit]', desc:'Show the server XP leaderboard.' },
+        { name:'xpadmin', usage:'/xpadmin give|remove|set <user> <amount>', desc:'Manage user XP (requires Manage Server).', requiresManage:true }
+      ]
+    },
+    {
+      key: 'roles', title: 'Roles & Self-Assignment', icon: 'fa-user-tag', accent: '#8b5cf6',
       items: [
         { name:'role list', usage:'/role list', desc:'Show all available self-assignable roles.' },
         { name:'role menu', usage:'/role menu', desc:'Interactive role selection menu (ephemeral).' },
@@ -1145,28 +1156,44 @@ export default function App(){
       ]
     },
     {
+      key: 'moderation', title: 'Moderation & Security', icon: 'fa-shield-halved', accent: '#dc2626',
+      items: [
+        { name:'automod list', usage:'/automod list', desc:'Show all configured automod rules.' },
+        { name:'automod info', usage:'/automod info <id>', desc:'View detailed info for an automod rule.' },
+        { name:'automod toggle', usage:'/automod toggle <id> <enabled>', desc:'Enable/disable an automod rule (requires Manage Server).', requiresManage:true },
+        { name:'antiraid status', usage:'/antiraid status', desc:'View current anti-raid protection status.' },
+        { name:'antiraid toggle', usage:'/antiraid toggle <enabled>', desc:'Enable/disable anti-raid protection (requires Manage Server).', requiresManage:true },
+        { name:'audit recent', usage:'/audit recent', desc:'View recent moderation actions (requires Manage Server).', requiresManage:true }
+      ]
+    },
+    {
       key: 'passive', title: 'Passive / Automation', icon: 'fa-bolt', accent: '#ef4444',
       items: [
         { name:'autoreply', usage:'(passive)', desc:'Automatic replies based on configured patterns.' },
-        { name:'welcome', usage:'(passive)', desc:'Welcome new members with customizable messages and cards.' },
+        { name:'welcome preview', usage:'/welcome preview', desc:'Preview current welcome message configuration.' },
+        { name:'welcome toggle', usage:'/welcome toggle <enabled>', desc:'Enable/disable welcome system (requires Manage Server).', requiresManage:true },
         { name:'automod', usage:'(passive)', desc:'Automatic moderation for spam, caps, links, and profanity.' },
-        { name:'xp system', usage:'(passive)', desc:'XP and leveling system for active members.' },
         { name:'audit logs', usage:'(passive)', desc:'Track all moderation actions and server changes.' },
         { name:'anti-raid', usage:'(passive)', desc:'Protection against raids and mass join attacks.' }
       ]
     },
-    // YouTube group (conditionally shown if user has Manage Server permission in guild)
     {
-      key: 'youtube', title: 'YouTube', icon: 'fa-brands fa-youtube', accent: '#FF0000',
+      key: 'scheduler', title: 'Scheduler', icon: 'fa-clock', accent: '#06b6d4',
       items: [
-    { name:'ytwatch', usage:'/ytwatch action:<enable|disable|addchannel|removechannel|announcechannel|mentionrole|interval|status>', desc:'Manage YouTube notifications (requires Manage Server).', requiresManage:true },
-    { name:'ytstats', usage:'/ytstats', desc:'Show YouTube watcher cache & quota stats.', requiresManage:true }
+        { name:'scheduler list', usage:'/scheduler list', desc:'List all scheduled messages.' },
+        { name:'scheduler info', usage:'/scheduler info <id>', desc:'View detailed info for a scheduled message.' },
+        { name:'scheduler enable', usage:'/scheduler enable <id>', desc:'Enable a scheduled message (requires Manage Server).', requiresManage:true },
+        { name:'scheduler disable', usage:'/scheduler disable <id>', desc:'Disable a scheduled message (requires Manage Server).', requiresManage:true },
+        { name:'scheduler run', usage:'/scheduler run <id>', desc:'Manually trigger a scheduled message now (requires Manage Server).', requiresManage:true }
       ]
     },
-    // Twitch group (conditionally shown if user has Manage Server permission in guild)
+    // Streaming group (conditionally shown if user has Manage Server permission in guild)
     {
-      key: 'twitch', title: 'Twitch', icon: 'fa-brands fa-twitch', accent: '#9146FF',
+      key: 'streaming', title: 'Streaming Integration', icon: 'fa-video', accent: '#7c3aed',
       items: [
+        { name:'ytwatch', usage:'/ytwatch action:<enable|disable|addchannel|removechannel|announcechannel|mentionrole|interval|status>', desc:'Manage YouTube notifications (requires Manage Server).', requiresManage:true },
+        { name:'ytstats', usage:'/ytstats', desc:'Show YouTube watcher cache & quota stats.', requiresManage:true },
+        { name:'ytdebug', usage:'/ytdebug', desc:'Show recent YouTube watcher debug events (requires Manage Server).', requiresManage:true },
         { name:'twitchstats', usage:'/twitchstats', desc:'Show Twitch watcher cache & API stats.', requiresManage:true },
         { name:'twitchdebug', usage:'/twitchdebug action:<config|status|test|resolve>', desc:'Debug Twitch integration and test notifications.', requiresManage:true }
       ]

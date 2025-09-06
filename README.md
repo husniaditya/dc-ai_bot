@@ -2,7 +2,12 @@
 
 # 🤖 Discord AI Bot & Modern Dashboard
 
-A comprehensive Discord bot powered by Google's Gemini AI with an elegant React dashboard. Features intelligent conversations, image analysis, content moderation, and advanced server management tools.
+A comprehensive Discord bot powered by Google's Gemini AI with an elegant React dashboard. Features int## 📚 Documentation
+
+### 🛡️ Moderation System Documentationigent conversations,## 🛠️ Comprehensive Moderation System
+
+### Core Moderation Featuresage analysis, content mod### Planned Features 🚧
+- **📊 Enhanced Analytics**: Detailed usage statistics and performance metricsation, and advanced server management tools.
 
 [![Discord.js](https://img.shields.io/badge/discord.js-v14.21.0-blue.svg)](https://discord.js.org/)
 [![Node.js](https://img.shields.io/badge/node.js-16.9.0+-green.svg)](https://nodejs.org/)
@@ -20,59 +25,38 @@ Add the bot to your Discord server using this OAuth2 URL (requires "Manage Serve
 https://discord.com/oauth2/authorize?client_id=951335667756072981&scope=bot%20applications.commands
 ```
 
-### Prerequisites
-- Node.js 16.9.0 or higher
-- Discord Bot Token
-- Google AI API Key (for Gemini)
-- MongoDB or MySQL database
-
-### Installation
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/husniaditya/dc-ai_bot.git
-   cd dc-ai_bot
-   ```
-
-2. Install dependencies:
-   ```bash
-   npm install
-   cd dashboard && npm install
-   ```
-
-3. Configure environment variables (see [Configuration](#configuration))
-
-4. Register slash commands:
-   ```bash
-   npm run register-commands
-   ```
-
-5. Start the bot:
-   ```bash
-   npm start
-   ```
-
-
 ## ✨ Features Overview
 
 ### 🤖 AI-Powered Bot
 - **Smart Conversations**: Advanced Q&A with context retention using Gemini 2.0 Flash
 - **Multi-Image Analysis**: Analyze up to 3 images simultaneously with detailed explanations
 - **Content Processing**: Automatic summarization, translation, and content moderation
-- **Interactive Commands**: 20+ slash commands for utilities, entertainment, and productivity
+- **Interactive Commands**: 30+ slash commands for utilities, entertainment, and productivity
+- **Context Menu Integration**: Right-click actions for quick AI operations
 
 ### 📊 Modern Dashboard
 - **OAuth2 Integration**: Secure Discord login with guild management
 - **Real-time Management**: Live auto-response configuration and testing
 - **Intuitive UI**: Glass-morphism design with dark/light theme support
 - **Advanced Tools**: Regex tester, bulk operations, and analytics dashboard
+- **Comprehensive Moderation**: Full suite of moderation tools and configuration
+
+### 🛡️ Advanced Moderation System
+- **🚪 Welcome System**: Customizable welcome messages, cards, and auto-role assignment
+- **🤖 Auto Moderation**: Spam detection, content filtering, link security with VirusTotal/SafeBrowsing integration
+- **👥 Role Management**: Reaction roles, self-assignable roles, and permission management
+- **📊 XP & Leveling**: Message-based progression system with rewards and leaderboards
+- **📅 Scheduled Messages**: Automated announcements with cron-based scheduling
+- **📋 Audit Logging**: Comprehensive activity tracking and moderation logs
+- **🛡️ Anti-Raid Protection**: Real-time raid detection and automated response system
 
 ### 🛠️ Core Capabilities
 - **Modular Architecture**: Clean, maintainable codebase with proper separation of concerns
-- **Database Persistence**: Support for both MongoDB and MySQL with automatic migrations
 - **Rate Limiting**: Built-in protection against spam and abuse
 - **Error Handling**: Comprehensive error tracking and graceful failure recovery
+- **Real-time Updates**: Live configuration changes without bot restart
 
-## �️ Technology Stack
+## ⚙️ Technology Stack
 
 ### Backend
 - **Runtime**: Node.js 16.9.0+
@@ -103,11 +87,13 @@ https://discord.com/oauth2/authorize?client_id=951335667756072981&scope=bot%20ap
 | `/help` | Interactive help system | `/help [category]` |
 | `/whoami` | Display user information | `/whoami` |
 | `/uptime` | Show bot uptime statistics | `/uptime` |
+| `/user info` | Get detailed user information | `/user info [target:<@user>]` |
+| `/echo` | Echo back text | `/echo text:<message>` |
 
 ### 🤖 AI & Intelligence
 | Command | Description | Usage |
 |---------|-------------|--------|
-| `/ask` | Ask Gemini AI anything | `/ask prompt:<your question>` |
+| `/ask` | Ask Gemini AI anything with caching | `/ask prompt:<your question>` |
 | `/askfollow` | Continue conversation with context | `/askfollow prompt:<follow-up>` |
 | `/explain_image` | Analyze 1-3 images with AI | `/explain_image image:<file> [prompt]` |
 | `/summarize` | Summarize recent chat messages | `/summarize [count:30]` |
@@ -116,68 +102,59 @@ https://discord.com/oauth2/authorize?client_id=951335667756072981&scope=bot%20ap
 ### 🗳️ Interactive Features
 | Command | Description | Usage |
 |---------|-------------|--------|
-| `/poll create` | Create interactive polls | `/poll create question:<q> options:<a,b,c>` |
-| `/poll results` | View poll results | `/poll results id:<pollId>` |
+| `/poll create` | Create interactive button polls | `/poll create question:<q> options:<a,b,c>` |
+| `/poll results` | View detailed poll results | `/poll results id:<pollId>` |
 | `/remind` | Set personal reminders | `/remind minutes:<n> text:<message>` |
 | `/autoreply` | Manage auto-responses | `/autoreply [enable/disable]` |
 
-### 🧮 Utilities
+### 🛡️ Moderation & Management
 | Command | Description | Usage |
 |---------|-------------|--------|
-| `/math` | Perform calculations | `/math add/sub/mul/div a:<n> b:<n>` |
-| `/user info` | Get user details | `/user info [target:<@user>]` |
-| `/echo` | Echo back text | `/echo text:<message>` |
+| `/antiraid status` | View anti-raid protection status | `/antiraid status` |
+| `/antiraid toggle` | Enable/disable anti-raid protection | `/antiraid toggle enabled:<true/false>` |
+| `/automod list` | List all automod rules | `/automod list` |
+| `/automod info` | Get detailed rule information | `/automod info id:<rule_id>` |
+| `/automod toggle` | Enable/disable automod rule | `/automod toggle id:<rule_id> enabled:<true/false>` |
+| `/audit` | View audit logging information | `/audit [settings]` |
+| `/welcome preview` | Preview welcome message settings | `/welcome preview` |
+| `/welcome toggle` | Enable/disable welcome system | `/welcome toggle enabled:<true/false>` |
+| `/scheduler list` | List all scheduled messages | `/scheduler list` |
+| `/scheduler info` | Get scheduled message details | `/scheduler info id:<message_id>` |
+| `/scheduler enable` | Enable scheduled message | `/scheduler enable id:<message_id>` |
+| `/scheduler disable` | Disable scheduled message | `/scheduler disable id:<message_id>` |
+| `/scheduler run` | Manually run scheduled message | `/scheduler run id:<message_id>` |
+| `/role` | Manage self-assignable roles | `/role add/remove/list/info <role_name>` |
 
-### 🎮 Entertainment & Social
+### 📊 XP & Leveling System
 | Command | Description | Usage |
 |---------|-------------|--------|
+| `/xp check` | Check your or another user's XP and level | `/xp check [user:<@user>]` |
+| `/xp leaderboard` | Show the server XP leaderboard | `/xp leaderboard [limit:<1-25>]` |
+| `/level` | Alternative level check command | `/level [user:<@user>]` |
+| `/rank` | Show user's rank in the server | `/rank [user:<@user>]` |
+| `/leaderboard` | Show top users by XP | `/leaderboard [limit:<number>]` |
+| `/xp-admin` | Admin commands for XP management | `/xp-admin [add/remove/set] [user] [amount]` |
+
+### 🧮 Utilities & Tools
+| Command | Description | Usage |
+|---------|-------------|--------|
+| `/math` | Perform mathematical calculations | `/math add/sub/mul/div a:<n> b:<n>` |
 | `/meme` | Generate or fetch memes | `/meme [category]` |
-| `/twitchstats` | Twitch integration stats | `/twitchstats [channel]` |
+
+### 📺 Media Integration
+| Command | Description | Usage |
+|---------|-------------|--------|
+| `/twitchstats` | Get Twitch channel statistics | `/twitchstats [channel]` |
+| `/twitchdebug` | Debug Twitch integration | `/twitchdebug` |
 | `/ytstats` | YouTube channel statistics | `/ytstats [channel]` |
 | `/ytwatch` | YouTube monitoring tools | `/ytwatch [action]` |
+| `/ytdebug` | Debug YouTube integration | `/ytdebug` |
 
 ### 🖱️ Context Menu Actions
 Right-click on messages to access:
-- **Explain Image** - Analyze images in the message
+- **Explain Image** - Analyze images in the message with AI
 - **Summarize** - Summarize conversation context
 - **Translate** - Auto-detect and translate content
-
-## ⚙️ Configuration
-
-Create a `.env` file in the root directory with the following variables:
-
-```env
-# Discord Bot Configuration
-DISCORD_TOKEN=your_discord_bot_token
-DISCORD_CLIENT_ID=your_discord_client_id
-DISCORD_CLIENT_SECRET=your_discord_client_secret
-
-# Google AI Configuration
-GOOGLE_AI_API_KEY=your_google_ai_api_key
-
-# Database Configuration (choose one)
-# MongoDB
-MONGODB_URI=mongodb://localhost:27017/discord_bot
-
-# MySQL
-DB_HOST=localhost
-DB_USER=your_db_user
-DB_PASSWORD=your_db_password
-DB_NAME=discord_bot
-
-# JWT Configuration
-JWT_SECRET=your_jwt_secret_key
-JWT_EXPIRES_IN=7d
-
-# Server Configuration
-PORT=3000
-API_PORT=3001
-NODE_ENV=production
-
-# Rate Limiting
-RATE_LIMIT_WINDOW_MS=900000
-RATE_LIMIT_MAX_REQUESTS=100
-```
 
 ### Required Permissions
 The bot requires the following Discord permissions:
@@ -188,6 +165,30 @@ The bot requires the following Discord permissions:
 - `Read Message History`
 - `Add Reactions`
 - `Manage Messages` (for polls and moderation)
+## � Documentation
+
+### 🛡️ Moderation System Documentation
+The bot includes a comprehensive moderation system with detailed documentation for each feature:
+
+| Feature | Documentation | Description |
+|---------|---------------|-------------|
+| **🚪 Welcome System** | [docs/WELCOME_SYSTEM.md](docs/WELCOME_SYSTEM.md) | Customizable welcome messages, cards, and auto-role assignment |
+| **🤖 Auto Moderation** | [docs/AUTOMOD_SYSTEM.md](docs/AUTOMOD_SYSTEM.md) | Spam detection, content filtering, and security integration |
+| **👥 Role Management** | [docs/ROLE_MANAGEMENT.md](docs/ROLE_MANAGEMENT.md) | Reaction roles, self-assignable roles, and permission management |
+| **📊 XP & Leveling** | [docs/XP_LEVELING.md](docs/XP_LEVELING.md) | Experience points system with rewards and progression |
+| **📅 Scheduled Messages** | [docs/SCHEDULER.md](docs/SCHEDULER.md) | Automated announcements with cron-based scheduling |
+| **📋 Audit Logging** | [docs/AUDIT_LOGGING.md](docs/AUDIT_LOGGING.md) | Comprehensive activity tracking and moderation logs |
+| **🛡️ Anti-Raid Protection** | [docs/ANTI_RAID_SYSTEM.md](docs/ANTI_RAID_SYSTEM.md) | Real-time raid detection and automated response |
+| **📖 Moderation Overview** | [docs/MODERATION_OVERVIEW.md](docs/MODERATION_OVERVIEW.md) | Complete overview of all moderation features |
+
+### 🔧 Key Features
+- **Dashboard Configuration**: All features configurable via web dashboard
+- **Real-time Updates**: Configuration changes apply immediately
+- **Security Integration**: VirusTotal and Google Safe Browsing API integration
+- **Performance Optimized**: Efficient caching and database optimization
+- **Comprehensive Logging**: Full audit trail for all moderation actions
+
+
 ## 🖼️ AI Image Analysis
 
 ### Context Menu (Recommended)
@@ -206,8 +207,7 @@ Use `/explain_image` with up to 3 image attachments:
 - **Detailed Analysis**: Comprehensive explanations with context
 - **Embed Integration**: Clean presentation with image previews
 
-
-## � AI Integration
+## 🤖 AI Integration
 
 ### Gemini 2.0 Flash Integration
 - **Model**: Latest Gemini 2.0 Flash for optimal performance
@@ -227,65 +227,78 @@ Use `/explain_image` with up to 3 image attachments:
 - **Rate Limiting**: Built-in protection against API abuse
 - **Async Processing**: Non-blocking operations for better responsiveness
 
-## 🎛️ Dashboard Features
+## 🛡️ Moderation Dashboard Features
 
-### Authentication & Security
-- **Discord OAuth2**: Secure login with guild scope permissions
-- **JWT Tokens**: Auto-rotating tokens with configurable expiration
-- **CSRF Protection**: State validation for all authentication flows
-- **Session Management**: Persistent login with secure token storage
+### Advanced Moderation Tools
+- **Real-time Configuration**: All moderation features configurable via dashboard
+- **Anti-Raid Protection**: Automated raid detection with configurable thresholds
+- **Auto Moderation**: Content filtering with VirusTotal and Google Safe Browsing integration
+- **Welcome System**: Customizable welcome messages with card generation
+- **Role Management**: Reaction roles and self-assignable role systems
+- **XP & Leveling**: Comprehensive progression system with rewards
+- **Scheduled Messages**: Cron-based automated announcements
+- **Audit Logging**: Full activity tracking and moderation logs
 
-### Guild Management
-- **Server Selection**: Visual guild picker with search functionality
-- **Permission Checking**: Automatic verification of management permissions
-- **Multi-Server Support**: Switch between servers seamlessly
-- **Real-time Sync**: Live updates from Discord API
+### Security Features
+- **Link Scanning**: Real-time URL security scanning with external APIs
+- **Phishing Protection**: Advanced phishing detection and prevention
+- **Spam Detection**: Multi-layered spam detection algorithms
+- **Content Filtering**: Custom word and pattern filtering
+- **Account Analysis**: New member screening and risk assessment
+## �️ Comprehensive Moderation System
 
-### Auto-Response System
-- **Regex Patterns**: Advanced pattern matching with flag support
-- **Live Testing**: Built-in regex tester with sample text validation
-- **Bulk Operations**: Enable/disable/delete multiple responses at once
-- **Cooldown Management**: Per-user cooldown settings (milliseconds)
-- **Response Randomization**: Multiple responses per pattern with random selection
+### Core Moderation Features
 
-### User Interface
-- **Glass Morphism**: Modern, translucent design elements
-- **Dark/Light Themes**: Automatic theme switching with user preference
-- **Responsive Design**: Mobile-first approach with Bootstrap 5
-- **Animated Feedback**: Toast notifications and smooth transitions
-- **Data Tables**: Advanced sorting, filtering, and pagination
-## 🚦 Auto-Response Configuration
+#### 🚪 Welcome System
+- Customizable welcome messages with variable support
+- Automatic welcome card generation with user avatars
+- Auto-role assignment for new members
+- Direct message welcoming capabilities
+- Channel-specific announcement configuration
 
-The auto-response system allows servers to create custom automated replies based on message patterns.
+#### 🤖 Auto Moderation
+- **Spam Detection**: Message frequency and content analysis
+- **Content Filtering**: Custom word and pattern filtering with regex support
+- **Link Security**: Real-time URL scanning with VirusTotal and Google Safe Browsing
+- **Caps Lock Control**: Configurable uppercase text limits
+- **Mention Protection**: Prevent @everyone/@here abuse and mass mentions
+- **Invite Link Filtering**: Block unauthorized Discord invites
 
-### Dashboard Configuration
-1. **Navigate**: Dashboard → Auto Responses
-2. **Add Pattern**: Click "Add New" and enter regex pattern with flags
-3. **Set Responses**: Provide multiple responses (one per line) for variety
-4. **Configure Settings**: Enable/disable and set user cooldowns
-5. **Test Patterns**: Use the built-in regex tester before saving
+#### 🛡️ Anti-Raid Protection
+- **Real-time Monitoring**: Join rate and account age analysis
+- **Automated Response**: Configurable actions (kick, ban, timeout, lockdown)
+- **Suspicious Account Detection**: Multi-factor risk assessment
+- **Grace Period Monitoring**: New member behavior tracking
+- **Bypass Roles**: Exempt trusted users from protection
 
-### Pattern Examples
-```regex
-# Greetings (case insensitive)
-^(hi|hello|hey)\b.*
-Flags: i
+#### 📊 XP & Leveling System
+- **Message-based XP**: Earn experience points from chat activity
+- **Voice Channel XP**: Gain XP for time spent in voice channels
+- **Level Progression**: Customizable leveling curves and requirements
+- **Role Rewards**: Automatic role assignment at specific levels
+- **Leaderboards**: Server-wide and time-based rankings
+- **Anti-Gaming**: Cooldowns and duplicate message prevention
 
-# Questions about bot
-.*\b(what|who|how).*bot.*
-Flags: i
+#### 👥 Role Management
+- **Reaction Roles**: Assign roles via emoji reactions
+- **Self-Assignable Roles**: `/role` command for user role management
+- **Role Categories**: Organize roles by type (color, interest, access)
+- **Permission Sync**: Automatic permission management
+- **Role Menus**: Interactive dropdown and button interfaces
 
-# Custom server-specific patterns
-.*welcome.*new.*member.*
-Flags: i
-```
+#### 📅 Scheduled Messages
+- **Cron-based Scheduling**: Flexible timing with cron expressions
+- **Multiple Formats**: Text, embed, and rich content support
+- **Variable Support**: Dynamic content with server and user variables
+- **Time Zone Handling**: Global and per-message timezone configuration
+- **Manual Execution**: Test and run messages on demand
 
-### Features
-- **Random Responses**: Bot randomly selects from multiple configured responses
-- **User Cooldowns**: Prevents spam with configurable per-user delays
-- **Guild-Specific**: Each server has independent auto-response configuration
-- **Enable/Disable**: Toggle responses without deleting patterns
-- **Bulk Actions**: Manage multiple responses efficiently
+#### 📋 Audit Logging
+- **Comprehensive Tracking**: Message, member, and server changes
+- **Multiple Log Channels**: Separate channels for different event types
+- **Customizable Formats**: Embed or text-based log formatting
+- **Retention Settings**: Configurable log retention periods
+- **Export Capabilities**: Data export for compliance and analysis
 
 ## 🔒 Security & Safety
 
@@ -304,7 +317,8 @@ Flags: i
 ### Content Safety
 - **AI Content Filtering**: Automatic filtering of inappropriate AI responses
 - **Image Analysis Safety**: Content validation for image explanation features
-- **Conversation Monitoring**: Context-aware safety checks for ongoing conversations
+- **Link Security**: Real-time URL scanning with VirusTotal and Google Safe Browsing
+- **Phishing Protection**: Advanced phishing detection and prevention
 - **Abuse Prevention**: Multiple layers of protection against malicious usage
 
 ### Data Protection
@@ -313,69 +327,38 @@ Flags: i
 - **Data Retention**: Automatic cleanup of temporary data and old logs
 - **Privacy Compliance**: GDPR-friendly data handling practices
 
-## �️ Development Roadmap
+## 🗓️ Development Roadmap
 
-### Planned Features
-- **🔧 Advanced Moderation**: Automated content moderation with customizable rules
-- **📊 Analytics Dashboard**: Detailed usage statistics and performance metrics
+### Current Features ✅
+- **AI Integration**: Gemini 2.0 Flash with image analysis and conversation context
+- **Comprehensive Moderation**: Full suite including anti-raid, auto-mod, welcome system
+- **XP & Leveling**: Complete progression system with rewards and leaderboards
+- **Role Management**: Reaction roles and self-assignable systems
+- **Scheduled Messages**: Cron-based automation with variable support
+- **Security Integration**: VirusTotal and Google Safe Browsing APIs
+- **Dashboard Interface**: Modern web interface for all configurations
+
+### Planned Features 🚧
+- **� Enhanced Analytics**: Detailed usage statistics and performance metrics
 - **🌐 Multi-language**: Complete internationalization support
 - **🎮 Game Integration**: Enhanced gaming features and social platform connections
-- **📱 Mobile App**: Companion mobile application for dashboard access
+- **📱 Mobile Dashboard**: Responsive mobile interface improvements
+- **🎨 Custom Themes**: Theme builder and community theme sharing
 
-### Technical Improvements
+### Technical Improvements 🛠️
 - **🧪 Testing Suite**: Comprehensive unit and integration testing
 - **🚀 CI/CD Pipeline**: Automated testing, building, and deployment
 - **📈 Performance Monitoring**: Real-time performance tracking and alerting
 - **🔄 Database Migrations**: Automated schema versioning and migrations
 - **🏗️ Microservices**: Modular architecture for better scalability
 
-### Quality of Life
+### Quality of Life ✨
 - **♿ Accessibility**: Full WCAG compliance and screen reader support
-- **📚 Documentation**: Interactive API documentation and video tutorials
-- **🎨 Themes**: Custom theme builder and community theme sharing
+- **📚 Interactive Documentation**: API documentation and video tutorials
 - **💾 Backup System**: Automated backup and restore functionality
 - **🔍 Advanced Search**: Full-text search across all bot data and logs
 
-## � Contributing
-
-We welcome contributions from the community! Here's how you can help:
-
-### Getting Started
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/amazing-feature`
-3. Make your changes and test thoroughly
-4. Commit with conventional commits: `git commit -m "feat: add amazing feature"`
-5. Push to your branch: `git push origin feature/amazing-feature`
-6. Create a Pull Request
-
-### Development Setup
-```bash
-# Clone your fork
-git clone https://github.com/yourusername/dc-ai_bot.git
-cd dc-ai_bot
-
-# Install dependencies
-npm install
-cd dashboard && npm install && cd ..
-
-# Set up environment
-cp .env.example .env
-# Edit .env with your configuration
-
-# Start development servers
-npm run dev
-```
-
-### Guidelines
-- Follow the existing code style and conventions
-- Write clear, descriptive commit messages
-- Add tests for new features
-- Update documentation as needed
-- Ensure all tests pass before submitting
-
-For detailed contributing guidelines, see [CONTRIBUTING.md](CONTRIBUTING.md).
-
-## � Support & Community
+## 💬 Support & Community
 
 ### Getting Help
 - **📚 Documentation**: Check our comprehensive guides and API documentation

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import WelcomeConfigForm from '../features/WelcomeConfigForm';
 import AutomodConfigForm from '../features/AutomodConfigForm';
 import RolesConfigForm from '../features/RolesConfigForm';
@@ -6,6 +6,7 @@ import XPConfigForm from '../features/XPConfigForm';
 import SchedulerConfigForm from '../features/SchedulerConfigForm';
 import LoggingConfigForm from '../features/LoggingConfigForm';
 import AntiRaidConfigForm from '../features/AntiRaidConfigForm';
+import UnsavedChangesModal from './UnsavedChangesModal';
 
 // Configuration Modal Component
 export default function ConfigurationModal({ 
@@ -22,6 +23,11 @@ export default function ConfigurationModal({
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
+  const [showUnsavedModal, setShowUnsavedModal] = useState(false);
+  
+  // Ref for forms that handle their own save/reset
+  const loggingFormRef = useRef(null);
+  const schedulerFormRef = useRef(null);
 
   // Fetch specific configuration when modal opens
   useEffect(() => {
@@ -32,9 +38,37 @@ export default function ConfigurationModal({
       try {
         let response;
         
-        // Handle welcome feature differently
+        // Handle different features with specific endpoints
         if (feature.key === 'welcome') {
           response = await fetch('/api/moderation/welcome/config', {
+            headers: { 
+              Authorization: `Bearer ${localStorage.getItem('token')}`,
+              'X-Guild-Id': guildId
+            }
+          });
+        } else if (feature.key === 'xp') {
+          response = await fetch('/api/moderation/xp/config', {
+            headers: { 
+              Authorization: `Bearer ${localStorage.getItem('token')}`,
+              'X-Guild-Id': guildId
+            }
+          });
+        } else if (feature.key === 'antiraid') {
+          response = await fetch('/api/moderation/antiraid/config', {
+            headers: { 
+              Authorization: `Bearer ${localStorage.getItem('token')}`,
+              'X-Guild-Id': guildId
+            }
+          });
+        } else if (feature.key === 'logging') {
+          response = await fetch('/api/moderation/audit-logs/config', {
+            headers: { 
+              Authorization: `Bearer ${localStorage.getItem('token')}`,
+              'X-Guild-Id': guildId
+            }
+          });
+        } else if (feature.key === 'scheduler') {
+          response = await fetch('/api/moderation/scheduler/config', {
             headers: { 
               Authorization: `Bearer ${localStorage.getItem('token')}`,
               'X-Guild-Id': guildId
@@ -53,7 +87,7 @@ export default function ConfigurationModal({
           const data = await response.json();
           
           // Handle different possible response structures
-          const configData = feature.key === 'welcome' 
+          const configData = (feature.key === 'welcome' || feature.key === 'xp' || feature.key === 'antiraid' || feature.key === 'logging' || feature.key === 'scheduler') 
             ? (data.config || data || {})
             : (data.config || data || {});
           
@@ -96,13 +130,14 @@ export default function ConfigurationModal({
       },
       automod: {
         enabled: false,
+        logChannelId: '',
+        bypassRoles: [],
+        // Legacy simple toggles for backward compatibility
         spamDetection: false,
         capsFilter: false,
         linkFilter: false,
         profanityFilter: false,
-        logChannelId: '',
-        autoDelete: false,
-        bypassRoles: []
+        autoDelete: false
       },
       roles: {
         enabled: false,
@@ -111,30 +146,43 @@ export default function ConfigurationModal({
       },
       xp: {
         enabled: false,
-        channelId: '',
-        xpPerMessage: 10,
-        cooldown: 60,
-        levelUpMessage: 'Congratulations {user}! You reached level {level}!',
-        rewardRoles: []
+        xpPerMessage: 15,
+        xpPerVoiceMinute: 5,
+        cooldownSeconds: 60,
+        excludedChannels: [],
+        excludedRoles: [],
+        levelUpMessages: true,
+        levelUpChannel: null,
+        doubleXpEvents: []
       },
       scheduler: {
         enabled: false,
-        scheduledMessages: []
+        messages: []
       },
       logging: {
         enabled: false,
-        messageLogChannel: '',
-        memberLogChannel: '',
-        channelLogChannel: '',
-        roleLogChannel: ''
+        globalChannel: null,
+        messageChannel: null,
+        memberChannel: null,
+        channelChannel: null,
+        roleChannel: null,
+        serverChannel: null,
+        voiceChannel: null,
+        includeBots: true,
+        enhancedDetails: true
       },
       antiraid: {
         enabled: false,
-        joinRateLimit: 5,
-        joinTimeWindow: 60,
-        accountAgeLimit: 7,
+        joinRate: 5,
+        joinWindow: 10,
+        accountAge: 7,
         autoLockdown: false,
-        verificationLevel: 1
+        verificationLevel: 'medium',
+        alertChannel: null,
+        kickSuspicious: false,
+        deleteInviteSpam: true,
+        gracePeriod: 30,
+        bypassRoles: []
       }
     };
 
@@ -143,11 +191,19 @@ export default function ConfigurationModal({
 
   // Check if configuration has been modified
   const isDirty = () => {
+    // For scheduler, also check if there's an open form
+    if (feature.key === 'scheduler' && schedulerFormRef?.current) {
+      const schedulerDirty = schedulerFormRef.current.isDirty?.() || false;
+      if (schedulerDirty) return true;
+    }
+    
+    // Use standard config comparison for all forms
     return JSON.stringify(config) !== JSON.stringify(originalConfig);
   };
 
   // Reset configuration to original values
   const resetConfig = () => {
+    // Use standard config reset for all forms
     setConfig({ ...originalConfig });
   };
 
@@ -166,8 +222,22 @@ export default function ConfigurationModal({
   const handleSave = async () => {
     setSaving(true);
     try {
-      await onSave(config);
-      setOriginalConfig({ ...config });
+      // Handle different features with specific endpoints
+      if (feature.key === 'welcome') {
+        await onSave(config);
+      } else if (feature.key === 'logging') {
+        // Use same pattern as welcome - let onSave handle it
+        await onSave(config);
+      } else if (feature.key === 'xp') {
+        // Use same pattern as welcome - let onSave handle it
+        await onSave(config);
+      } else if (feature.key === 'antiraid') {
+        // Use same pattern as welcome - let onSave handle it
+        await onSave(config);
+      } else {
+        await onSave(config);
+      }
+      
       showToast('success', `${feature.label} configuration saved successfully`);
     } catch (error) {
       console.error('Save failed:', error);
@@ -179,16 +249,26 @@ export default function ConfigurationModal({
 
   const handleClose = () => {
     if (isDirty() && !saving) {
-      const confirmClose = window.confirm(
-        'You have unsaved changes. Are you sure you want to close without saving?'
-      );
-      if (!confirmClose) return;
+      setShowUnsavedModal(true);
+      return;
     }
     
     setIsClosing(true);
     setTimeout(() => {
       onClose();
     }, 200);
+  };
+
+  const handleConfirmClose = () => {
+    setShowUnsavedModal(false);
+    setIsClosing(true);
+    setTimeout(() => {
+      onClose();
+    }, 200);
+  };
+
+  const handleCancelClose = () => {
+    setShowUnsavedModal(false);
   };
 
   const updateConfig = (key, value) => {
@@ -208,6 +288,21 @@ export default function ConfigurationModal({
       showToast
     };
 
+    // Add onConfigSaved callback for forms that handle their own saving
+    const schedulerProps = {
+      ...commonProps,
+      ref: schedulerFormRef,
+      onConfigSaved: (savedConfig) => {
+        setOriginalConfig(savedConfig);
+      },
+      onClose: () => {
+        setIsClosing(true);
+        setTimeout(() => {
+          onClose();
+        }, 200);
+      }
+    };
+
     switch (feature.key) {
       case 'welcome':
         return <WelcomeConfigForm {...commonProps} />;
@@ -218,9 +313,9 @@ export default function ConfigurationModal({
       case 'xp':
         return <XPConfigForm {...commonProps} />;
       case 'scheduler':
-        return <SchedulerConfigForm {...commonProps} />;
+        return <SchedulerConfigForm {...schedulerProps} />;
       case 'logging':
-        return <LoggingConfigForm {...commonProps} />;
+        return <LoggingConfigForm ref={loggingFormRef} {...commonProps} />;
       case 'antiraid':
         return <AntiRaidConfigForm {...commonProps} />;
       default:
@@ -289,7 +384,7 @@ export default function ConfigurationModal({
           
           {/* Modal Footer */}
           <div className="modal-footer border-secondary">
-            {isDirty() && (
+            {isDirty() && feature.key !== 'scheduler' && (
               <button 
                 type="button" 
                 className="btn btn-outline-warning me-2"
@@ -310,7 +405,7 @@ export default function ConfigurationModal({
               Close
             </button>
             {/* Add Save button for all forms except roles */}
-            {feature.key !== 'roles' && feature.key !== 'scheduler' && (
+            {feature.key !== 'roles' && feature.key !== 'scheduler' && feature.key !== 'automod' && (
               <button 
                 type="button" 
                 className="btn btn-primary"
@@ -335,6 +430,14 @@ export default function ConfigurationModal({
           </div>
         </div>
       </div>
+      
+      {/* Unsaved Changes Confirmation Modal */}
+      <UnsavedChangesModal
+        isOpen={showUnsavedModal}
+        onConfirm={handleConfirmClose}
+        onCancel={handleCancelClose}
+        featureName={feature.label}
+      />
     </div>
   );
 }

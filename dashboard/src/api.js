@@ -157,6 +157,68 @@ export async function updateSettings(p, guildId){ return authFetch('/api/setting
 export async function listAuto(guildId){ return authFetch('/api/auto-responses' + (guildId?`?guildId=${guildId}`:'')); }
 export async function upsertAuto(entry, guildId){ return authFetch('/api/auto-responses' + (guildId?`?guildId=${guildId}`:''), { method:'POST', body: JSON.stringify(entry) }); }
 export async function deleteAuto(key, guildId){ return authFetch('/api/auto-responses/' + encodeURIComponent(key) + (guildId?`?guildId=${guildId}`:''), { method:'DELETE' }); }
+
+// Audit Logging API functions
+export async function getAuditLogConfig(guildId) {
+  const headers = guildId ? { 'X-Guild-Id': guildId } : {};
+  return authFetch('/api/moderation/logging/config', { headers });
+}
+
+export async function updateAuditLogConfig(config, guildId) {
+  const headers = guildId ? { 'X-Guild-Id': guildId } : {};
+  return authFetch('/api/moderation/logging/config', {
+    method: 'PUT',
+    headers,
+    body: JSON.stringify(config)
+  });
+}
+
+export async function getAuditLogs(guildId, options = {}) {
+  const headers = guildId ? { 'X-Guild-Id': guildId } : {};
+  const params = new URLSearchParams();
+  
+  if (options.actionType) params.append('actionType', options.actionType);
+  if (options.userId) params.append('userId', options.userId);
+  if (options.channelId) params.append('channelId', options.channelId);
+  if (options.limit) params.append('limit', options.limit.toString());
+  if (options.offset) params.append('offset', options.offset.toString());
+  if (options.orderBy) params.append('orderBy', options.orderBy);
+  
+  const query = params.toString() ? `?${params.toString()}` : '';
+  return authFetch(`/api/moderation/logging/logs${query}`, { headers });
+}
+
+export async function createAuditLogEntry(logData, guildId) {
+  const headers = guildId ? { 'X-Guild-Id': guildId } : {};
+  return authFetch('/api/moderation/logging/logs', {
+    method: 'POST',
+    headers,
+    body: JSON.stringify(logData)
+  });
+}
+
+export async function deleteAuditLogEntry(logId, guildId) {
+  const headers = guildId ? { 'X-Guild-Id': guildId } : {};
+  return authFetch(`/api/moderation/logging/logs/${logId}`, {
+    method: 'DELETE',
+    headers
+  });
+}
+
+// Anti-Raid Configuration API functions
+export async function getAntiRaidConfig(guildId) {
+  const headers = guildId ? { 'X-Guild-Id': guildId } : {};
+  return authFetch('/api/moderation/antiraid/config', { headers });
+}
+
+export async function updateAntiRaidConfig(config, guildId) {
+  const headers = guildId ? { 'X-Guild-Id': guildId } : {};
+  return authFetch('/api/moderation/antiraid/config', {
+    method: 'PUT',
+    headers,
+    body: JSON.stringify(config)
+  });
+}
 export async function getCommandToggles(guildId){ return authFetch('/api/commands' + (guildId?`?guildId=${guildId}`:'')); }
 export async function setCommandToggle(name, enabled, guildId){ return authFetch('/api/commands/toggle' + (guildId?`?guildId=${guildId}`:''), { method:'POST', body: JSON.stringify({ name, enabled }) }); }
 export async function getPersonalization(guildId){ return authFetch('/api/personalization' + (guildId?`?guildId=${guildId}`:'')); }
@@ -177,6 +239,72 @@ export async function extractYouTubeChannelId(input){ return authFetch('/api/you
 export async function getTwitchConfig(guildId){ return authFetch('/api/twitch/config' + (guildId?`?guildId=${guildId}`:'')); }
 export async function updateTwitchConfig(partial, guildId){ return authFetch('/api/twitch/config' + (guildId?`?guildId=${guildId}`:''), { method:'PUT', body: JSON.stringify(partial) }); }
 export async function resolveTwitchStreamer(input){ return authFetch('/api/twitch/resolve-streamer', { method:'POST', body: JSON.stringify({ input }) }); }
+
+// XP System config helpers
+export async function getXpConfig(guildId){ 
+  const headers = guildId ? { 'X-Guild-Id': guildId } : {};
+  return authFetch('/api/moderation/xp/config', { headers }); 
+}
+export async function updateXpConfig(config, guildId){ 
+  const headers = guildId ? { 'X-Guild-Id': guildId } : {};
+  return authFetch('/api/moderation/xp/config', { 
+    method:'PUT', 
+    headers,
+    body: JSON.stringify(config) 
+  }); 
+}
+
+// XP User management
+export async function getXpLeaderboard(guildId, limit = 10, offset = 0) {
+  const headers = guildId ? { 'X-Guild-Id': guildId } : {};
+  const params = new URLSearchParams({ limit: limit.toString(), offset: offset.toString() });
+  return authFetch(`/api/moderation/xp/leaderboard?${params}`, { headers });
+}
+
+export async function getUserXp(guildId, userId) {
+  const headers = guildId ? { 'X-Guild-Id': guildId } : {};
+  return authFetch(`/api/moderation/xp/user/${userId}`, { headers });
+}
+
+export async function addUserXp(guildId, userId, amount, source = 'manual') {
+  const headers = guildId ? { 'X-Guild-Id': guildId } : {};
+  return authFetch(`/api/moderation/xp/user/${userId}/add`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({ amount, source })
+  });
+}
+
+export async function resetUserXp(guildId, userId) {
+  const headers = guildId ? { 'X-Guild-Id': guildId } : {};
+  return authFetch(`/api/moderation/xp/user/${userId}`, {
+    method: 'DELETE',
+    headers
+  });
+}
+
+// XP Level rewards
+export async function getXpLevelRewards(guildId) {
+  const headers = guildId ? { 'X-Guild-Id': guildId } : {};
+  return authFetch('/api/moderation/xp/rewards', { headers });
+}
+
+export async function addXpLevelReward(guildId, level, roleId, removePrevious = false) {
+  const headers = guildId ? { 'X-Guild-Id': guildId } : {};
+  return authFetch('/api/moderation/xp/rewards', {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({ level, roleId, removePrevious })
+  });
+}
+
+export async function removeXpLevelReward(guildId, level) {
+  const headers = guildId ? { 'X-Guild-Id': guildId } : {};
+  return authFetch(`/api/moderation/xp/rewards/${level}`, {
+    method: 'DELETE',
+    headers
+  });
+}
 
 // Authentication management
 export async function logout() {
@@ -203,6 +331,115 @@ export async function validateToken() {
 
 export async function getCurrentUser() {
   return authFetch('/api/auth/user/me');
+}
+
+// Profanity management API functions
+export async function getProfanityWords(guildId) {
+  const headers = guildId ? { 'X-Guild-Id': guildId } : {};
+  return authFetch('/api/moderation/profanity/words', { headers });
+}
+
+export async function addProfanityWord(wordData, guildId) {
+  const headers = guildId ? { 'X-Guild-Id': guildId } : {};
+  return authFetch('/api/moderation/profanity/words', {
+    method: 'POST',
+    headers,
+    body: JSON.stringify(wordData)
+  });
+}
+
+export async function updateProfanityWord(wordId, wordData, guildId) {
+  const headers = guildId ? { 'X-Guild-Id': guildId } : {};
+  return authFetch(`/api/moderation/profanity/words/${wordId}`, {
+    method: 'PUT',
+    headers,
+    body: JSON.stringify(wordData)
+  });
+}
+
+export async function deleteProfanityWord(wordId, guildId) {
+  const headers = guildId ? { 'X-Guild-Id': guildId } : {};
+  return authFetch(`/api/moderation/profanity/words/${wordId}`, {
+    method: 'DELETE',
+    headers
+  });
+}
+
+export async function getProfanityPatterns(guildId) {
+  const headers = guildId ? { 'X-Guild-Id': guildId } : {};
+  return authFetch('/api/moderation/profanity/patterns', { headers });
+}
+
+export async function addProfanityPattern(patternData, guildId) {
+  const headers = guildId ? { 'X-Guild-Id': guildId } : {};
+  return authFetch('/api/moderation/profanity/patterns', {
+    method: 'POST',
+    headers,
+    body: JSON.stringify(patternData)
+  });
+}
+
+export async function updateProfanityPattern(patternId, patternData, guildId) {
+  const headers = guildId ? { 'X-Guild-Id': guildId } : {};
+  return authFetch(`/api/moderation/profanity/patterns/${patternId}`, {
+    method: 'PUT',
+    headers,
+    body: JSON.stringify(patternData)
+  });
+}
+
+export async function deleteProfanityPattern(patternId, guildId) {
+  const headers = guildId ? { 'X-Guild-Id': guildId } : {};
+  return authFetch(`/api/moderation/profanity/patterns/${patternId}`, {
+    method: 'DELETE',
+    headers
+  });
+}
+
+// Scheduler API functions
+export async function getSchedulerConfig(guildId) {
+  const headers = guildId ? { 'X-Guild-Id': guildId } : {};
+  return authFetch('/api/moderation/scheduler/config', { headers });
+}
+
+export async function updateSchedulerConfig(config, guildId) {
+  const headers = guildId ? { 'X-Guild-Id': guildId } : {};
+  return authFetch('/api/moderation/scheduler/config', {
+    method: 'PUT',
+    headers,
+    body: JSON.stringify(config)
+  });
+}
+
+export async function getScheduledMessages(guildId) {
+  const headers = guildId ? { 'X-Guild-Id': guildId } : {};
+  return authFetch('/api/moderation/scheduler/messages', { headers });
+}
+
+export async function createScheduledMessage(messageData, guildId) {
+  const headers = guildId ? { 'X-Guild-Id': guildId } : {};
+  return authFetch('/api/moderation/scheduler/messages', {
+    method: 'POST',
+    headers,
+    body: JSON.stringify(messageData)
+  });
+}
+
+export async function updateScheduledMessage(messageId, messageData, guildId) {
+  const headers = guildId ? { 'X-Guild-Id': guildId } : {};
+  return authFetch(`/api/moderation/scheduler/messages/${messageId}`, {
+    method: 'PUT',
+    headers,
+    body: JSON.stringify(messageData)
+  });
+}
+
+export async function deleteScheduledMessage(messageId, guildId) {
+  const headers = guildId ? { 'X-Guild-Id': guildId } : {};
+  return authFetch(`/api/moderation/scheduler/messages/${messageId}`, {
+    method: 'DELETE',
+    headers
+  });
 }
 
 export { login, getToken, setToken, handleAuthError };

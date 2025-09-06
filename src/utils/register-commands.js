@@ -335,6 +335,369 @@ const commands = [
     ]
   },
   {
+    name: 'xp',
+    description: 'XP and leveling commands',
+    options: [
+      {
+        name: 'check',
+        description: 'Check your or another user\'s XP and level',
+        type: 1, // SUB_COMMAND
+        options: [
+          {
+            name: 'user',
+            description: 'User to check (defaults to yourself)',
+            type: 6, // USER
+            required: false
+          }
+        ]
+      },
+      {
+        name: 'leaderboard',
+        description: 'Show the XP leaderboard for this server',
+        type: 1, // SUB_COMMAND
+        options: [
+          {
+            name: 'limit',
+            description: 'Number of users to show (default: 10, max: 25)',
+            type: 4, // INTEGER
+            required: false,
+            min_value: 1,
+            max_value: 25
+          }
+        ]
+      }
+    ]
+  },
+  {
+    name: 'xpadmin',
+    description: 'XP administration commands (Manage Server required)',
+    options: [
+      {
+        name: 'give',
+        description: 'Give XP to a user',
+        type: 1, // SUB_COMMAND
+        options: [
+          {
+            name: 'user',
+            description: 'User to give XP to',
+            type: 6, // USER
+            required: true
+          },
+          {
+            name: 'amount',
+            description: 'Amount of XP to give',
+            type: 4, // INTEGER
+            required: true,
+            min_value: 1,
+            max_value: 10000
+          },
+          {
+            name: 'reason',
+            description: 'Reason for giving XP',
+            type: 3, // STRING
+            required: false
+          }
+        ]
+      },
+      {
+        name: 'remove',
+        description: 'Remove XP from a user',
+        type: 1, // SUB_COMMAND
+        options: [
+          {
+            name: 'user',
+            description: 'User to remove XP from',
+            type: 6, // USER
+            required: true
+          },
+          {
+            name: 'amount',
+            description: 'Amount of XP to remove',
+            type: 4, // INTEGER
+            required: true,
+            min_value: 1,
+            max_value: 10000
+          },
+          {
+            name: 'reason',
+            description: 'Reason for removing XP',
+            type: 3, // STRING
+            required: false
+          }
+        ]
+      },
+      {
+        name: 'reset',
+        description: 'Reset a user\'s XP and level',
+        type: 1, // SUB_COMMAND
+        options: [
+          {
+            name: 'user',
+            description: 'User to reset XP for',
+            type: 6, // USER
+            required: true
+          },
+          {
+            name: 'confirm',
+            description: 'Type "CONFIRM" to confirm the reset',
+            type: 3, // STRING
+            required: true
+          }
+        ]
+      },
+      {
+        name: 'set',
+        description: 'Set a user\'s XP to a specific amount',
+        type: 1, // SUB_COMMAND
+        options: [
+          {
+            name: 'user',
+            description: 'User to set XP for',
+            type: 6, // USER
+            required: true
+          },
+          {
+            name: 'amount',
+            description: 'XP amount to set',
+            type: 4, // INTEGER
+            required: true,
+            min_value: 0,
+            max_value: 100000
+          },
+          {
+            name: 'reason',
+            description: 'Reason for setting XP',
+            type: 3, // STRING
+            required: false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    name: 'level',
+    description: 'Quick command to check your level and XP'
+  },
+  {
+    name: 'rank',
+    description: 'Check your rank on the leaderboard',
+    options: [
+      {
+        name: 'user',
+        description: 'User to check rank for (defaults to yourself)',
+        type: 6, // USER
+        required: false
+      }
+    ]
+  },
+  {
+    name: 'scheduler',
+    description: 'Manage scheduled messages',
+    options: [
+      {
+        name: 'list',
+        description: 'List all scheduled messages',
+        type: 1 // SUB_COMMAND
+      },
+      {
+        name: 'info',
+        description: 'View detailed info for a scheduled message',
+        type: 1, // SUB_COMMAND
+        options: [
+          {
+            name: 'id',
+            description: 'ID of the scheduled message',
+            type: 4, // INTEGER
+            required: true
+          }
+        ]
+      },
+      {
+        name: 'enable',
+        description: 'Enable a scheduled message',
+        type: 1, // SUB_COMMAND
+        options: [
+          {
+            name: 'id',
+            description: 'ID of the scheduled message',
+            type: 4, // INTEGER
+            required: true
+          }
+        ]
+      },
+      {
+        name: 'disable',
+        description: 'Disable a scheduled message',
+        type: 1, // SUB_COMMAND
+        options: [
+          {
+            name: 'id',
+            description: 'ID of the scheduled message',
+            type: 4, // INTEGER
+            required: true
+          }
+        ]
+      },
+      {
+        name: 'run',
+        description: 'Manually trigger a scheduled message now',
+        type: 1, // SUB_COMMAND
+        options: [
+          {
+            name: 'id',
+            description: 'ID of the scheduled message',
+            type: 4, // INTEGER
+            required: true
+          }
+        ]
+      }
+    ]
+  },
+  {
+    name: 'automod',
+    description: 'Manage automod rules',
+    options: [
+      {
+        name: 'list',
+        description: 'Show all configured automod rules',
+        type: 1 // SUB_COMMAND
+      },
+      {
+        name: 'info',
+        description: 'View detailed info for an automod rule',
+        type: 1, // SUB_COMMAND
+        options: [
+          {
+            name: 'id',
+            description: 'ID of the automod rule',
+            type: 4, // INTEGER
+            required: true
+          }
+        ]
+      },
+      {
+        name: 'toggle',
+        description: 'Enable/disable an automod rule',
+        type: 1, // SUB_COMMAND
+        options: [
+          {
+            name: 'id',
+            description: 'ID of the automod rule',
+            type: 4, // INTEGER
+            required: true
+          },
+          {
+            name: 'enabled',
+            description: 'Whether to enable or disable the rule',
+            type: 5, // BOOLEAN
+            required: true
+          }
+        ]
+      }
+    ]
+  },
+  {
+    name: 'antiraid',
+    description: 'Manage anti-raid protection',
+    options: [
+      {
+        name: 'status',
+        description: 'View current anti-raid protection status',
+        type: 1 // SUB_COMMAND
+      },
+      {
+        name: 'toggle',
+        description: 'Enable/disable anti-raid protection',
+        type: 1, // SUB_COMMAND
+        options: [
+          {
+            name: 'enabled',
+            description: 'Whether to enable or disable anti-raid protection',
+            type: 5, // BOOLEAN
+            required: true
+          }
+        ]
+      }
+    ]
+  },
+  {
+    name: 'welcome',
+    description: 'Manage welcome system',
+    options: [
+      {
+        name: 'preview',
+        description: 'Preview current welcome message configuration',
+        type: 1 // SUB_COMMAND
+      },
+      {
+        name: 'toggle',
+        description: 'Enable/disable welcome system',
+        type: 1, // SUB_COMMAND
+        options: [
+          {
+            name: 'enabled',
+            description: 'Whether to enable or disable the welcome system',
+            type: 5, // BOOLEAN
+            required: true
+          }
+        ]
+      }
+    ]
+  },
+  {
+    name: 'audit',
+    description: 'View audit logs and moderation history',
+    options: [
+      {
+        name: 'recent',
+        description: 'View recent moderation actions',
+        type: 1 // SUB_COMMAND
+      },
+      {
+        name: 'search',
+        description: 'Search audit logs by user or action type',
+        type: 1, // SUB_COMMAND
+        options: [
+          {
+            name: 'user',
+            description: 'User to search logs for',
+            type: 6, // USER
+            required: false
+          },
+          {
+            name: 'action',
+            description: 'Action type to filter by',
+            type: 3, // STRING
+            required: false,
+            choices: [
+              { name: 'Message Delete', value: 'messageDelete' },
+              { name: 'Message Edit', value: 'messageUpdate' },
+              { name: 'Member Join', value: 'guildMemberAdd' },
+              { name: 'Member Leave', value: 'guildMemberRemove' },
+              { name: 'Ban', value: 'guildBanAdd' },
+              { name: 'Unban', value: 'guildBanRemove' },
+              { name: 'Role Changes', value: 'guildMemberUpdate' },
+              { name: 'Channel Changes', value: 'channelUpdate' }
+            ]
+          },
+          {
+            name: 'limit',
+            description: 'Number of results to show (max 25)',
+            type: 4, // INTEGER
+            required: false,
+            min_value: 1,
+            max_value: 25
+          }
+        ]
+      },
+      {
+        name: 'stats',
+        description: 'View audit log statistics',
+        type: 1 // SUB_COMMAND
+      }
+    ]
+  },
+  {
     name: 'Explain Image',
     type: 3 // MESSAGE context menu
   },

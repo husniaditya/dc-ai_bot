@@ -24,59 +24,37 @@ export default function XPConfigForm({ config, updateConfig, channels, roles }) 
       <div className="row">
         <div className="col-md-6">
           <FormField 
-            label="Base XP per Message"
-            description="Minimum XP gained per message"
+            label="XP per Message"
+            description="XP gained per message"
           >
             <input 
               type="number"
               className="form-control form-control-sm"
               min="1"
               max="100"
-              value={config.baseXp || 15}
-              onChange={(e) => updateConfig('baseXp', parseInt(e.target.value) || 15)}
+              value={config.xpPerMessage || 15}
+              onChange={(e) => updateConfig('xpPerMessage', parseInt(e.target.value) || 15)}
             />
           </FormField>
         </div>
         <div className="col-md-6">
           <FormField 
-            label="Max XP per Message"
-            description="Maximum XP gained per message"
+            label="XP Cooldown (seconds)"
+            description="Time users must wait between XP gains"
           >
             <input 
               type="number"
               className="form-control form-control-sm"
-              min="1"
-              max="200"
-              value={config.maxXp || 25}
-              onChange={(e) => updateConfig('maxXp', parseInt(e.target.value) || 25)}
+              min="10"
+              max="300"
+              value={config.cooldownSeconds || 60}
+              onChange={(e) => updateConfig('cooldownSeconds', parseInt(e.target.value) || 60)}
             />
           </FormField>
         </div>
       </div>
 
-      <FormField 
-        label="XP Cooldown (seconds)"
-        description="Time users must wait between XP gains"
-      >
-        <input 
-          type="number"
-          className="form-control form-control-sm"
-          min="10"
-          max="300"
-          value={config.cooldown || 60}
-          onChange={(e) => updateConfig('cooldown', parseInt(e.target.value) || 60)}
-        />
-      </FormField>
-
-      <SwitchToggle
-        id="xp-levelup-message"
-        label="Level Up Messages"
-        checked={config.levelUpMessage !== false}
-        onChange={(checked) => updateConfig('levelUpMessage', checked)}
-        description="Send a message when users level up"
-      />
-
-      {config.levelUpMessage !== false && (
+      {config.levelUpMessages !== false && (
         <FormField 
           label="Level Up Channel"
           description="Where to send level up messages (leave empty for same channel)"
@@ -135,68 +113,175 @@ export default function XPConfigForm({ config, updateConfig, channels, roles }) 
       </FormField>
 
       <FormField 
-        label="XP Multiplier Roles"
-        description="Roles that give bonus XP"
+        label="Excluded Roles"
+        description="Roles that won't gain XP"
       >
-        <div className="multiplier-roles">
-          {config.multiplierRoles?.map((multiplierRole, index) => (
-            <div key={index} className="d-flex gap-2 mb-2 align-items-end">
-              <div className="flex-grow-1">
-                <select 
-                  className="form-select form-select-sm"
-                  value={multiplierRole.roleId || ''}
-                  onChange={(e) => {
-                    const newMultipliers = [...(config.multiplierRoles || [])];
-                    newMultipliers[index] = { ...newMultipliers[index], roleId: e.target.value };
-                    updateConfig('multiplierRoles', newMultipliers);
-                  }}
-                >
-                  <option value="">Select role...</option>
-                  {roles.filter(role => !role.managed && role.name !== '@everyone').map(role => (
-                    <option key={role.id} value={role.id}>{role.name}</option>
-                  ))}
-                </select>
+        <div className="excluded-roles">
+          {config.excludedRoles?.length > 0 && (
+            <div className="selected-roles mb-2">
+              <div className="d-flex flex-wrap gap-1">
+                {config.excludedRoles.map(roleId => {
+                  const role = roles.find(r => r.id === roleId);
+                  if (!role) return null;
+                  return (
+                    <span key={roleId} className="badge bg-secondary d-flex align-items-center gap-1">
+                      @{role.name}
+                      <button
+                        type="button"
+                        className="btn-close btn-close-white"
+                        style={{ fontSize: '0.6em' }}
+                        onClick={() => {
+                          const newExcluded = config.excludedRoles.filter(id => id !== roleId);
+                          updateConfig('excludedRoles', newExcluded);
+                        }}
+                        aria-label={`Remove ${role.name}`}
+                      />
+                    </span>
+                  );
+                })}
               </div>
-              <div style={{ width: '120px' }}>
-                <input 
-                  type="number"
-                  className="form-control form-control-sm"
-                  placeholder="Multiplier"
-                  min="0.1"
-                  max="10"
-                  step="0.1"
-                  value={multiplierRole.multiplier || 1}
-                  onChange={(e) => {
-                    const newMultipliers = [...(config.multiplierRoles || [])];
-                    newMultipliers[index] = { ...newMultipliers[index], multiplier: parseFloat(e.target.value) || 1 };
-                    updateConfig('multiplierRoles', newMultipliers);
-                  }}
-                />
-              </div>
-              <button 
-                type="button"
-                className="btn btn-outline-danger btn-sm"
-                onClick={() => {
-                  const newMultipliers = config.multiplierRoles.filter((_, i) => i !== index);
-                  updateConfig('multiplierRoles', newMultipliers);
-                }}
-              >
-                <i className="fa-solid fa-trash" />
-              </button>
             </div>
-          ))}
-          <button 
-            type="button"
-            className="btn btn-outline-primary btn-sm"
-            onClick={() => {
-              updateConfig('multiplierRoles', [...(config.multiplierRoles || []), { roleId: '', multiplier: 1.5 }]);
+          )}
+          
+          <select 
+            className="form-select form-select-sm"
+            value=""
+            onChange={(e) => {
+              const roleId = e.target.value;
+              if (roleId && !config.excludedRoles?.includes(roleId)) {
+                updateConfig('excludedRoles', [...(config.excludedRoles || []), roleId]);
+              }
+              e.target.value = ''; // Reset selection
             }}
           >
-            <i className="fa-solid fa-plus me-2" />
-            Add Multiplier Role
-          </button>
+            <option value="">Add role to exclude...</option>
+            {roles
+              .filter(role => !role.managed && role.name !== '@everyone' && !config.excludedRoles?.includes(role.id))
+              .map(role => (
+                <option key={role.id} value={role.id}>{role.name}</option>
+              ))}
+          </select>
         </div>
       </FormField>
+
+      <FormField 
+        label="XP Multiplier Roles"
+        description="Roles that get bonus XP multipliers"
+      >
+        <div className="role-multipliers">
+          {config.doubleXpEvents?.filter(event => event.roleId)?.length > 0 && (
+            <div className="current-multipliers mb-3">
+              <div className="d-flex flex-wrap gap-2">
+                {config.doubleXpEvents.filter(event => event.roleId).map((roleMultiplier, index) => {
+                  const role = roles.find(r => r.id === roleMultiplier.roleId);
+                  if (!role) return null;
+                  return (
+                    <div key={index} className="card-xp-roles" style={{ minWidth: '200px' }}>
+                      <div className="card-xp-body py-2 px-3">
+                        <div className="d-flex justify-content-between align-items-center">
+                          <div>
+                            <div className="fw-semibold text-success" style={{ fontSize: '0.9rem' }}>@{role.name}</div>
+                            <div className="text-muted-primary" style={{ fontSize: '0.8rem' }}>{roleMultiplier.multiplier}x multiplier</div>
+                          </div>
+                          <button
+                            type="button"
+                            className="btn btn-sm btn-outline-danger"
+                            onClick={() => {
+                              const newEvents = config.doubleXpEvents.filter(event => event.roleId !== roleMultiplier.roleId);
+                              updateConfig('doubleXpEvents', newEvents);
+                            }}
+                            title="Remove multiplier"
+                          >
+                            <i className="fa-solid fa-trash" style={{ fontSize: '0.8rem' }}></i>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+          
+          <div className="add-multiplier-form">
+            {/* Use consistent label + spacing styles to align with other FormField inputs */}
+            <div className="row g-2">
+              <div className="col-md-6">
+                <div className="mb-2 mb-md-0">
+                  <label className="form-label small fw-semibold mb-1" htmlFor="new-multiplier-role">Role</label>
+                  <select 
+                    id="new-multiplier-role"
+                    className="form-select form-select-sm"
+                    defaultValue=""
+                  >
+                    <option value="">Select role...</option>
+                    {roles
+                      .filter(role => 
+                        !role.managed && 
+                        role.name !== '@everyone' && 
+                        !config.doubleXpEvents?.some(event => event.roleId === role.id)
+                      )
+                      .map(role => (
+                        <option key={role.id} value={role.id}>{role.name}</option>
+                      ))}
+                  </select>
+                </div>
+              </div>
+              <div className="col-md-4">
+                <div className="mb-2 mb-md-0">
+                  <label className="form-label small fw-semibold mb-1" htmlFor="new-multiplier-value">Multiplier</label>
+                  <input 
+                    id="new-multiplier-value"
+                    type="number"
+                    className="form-control form-control-sm"
+                    placeholder="1.5"
+                    min="0.1"
+                    max="10"
+                    step="0.1"
+                  />
+                </div>
+              </div>
+              <div className="col-md-2">
+                {/* Invisible label to preserve vertical rhythm with other fields */}
+                <label className="form-label small fw-semibold mb-1 invisible">Add</label>
+                <button
+                  type="button"
+                  className="btn btn-primary btn-sm w-100"
+                  onClick={() => {
+                    const roleSelect = document.getElementById('new-multiplier-role');
+                    const multiplierInput = document.getElementById('new-multiplier-value');
+                    const roleId = roleSelect.value;
+                    const multiplier = parseFloat(multiplierInput.value);
+                    if (roleId && multiplier && multiplier > 0) {
+                      const newEvents = [...(config.doubleXpEvents || []), { roleId, multiplier }];
+                      updateConfig('doubleXpEvents', newEvents);
+                      roleSelect.value = '';
+                      multiplierInput.value = '';
+                    }
+                  }}
+                >
+                  <i className="fa-solid fa-plus me-1"></i>
+                  Add
+                </button>
+              </div>
+            </div>
+            <div className="mt-2">
+              <small className="text-muted">
+                <i className="fa-solid fa-info-circle me-1"></i>
+                Members with multiple multiplier roles will get the highest multiplier.
+              </small>
+            </div>
+          </div>
+        </div>
+      </FormField>
+
+      <SwitchToggle
+        id="xp-levelup-message"
+        label="Level Up Messages"
+        checked={config.levelUpMessages !== false}
+        onChange={(checked) => updateConfig('levelUpMessages', checked)}
+        description="Send a message when users level up"
+      />
     </div>
   );
 }

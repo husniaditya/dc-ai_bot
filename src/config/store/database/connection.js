@@ -219,8 +219,10 @@ async function initializeModerationTables() {
     bypass_roles TEXT NULL,
     log_channel_id VARCHAR(32) NULL,
     auto_delete BOOLEAN DEFAULT 0,
+    message_action ENUM('keep', 'delete') DEFAULT 'keep',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    INDEX idx_guild_enabled (guild_id, enabled)
+    INDEX idx_guild_enabled (guild_id, enabled),
+    INDEX idx_guild_message_action (guild_id, message_action)
   ) ENGINE=InnoDB`);
 
   // Reaction Roles
@@ -281,11 +283,41 @@ async function initializeModerationTables() {
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
   ) ENGINE=InnoDB`);
 
+  // User XP tracking per guild
+  await sqlPool.query(`CREATE TABLE IF NOT EXISTS guild_user_xp (
+    guild_id VARCHAR(32) NOT NULL,
+    user_id VARCHAR(32) NOT NULL,
+    total_xp BIGINT DEFAULT 0,
+    current_level INT DEFAULT 0,
+    last_message_xp TIMESTAMP NULL,
+    last_voice_xp TIMESTAMP NULL,
+    total_messages INT DEFAULT 0,
+    total_voice_minutes INT DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (guild_id, user_id),
+    INDEX idx_guild_level (guild_id, current_level DESC),
+    INDEX idx_guild_xp (guild_id, total_xp DESC)
+  ) ENGINE=InnoDB`);
+
+  // Level-based role rewards (optional but recommended)
+  await sqlPool.query(`CREATE TABLE IF NOT EXISTS guild_xp_level_rewards (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    guild_id VARCHAR(32) NOT NULL,
+    level INT NOT NULL,
+    role_id VARCHAR(32) NOT NULL,
+    remove_previous BOOLEAN DEFAULT 0,
+    enabled BOOLEAN DEFAULT 1,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY unique_guild_level (guild_id, level),
+    INDEX idx_guild_rewards (guild_id, enabled)
+  ) ENGINE=InnoDB`);
+
   // Scheduled Messages
   await sqlPool.query(`CREATE TABLE IF NOT EXISTS guild_scheduled_messages (
     id INT AUTO_INCREMENT PRIMARY KEY,
     guild_id VARCHAR(32) NOT NULL,
-    name VARCHAR(200) NOT NULL,
+    title VARCHAR(200) NOT NULL,
     channel_id VARCHAR(32) NOT NULL,
     message_content TEXT NOT NULL,
     embed_data TEXT NULL,
@@ -305,16 +337,53 @@ async function initializeModerationTables() {
   await sqlPool.query(`CREATE TABLE IF NOT EXISTS guild_audit_logs (
     id INT AUTO_INCREMENT PRIMARY KEY,
     guild_id VARCHAR(32) NOT NULL,
-    action_type ENUM('message_delete', 'message_edit', 'member_join', 'member_leave', 'role_update', 'channel_update', 'ban', 'kick', 'warn') NOT NULL,
+    action_type ENUM(
+      'messageDelete', 'messageUpdate', 'messageBulkDelete',
+      'guildMemberAdd', 'guildMemberRemove', 'guildMemberUpdate',
+      'guildBanAdd', 'guildBanRemove',
+      'channelCreate', 'channelDelete', 'channelUpdate',
+      'roleCreate', 'roleDelete', 'roleUpdate',
+      'voiceStateUpdate', 'guildUpdate',
+      'emojiCreate', 'emojiDelete', 'emojiUpdate',
+      'webhookUpdate', 'guildIntegrationsUpdate',
+      'warn', 'kick', 'ban', 'mute', 'unmute'
+    ) NOT NULL,
     user_id VARCHAR(32) NULL,
     moderator_id VARCHAR(32) NULL,
     target_id VARCHAR(32) NULL,
     channel_id VARCHAR(32) NULL,
+    message_id VARCHAR(32) NULL,
+    role_id VARCHAR(32) NULL,
+    emoji_id VARCHAR(32) NULL,
+    before_data TEXT NULL,
+    after_data TEXT NULL,
     reason TEXT NULL,
-    metadata TEXT NULL,
+    metadata JSON NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     INDEX idx_guild_type (guild_id, action_type),
-    INDEX idx_created (created_at)
+    INDEX idx_created (created_at),
+    INDEX idx_user (user_id),
+    INDEX idx_moderator (moderator_id),
+    INDEX idx_channel (channel_id)
+  ) ENGINE=InnoDB`);
+
+  // Audit Logging Configuration
+  await sqlPool.query(`CREATE TABLE IF NOT EXISTS guild_audit_logs_config (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    guild_id VARCHAR(32) NOT NULL UNIQUE,
+    global_channel VARCHAR(32) NULL,
+    message_channel VARCHAR(32) NULL,
+    member_channel VARCHAR(32) NULL,
+    channel_channel VARCHAR(32) NULL,
+    role_channel VARCHAR(32) NULL,
+    server_channel VARCHAR(32) NULL,
+    voice_channel VARCHAR(32) NULL,
+    include_bots BOOLEAN DEFAULT 1,
+    enhanced_details BOOLEAN DEFAULT 1,
+    enabled BOOLEAN DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_guild_enabled (guild_id, enabled)
   ) ENGINE=InnoDB`);
 
   // Anti-Raid Settings
@@ -325,8 +394,16 @@ async function initializeModerationTables() {
     join_rate_window INT DEFAULT 60,
     account_age_limit INT DEFAULT 7,
     auto_lockdown BOOLEAN DEFAULT 0,
+    auto_kick BOOLEAN DEFAULT 0,
     lockdown_duration INT DEFAULT 300,
     alert_channel_id VARCHAR(32) NULL,
+    raid_action ENUM('mute','kick','ban','lockdown','none') DEFAULT 'mute',
+    raid_action_duration INT DEFAULT 5,
+    raid_active BOOLEAN DEFAULT 0,
+    raid_started_at TIMESTAMP NULL,
+    delete_spam_invites BOOLEAN DEFAULT 0,
+    new_member_period INT DEFAULT 30,
+    whitelist_roles TEXT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
   ) ENGINE=InnoDB`);
@@ -361,6 +438,119 @@ async function initializeModerationTables() {
     updated_by VARCHAR(32) NULL,
     INDEX idx_guild_command (guild_id, command_name),
     INDEX idx_guild_status (guild_id, status)
+  ) ENGINE=InnoDB`);
+
+  // Profanity Detection Tables
+  await sqlPool.query(`CREATE TABLE IF NOT EXISTS guild_profanity_words (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    guild_id VARCHAR(32) NOT NULL,
+    word VARCHAR(255) NOT NULL,
+    severity ENUM('low', 'medium', 'high', 'extreme') DEFAULT 'medium',
+    language VARCHAR(10) DEFAULT 'en',
+    case_sensitive BOOLEAN DEFAULT FALSE,
+    whole_word_only BOOLEAN DEFAULT TRUE,
+    enabled BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    created_by VARCHAR(32) NULL,
+    INDEX idx_guild_enabled (guild_id, enabled),
+    INDEX idx_guild_severity (guild_id, severity),
+    UNIQUE KEY unique_guild_word (guild_id, word)
+  ) ENGINE=InnoDB`);
+
+  await sqlPool.query(`CREATE TABLE IF NOT EXISTS guild_profanity_patterns (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    guild_id VARCHAR(32) NOT NULL,
+    pattern TEXT NOT NULL,
+    description VARCHAR(255) NULL,
+    severity ENUM('low', 'medium', 'high', 'extreme') DEFAULT 'medium',
+    flags VARCHAR(10) DEFAULT 'gi',
+    enabled BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    created_by VARCHAR(32) NULL,
+    INDEX idx_guild_enabled (guild_id, enabled),
+    INDEX idx_guild_severity (guild_id, severity)
+  ) ENGINE=InnoDB`);
+
+  await sqlPool.query(`CREATE TABLE IF NOT EXISTS global_profanity_dictionary (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    word VARCHAR(255) NOT NULL,
+    language VARCHAR(10) NOT NULL,
+    category VARCHAR(50) NULL,
+    severity ENUM('low', 'medium', 'high', 'extreme') DEFAULT 'medium',
+    alternatives TEXT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_language (language),
+    INDEX idx_category (category),
+    INDEX idx_severity (severity),
+    UNIQUE KEY unique_word_lang (word, language)
+  ) ENGINE=InnoDB`);
+
+  // User Violations and Warning System Tables
+  await sqlPool.query(`CREATE TABLE IF NOT EXISTS guild_user_violations (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    guild_id VARCHAR(32) NOT NULL,
+    user_id VARCHAR(32) NOT NULL,
+    rule_id INT NULL,
+    rule_type ENUM('spam', 'caps', 'links', 'invite_links', 'profanity', 'mention_spam') NOT NULL,
+    rule_name VARCHAR(100) NOT NULL,
+    violation_reason TEXT NOT NULL,
+    message_content TEXT NULL,
+    channel_id VARCHAR(32) NOT NULL,
+    message_id VARCHAR(32) NULL,
+    action_taken ENUM('warn', 'mute', 'kick', 'ban', 'delete') NOT NULL,
+    warning_increment INT DEFAULT 1,
+    total_warnings_at_time INT DEFAULT 1,
+    threshold_at_time INT DEFAULT 3,
+    moderator_id VARCHAR(32) NULL,
+    is_auto_mod BOOLEAN DEFAULT 1,
+    severity ENUM('low', 'medium', 'high', 'extreme') DEFAULT 'medium',
+    metadata JSON NULL,
+    expires_at TIMESTAMP NULL,
+    status ENUM('active', 'expired', 'pardoned', 'appealed') DEFAULT 'active',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_guild_user (guild_id, user_id),
+    INDEX idx_guild_rule_type (guild_id, rule_type),
+    INDEX idx_user_rule_type (user_id, rule_type),
+    INDEX idx_created_at (created_at),
+    INDEX idx_status (status),
+    INDEX idx_auto_mod (is_auto_mod),
+    INDEX idx_expires (expires_at)
+  ) ENGINE=InnoDB`);
+
+  await sqlPool.query(`CREATE TABLE IF NOT EXISTS guild_user_warning_counts (
+    guild_id VARCHAR(32) NOT NULL,
+    user_id VARCHAR(32) NOT NULL,
+    rule_type ENUM('spam', 'caps', 'links', 'invite_links', 'profanity', 'mention_spam') NOT NULL,
+    warning_count INT DEFAULT 0,
+    last_violation_at TIMESTAMP NULL,
+    last_reset_at TIMESTAMP NULL,
+    total_violations INT DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (guild_id, user_id, rule_type),
+    INDEX idx_guild_user (guild_id, user_id),
+    INDEX idx_last_violation (last_violation_at),
+    INDEX idx_warning_count (warning_count DESC)
+  ) ENGINE=InnoDB`);
+
+  await sqlPool.query(`CREATE TABLE IF NOT EXISTS guild_violation_appeals (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    violation_id INT NOT NULL,
+    guild_id VARCHAR(32) NOT NULL,
+    user_id VARCHAR(32) NOT NULL,
+    appeal_reason TEXT NOT NULL,
+    appeal_status ENUM('pending', 'approved', 'rejected') DEFAULT 'pending',
+    reviewed_by VARCHAR(32) NULL,
+    reviewer_notes TEXT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_guild_user (guild_id, user_id),
+    INDEX idx_status (appeal_status),
+    INDEX idx_created_at (created_at),
+    FOREIGN KEY (violation_id) REFERENCES guild_user_violations(id) ON DELETE CASCADE
   ) ENGINE=InnoDB`);
 }
 

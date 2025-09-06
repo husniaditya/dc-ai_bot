@@ -83,24 +83,45 @@ if (process.env.ENABLE_MESSAGE_CONTENT !== '0') intents.push(GatewayIntentBits.M
 // Guild Members intent (privileged) – required for welcome join tracking & some member operations
 if (process.env.ENABLE_GUILD_MEMBERS === '1' || process.env.ENABLE_WELCOME === '1') intents.push(GatewayIntentBits.GuildMembers);
 const client = new Client({ intents, partials:[Partials.Channel, Partials.Message, Partials.Reaction] });
+// Expose globally for services needing client (scheduler hooks)
+global.discordClient = client;
 loadCommands(client);
 
 const store = require('./config/store');
 const persistenceModeRef = { mode:null };
 store.persistenceModeRef = persistenceModeRef;
-store.initPersistence().then(mode => { 
-  persistenceModeRef.mode = mode; 
-  store.persistenceModeRef.mode = mode;
-  console.log('Persistence mode:', mode); 
-});
+// Initialize scheduler service (moved into services folder)
+const { initScheduler } = require('./config/store/services/schedulerService');
 
-// Create and start the API server
-const app = createApiServer(client, store, commandMap, startTimestamp);
-const DASHBOARD_PORT = process.env.DASHBOARD_PORT || 3001;
-app.listen(DASHBOARD_PORT, () => console.log('Dashboard API listening on :' + DASHBOARD_PORT));
+// Initialize database before starting API server
+async function initializeApp() {
+  try {
+    const mode = await store.initPersistence();
+    persistenceModeRef.mode = mode; 
+    store.persistenceModeRef.mode = mode;
+    console.log('Persistence mode:', mode);
+    
+    // Create and start the API server AFTER database is ready
+    const app = createApiServer(client, store, commandMap, startTimestamp);
+    const DASHBOARD_PORT = process.env.DASHBOARD_PORT || 3001;
+    app.listen(DASHBOARD_PORT, () => console.log('Dashboard API listening on :' + DASHBOARD_PORT));
+  } catch (error) {
+    console.error('Failed to initialize database:', error);
+    // Still start API server with in-memory fallback
+    const app = createApiServer(client, store, commandMap, startTimestamp);
+    const DASHBOARD_PORT = process.env.DASHBOARD_PORT || 3001;
+    app.listen(DASHBOARD_PORT, () => console.log('Dashboard API listening on :' + DASHBOARD_PORT + ' (in-memory mode)'));
+  }
+}
+
+// Start initialization
+initializeApp();
 
 // Load events (including ready event that starts YouTube/Twitch watchers)
 loadEvents(client, store, commandMap, startTimestamp);
+
+// Start scheduler (after events so ready listener in scheduler can attach)
+initScheduler(client);
 
 // Fallback ready event if no ready.js event file exists
 client.once('ready', () => {
