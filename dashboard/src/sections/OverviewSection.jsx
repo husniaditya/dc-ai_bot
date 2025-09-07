@@ -157,8 +157,8 @@ export default function OverviewSection({ analytics, apiStatus, autos, totalEnab
                         </div>
                         <span className="small">Welcome System</span>
                       </div>
-                      <span className={`badge ${analytics?.features?.welcome_enabled ? 'bg-success' : analytics?.features?.welcome_enabled === false ? 'bg-danger' : 'bg-success'}`}>
-                        {analytics?.features?.welcome_enabled ? 'Active' : analytics?.features?.welcome_enabled === false ? 'Disabled' : 'Active'}
+                      <span className={`badge ${analytics?.features?.welcome_enabled === true ? 'bg-success' : analytics?.features?.welcome_enabled === false ? 'bg-danger' : 'bg-secondary'}`}>
+                        {analytics?.features?.welcome_enabled === true ? 'Enabled' : analytics?.features?.welcome_enabled === false ? 'Disabled' : 'Unknown'}
                       </span>
                     </div>
                     <div className="feature-item d-flex justify-content-between align-items-center py-2">
@@ -168,8 +168,8 @@ export default function OverviewSection({ analytics, apiStatus, autos, totalEnab
                         </div>
                         <span className="small">Auto Moderation</span>
                       </div>
-                      <span className={`badge ${analytics?.features?.automod_enabled ? 'bg-success' : analytics?.features?.automod_enabled === false ? 'bg-danger' : 'bg-success'}`}>
-                        {analytics?.features?.automod_enabled ? 'Active' : analytics?.features?.automod_enabled === false ? 'Disabled' : 'Active'}
+                      <span className={`badge ${analytics?.features?.automod_enabled === true ? 'bg-success' : analytics?.features?.automod_enabled === false ? 'bg-danger' : 'bg-secondary'}`}>
+                        {analytics?.features?.automod_enabled === true ? 'Enabled' : analytics?.features?.automod_enabled === false ? 'Disabled' : 'Unknown'}
                       </span>
                     </div>
                     <div className="feature-item d-flex justify-content-between align-items-center py-2">
@@ -180,7 +180,7 @@ export default function OverviewSection({ analytics, apiStatus, autos, totalEnab
                         <span className="small">Anti-Raid</span>
                       </div>
                       <span className={`badge ${analytics?.features?.antiraid_enabled ? 'bg-success' : analytics?.features?.antiraid_enabled === false ? 'bg-danger' : 'bg-success'}`}>
-                        {analytics?.features?.antiraid_enabled ? 'Active' : analytics?.features?.antiraid_enabled === false ? 'Disabled' : 'Active'}
+                        {analytics?.features?.antiraid_enabled ? 'Enabled' : analytics?.features?.antiraid_enabled === false ? 'Disabled' : 'Active'}
                       </span>
                     </div>
                     <div className="feature-item d-flex justify-content-between align-items-center py-2">
@@ -191,7 +191,7 @@ export default function OverviewSection({ analytics, apiStatus, autos, totalEnab
                         <span className="small">XP & Leveling</span>
                       </div>
                       <span className={`badge ${analytics?.features?.xp_enabled ? 'bg-success' : analytics?.features?.xp_enabled === false ? 'bg-danger' : 'bg-success'}`}>
-                        {analytics?.features?.xp_enabled ? 'Active' : analytics?.features?.xp_enabled === false ? 'Disabled' : 'Active'}
+                        {analytics?.features?.xp_enabled ? 'Enabled' : analytics?.features?.xp_enabled === false ? 'Disabled' : 'Active'}
                       </span>
                     </div>
                   </div>
@@ -211,7 +211,7 @@ export default function OverviewSection({ analytics, apiStatus, autos, totalEnab
                         <span className="small">Scheduler</span>
                       </div>
                       <span className={`badge ${analytics?.features?.scheduler_enabled ? 'bg-success' : analytics?.features?.scheduler_enabled === false ? 'bg-danger' : 'bg-success'}`}>
-                        {analytics?.features?.scheduler_enabled ? 'Active' : analytics?.features?.scheduler_enabled === false ? 'Disabled' : 'Active'}
+                        {analytics?.features?.scheduler_enabled ? 'Enabled' : analytics?.features?.scheduler_enabled === false ? 'Disabled' : 'Active'}
                       </span>
                     </div>
                     <div className="feature-item d-flex justify-content-between align-items-center py-2">
@@ -222,7 +222,7 @@ export default function OverviewSection({ analytics, apiStatus, autos, totalEnab
                         <span className="small">Audit Logging</span>
                       </div>
                       <span className={`badge ${analytics?.features?.audit_enabled ? 'bg-success' : analytics?.features?.audit_enabled === false ? 'bg-danger' : 'bg-success'}`}>
-                        {analytics?.features?.audit_enabled ? 'Active' : analytics?.features?.audit_enabled === false ? 'Disabled' : 'Active'}
+                        {analytics?.features?.audit_enabled ? 'Enabled' : analytics?.features?.audit_enabled === false ? 'Disabled' : 'Active'}
                       </span>
                     </div>
                     <div className="feature-item d-flex justify-content-between align-items-center py-2">
@@ -233,18 +233,7 @@ export default function OverviewSection({ analytics, apiStatus, autos, totalEnab
                         <span className="small">Role Management</span>
                       </div>
                       <span className={`badge ${analytics?.features?.role_management_enabled === true ? 'bg-success' : analytics?.features?.role_management_enabled === false ? 'bg-danger' : 'bg-warning'}`}>
-                        {analytics?.features?.role_management_enabled === true ? 'Active' : analytics?.features?.role_management_enabled === false ? 'Disabled' : 'Partial'}
-                      </span>
-                    </div>
-                    <div className="feature-item d-flex justify-content-between align-items-center py-2">
-                      <div className="d-flex align-items-center">
-                        <div className="feature-icon me-2">
-                          <i className="fas fa-brain text-primary"></i>
-                        </div>
-                        <span className="small">AI Integration</span>
-                      </div>
-                      <span className={`badge ${analytics?.features?.ai_enabled ? 'bg-success' : analytics?.features?.ai_enabled === false ? 'bg-danger' : 'bg-success'}`}>
-                        {analytics?.features?.ai_enabled ? 'Active' : analytics?.features?.ai_enabled === false ? 'Disabled' : 'Active'}
+                        {analytics?.features?.role_management_enabled === true ? 'Enabled' : analytics?.features?.role_management_enabled === false ? 'Disabled' : 'Partial'}
                       </span>
                     </div>
                   </div>

@@ -281,6 +281,33 @@ function createAnalyticsRoutes(client, store, startTimestamp, commandMap) {
         weeklyTrend: [0, 0, 0, 0, 0, 0, 0]
       };
       
+      // Get moderation features status
+      let featuresData = {};
+      try {
+        if (guildId && store.getModerationFeatures) {
+          const moderationFeatures = await store.getModerationFeatures(guildId);
+          featuresData = {
+            welcome_enabled: moderationFeatures.welcome?.enabled,
+            automod_enabled: moderationFeatures.automod?.enabled,
+            antiraid_enabled: moderationFeatures.antiraid?.enabled,
+            xp_enabled: moderationFeatures.xp?.enabled,
+            scheduler_enabled: moderationFeatures.scheduler?.enabled,
+            audit_enabled: moderationFeatures.logging?.enabled,
+            role_management_enabled: moderationFeatures.roles?.enabled,
+            ai_enabled: moderationFeatures.ai?.enabled
+          };
+          
+          // The moderation features table is the master control - don't override it
+          // Only check guild welcome settings if moderation features is not available
+        } else if (guildId && store.getGuildWelcome) {
+          // Fallback to guild welcome settings if moderation features unavailable
+          const welcomeConfig = await store.getGuildWelcome(guildId);
+          featuresData.welcome_enabled = welcomeConfig.enabled;
+        }
+      } catch (featuresError) {
+        console.warn('Could not fetch moderation features:', featuresError.message);
+      }
+      
       if (guildId && store.sqlPool) {
         try {
           // Total violations today
@@ -413,6 +440,8 @@ function createAnalyticsRoutes(client, store, startTimestamp, commandMap) {
           guildName: guildStats.name
         },
         autoBuckets,
+        // Features status from moderation settings
+        features: featuresData,
         // New data for enhanced dashboard
         guild: {
           members: guildStats.members,
