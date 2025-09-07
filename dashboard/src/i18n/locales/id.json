@@ -28,18 +28,20 @@
     "back": "Kembali",
     "next": "Selanjutnya",
     "previous": "Sebelumnya",
-    "unsaved": "Belum disimpan"
+    "unsaved": "Belum disimpan",
+  "notAvailable": "Tidak tersedia",
+  "refresh": "Segarkan analitik"
   },
   "navigation": {
     "dashboard": "Dashboard",
     "changeServer": "Ganti server",
-    "selectServer": "Pilih Server",
-    "overview": "Gambaran Umum",
-    "autos": "Respons Otomatis",
+    "selectServer": "Pilih server",
+    "overview": "Gambaran umum",
+    "autos": "Respons otomatis",
     "commands": "Perintah",
-    "personal": "Personalisasi Bot",
+    "personal": "Personalisasi bot",
     "moderation": "Moderasi",
-    "games": "Game & Sosial",
+    "games": "Game & sosial",
     "settings": "Pengaturan",
     "logout": "Keluar",
     "signOut": "Keluar",
@@ -62,8 +64,9 @@
       "label": "Bahasa",
       "help": "Bahasa default untuk respons bot dan antarmuka dashboard",
       "changeNote": "Bahasa dashboard akan berubah setelah menyimpan pengaturan",
-      "saved": "Pengaturan bahasa berhasil disimpan",
-      "saveFailed": "Gagal menyimpan pengaturan bahasa"
+  "saved": "Pengaturan bahasa berhasil disimpan",
+  "saveFailed": "Gagal menyimpan pengaturan bahasa",
+  "changedTo": "Bahasa diubah ke {{language}}"
     },
     "timezone": {
       "label": "Zona Waktu",
@@ -128,6 +131,7 @@
   "overview": {
     "title": "Gambaran Umum Server",
     "subtitle": "Gambaran umum dashboard dan statistik server",
+  "activityDashboardTitle": "Dasbor Aktivitas",
     "serverInfo": "Informasi Server",
     "botStatus": "Status Bot",
     "quickActions": "Aksi Cepat",
@@ -178,10 +182,166 @@
     "charts": {
       "loadingCharts": "Memuat grafik…",
       "stackedBarDescription": "Grafik batang menampilkan perbandingan yang diaktifkan vs dinonaktifkan untuk auto dan perintah.",
-      "count": "Jumlah"
+      "count": "Jumlah",
+      "categories": {
+        "autos": "Auto",
+        "commands": "Perintah"
+      },
+      "days": {
+        "sun": "Min",
+        "mon": "Sen", 
+        "tue": "Sel",
+        "wed": "Rab",
+        "thu": "Kam",
+        "fri": "Jum",
+        "sat": "Sab"
+      },
+      "commandActivity": "Aktivitas Perintah (7 hari)",
+      "noData": "Tidak ada data tersedia"
     },
     "loadingAnalytics": "Memuat analitik…",
-    "of": "dari"
+    "of": "dari",
+    "serverInformation": "Informasi Server",
+    "activityStreamTitle": "Stream Aktivitas Terbaru",
+    "topCommands24h": "Perintah Teratas (24j)",
+    "total": "total",
+    "executions": "eksekusi",
+    "avg": "rata",
+    "topCommandsEmpty": "Tidak ada perintah yang dijalankan dalam 24 jam terakhir.",
+    "systemStatusTitle": "Status Sistem",
+    "antiRaidProtectionTitle": "Perlindungan Anti-Raid",
+    "last24Hours": "24 Jam Terakhir",
+    "joinPatternLast6Hours": "Pola Bergabung (6 Jam Terakhir)",
+    "securityTrendsTitle": "Tren Keamanan & Keamanan Anggota",
+    "badges": {
+      "todayCount": "{{count}} hari ini"
+    },
+    "time": {
+      "hoursAgo": "{{count}}j lalu",
+      "now": "Sekarang",
+      "secondsShort": "d",
+      "days": "hari"
+    },
+    "performanceMetrics": "Metrik Performa",
+    "guildInfo": {
+      "members": "anggota",
+      "online": "Online",
+      "today": "Hari ini",
+      "roles": "Role",
+      "newMembersToday": "+{count}"
+    },
+    "metrics": {
+      "apiResponse": "Respons API",
+      "excellent": "Sangat Baik",
+      "good": "Baik", 
+      "slow": "Lambat",
+      "commandUsage": "Penggunaan Perintah",
+      "highActivity": "Aktivitas tinggi",
+      "moderateActivity": "Aktivitas sedang",
+      "lowActivity": "Aktivitas rendah",
+      "errorRate": "Tingkat Error",
+      "systemHealth": "Kesehatan Sistem",
+      "optimal": "Optimal",
+      "degraded": "Menurun",
+      "critical": "Kritis",
+      "successRate": "Tingkat Sukses",
+      "cpuUsage": "Penggunaan CPU",
+      "improvement": "peningkatan",
+      "normalLoad": "Beban normal",
+      "yesterdayChange": "-12ms dari kemarin",
+      "newToday": "baru hari ini"
+    },
+    "systemHealth": {
+      "title": "Kesehatan Sistem",
+      "excellent": "Sangat Baik",
+      "good": "Baik",
+      "degraded": "Menurun",
+      "critical": "Kritis",
+      "allSystemsOperational": "Semua sistem beroperasi",
+      "minorIssues": "Masalah kecil terdeteksi",
+      "majorIssues": "Masalah besar terdeteksi",
+      "criticalFailure": "Kegagalan kritis",
+      "botOnline": "Bot Online",
+      "database": "Database",
+      "aiServices": "Layanan AI",
+      "cacheSystem": "Sistem Cache",
+      "systemHealthScore": "Skor Kesehatan Sistem",
+      "status": {
+        "active": "Aktif",
+        "connected": "Terhubung",
+        "operational": "Beroperasi",
+        "warming": "Pemanasan"
+      }
+    },
+    "security": {
+      "title": "Keamanan",
+      "score": "Skor Keamanan",
+      "raidBlocking": "Pemblokiran Raid",
+      "autoMod": "Moderasi Otomatis",
+      "filterEffectiveness": "Efektivitas Filter",
+      "filters": {
+        "spam": "Spam",
+        "links": "Tautan",
+        "mentions": "Sebutan",
+        "invites": "Undangan",
+        "profanity": "Kata Kasar",
+        "caps": "Huruf Besar"
+      },
+      "blocked": "Terblokir",
+      "detected": "Terdeteksi",
+      "protectionStatus": "Status Perlindungan",
+      "raidsBlocked": "Raid Terblokir",
+      "suspicious": "Mencurigakan",
+      "legitimate": "Legit",
+      "actionsTaken": "Aksi Diambil",
+      "securityScore": "Skor Keamanan",
+      "cleanMembers": "Anggota Bersih",
+      "warnedUsers": "Pengguna Diperingatkan",
+      "bannedToday": "Diblokir Hari Ini",
+      "newMembers": "Anggota Baru",
+      "joins": "Bergabung",
+      "joinRateLimit": "Batas Laju Bergabung",
+      "minAccountAgeLabel": "Usia Akun Min",
+      "violationsCaught": "Pelanggaran Tertangkap",
+      "violationsCaught24h": "Pelanggaran Tertangkap (24j)",
+      "securityEventsLast7d": "Peristiwa Keamanan (7 Hari Terakhir)",
+      "excellentProtection": "Perlindungan Sangat Baik",
+      "actions": {
+        "actions": "Aksi",
+        "delete": "Hapus",
+        "warn": "Peringatkan",
+        "mute": "Bisukan",
+        "kick": "Keluarkan",
+        "ban": "Ban"
+      },
+      "thisWeek": "minggu ini",
+      "noDataThisWeek": "Tidak ada data minggu ini"
+    },
+    "memberStats": {
+      "title": "Statistik Anggota",
+      "activeUsers": "Pengguna Aktif",
+      "recentActivity": "Aktivitas Terbaru",
+      "newMembers": "Anggota Baru",
+      "onlineMembers": "Anggota Online"
+    },
+    "activityStream": {
+      "title": "Stream Aktivitas Terbaru",
+      "noActivity": "Tidak ada aktivitas terbaru",
+      "loadingActivity": "Memuat aktivitas...",
+      "noActivityMessage": "Tidak ada aktivitas terbaru ditemukan. Perintah akan muncul di sini saat dijalankan.",
+      "recent": "terbaru",
+      "discordServer": "Server Discord",
+      "unknownGuild": "Guild Tidak Dikenal",
+      "byUser": "oleh {{user}}",
+      "now": "Sekarang"
+    },
+    "sampleActivity": {
+      "schedulerUsed": "/scheduler digunakan",
+      "autoReplyTriggered": "Auto-reply dipicu",
+      "pingExecuted": "/ping dijalankan", 
+      "welcomeMessageSent": "Pesan selamat datang dikirim",
+      "helpRequested": "/help diminta"
+    }
   },
   "autoResponses": {
     "title": "Respons Otomatis",
@@ -234,5 +394,76 @@
     "channel": "Channel Selamat Datang",
     "message": "Pesan Selamat Datang",
     "roles": "Role Otomatis"
+  }
+  ,
+  "autosSection": {
+    "loadingTitle": "Memuat Respons Otomatis",
+    "loadingMessage": "Mengambil pola dan pengaturan respons otomatis server Anda...",
+    "regexTester": {
+      "open": "Penguji Regex",
+      "close": "Tutup Penguji",
+      "pattern": "Pola",
+      "flags": "Bendera",
+      "sampleLabel": "Teks Contoh (multi-baris)",
+      "samplePlaceholder": "halo dunia\nHai",
+      "run": "Jalankan",
+      "empty": "kosong",
+      "error": "Kesalahan regex: {{error}}"
+    },
+    "bulk": {
+      "selectedCount": "Dipilih: {{count}}",
+      "enable": "Aktifkan",
+      "disable": "Nonaktifkan",
+      "enableSelected": "Aktifkan yang dipilih",
+      "disableSelected": "Nonaktifkan yang dipilih",
+      "deleteSelected": "Hapus yang dipilih",
+      "clearSelection": "Bersihkan pilihan",
+      "selectAllFiltered": "Pilih semua hasil",
+      "rows": "Baris"
+    },
+    "columns": {
+      "select": "Pilih",
+      "key": "Kunci",
+      "pattern": "Pola",
+      "flags": "Bendera",
+      "replies": "Balasan",
+      "enabled": "Nyala"
+    },
+    "pagination": {
+      "rows": "Baris",
+      "prevPage": "Halaman sebelumnya",
+      "nextPage": "Halaman berikutnya",
+      "page": "Halaman {{page}} / {{total}}",
+      "showing": "Menampilkan {{count}} dari {{filtered}} difilter (total {{total}})"
+    },
+    "empty": "Tidak ada respons otomatis yang cocok dengan pencarian Anda.",
+    "confirm": {
+      "deleteSelected": "Hapus {{count}} yang dipilih?",
+      "deleteOne": "Hapus {{key}}?"
+    },
+    "toasts": {
+      "bulkEnabled": "Berhasil diaktifkan",
+      "bulkDisabled": "Berhasil dinonaktifkan",
+  "bulkDeleted": "Berhasil dihapus",
+  "deleted": "Dihapus",
+  "saved": "Respons otomatis tersimpan"
+    },
+    "modal": {
+      "titleAdd": "Tambah Respons Otomatis",
+      "titleEdit": "Edit Respons Otomatis",
+      "key": "Kunci",
+      "keyHelpUnique": "id unik",
+      "keyPlaceholder": "salam",
+      "keyNoSpaces": "Tanpa spasi.",
+      "pattern": "Pola Regex",
+      "patternPlaceholder": "^halo|hai",
+      "flags": "Bendera",
+      "flagsPlaceholder": "i",
+      "replies": "Balasan",
+      "repliesHelp": "satu per baris",
+      "repliesPlaceholder": "Halo!\nHai!",
+      "enabled": "Aktif",
+      "footerNote": "Bot memilih satu balasan secara acak."
+    }
   }
 }

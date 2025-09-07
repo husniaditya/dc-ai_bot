@@ -32,11 +32,20 @@
   },
   "navigation": {
     "dashboard": "Tableau de bord",
-    "settings": "Paramètres",
+    "changeServer": "Changer de serveur",
+    "selectServer": "Sélectionner un serveur",
+    "overview": "Aperçu",
+    "autos": "Réponses automatiques",
+    "commands": "Commandes",
+    "personal": "Personnalisation du bot",
     "moderation": "Modération",
     "games": "Jeux et Social",
+    "settings": "Paramètres",
     "logout": "Se déconnecter",
-    "selectServer": "Sélectionner un serveur"
+    "signOut": "Se déconnecter",
+    "collapseSidebar": "Réduire la barre latérale",
+    "expandSidebar": "Agrandir la barre latérale",
+    "toggleTheme": "Basculer thème clair / sombre"
   },
   "settings": {
     "title": "Paramètres du serveur",
@@ -51,7 +60,10 @@
     },
     "language": {
       "label": "Langue",
-      "help": "Langue par défaut pour les réponses du bot"
+  "help": "Langue par défaut pour les réponses du bot",
+  "saved": "Paramètre de langue enregistré",
+  "saveFailed": "Échec de l'enregistrement du paramètre de langue",
+  "changedTo": "Langue changée en {{language}}"
     },
     "timezone": {
       "label": "Fuseau horaire",
@@ -112,5 +124,267 @@
     "fr": "Français",
     "de": "Deutsch",
     "ja": "日本語"
+  },
+  "overview": {
+    "title": "Aperçu du serveur",
+    "subtitle": "Aperçu du tableau de bord et statistiques du serveur",
+    "activityDashboardTitle": "Tableau d'activité",
+    "serverInfo": "Informations du serveur",
+    "botStatus": "Statut du bot",
+    "quickActions": "Actions rapides",
+    "quickStats": "Statistiques rapides",
+    "autosEnabled": "Autos activés",
+    "commandsEnabled": "Commandes activées",
+    "guildMembers": "Membres du serveur",
+    "commandsToday": "Commandes aujourd'hui",
+    "totalAutos": "Autos totaux",
+    "enabled": "Activé",
+    "disabled": "Désactivé",
+    "featureStatus": "Statut des fonctionnalités",
+    "coreFeatures": "Fonctionnalités principales",
+    "advancedFeatures": "Fonctionnalités avancées",
+    "welcomeSystem": "Système de bienvenue",
+    "roleManagement": "Gestion des rôles",
+    "xpLeveling": "XP & Niveaux",
+    "scheduler": "Planificateur",
+    "autoModeration": "Modération automatique",
+    "antiRaid": "Anti-Raid",
+    "auditLogging": "Journal d'audit",
+    "active": "Actif",
+    "partial": "Partiel",
+    "unknown": "Inconnu",
+    "status": {
+      "enabled": "Activé",
+      "disabled": "Désactivé",
+      "active": "Actif",
+      "partial": "Partiel",
+      "unknown": "Inconnu"
+    },
+    "apiStatus": {
+      "geminiAi": "Gemini AI",
+      "discord": "Discord",
+      "database": "Base de données",
+      "uptime": "Disponibilité",
+      "memory": "Mémoire",
+      "errorsHour": "Erreurs/Heure",
+      "cacheHit": "Hits du cache",
+      "ready": "Prêt",
+      "down": "Hors ligne",
+      "on": "Marche",
+      "off": "Arrêt",
+      "lastHour": "dernière heure",
+      "entries": "entrées",
+      "used": "utilisé"
+    },
+    "charts": {
+      "loadingCharts": "Chargement des graphiques…",
+      "stackedBarDescription": "Le graphique empilé compare activé vs désactivé pour autos et commandes.",
+      "count": "Nombre",
+      "categories": {
+        "autos": "Autos",
+        "commands": "Commandes"
+      },
+      "days": {
+        "sun": "Dim",
+        "mon": "Lun",
+        "tue": "Mar",
+        "wed": "Mer",
+        "thu": "Jeu",
+        "fri": "Ven",
+        "sat": "Sam"
+      },
+      "commandActivity": "Activité des commandes (7 jours)",
+      "noData": "Aucune donnée disponible"
+    },
+    "loadingAnalytics": "Chargement des analyses…",
+    "of": "de",
+    "serverInformation": "Informations du serveur",
+    "activityStreamTitle": "Flux d'activité récente",
+    "topCommands24h": "Commandes principales (24h)",
+    "total": "total",
+    "executions": "exécutions",
+    "avg": "moy",
+    "topCommandsEmpty": "Aucune commande exécutée au cours des 24 dernières heures.",
+    "systemStatusTitle": "État du système",
+    "antiRaidProtectionTitle": "Protection Anti-Raid",
+    "last24Hours": "Dernières 24 heures",
+    "joinPatternLast6Hours": "Modèle d'adhésion (6 dernières heures)",
+    "securityTrendsTitle": "Tendances de sécurité et sécurité des membres",
+    "badges": {
+      "todayCount": "{{count}} aujourd'hui"
+    },
+    "time": {
+      "hoursAgo": "il y a {{count}}h",
+      "now": "Maintenant",
+      "secondsShort": "s",
+      "days": "jour(s)"
+    },
+    "performanceMetrics": "Indicateurs de performance",
+    "guildInfo": {
+      "members": "membres",
+      "online": "En ligne",
+      "today": "Aujourd'hui",
+      "roles": "Rôles",
+      "newMembersToday": "+{count}"
+    },
+    "metrics": {
+      "apiResponse": "Réponse API",
+      "excellent": "Excellent",
+      "good": "Bon",
+      "slow": "Lent",
+      "commandUsage": "Utilisation des commandes",
+      "highActivity": "Forte activité",
+      "moderateActivity": "Activité modérée",
+      "lowActivity": "Faible activité",
+      "errorRate": "Taux d'erreur",
+      "systemHealth": "Santé du système",
+      "optimal": "Optimal",
+      "degraded": "Dégradé",
+      "critical": "Critique",
+      "successRate": "Taux de réussite",
+      "cpuUsage": "Utilisation CPU",
+      "improvement": "amélioration",
+      "normalLoad": "Charge normale",
+      "yesterdayChange": "-12 ms depuis hier",
+      "newToday": "nouveaux aujourd'hui"
+    },
+    "activeUsers": "Utilisateurs actifs",
+    "recentActivityStream": "Flux d'activité récente",
+    "systemHealth": {
+      "botOnline": "Bot en ligne",
+      "database": "Base de données",
+      "aiServices": "Services IA",
+      "cacheSystem": "Système de cache",
+      "systemHealthScore": "Score de santé du système",
+      "status": {
+        "active": "Actif",
+        "connected": "Connecté",
+        "operational": "Opérationnel",
+        "warming": "Montée en charge"
+      }
+    },
+    "security": {
+      "protectionStatus": "Statut de protection",
+      "raidsBlocked": "Raids bloqués",
+      "suspicious": "Suspects",
+      "legitimate": "Légitimes",
+      "filterEffectiveness": "Efficacité des filtres",
+      "filters": {
+        "spam": "Spam",
+        "links": "Liens",
+        "caps": "Majuscules",
+        "profanity": "Grossier",
+        "invites": "Invitations",
+        "mentions": "Mentions"
+      },
+      "actionsTaken": "Actions entreprises",
+      "securityScore": "Score de sécurité",
+      "cleanMembers": "Membres sains",
+      "warnedUsers": "Utilisateurs avertis",
+      "bannedToday": "Bannis aujourd'hui",
+      "newMembers": "Nouveaux membres",
+      "joins": "Adhésions",
+      "joinRateLimit": "Limite de taux d'adhésion",
+      "minAccountAgeLabel": "Âge minimum du compte",
+      "violationsCaught": "Infractions détectées",
+      "violationsCaught24h": "Infractions détectées (24h)",
+      "securityEventsLast7d": "Événements de sécurité (7 derniers jours)",
+      "excellentProtection": "Protection excellente",
+      "actions": {
+        "actions": "Actions",
+        "delete": "Supprimer",
+        "warn": "Avertir",
+        "mute": "Rendre muet",
+        "kick": "Expulser",
+        "ban": "Bannir"
+      },
+      "thisWeek": "cette semaine",
+      "noDataThisWeek": "Pas de données cette semaine"
+    },
+    "activityStream": {
+      "noActivityMessage": "Aucune activité récente trouvée. Les commandes apparaîtront ici lorsqu'elles seront exécutées.",
+      "recent": "récent",
+      "discordServer": "Serveur Discord",
+      "unknownGuild": "Serveur inconnu",
+      "byUser": "par {{user}}",
+      "now": "Maintenant"
+    },
+    "sampleActivity": {
+      "schedulerUsed": "/scheduler utilisé",
+      "autoReplyTriggered": "Réponse automatique déclenchée",
+      "pingExecuted": "/ping exécuté",
+      "welcomeMessageSent": "Message de bienvenue envoyé",
+      "helpRequested": "/help demandé"
+    }
+  },
+  "autosSection": {
+    "loadingTitle": "Chargement des réponses automatiques",
+    "loadingMessage": "Récupération des modèles et paramètres des réponses automatiques de votre serveur...",
+    "regexTester": {
+      "open": "Testeur Regex",
+      "close": "Fermer le testeur",
+      "pattern": "Modèle",
+      "flags": "Modificateurs",
+      "sampleLabel": "Texte d'exemple (multi-lignes)",
+      "samplePlaceholder": "bonjour le monde\\nSalut",
+      "run": "Exécuter",
+      "empty": "vide",
+      "error": "Erreur regex : {{error}}"
+    },
+    "bulk": {
+      "selectedCount": "Sélectionnés : {{count}}",
+      "enable": "Activer",
+      "disable": "Désactiver",
+      "enableSelected": "Activer la sélection",
+      "disableSelected": "Désactiver la sélection",
+      "deleteSelected": "Supprimer la sélection",
+      "clearSelection": "Effacer la sélection",
+      "selectAllFiltered": "Tout sélectionner (filtrés)",
+      "rows": "Lignes"
+    },
+    "columns": {
+      "select": "Sélectionner",
+      "key": "Clé",
+      "pattern": "Modèle",
+      "flags": "Mod.",
+      "replies": "Réponses",
+      "enabled": "Activé"
+    },
+    "pagination": {
+      "rows": "Lignes",
+      "prevPage": "Page précédente",
+      "nextPage": "Page suivante",
+      "page": "Page {{page}} / {{total}}",
+      "showing": "Affichage de {{count}} sur {{filtered}} filtrés (total {{total}})"
+    },
+    "empty": "Aucune réponse automatique ne correspond à votre recherche.",
+    "confirm": {
+      "deleteSelected": "Supprimer les {{count}} sélectionnés ?",
+      "deleteOne": "Supprimer {{key}} ?"
+    },
+    "toasts": {
+      "bulkEnabled": "Sélection activée",
+      "bulkDisabled": "Sélection désactivée",
+  "bulkDeleted": "Sélection supprimée",
+  "deleted": "Supprimé",
+  "saved": "Réponse automatique enregistrée"
+    },
+    "modal": {
+      "titleAdd": "Ajouter une réponse automatique",
+      "titleEdit": "Modifier une réponse automatique",
+      "key": "Clé",
+      "keyHelpUnique": "id unique",
+      "keyPlaceholder": "saluer",
+      "keyNoSpaces": "Sans espaces.",
+      "pattern": "Motif Regex",
+      "patternPlaceholder": "^bonjour|salut",
+      "flags": "Modificateurs",
+      "flagsPlaceholder": "i",
+      "replies": "Réponses",
+      "repliesHelp": "une par ligne",
+      "repliesPlaceholder": "Bonjour !\nSalut !",
+      "enabled": "Activé",
+      "footerNote": "Le bot choisit une réponse au hasard."
+    }
   }
 }

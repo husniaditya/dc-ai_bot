@@ -13,7 +13,7 @@ export default function Sidebar({
         <div className="guild-switcher card-glass mb-3 p-2 d-flex align-items-center gap-2">
           <button type="button" className="guild-switcher-btn flex-grow-1" onClick={()=>setView('guild')} title={t('navigation.changeServer')}>
             {(() => { const g = guilds.find(x=>x.id===selectedGuild); const iconUrl = g?.icon ? `https://cdn.discordapp.com/icons/${g.id}/${g.icon}.png?size=128` : null; return <>
-              <div className="gw-icon">{iconUrl ? <img src={iconUrl} alt={g?.name||'Guild'} /> : <span className="fallback">{(g?.name||'?').slice(0,2).toUpperCase()}</span>}</div>
+              <div className="gw-icon">{iconUrl ? <img src={iconUrl} alt={g?.name||t('navigation.selectServer')} /> : <span className="fallback">{(g?.name||'?').slice(0,2).toUpperCase()}</span>}</div>
               <div className="gw-meta">
                 <div className="gw-name" title={g?.name}>{g?.name||t('navigation.selectServer')}</div>
                 <div className="gw-action">{t('navigation.changeServer')} ▾</div>

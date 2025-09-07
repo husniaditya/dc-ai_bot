@@ -32,11 +32,20 @@
   },
   "navigation": {
     "dashboard": "ダッシュボード",
-    "settings": "設定",
+    "changeServer": "サーバーを変更",
+    "selectServer": "サーバーを選択",
+    "overview": "概要",
+    "autos": "自動応答",
+    "commands": "コマンド",
+    "personal": "ボットのパーソナライズ",
     "moderation": "モデレーション",
     "games": "ゲーム・ソーシャル",
+    "settings": "設定",
     "logout": "ログアウト",
-    "selectServer": "サーバーを選択"
+    "signOut": "サインアウト",
+    "collapseSidebar": "サイドバーを折りたたむ",
+    "expandSidebar": "サイドバーを展開",
+    "toggleTheme": "ライト/ダークテーマ切替"
   },
   "settings": {
     "title": "サーバー設定",
@@ -51,7 +60,10 @@
     },
     "language": {
       "label": "言語",
-      "help": "ボット応答のデフォルト言語"
+  "help": "ボット応答のデフォルト言語",
+  "saved": "言語設定を保存しました",
+  "saveFailed": "言語設定の保存に失敗しました",
+  "changedTo": "言語を{{language}}に変更しました"
     },
     "timezone": {
       "label": "タイムゾーン",
@@ -112,5 +124,267 @@
     "fr": "Français",
     "de": "Deutsch",
     "ja": "日本語"
+  },
+  "overview": {
+    "title": "サーバー概要",
+    "subtitle": "ダッシュボード概要とサーバー統計",
+    "activityDashboardTitle": "アクティビティダッシュボード",
+    "serverInfo": "サーバー情報",
+    "botStatus": "ボットステータス",
+    "quickActions": "クイックアクション",
+    "quickStats": "クイックステータス",
+    "autosEnabled": "自動機能 有効",
+    "commandsEnabled": "コマンド 有効",
+    "guildMembers": "サーバーメンバー",
+    "commandsToday": "本日のコマンド",
+    "totalAutos": "自動機能 合計",
+    "enabled": "有効",
+    "disabled": "無効",
+    "featureStatus": "機能ステータス",
+    "coreFeatures": "コア機能",
+    "advancedFeatures": "高度な機能",
+    "welcomeSystem": "ウェルカムシステム",
+    "roleManagement": "ロール管理",
+    "xpLeveling": "XP とレベル",
+    "scheduler": "スケジューラ",
+    "autoModeration": "自動モデレーション",
+    "antiRaid": "アンチレイド",
+    "auditLogging": "監査ログ",
+    "active": "稼働中",
+    "partial": "部分",
+    "unknown": "不明",
+    "status": {
+      "enabled": "有効",
+      "disabled": "無効",
+      "active": "稼働中",
+      "partial": "部分",
+      "unknown": "不明"
+    },
+    "apiStatus": {
+      "geminiAi": "Gemini AI",
+      "discord": "Discord",
+      "database": "データベース",
+      "uptime": "稼働率",
+      "memory": "メモリ",
+      "errorsHour": "エラー/時",
+      "cacheHit": "キャッシュヒット",
+      "ready": "準備完了",
+      "down": "停止",
+      "on": "オン",
+      "off": "オフ",
+      "lastHour": "直近1時間",
+      "entries": "件",
+      "used": "使用中"
+    },
+    "charts": {
+      "loadingCharts": "グラフを読み込み中…",
+      "stackedBarDescription": "積み上げ棒グラフは自動機能とコマンドの有効/無効を比較します。",
+      "count": "件数",
+      "categories": {
+        "autos": "自動機能",
+        "commands": "コマンド"
+      },
+      "days": {
+        "sun": "日",
+        "mon": "月",
+        "tue": "火",
+        "wed": "水",
+        "thu": "木",
+        "fri": "金",
+        "sat": "土"
+      },
+      "commandActivity": "コマンドの活動 (7日間)",
+      "noData": "データがありません"
+    },
+    "loadingAnalytics": "分析を読み込み中…",
+    "of": "／",
+    "serverInformation": "サーバー情報",
+    "activityStreamTitle": "最近のアクティビティ",
+    "topCommands24h": "上位コマンド (24時間)",
+    "total": "合計",
+    "executions": "実行",
+    "avg": "平均",
+    "topCommandsEmpty": "過去24時間に実行されたコマンドはありません。",
+    "systemStatusTitle": "システムステータス",
+    "antiRaidProtectionTitle": "アンチレイド保護",
+    "last24Hours": "過去24時間",
+    "joinPatternLast6Hours": "参加パターン (直近6時間)",
+    "securityTrendsTitle": "セキュリティ動向とメンバーセーフティ",
+    "badges": {
+      "todayCount": "本日 {{count}}"
+    },
+    "time": {
+      "hoursAgo": "{{count}}時間前",
+      "now": "今",
+      "secondsShort": "秒",
+      "days": "日"
+    },
+    "performanceMetrics": "パフォーマンス指標",
+    "guildInfo": {
+      "members": "メンバー",
+      "online": "オンライン",
+      "today": "本日",
+      "roles": "ロール",
+      "newMembersToday": "+{count}"
+    },
+    "metrics": {
+      "apiResponse": "API応答",
+      "excellent": "優秀",
+      "good": "良好",
+      "slow": "遅い",
+      "commandUsage": "コマンドの利用",
+      "highActivity": "高い活動",
+      "moderateActivity": "中程度の活動",
+      "lowActivity": "低い活動",
+      "errorRate": "エラー率",
+      "systemHealth": "システム健全性",
+      "optimal": "最適",
+      "degraded": "低下",
+      "critical": "重大",
+      "successRate": "成功率",
+      "cpuUsage": "CPU使用率",
+      "improvement": "改善",
+      "normalLoad": "通常負荷",
+      "yesterdayChange": "昨日比 -12 ms",
+      "newToday": "本日 新規"
+    },
+    "activeUsers": "アクティブユーザー",
+    "recentActivityStream": "最近のアクティビティ",
+    "systemHealth": {
+      "botOnline": "ボットオンライン",
+      "database": "データベース",
+      "aiServices": "AIサービス",
+      "cacheSystem": "キャッシュシステム",
+      "systemHealthScore": "システム健全性スコア",
+      "status": {
+        "active": "稼働中",
+        "connected": "接続済み",
+        "operational": "稼働",
+        "warming": "ウォームアップ"
+      }
+    },
+    "security": {
+      "protectionStatus": "保護ステータス",
+      "raidsBlocked": "阻止したレイド",
+      "suspicious": "不審",
+      "legitimate": "正常",
+      "filterEffectiveness": "フィルター有効性",
+      "filters": {
+        "spam": "スパム",
+        "links": "リンク",
+        "caps": "大文字",
+        "profanity": "不適切",
+        "invites": "招待",
+        "mentions": "メンション"
+      },
+      "actionsTaken": "実行されたアクション",
+      "securityScore": "セキュリティスコア",
+      "cleanMembers": "健全なメンバー",
+      "warnedUsers": "警告されたユーザー",
+      "bannedToday": "本日 BAN",
+      "newMembers": "新規メンバー",
+      "joins": "参加",
+      "joinRateLimit": "参加レート制限",
+      "minAccountAgeLabel": "最小アカウント年齢",
+      "violationsCaught": "検出された違反",
+      "violationsCaught24h": "検出された違反 (24h)",
+      "securityEventsLast7d": "セキュリティイベント (過去7日)",
+      "excellentProtection": "優れた保護",
+      "actions": {
+        "actions": "アクション",
+        "delete": "削除",
+        "warn": "警告",
+        "mute": "ミュート",
+        "kick": "キック",
+        "ban": "BAN"
+      },
+      "thisWeek": "今週",
+      "noDataThisWeek": "今週のデータはありません"
+    },
+    "activityStream": {
+      "noActivityMessage": "最近のアクティビティは見つかりませんでした。コマンドが実行されるとここに表示されます。",
+      "recent": "最近",
+      "discordServer": "Discord サーバー",
+      "unknownGuild": "不明なサーバー",
+      "byUser": "{{user}} によって",
+      "now": "今"
+    },
+    "sampleActivity": {
+      "schedulerUsed": "/scheduler を使用",
+      "autoReplyTriggered": "自動返信がトリガーされました",
+      "pingExecuted": "/ping を実行",
+      "welcomeMessageSent": "ウェルカムメッセージを送信",
+      "helpRequested": "/help をリクエスト"
+    }
+  },
+  "autosSection": {
+    "loadingTitle": "自動応答を読み込み中",
+    "loadingMessage": "サーバーの自動応答パターンと設定を取得しています...",
+    "regexTester": {
+      "open": "Regex テスター",
+      "close": "テスターを閉じる",
+      "pattern": "パターン",
+      "flags": "フラグ",
+      "sampleLabel": "サンプルテキスト（複数行）",
+      "samplePlaceholder": "hello world\\nこんにちは",
+      "run": "実行",
+      "empty": "空",
+      "error": "Regex エラー: {{error}}"
+    },
+    "bulk": {
+      "selectedCount": "選択: {{count}}",
+      "enable": "有効化",
+      "disable": "無効化",
+      "enableSelected": "選択項目を有効化",
+      "disableSelected": "選択項目を無効化",
+      "deleteSelected": "選択項目を削除",
+      "clearSelection": "選択をクリア",
+      "selectAllFiltered": "フィルタ結果をすべて選択",
+      "rows": "行"
+    },
+    "columns": {
+      "select": "選択",
+      "key": "キー",
+      "pattern": "パターン",
+      "flags": "フラグ",
+      "replies": "返信",
+      "enabled": "オン"
+    },
+    "pagination": {
+      "rows": "行",
+      "prevPage": "前のページ",
+      "nextPage": "次のページ",
+      "page": "{{page}} / {{total}} ページ",
+      "showing": "{{filtered}} 件中 {{count}} 件を表示（合計 {{total}} 件）"
+    },
+    "empty": "検索に一致する自動応答はありません。",
+    "confirm": {
+      "deleteSelected": "選択した {{count}} 件を削除しますか？",
+      "deleteOne": "{{key}} を削除しますか？"
+    },
+    "toasts": {
+      "bulkEnabled": "選択項目を有効化しました",
+      "bulkDisabled": "選択項目を無効化しました",
+  "bulkDeleted": "選択項目を削除しました",
+  "deleted": "削除しました",
+  "saved": "自動応答を保存しました"
+    },
+    "modal": {
+      "titleAdd": "自動応答を追加",
+      "titleEdit": "自動応答を編集",
+      "key": "キー",
+      "keyHelpUnique": "一意のID",
+      "keyPlaceholder": "greet（挨拶）",
+      "keyNoSpaces": "スペースを含めないでください。",
+      "pattern": "Regex パターン",
+      "patternPlaceholder": "^hello|hi",
+      "flags": "フラグ",
+      "flagsPlaceholder": "i",
+      "replies": "返信",
+      "repliesHelp": "1行に1つ",
+      "repliesPlaceholder": "Hello!\nHi!",
+      "enabled": "有効",
+      "footerNote": "ボットはランダムに1つの返信を選びます。"
+    }
   }
 }

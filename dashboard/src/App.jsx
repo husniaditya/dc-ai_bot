@@ -14,6 +14,13 @@ import './styles/responsive-tables.css';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 // Internationalization
 import { I18nProvider } from './i18n';
+// Lightweight i18n helper for toasts in this file (runs outside Provider)
+import en from './i18n/locales/en.json';
+import id from './i18n/locales/id.json';
+import es from './i18n/locales/es.json';
+import fr from './i18n/locales/fr.json';
+import de from './i18n/locales/de.json';
+import ja from './i18n/locales/ja.json';
 // Layout & structural components
 import Sidebar from './components/Sidebar.jsx';
 import AutoResponseModal from './components/AutoResponseModal.jsx';
@@ -30,6 +37,28 @@ import { login, getSettings, updateSettings, listAuto, upsertAuto, deleteAuto, g
 const API_BASE = getApiBase();
 
 export default function App(){
+  // Minimal translator for toasts (reads current language from localStorage; falls back to English)
+  const translations = { en, id, es, fr, de, ja };
+  function getNested(obj, path, fallback) {
+    return path.split('.').reduce((acc, k) => (acc && acc[k] !== undefined ? acc[k] : undefined), obj) ?? fallback;
+  }
+  function tGlobal(key, interpolations = {}) {
+    let lang = 'en';
+    try {
+      const stored = localStorage.getItem('dashboard_language');
+      if (stored && translations[stored]) lang = stored;
+      else {
+        const browserLang = (navigator.language || 'en').split('-')[0];
+        if (translations[browserLang]) lang = browserLang;
+      }
+    } catch {}
+    let str = getNested(translations[lang], key, undefined);
+    if (str === undefined) str = getNested(en, key, key);
+    if (typeof str === 'string' && Object.keys(interpolations).length > 0) {
+      str = str.replace(/\{\{(\w+)\}\}/g, (m, p1) => (interpolations[p1] ?? m));
+    }
+    return str;
+  }
   const [token, setToken] = useState(localStorage.getItem('token'));
   const [loginForm, setLoginForm] = useState({ username:'', password:'' });
   const [settings, setSettings] = useState(null);
@@ -789,7 +818,7 @@ export default function App(){
       setSettings(optimistic);
   const updated = await updateSettings(optimistic, selectedGuild);
       setSettings(updated);
-  pushToast('success','Settings saved');
+  pushToast('success', tGlobal('settings.messages.saved'));
     } catch(e){ setError(e.message); }
   }
 
@@ -805,17 +834,17 @@ export default function App(){
     });
     try {
   await upsertAuto(entry, selectedGuild);
-  pushToast('success','Auto response saved');
+  pushToast('success', tGlobal('autosSection.toasts.saved'));
       closeAutoModal();
     } catch(e){ setError(e.message); refresh(); }
   }
 
   async function removeAuto(key){
-    if(!window.confirm('Delete '+key+'?')) return;
+    if(!window.confirm(tGlobal('autosSection.confirm.deleteOne', { key }))) return;
     // optimistic removal
     const prev = autos;
     setAutos(autos.filter(a=>a.key!==key));
-  try { await deleteAuto(key, selectedGuild); pushToast('success','Deleted'); } catch(e){ setError(e.message); setAutos(prev); }
+  try { await deleteAuto(key, selectedGuild); pushToast('success', tGlobal('autosSection.toasts.deleted')); } catch(e){ setError(e.message); setAutos(prev); }
   }
 
   function pushToast(type,message){

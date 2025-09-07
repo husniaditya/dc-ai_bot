@@ -1,6 +1,19 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useI18n } from '../i18n/I18nContext';
+import '../styles/flags.css';
+import 'flag-icons/css/flag-icons.min.css';
 import { getSettings, updateSettings } from '../api';
+
+// Map languages to a representative country's ISO 3166-1 alpha-2 code for flag assets
+const FLAG_CODES = {
+  en: 'us', // English → US
+  id: 'id',
+  es: 'es',
+  fr: 'fr',
+  de: 'de',
+  ja: 'jp',
+};
+const getFlagCode = (code) => FLAG_CODES[code] || 'un';
 
 export default function LanguageSelector({ className = '', showLabel = true, size = 'sm', guildId = null, pushToast = null }) {
   const { currentLanguage, changeLanguage, supportedLanguages, t } = useI18n();
@@ -8,6 +21,7 @@ export default function LanguageSelector({ className = '', showLabel = true, siz
 
   const handleLanguageChange = async (e) => {
     const newLanguage = e.target.value;
+  const selectedLang = supportedLanguages.find(l => l.code === newLanguage) || { nativeName: newLanguage.toUpperCase() };
     
     // Always update the UI language immediately
     changeLanguage(newLanguage);
@@ -29,7 +43,7 @@ export default function LanguageSelector({ className = '', showLabel = true, siz
         await updateSettings(updatedSettings, guildId);
         
         if (pushToast) {
-          pushToast('success', t('settings.language.saved'));
+          pushToast('success', t('settings.language.changedTo', { language: selectedLang.nativeName }));
         }
       } catch (error) {
         console.error('Failed to save language setting:', error);
@@ -70,7 +84,7 @@ export default function LanguageSelector({ className = '', showLabel = true, siz
 
 // Modern compact language selector for navbar/header
 export function CompactLanguageSelector({ className = '', guildId = null, pushToast = null }) {
-  const { currentLanguage, changeLanguage, supportedLanguages } = useI18n();
+  const { currentLanguage, changeLanguage, supportedLanguages, t } = useI18n();
   const [isOpen, setIsOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const dropdownRef = useRef(null);
@@ -110,6 +124,7 @@ export function CompactLanguageSelector({ className = '', guildId = null, pushTo
   }, [isOpen]);
 
   const handleLanguageSelect = async (languageCode) => {
+    const selectedLang = supportedLanguages.find(l => l.code === languageCode) || { nativeName: languageCode.toUpperCase() };
     // Always update the UI language immediately
     changeLanguage(languageCode);
     setIsOpen(false);
@@ -131,12 +146,12 @@ export function CompactLanguageSelector({ className = '', guildId = null, pushTo
         await updateSettings(updatedSettings, guildId);
         
         if (pushToast) {
-          pushToast('success', `Language changed to ${currentLang.nativeName}`);
+          pushToast('success', t('settings.language.changedTo', { language: selectedLang.nativeName }));
         }
       } catch (error) {
         console.error('Failed to save language setting:', error);
         if (pushToast) {
-          pushToast('error', 'Failed to save language setting');
+          pushToast('error', t('settings.language.saveFailed'));
         }
       } finally {
         setSaving(false);
@@ -149,6 +164,7 @@ export function CompactLanguageSelector({ className = '', guildId = null, pushTo
   };
 
   const currentLang = getCurrentLanguageInfo();
+  const currentFlagCode = getFlagCode(currentLang.code);
   const isMobile = window.innerWidth <= 768;
 
   return (
@@ -166,7 +182,7 @@ export function CompactLanguageSelector({ className = '', guildId = null, pushTo
         aria-label={`Current language: ${currentLang.nativeName}. Click to change language.`}
         title="Change Language"
       >
-        <i className="fa-solid fa-globe"></i>
+  <span className={`fi fi-${currentFlagCode}`} aria-hidden="true"></span>
         <span className="language-code">{getCurrentLanguageDisplay()}</span>
         {saving ? (
           <i className="fa-solid fa-spinner fa-spin"></i>
@@ -190,6 +206,7 @@ export function CompactLanguageSelector({ className = '', guildId = null, pushTo
                 role="menuitem"
                 aria-label={`Switch to ${lang.nativeName} (${lang.name})`}
               >
+                <span className={`fi fi-${getFlagCode(lang.code)}`} aria-hidden="true"></span>
                 <div className="language-info">
                   <span className="language-native">{lang.nativeName}</span>
                   <span className="language-english">{lang.name}</span>

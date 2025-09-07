@@ -28,7 +28,9 @@
     "back": "Back",
     "next": "Next",
     "previous": "Previous",
-    "unsaved": "Unsaved"
+    "unsaved": "Unsaved",
+  "notAvailable": "N/A",
+  "refresh": "Refresh analytics"
   },
   "navigation": {
     "dashboard": "Dashboard",
@@ -63,7 +65,8 @@
       "help": "Default language for bot responses and dashboard interface",
       "changeNote": "Dashboard language will change after saving settings",
       "saved": "Language setting saved successfully",
-      "saveFailed": "Failed to save language setting"
+  "saveFailed": "Failed to save language setting",
+  "changedTo": "Language changed to {{language}}"
     },
     "timezone": {
       "label": "Timezone",
@@ -128,6 +131,7 @@
   "overview": {
     "title": "Server Overview",
     "subtitle": "Dashboard overview and server statistics",
+  "activityDashboardTitle": "Activity Dashboard",
     "serverInfo": "Server Information",
     "botStatus": "Bot Status",
     "quickActions": "Quick Actions",
@@ -178,10 +182,143 @@
     "charts": {
       "loadingCharts": "Loading charts…",
       "stackedBarDescription": "Stacked bar compares enabled vs disabled for autos and commands.",
-      "count": "Count"
+      "count": "Count",
+      "categories": {
+        "autos": "Autos",
+        "commands": "Commands"
+      },
+      "days": {
+        "sun": "Sun",
+        "mon": "Mon", 
+        "tue": "Tue",
+        "wed": "Wed",
+        "thu": "Thu",
+        "fri": "Fri",
+        "sat": "Sat"
+      },
+      "commandActivity": "Command Activity (7 days)",
+      "noData": "No data available"
     },
     "loadingAnalytics": "Loading analytics…",
-    "of": "of"
+    "of": "of",
+    "serverInformation": "Server Information",
+    "activityStreamTitle": "Recent Activity Stream",
+    "topCommands24h": "Top Commands (24h)",
+    "total": "total",
+    "executions": "executions",
+    "avg": "avg",
+    "topCommandsEmpty": "No commands executed in the last 24 hours.",
+    "systemStatusTitle": "System Status",
+    "antiRaidProtectionTitle": "Anti-Raid Protection",
+    "last24Hours": "Last 24 Hours",
+    "joinPatternLast6Hours": "Join Pattern (Last 6 Hours)",
+    "securityTrendsTitle": "Security Trends & Member Safety",
+    "badges": {
+      "todayCount": "{{count}} today"
+    },
+    "time": {
+      "hoursAgo": "{{count}}h ago",
+      "now": "Now",
+      "secondsShort": "s",
+      "days": "day(s)"
+    },
+    "performanceMetrics": "Performance Metrics",
+    "guildInfo": {
+      "members": "members",
+      "online": "Online",
+      "today": "Today",
+      "roles": "Roles",
+      "newMembersToday": "+{count}"
+    },
+    "metrics": {
+      "apiResponse": "API Response",
+      "excellent": "Excellent",
+      "good": "Good", 
+      "slow": "Slow",
+      "commandUsage": "Command Usage",
+      "highActivity": "High activity",
+      "moderateActivity": "Moderate activity",
+      "lowActivity": "Low activity",
+      "errorRate": "Error Rate",
+      "systemHealth": "System Health",
+      "optimal": "Optimal",
+      "degraded": "Degraded",
+      "critical": "Critical",
+      "successRate": "Success Rate",
+      "cpuUsage": "CPU Usage",
+      "improvement": "improvement",
+      "normalLoad": "Normal load",
+  "yesterdayChange": "-12ms from yesterday",
+  "newToday": "new today"
+    },
+    "activeUsers": "Active Users",
+    "recentActivityStream": "Recent Activity Stream",
+    "systemHealth": {
+      "botOnline": "Bot Online",
+      "database": "Database", 
+      "aiServices": "AI Services",
+      "cacheSystem": "Cache System",
+      "systemHealthScore": "System Health Score",
+      "status": {
+        "active": "Active",
+        "connected": "Connected", 
+        "operational": "Operational",
+        "warming": "Warming"
+      }
+    },
+    "security": {
+      "protectionStatus": "Protection Status",
+      "raidsBlocked": "Raids Blocked",
+      "suspicious": "Suspicious",
+      "legitimate": "Legitimate",
+      "filterEffectiveness": "Filter Effectiveness",
+      "filters": {
+        "spam": "Spam",
+        "links": "Links", 
+        "caps": "Caps",
+        "profanity": "Profanity",
+        "invites": "Invites",
+        "mentions": "Mentions"
+      },
+      "actionsTaken": "Actions Taken",
+      "securityScore": "Security Score",
+      "cleanMembers": "Clean Members",
+      "warnedUsers": "Warned Users", 
+      "bannedToday": "Banned Today",
+      "newMembers": "New Members",
+      "joins": "Joins",
+      "joinRateLimit": "Join Rate Limit",
+      "minAccountAgeLabel": "Min Account Age",
+      "violationsCaught": "Violations Caught",
+      "violationsCaught24h": "Violations Caught (24h)",
+      "securityEventsLast7d": "Security Events (Last 7 Days)",
+      "excellentProtection": "Excellent Protection",
+      "actions": {
+        "actions": "Actions",
+        "delete": "Delete",
+        "warn": "Warn",
+        "mute": "Mute",
+        "kick": "Kick",
+        "ban": "Ban"
+      },
+      "thisWeek": "this week",
+      "noDataThisWeek": "No data this week"
+    },
+    "activityStream": {
+      "noActivityMessage": "No recent activity found. Commands will appear here as they are executed.",
+      "recent": "recent",
+      "discordServer": "Discord Server",
+      "unknownGuild": "Unknown Guild",
+      "byUser": "by {{user}}",
+      "now": "Now"
+    },
+    "sampleActivity": {
+      "schedulerUsed": "/scheduler used",
+      "autoReplyTriggered": "Auto-reply triggered",
+      "pingExecuted": "/ping executed", 
+      "welcomeMessageSent": "Welcome message sent",
+      "helpRequested": "/help requested"
+    }
   },
   "autoResponses": {
     "title": "Auto Responses",
@@ -192,6 +329,76 @@
     "addResponse": "Add Response",
     "editResponse": "Edit Response",
     "deleteResponse": "Delete Response"
+  },
+  "autosSection": {
+    "loadingTitle": "Loading Auto Responses",
+    "loadingMessage": "Fetching your server's auto response patterns and settings...",
+    "regexTester": {
+      "open": "Regex Tester",
+      "close": "Close Tester",
+      "pattern": "Pattern",
+      "flags": "Flags",
+      "sampleLabel": "Sample Text (multi-line)",
+      "samplePlaceholder": "hello world\nHi there",
+      "run": "Run",
+      "empty": "empty",
+      "error": "Regex error: {{error}}"
+    },
+    "bulk": {
+      "selectedCount": "Selected: {{count}}",
+      "enable": "Enable",
+      "disable": "Disable",
+      "enableSelected": "Enable selected",
+      "disableSelected": "Disable selected",
+      "deleteSelected": "Delete selected",
+      "clearSelection": "Clear selection",
+      "selectAllFiltered": "Select all filtered",
+      "rows": "Rows"
+    },
+    "columns": {
+      "select": "Select",
+      "key": "Key",
+      "pattern": "Pattern",
+      "flags": "Flags",
+      "replies": "Replies",
+      "enabled": "On"
+    },
+    "pagination": {
+      "rows": "Rows",
+      "prevPage": "Previous page",
+      "nextPage": "Next page",
+      "page": "Page {{page}} / {{total}}",
+      "showing": "Showing {{count}} of {{filtered}} filtered (total {{total}})"
+    },
+    "empty": "No auto responses match your search.",
+    "confirm": {
+      "deleteSelected": "Delete {{count}} selected?",
+      "deleteOne": "Delete {{key}}?"
+    },
+    "toasts": {
+      "bulkEnabled": "Enabled selected",
+      "bulkDisabled": "Disabled selected",
+  "bulkDeleted": "Deleted selected",
+  "deleted": "Deleted",
+  "saved": "Auto response saved"
+    },
+    "modal": {
+      "titleAdd": "Add Auto Response",
+      "titleEdit": "Edit Auto Response",
+      "key": "Key",
+      "keyHelpUnique": "unique id",
+      "keyPlaceholder": "greet",
+      "keyNoSpaces": "No spaces.",
+      "pattern": "Regex Pattern",
+      "patternPlaceholder": "^hello|hi",
+      "flags": "Flags",
+      "flagsPlaceholder": "i",
+      "replies": "Replies",
+      "repliesHelp": "one per line",
+      "repliesPlaceholder": "Hello there!\nHi!",
+      "enabled": "Enabled",
+      "footerNote": "Bot picks one reply randomly."
+    }
   },
   "commands": {
     "title": "Commands",
