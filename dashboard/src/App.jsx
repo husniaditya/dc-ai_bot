@@ -1004,8 +1004,11 @@ export default function App(){
       return { ...prev, [name]: enabled };
     });
     setCommandToggle(name, enabled, selectedGuild).then(()=>{
-      // Show toast with appropriate style
-      pushToast(enabled ? 'success' : 'info', `Command "${name}" ${enabled ? 'enabled' : 'disabled'} successfully`);
+      // Show toast with appropriate style (localized)
+      const msg = enabled
+        ? tGlobal('commands.toasts.enabled', { name })
+        : tGlobal('commands.toasts.disabled', { name });
+      pushToast(enabled ? 'success' : 'info', msg);
       // fetch authoritative analytics snapshot
       refreshAnalytics();
     }).catch(()=>{
@@ -1031,7 +1034,7 @@ export default function App(){
         }
         return prev;
       });
-      pushToast('error', 'Failed to update '+name);
+  pushToast('error', tGlobal('commands.toasts.toggleFailed', { name }));
     });
   }
 

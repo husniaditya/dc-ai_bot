@@ -60,10 +60,10 @@
     },
     "language": {
       "label": "Sprache",
-  "help": "Standardsprache für Bot-Antworten",
-  "saved": "Spracheinstellung gespeichert",
-  "saveFailed": "Spracheinstellung konnte nicht gespeichert werden",
-  "changedTo": "Sprache geändert zu {{language}}"
+      "help": "Standardsprache für Bot-Antworten",
+      "saved": "Spracheinstellung gespeichert",
+      "saveFailed": "Spracheinstellung konnte nicht gespeichert werden",
+      "changedTo": "Sprache geändert zu {{language}}"
     },
     "timezone": {
       "label": "Zeitzone",
@@ -365,9 +365,9 @@
     "toasts": {
       "bulkEnabled": "Auswahl aktiviert",
       "bulkDisabled": "Auswahl deaktiviert",
-  "bulkDeleted": "Auswahl gelöscht",
-  "deleted": "Gelöscht",
-  "saved": "Auto-Antwort gespeichert"
+      "bulkDeleted": "Auswahl gelöscht",
+      "deleted": "Gelöscht",
+      "saved": "Auto-Antwort gespeichert"
     },
     "modal": {
       "titleAdd": "Auto-Antwort hinzufügen",
@@ -385,6 +385,103 @@
       "repliesPlaceholder": "Hallo!\nHi!",
       "enabled": "Aktiviert",
       "footerNote": "Der Bot wählt zufällig eine Antwort."
+    }
+  },
+  "commands": {
+    "title": "Befehle",
+    "subtitle": "Verwalten Sie Bot-Befehle und Berechtigungen",
+    "slashCommands": "Slash-Befehle",
+    "prefixCommands": "Präfix-Befehle",
+    "permissions": "Befehlsberechtigungen",
+    "enableAll": "Alle aktivieren",
+    "disableAll": "Alle deaktivieren",
+    "section": {
+      "commandOne": "1 Befehl",
+      "commandMany": "{{count}} Befehle",
+      "requiresManage": "Benötigt die Berechtigung 'Server verwalten'",
+      "alwaysActive": "Immer aktiv",
+      "updatedBy": "Aktualisiert von {{user}}",
+      "readOnly": "Schreibgeschützt",
+      "passive": "Passiv",
+      "bottomNote": "Einige Befehle sind immer aktiv oder erfordern spezielle Berechtigungen zum Umschalten.",
+      "unknownUser": "Unbekannt"
+    },
+    "groups": {
+      "core": { "title": "Kern" },
+      "ai": { "title": "KI & Sprache" },
+      "polls": { "title": "Umfragen" },
+      "utilities": { "title": "Dienstprogramme" },
+      "xp": { "title": "XP & Level" },
+      "roles": { "title": "Rollen & Selbstzuweisung" },
+      "moderation": { "title": "Moderation & Sicherheit" },
+      "passive": { "title": "Passiv / Automatisierung" },
+      "scheduler": { "title": "Planer" },
+      "streaming": { "title": "Streaming-Integration" }
+    },
+    "toasts": {
+      "enabled": "Befehl \"{{name}}\" aktiviert",
+      "disabled": "Befehl \"{{name}}\" deaktiviert",
+      "toggleFailed": "Aktualisierung von {{name}} fehlgeschlagen"
+    },
+    "items": {
+      "ping": { "usage": "/ping", "desc": "Gesundheitsprüfung — antwortet mit Pong." },
+      "uptime": { "usage": "/uptime", "desc": "Zeigt die Laufzeit des Bot-Prozesses an." },
+      "whoami": { "usage": "/whoami", "desc": "Zeigt Ihren Benutzer-Tag und Ihre ID an." },
+      "echo": { "usage": "/echo <text>", "desc": "Antwortet mit dem gleichen Text." },
+      "help": { "usage": "/help", "desc": "Interaktives Hilfemenü nach Kategorien." },
+
+      "ask": { "usage": "/ask prompt:<text>", "desc": "Stellen Sie der KI eine Frage (3 Min. zwischengespeichert)." },
+      "askfollow": { "usage": "/askfollow prompt:<text>", "desc": "Folgefrage mit kürzlich geführtem Gesprächskontext." },
+      "explain_image": { "usage": "/explain_image image(1-3) [prompt]", "desc": "Erklärt bis zu 3 Bilder mit optionalem Prompt." },
+      "summarize": { "usage": "/summarize [count]", "desc": "Fasst die letzten Nachrichten zusammen (Standard 30)." },
+      "translate": { "usage": "/translate text target", "desc": "Übersetzt Text in die Zielsprache." },
+
+      "poll create": { "usage": "/poll create question options", "desc": "Erstellt eine Umfrage (bis zu 5 Optionen)." },
+      "poll results": { "usage": "/poll results id", "desc": "Zeigt Ergebnisse für eine Umfrage-ID an." },
+
+      "math": { "usage": "/math add|sub|mul|div a b", "desc": "Grundlegende arithmetische Operationen." },
+      "user info": { "usage": "/user info [target]", "desc": "Discord-Benutzerinformationen abrufen." },
+      "remind": { "usage": "/remind minutes text", "desc": "Erinnerung per DM oder im Kanal planen." },
+      "meme": { "usage": "/meme", "desc": "Zufälliges Meme-Bild von meme-api.com." },
+
+      "level": { "usage": "/level [user]", "desc": "Prüfen Sie Ihr Level oder das eines anderen Nutzers." },
+      "xp": { "usage": "/xp check|leaderboard [user]", "desc": "XP prüfen oder Server-Bestenliste anzeigen." },
+      "rank": { "usage": "/rank [user]", "desc": "Prüfen Sie Ihren Rang auf dem Server." },
+      "leaderboard": { "usage": "/leaderboard [limit]", "desc": "Zeigt die XP-Bestenliste des Servers an." },
+      "xpadmin": { "usage": "/xpadmin give|remove|set <user> <amount>", "desc": "Benutzer-XP verwalten (erfordert Server verwalten)." },
+
+      "role list": { "usage": "/role list", "desc": "Alle verfügbaren selbstzuweisbaren Rollen anzeigen." },
+      "role menu": { "usage": "/role menu", "desc": "Interaktives Rollen-Auswahlmenü (flüchtig)." },
+      "role add": { "usage": "/role add <role> [user]", "desc": "Fügen Sie sich selbst oder einem anderen Benutzer eine Rolle hinzu." },
+      "role remove": { "usage": "/role remove <role> [user]", "desc": "Entfernen Sie eine Rolle von sich selbst oder einem anderen Benutzer." },
+      "role setup": { "usage": "/role setup <action> <role> [options]", "desc": "Selbstzuweisbare Rollen konfigurieren (erfordert Rollen verwalten)." },
+      "role toggle": { "usage": "/role toggle <command_name>", "desc": "Rollenbefehl ein-/ausschalten (erfordert Rollen verwalten)." },
+
+      "automod list": { "usage": "/automod list", "desc": "Alle konfigurierten Automod-Regeln anzeigen." },
+      "automod info": { "usage": "/automod info <id>", "desc": "Detailinformationen zu einer Automod-Regel anzeigen." },
+      "automod toggle": { "usage": "/automod toggle <id> <enabled>", "desc": "Automod-Regel ein-/ausschalten (erfordert Server verwalten)." },
+      "antiraid status": { "usage": "/antiraid status", "desc": "Aktuellen Anti-Raid-Schutzstatus anzeigen." },
+      "antiraid toggle": { "usage": "/antiraid toggle <enabled>", "desc": "Anti-Raid-Schutz ein-/ausschalten (erfordert Server verwalten)." },
+      "audit recent": { "usage": "/audit recent", "desc": "Jüngste Moderationsaktionen anzeigen (erfordert Server verwalten)." },
+
+      "autoreply": { "usage": "(passive)", "desc": "Automatische Antworten basierend auf konfigurierten Mustern." },
+      "welcome preview": { "usage": "/welcome preview", "desc": "Vorschau der aktuellen Willkommensnachrichten-Konfiguration." },
+      "welcome toggle": { "usage": "/welcome toggle <enabled>", "desc": "Willkommenssystem ein-/ausschalten (erfordert Server verwalten)." },
+      "automod": { "usage": "(passive)", "desc": "Automatische Moderation für Spam, Großbuchstaben, Links und Obszönitäten." },
+      "audit logs": { "usage": "(passive)", "desc": "Alle Moderationsaktionen und Serveränderungen nachverfolgen." },
+      "anti-raid": { "usage": "(passive)", "desc": "Schutz vor Raids und Massenbeitritten." },
+
+      "scheduler list": { "usage": "/scheduler list", "desc": "Alle geplanten Nachrichten auflisten." },
+      "scheduler info": { "usage": "/scheduler info <id>", "desc": "Detailinformationen zu einer geplanten Nachricht anzeigen." },
+      "scheduler enable": { "usage": "/scheduler enable <id>", "desc": "Geplante Nachricht aktivieren (erfordert Server verwalten)." },
+      "scheduler disable": { "usage": "/scheduler disable <id>", "desc": "Geplante Nachricht deaktivieren (erfordert Server verwalten)." },
+      "scheduler run": { "usage": "/scheduler run <id>", "desc": "Geplante Nachricht jetzt manuell auslösen (erfordert Server verwalten)." },
+
+      "ytwatch": { "usage": "/ytwatch action:<enable|disable|addchannel|removechannel|announcechannel|mentionrole|interval|status>", "desc": "YouTube-Benachrichtigungen verwalten (erfordert Server verwalten)." },
+      "ytstats": { "usage": "/ytstats", "desc": "YouTube-Watcher-Cache & Quota-Statistiken anzeigen." },
+      "ytdebug": { "usage": "/ytdebug", "desc": "Neueste Debug-Ereignisse des YouTube-Watchers anzeigen (erfordert Server verwalten)." },
+      "twitchstats": { "usage": "/twitchstats", "desc": "Twitch-Watcher-Cache & API-Statistiken anzeigen." },
+      "twitchdebug": { "usage": "/twitchdebug action:<config|status|test|resolve>", "desc": "Twitch-Integration debuggen und Benachrichtigungen testen." }
     }
   }
 }

@@ -60,10 +60,10 @@
     },
     "language": {
       "label": "言語",
-  "help": "ボット応答のデフォルト言語",
-  "saved": "言語設定を保存しました",
-  "saveFailed": "言語設定の保存に失敗しました",
-  "changedTo": "言語を{{language}}に変更しました"
+      "help": "ボット応答のデフォルト言語",
+      "saved": "言語設定を保存しました",
+      "saveFailed": "言語設定の保存に失敗しました",
+      "changedTo": "言語を{{language}}に変更しました"
     },
     "timezone": {
       "label": "タイムゾーン",
@@ -321,25 +321,25 @@
     "loadingTitle": "自動応答を読み込み中",
     "loadingMessage": "サーバーの自動応答パターンと設定を取得しています...",
     "regexTester": {
-      "open": "Regex テスター",
+      "open": "正規表現テスター",
       "close": "テスターを閉じる",
       "pattern": "パターン",
       "flags": "フラグ",
       "sampleLabel": "サンプルテキスト（複数行）",
-      "samplePlaceholder": "hello world\\nこんにちは",
+      "samplePlaceholder": "こんにちは 世界\\nこんにちは",
       "run": "実行",
       "empty": "空",
-      "error": "Regex エラー: {{error}}"
+      "error": "正規表現エラー: {{error}}"
     },
     "bulk": {
-      "selectedCount": "選択: {{count}}",
+      "selectedCount": "選択済み: {{count}}",
       "enable": "有効化",
       "disable": "無効化",
-      "enableSelected": "選択項目を有効化",
-      "disableSelected": "選択項目を無効化",
-      "deleteSelected": "選択項目を削除",
+      "enableSelected": "選択を有効化",
+      "disableSelected": "選択を無効化",
+      "deleteSelected": "選択を削除",
       "clearSelection": "選択をクリア",
-      "selectAllFiltered": "フィルタ結果をすべて選択",
+      "selectAllFiltered": "フィルタ済みを全選択",
       "rows": "行"
     },
     "columns": {
@@ -348,43 +348,140 @@
       "pattern": "パターン",
       "flags": "フラグ",
       "replies": "返信",
-      "enabled": "オン"
+      "enabled": "有効"
     },
     "pagination": {
       "rows": "行",
       "prevPage": "前のページ",
       "nextPage": "次のページ",
-      "page": "{{page}} / {{total}} ページ",
-      "showing": "{{filtered}} 件中 {{count}} 件を表示（合計 {{total}} 件）"
+      "page": "ページ {{page}} / {{total}}",
+      "showing": "{{filtered}} 件中 {{count}} 件を表示 (合計 {{total}} 件)"
     },
-    "empty": "検索に一致する自動応答はありません。",
+    "empty": "検索条件に一致する自動応答はありません。",
     "confirm": {
-      "deleteSelected": "選択した {{count}} 件を削除しますか？",
+      "deleteSelected": "選択された {{count}} 件を削除しますか？",
       "deleteOne": "{{key}} を削除しますか？"
     },
     "toasts": {
-      "bulkEnabled": "選択項目を有効化しました",
-      "bulkDisabled": "選択項目を無効化しました",
-  "bulkDeleted": "選択項目を削除しました",
-  "deleted": "削除しました",
-  "saved": "自動応答を保存しました"
+      "bulkEnabled": "選択を有効化しました",
+      "bulkDisabled": "選択を無効化しました",
+      "bulkDeleted": "選択を削除しました",
+      "deleted": "削除しました",
+      "saved": "自動応答を保存しました"
     },
     "modal": {
       "titleAdd": "自動応答を追加",
       "titleEdit": "自動応答を編集",
       "key": "キー",
       "keyHelpUnique": "一意のID",
-      "keyPlaceholder": "greet（挨拶）",
-      "keyNoSpaces": "スペースを含めないでください。",
-      "pattern": "Regex パターン",
+      "keyPlaceholder": "greet",
+      "keyNoSpaces": "スペース不可",
+      "pattern": "正規表現パターン",
       "patternPlaceholder": "^hello|hi",
       "flags": "フラグ",
       "flagsPlaceholder": "i",
       "replies": "返信",
-      "repliesHelp": "1行に1つ",
-      "repliesPlaceholder": "Hello!\nHi!",
+      "repliesHelp": "1 行につき 1 件",
+      "repliesPlaceholder": "こんにちは！\nやあ！",
       "enabled": "有効",
-      "footerNote": "ボットはランダムに1つの返信を選びます。"
+      "footerNote": "ボットはランダムに 1 つの返信を選びます。"
+    }
+  },
+  "commands": {
+    "title": "コマンド",
+    "subtitle": "ボットのコマンドと権限を管理",
+    "slashCommands": "スラッシュコマンド",
+    "prefixCommands": "プレフィックスコマンド",
+    "permissions": "コマンドの権限",
+    "enableAll": "すべて有効化",
+    "disableAll": "すべて無効化",
+    "section": {
+      "commandOne": "1 個のコマンド",
+      "commandMany": "{{count}} 個のコマンド",
+      "requiresManage": "サーバー管理権限が必要",
+      "alwaysActive": "常に有効",
+      "updatedBy": "{{user}} により更新",
+      "readOnly": "読み取り専用",
+      "passive": "パッシブ",
+      "bottomNote": "一部のコマンドは常時オン、または切り替えに特定の権限が必要です。",
+      "unknownUser": "不明"
+    },
+    "groups": {
+      "core": { "title": "コア" },
+      "ai": { "title": "AI・言語" },
+      "polls": { "title": "投票" },
+      "utilities": { "title": "ユーティリティ" },
+      "xp": { "title": "XP・レベリング" },
+      "roles": { "title": "ロール・セルフ付与" },
+      "moderation": { "title": "モデレーション・セキュリティ" },
+      "passive": { "title": "パッシブ / 自動化" },
+      "scheduler": { "title": "スケジューラ" },
+      "streaming": { "title": "ストリーミング連携" }
+    },
+    "toasts": {
+      "enabled": "コマンド \"{{name}}\" を有効化しました",
+      "disabled": "コマンド \"{{name}}\" を無効化しました",
+      "toggleFailed": "{{name}} の更新に失敗しました"
+    },
+    "items": {
+      "ping": { "usage": "/ping", "desc": "ヘルスチェック — Pong で応答します。" },
+      "uptime": { "usage": "/uptime", "desc": "ボットプロセスの稼働時間を表示します。" },
+      "whoami": { "usage": "/whoami", "desc": "ユーザーのタグとIDを表示します。" },
+      "echo": { "usage": "/echo <text>", "desc": "同じテキストで応答します。" },
+      "help": { "usage": "/help", "desc": "カテゴリー別のインタラクティブなヘルプメニュー。" },
+
+      "ask": { "usage": "/ask prompt:<text>", "desc": "AI に質問します（3 分間キャッシュ）。" },
+      "askfollow": { "usage": "/askfollow prompt:<text>", "desc": "直近の会話コンテキストを用いたフォローアップ。" },
+      "explain_image": { "usage": "/explain_image image(1-3) [prompt]", "desc": "最大 3 枚の画像を任意のプロンプト付きで説明します。" },
+      "summarize": { "usage": "/summarize [count]", "desc": "直近のメッセージを要約します（既定 30）。" },
+      "translate": { "usage": "/translate text target", "desc": "テキストをターゲット言語に翻訳します。" },
+
+      "poll create": { "usage": "/poll create question options", "desc": "投票を作成します（最大 5 オプション）。" },
+      "poll results": { "usage": "/poll results id", "desc": "投票 ID の結果を表示します。" },
+
+      "math": { "usage": "/math add|sub|mul|div a b", "desc": "基本的な算術演算。" },
+      "user info": { "usage": "/user info [target]", "desc": "Discord ユーザー情報を参照します。" },
+      "remind": { "usage": "/remind minutes text", "desc": "DM またはチャンネルでリマインダーを予定します。" },
+      "meme": { "usage": "/meme", "desc": "meme-api.com からランダムなミeme画像。" },
+
+      "level": { "usage": "/level [user]", "desc": "自分または他ユーザーのレベルを確認します。" },
+      "xp": { "usage": "/xp check|leaderboard [user]", "desc": "XP を確認するか、サーバーのランキングを表示します。" },
+      "rank": { "usage": "/rank [user]", "desc": "サーバー内での自分の順位を確認します。" },
+      "leaderboard": { "usage": "/leaderboard [limit]", "desc": "サーバーの XP ランキングを表示します。" },
+      "xpadmin": { "usage": "/xpadmin give|remove|set <user> <amount>", "desc": "ユーザーの XP を管理（サーバー管理が必要）。" },
+
+      "role list": { "usage": "/role list", "desc": "自己付与可能なロールをすべて表示します。" },
+      "role menu": { "usage": "/role menu", "desc": "インタラクティブなロール選択メニュー（エフェメラル）。" },
+      "role add": { "usage": "/role add <role> [user]", "desc": "自分または他ユーザーにロールを追加します。" },
+      "role remove": { "usage": "/role remove <role> [user]", "desc": "自分または他ユーザーからロールを削除します。" },
+      "role setup": { "usage": "/role setup <action> <role> [options]", "desc": "自己付与ロールを設定（ロール管理が必要）。" },
+      "role toggle": { "usage": "/role toggle <command_name>", "desc": "ロールコマンドの有効/無効を切替（ロール管理が必要）。" },
+
+      "automod list": { "usage": "/automod list", "desc": "設定済みの automod ルールをすべて表示。" },
+      "automod info": { "usage": "/automod info <id>", "desc": "automod ルールの詳細を表示。" },
+      "automod toggle": { "usage": "/automod toggle <id> <enabled>", "desc": "automod ルールの有効/無効を切替（サーバー管理が必要）。" },
+      "antiraid status": { "usage": "/antiraid status", "desc": "現在のアンチレイド保護ステータスを表示。" },
+      "antiraid toggle": { "usage": "/antiraid toggle <enabled>", "desc": "アンチレイド保護の有効/無効を切替（サーバー管理が必要）。" },
+      "audit recent": { "usage": "/audit recent", "desc": "最近のモデレーションアクションを表示（サーバー管理が必要）。" },
+
+      "autoreply": { "usage": "(passive)", "desc": "設定済みパターンに基づく自動返信。" },
+      "welcome preview": { "usage": "/welcome preview", "desc": "現在の歓迎メッセージ設定をプレビュー。" },
+      "welcome toggle": { "usage": "/welcome toggle <enabled>", "desc": "ウェルカムシステムの有効/無効を切替（サーバー管理が必要）。" },
+      "automod": { "usage": "(passive)", "desc": "スパム・大文字・リンク・不適切語の自動モデレーション。" },
+      "audit logs": { "usage": "(passive)", "desc": "すべてのモデレーションとサーバー変更を記録。" },
+      "anti-raid": { "usage": "(passive)", "desc": "レイドや大量参加攻撃からの保護。" },
+
+      "scheduler list": { "usage": "/scheduler list", "desc": "すべての予約メッセージを一覧表示。" },
+      "scheduler info": { "usage": "/scheduler info <id>", "desc": "予約メッセージの詳細を表示。" },
+      "scheduler enable": { "usage": "/scheduler enable <id>", "desc": "予約メッセージを有効化（サーバー管理が必要）。" },
+      "scheduler disable": { "usage": "/scheduler disable <id>", "desc": "予約メッセージを無効化（サーバー管理が必要）。" },
+      "scheduler run": { "usage": "/scheduler run <id>", "desc": "予約メッセージを今すぐ手動で実行（サーバー管理が必要）。" },
+
+      "ytwatch": { "usage": "/ytwatch action:<enable|disable|addchannel|removechannel|announcechannel|mentionrole|interval|status>", "desc": "YouTube 通知を管理（サーバー管理が必要）。" },
+      "ytstats": { "usage": "/ytstats", "desc": "YouTube watcher のキャッシュとクォータ統計を表示。" },
+      "ytdebug": { "usage": "/ytdebug", "desc": "YouTube watcher の最近のデバッグイベントを表示（サーバー管理が必要）。" },
+      "twitchstats": { "usage": "/twitchstats", "desc": "Twitch watcher のキャッシュと API 統計を表示。" },
+      "twitchdebug": { "usage": "/twitchdebug action:<config|status|test|resolve>", "desc": "Twitch 連携をデバッグし通知をテスト。" }
     }
   }
 }

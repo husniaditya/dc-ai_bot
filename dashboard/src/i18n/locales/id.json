@@ -360,40 +360,95 @@
     "prefixCommands": "Perintah Prefix",
     "permissions": "Izin Perintah",
     "enableAll": "Aktifkan Semua",
-    "disableAll": "Nonaktifkan Semua"
-  },
-  "personalization": {
-    "title": "Personalisasi Bot",
-    "subtitle": "Sesuaikan tampilan dan perilaku bot Anda",
-    "avatar": "Avatar Bot",
-    "nickname": "Nama Panggilan Bot",
-    "status": "Status Bot",
-    "embedColor": "Warna Embed",
-    "prefix": "Prefix Perintah"
-  },
-  "moderation": {
-    "title": "Moderasi",
-    "subtitle": "Konfigurasi alat dan pengaturan moderasi",
-    "automod": "Moderasi Otomatis",
-    "warnings": "Sistem Peringatan",
-    "roles": "Manajemen Role",
-    "logging": "Log Audit"
-  },
-  "gamesSocials": {
-    "title": "Game & Sosial",
-    "subtitle": "Konfigurasi fitur gaming dan sosial",
-    "leveling": "XP & Leveling",
-    "economy": "Sistem Ekonomi",
-    "socialFeatures": "Fitur Sosial",
-    "miniGames": "Mini Game"
-  },
-  "welcome": {
-    "title": "Sistem Selamat Datang",
-    "subtitle": "Konfigurasi pesan selamat datang dan pengaturan member baru",
-    "enabled": "Pesan selamat datang diaktifkan",
-    "channel": "Channel Selamat Datang",
-    "message": "Pesan Selamat Datang",
-    "roles": "Role Otomatis"
+    "disableAll": "Nonaktifkan Semua",
+    "section": {
+      "commandOne": "1 perintah",
+      "commandMany": "{{count}} perintah",
+      "requiresManage": "Memerlukan izin Kelola Server",
+      "alwaysActive": "Selalu Aktif",
+      "updatedBy": "Diperbarui oleh {{user}}",
+      "readOnly": "Hanya baca",
+      "passive": "Pasif",
+      "bottomNote": "Beberapa perintah selalu aktif atau membutuhkan izin khusus untuk diubah.",
+      "unknownUser": "Tidak diketahui"
+    },
+    "groups": {
+      "core": { "title": "Inti" },
+      "ai": { "title": "AI & Bahasa" },
+      "polls": { "title": "Jajak Pendapat" },
+      "utilities": { "title": "Utilitas" },
+      "xp": { "title": "XP & Leveling" },
+      "roles": { "title": "Peran & Self-Assign" },
+      "moderation": { "title": "Moderasi & Keamanan" },
+      "passive": { "title": "Pasif / Otomatisasi" },
+      "scheduler": { "title": "Penjadwal" },
+      "streaming": { "title": "Integrasi Streaming" }
+    },
+    "toasts": {
+      "enabled": "Perintah \"{{name}}\" diaktifkan",
+      "disabled": "Perintah \"{{name}}\" dinonaktifkan",
+      "toggleFailed": "Gagal memperbarui {{name}}"
+    },
+    "items": {
+      "ping": { "usage": "/ping", "desc": "Pemeriksaan kesehatan — membalas dengan Pong." },
+      "uptime": { "usage": "/uptime", "desc": "Menampilkan waktu aktif proses bot." },
+      "whoami": { "usage": "/whoami", "desc": "Menampilkan tag & id pengguna Anda." },
+      "echo": { "usage": "/echo <text>", "desc": "Membalas dengan teks yang sama." },
+      "help": { "usage": "/help", "desc": "Menu bantuan kategori interaktif." },
+
+      "ask": { "usage": "/ask prompt:<text>", "desc": "Tanya AI sebuah pertanyaan (disimpan 3 menit)." },
+      "askfollow": { "usage": "/askfollow prompt:<text>", "desc": "Tindak lanjut menggunakan konteks percakapan terbaru." },
+      "explain_image": { "usage": "/explain_image image(1-3) [prompt]", "desc": "Jelaskan hingga 3 gambar dengan prompt opsional." },
+      "summarize": { "usage": "/summarize [count]", "desc": "Ringkas pesan terakhir (default 30)." },
+      "translate": { "usage": "/translate text target", "desc": "Terjemahkan teks ke bahasa target." },
+
+      "poll create": { "usage": "/poll create question options", "desc": "Buat jajak pendapat (maks 5 opsi)." },
+      "poll results": { "usage": "/poll results id", "desc": "Tampilkan hasil untuk id jajak pendapat." },
+
+      "math": { "usage": "/math add|sub|mul|div a b", "desc": "Operasi aritmetika dasar." },
+      "user info": { "usage": "/user info [target]", "desc": "Lihat info pengguna Discord." },
+      "remind": { "usage": "/remind minutes text", "desc": "Jadwalkan pengingat DM atau channel." },
+      "meme": { "usage": "/meme", "desc": "Gambar meme acak dari meme-api.com." },
+
+      "level": { "usage": "/level [user]", "desc": "Cek level Anda atau level XP orang lain." },
+      "xp": { "usage": "/xp check|leaderboard [user]", "desc": "Cek XP atau lihat papan peringkat server." },
+      "rank": { "usage": "/rank [user]", "desc": "Cek peringkat Anda di server." },
+      "leaderboard": { "usage": "/leaderboard [limit]", "desc": "Tampilkan papan peringkat XP server." },
+      "xpadmin": { "usage": "/xpadmin give|remove|set <user> <amount>", "desc": "Kelola XP pengguna (butuh Kelola Server)." },
+
+      "role list": { "usage": "/role list", "desc": "Tampilkan semua peran yang bisa dipilih sendiri." },
+      "role menu": { "usage": "/role menu", "desc": "Menu pemilihan peran interaktif (sementara)." },
+      "role add": { "usage": "/role add <role> [user]", "desc": "Tambah peran ke diri sendiri atau pengguna lain." },
+      "role remove": { "usage": "/role remove <role> [user]", "desc": "Hapus peran dari diri sendiri atau pengguna lain." },
+      "role setup": { "usage": "/role setup <action> <role> [options]", "desc": "Konfigurasikan peran yang bisa dipilih (butuh Kelola Peran)." },
+      "role toggle": { "usage": "/role toggle <command_name>", "desc": "Aktif/nonaktifkan perintah peran (butuh Kelola Peran)." },
+
+      "automod list": { "usage": "/automod list", "desc": "Tampilkan semua aturan automod yang dikonfigurasi." },
+      "automod info": { "usage": "/automod info <id>", "desc": "Lihat info detail untuk aturan automod." },
+      "automod toggle": { "usage": "/automod toggle <id> <enabled>", "desc": "Aktif/nonaktifkan aturan automod (butuh Kelola Server)." },
+      "antiraid status": { "usage": "/antiraid status", "desc": "Lihat status perlindungan anti-raid saat ini." },
+      "antiraid toggle": { "usage": "/antiraid toggle <enabled>", "desc": "Aktif/nonaktifkan perlindungan anti-raid (butuh Kelola Server)." },
+      "audit recent": { "usage": "/audit recent", "desc": "Lihat tindakan moderasi terbaru (butuh Kelola Server)." },
+
+      "autoreply": { "usage": "(passive)", "desc": "Balasan otomatis berdasarkan pola yang dikonfigurasi." },
+      "welcome preview": { "usage": "/welcome preview", "desc": "Pratinjau konfigurasi pesan sambutan saat ini." },
+      "welcome toggle": { "usage": "/welcome toggle <enabled>", "desc": "Aktif/nonaktifkan sistem sambutan (butuh Kelola Server)." },
+      "automod": { "usage": "(passive)", "desc": "Moderasi otomatis untuk spam, caps, tautan, dan kata kasar." },
+      "audit logs": { "usage": "(passive)", "desc": "Lacak semua tindakan moderasi dan perubahan server." },
+      "anti-raid": { "usage": "(passive)", "desc": "Perlindungan terhadap raid dan serangan mass join." },
+
+      "scheduler list": { "usage": "/scheduler list", "desc": "Daftar semua pesan terjadwal." },
+      "scheduler info": { "usage": "/scheduler info <id>", "desc": "Lihat info detail untuk pesan terjadwal." },
+      "scheduler enable": { "usage": "/scheduler enable <id>", "desc": "Aktifkan pesan terjadwal (butuh Kelola Server)." },
+      "scheduler disable": { "usage": "/scheduler disable <id>", "desc": "Nonaktifkan pesan terjadwal (butuh Kelola Server)." },
+      "scheduler run": { "usage": "/scheduler run <id>", "desc": "Jalankan pesan terjadwal sekarang (butuh Kelola Server)." },
+
+      "ytwatch": { "usage": "/ytwatch action:<enable|disable|addchannel|removechannel|announcechannel|mentionrole|interval|status>", "desc": "Kelola notifikasi YouTube (butuh Kelola Server)." },
+      "ytstats": { "usage": "/ytstats", "desc": "Tampilkan cache & statistik kuota YouTube watcher." },
+      "ytdebug": { "usage": "/ytdebug", "desc": "Tampilkan event debug YouTube watcher terbaru (butuh Kelola Server)." },
+      "twitchstats": { "usage": "/twitchstats", "desc": "Tampilkan cache & statistik API Twitch watcher." },
+      "twitchdebug": { "usage": "/twitchdebug action:<config|status|test|resolve>", "desc": "Debug integrasi Twitch dan uji notifikasi." }
+    }
   }
   ,
   "autosSection": {

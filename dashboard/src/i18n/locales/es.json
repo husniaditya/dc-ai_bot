@@ -5,7 +5,7 @@
     "cancel": "Cancelar",
     "delete": "Eliminar",
     "edit": "Editar",
-    "add": "Agregar",
+    "add": "Añadir",
     "loading": "Cargando...",
     "saving": "Guardando...",
     "success": "Éxito",
@@ -28,7 +28,9 @@
     "back": "Atrás",
     "next": "Siguiente",
     "previous": "Anterior",
-    "unsaved": "Sin guardar"
+    "unsaved": "Sin guardar",
+    "notAvailable": "No disponible",
+    "refresh": "Actualizar analíticas"
   },
   "navigation": {
     "dashboard": "Panel",
@@ -60,10 +62,10 @@
     },
     "language": {
       "label": "Idioma",
-  "help": "Idioma predeterminado para las respuestas del bot",
-  "saved": "Configuración de idioma guardada",
-  "saveFailed": "Error al guardar la configuración de idioma",
-  "changedTo": "Idioma cambiado a {{language}}"
+      "help": "Idioma predeterminado para las respuestas del bot",
+      "saved": "Configuración de idioma guardada",
+      "saveFailed": "Error al guardar la configuración de idioma",
+      "changedTo": "Idioma cambiado a {{language}}"
     },
     "timezone": {
       "label": "Zona Horaria",
@@ -326,7 +328,7 @@
       "pattern": "Patrón",
       "flags": "Modificadores",
       "sampleLabel": "Texto de ejemplo (multilínea)",
-      "samplePlaceholder": "hola mundo\\nHola",
+      "samplePlaceholder": "hola mundo\\nhola",
       "run": "Ejecutar",
       "empty": "vacío",
       "error": "Error de regex: {{error}}"
@@ -365,9 +367,9 @@
     "toasts": {
       "bulkEnabled": "Seleccionados habilitados",
       "bulkDisabled": "Seleccionados deshabilitados",
-  "bulkDeleted": "Seleccionados eliminados",
-  "deleted": "Eliminado",
-  "saved": "Respuesta automática guardada"
+      "bulkDeleted": "Seleccionados eliminados",
+      "deleted": "Eliminado",
+      "saved": "Respuesta automática guardada"
     },
     "modal": {
       "titleAdd": "Agregar respuesta automática",
@@ -385,6 +387,103 @@
       "repliesPlaceholder": "¡Hola!\nBuenas!",
       "enabled": "Habilitado",
       "footerNote": "El bot elige una respuesta al azar."
+    }
+  },
+  "commands": {
+    "title": "Comandos",
+    "subtitle": "Administra los comandos del bot y permisos",
+    "slashCommands": "Comandos Slash",
+    "prefixCommands": "Comandos con prefijo",
+    "permissions": "Permisos de comandos",
+    "enableAll": "Habilitar todos",
+    "disableAll": "Deshabilitar todos",
+    "section": {
+      "commandOne": "1 comando",
+      "commandMany": "{{count}} comandos",
+      "requiresManage": "Requiere permiso de Gestionar Servidor",
+      "alwaysActive": "Siempre activo",
+      "updatedBy": "Actualizado por {{user}}",
+      "readOnly": "Solo lectura",
+      "passive": "Pasivo",
+      "bottomNote": "Algunos comandos están siempre activos o requieren permisos específicos para cambiar.",
+      "unknownUser": "Desconocido"
+    },
+    "groups": {
+      "core": { "title": "Núcleo" },
+      "ai": { "title": "IA y Lenguaje" },
+      "polls": { "title": "Encuestas" },
+      "utilities": { "title": "Utilidades" },
+      "xp": { "title": "XP y Niveles" },
+      "roles": { "title": "Roles y Autoasignación" },
+      "moderation": { "title": "Moderación y Seguridad" },
+      "passive": { "title": "Pasivo / Automatización" },
+      "scheduler": { "title": "Programador" },
+      "streaming": { "title": "Integración de Streaming" }
+    },
+    "toasts": {
+      "enabled": "Comando \"{{name}}\" habilitado",
+      "disabled": "Comando \"{{name}}\" deshabilitado",
+      "toggleFailed": "No se pudo actualizar {{name}}"
+    },
+    "items": {
+      "ping": { "usage": "/ping", "desc": "Comprobación de estado: responde con Pong." },
+      "uptime": { "usage": "/uptime", "desc": "Muestra el tiempo de actividad del bot." },
+      "whoami": { "usage": "/whoami", "desc": "Muestra tu etiqueta e ID de usuario." },
+      "echo": { "usage": "/echo <text>", "desc": "Responde con el mismo texto." },
+      "help": { "usage": "/help", "desc": "Menú de ayuda por categorías interactivo." },
+
+      "ask": { "usage": "/ask prompt:<text>", "desc": "Pregunta algo a la IA (en caché 3 min)." },
+      "askfollow": { "usage": "/askfollow prompt:<text>", "desc": "Seguimiento usando el contexto reciente de la conversación." },
+      "explain_image": { "usage": "/explain_image image(1-3) [prompt]", "desc": "Explica hasta 3 imágenes con un prompt opcional." },
+      "summarize": { "usage": "/summarize [count]", "desc": "Resume los últimos mensajes (por defecto 30)." },
+      "translate": { "usage": "/translate text target", "desc": "Traduce texto al idioma objetivo." },
+
+      "poll create": { "usage": "/poll create question options", "desc": "Crea una encuesta (hasta 5 opciones)." },
+      "poll results": { "usage": "/poll results id", "desc": "Muestra los resultados de una encuesta por id." },
+
+      "math": { "usage": "/math add|sub|mul|div a b", "desc": "Operaciones aritméticas básicas." },
+      "user info": { "usage": "/user info [target]", "desc": "Consultar información de usuario de Discord." },
+      "remind": { "usage": "/remind minutes text", "desc": "Programa un recordatorio por DM o en el canal." },
+      "meme": { "usage": "/meme", "desc": "Imagen de meme aleatoria de meme-api.com." },
+
+      "level": { "usage": "/level [user]", "desc": "Revisa tu nivel o el nivel de XP de otro usuario." },
+      "xp": { "usage": "/xp check|leaderboard [user]", "desc": "Revisa el XP o ve la tabla de clasificación del servidor." },
+      "rank": { "usage": "/rank [user]", "desc": "Revisa tu rango en el servidor." },
+      "leaderboard": { "usage": "/leaderboard [limit]", "desc": "Muestra la clasificación de XP del servidor." },
+      "xpadmin": { "usage": "/xpadmin give|remove|set <user> <amount>", "desc": "Gestiona el XP de usuarios (requiere Gestionar Servidor)." },
+
+      "role list": { "usage": "/role list", "desc": "Muestra todos los roles autoasignables disponibles." },
+      "role menu": { "usage": "/role menu", "desc": "Menú interactivo de selección de roles (efímero)." },
+      "role add": { "usage": "/role add <role> [user]", "desc": "Añade un rol autoasignable a ti o a otro usuario." },
+      "role remove": { "usage": "/role remove <role> [user]", "desc": "Quita un rol autoasignable de ti o de otro usuario." },
+      "role setup": { "usage": "/role setup <action> <role> [options]", "desc": "Configura roles autoasignables (requiere Gestionar Roles)." },
+      "role toggle": { "usage": "/role toggle <command_name>", "desc": "Activa/desactiva un comando de rol (requiere Gestionar Roles)." },
+
+      "automod list": { "usage": "/automod list", "desc": "Muestra todas las reglas de automod configuradas." },
+      "automod info": { "usage": "/automod info <id>", "desc": "Ver información detallada de una regla de automod." },
+      "automod toggle": { "usage": "/automod toggle <id> <enabled>", "desc": "Activa/desactiva una regla de automod (requiere Gestionar Servidor)." },
+      "antiraid status": { "usage": "/antiraid status", "desc": "Ver el estado actual de protección anti-raid." },
+      "antiraid toggle": { "usage": "/antiraid toggle <enabled>", "desc": "Activa/desactiva la protección anti-raid (requiere Gestionar Servidor)." },
+      "audit recent": { "usage": "/audit recent", "desc": "Ver acciones de moderación recientes (requiere Gestionar Servidor)." },
+
+      "autoreply": { "usage": "(passive)", "desc": "Respuestas automáticas basadas en patrones configurados." },
+      "welcome preview": { "usage": "/welcome preview", "desc": "Vista previa de la configuración actual de bienvenida." },
+      "welcome toggle": { "usage": "/welcome toggle <enabled>", "desc": "Activa/desactiva el sistema de bienvenida (requiere Gestionar Servidor)." },
+      "automod": { "usage": "(passive)", "desc": "Moderación automática para spam, mayúsculas, enlaces y groserías." },
+      "audit logs": { "usage": "(passive)", "desc": "Rastrea todas las acciones de moderación y cambios del servidor." },
+      "anti-raid": { "usage": "(passive)", "desc": "Protección contra raids y uniones masivas." },
+
+      "scheduler list": { "usage": "/scheduler list", "desc": "Lista todos los mensajes programados." },
+      "scheduler info": { "usage": "/scheduler info <id>", "desc": "Ver información detallada de un mensaje programado." },
+      "scheduler enable": { "usage": "/scheduler enable <id>", "desc": "Activa un mensaje programado (requiere Gestionar Servidor)." },
+      "scheduler disable": { "usage": "/scheduler disable <id>", "desc": "Desactiva un mensaje programado (requiere Gestionar Servidor)." },
+      "scheduler run": { "usage": "/scheduler run <id>", "desc": "Ejecuta manualmente un mensaje programado ahora (requiere Gestionar Servidor)." },
+
+      "ytwatch": { "usage": "/ytwatch action:<enable|disable|addchannel|removechannel|announcechannel|mentionrole|interval|status>", "desc": "Gestiona notificaciones de YouTube (requiere Gestionar Servidor)." },
+      "ytstats": { "usage": "/ytstats", "desc": "Muestra caché y estadísticas de cuota del watcher de YouTube." },
+      "ytdebug": { "usage": "/ytdebug", "desc": "Muestra eventos de depuración recientes del watcher de YouTube (requiere Gestionar Servidor)." },
+      "twitchstats": { "usage": "/twitchstats", "desc": "Muestra caché y estadísticas de la API del watcher de Twitch." },
+      "twitchdebug": { "usage": "/twitchdebug action:<config|status|test|resolve>", "desc": "Depura la integración de Twitch y prueba notificaciones." }
     }
   }
 }
