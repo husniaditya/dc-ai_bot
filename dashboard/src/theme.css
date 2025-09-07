@@ -3882,3 +3882,933 @@ html:not(.dark) .pattern-preview-container {
 .modal-action-btn i {
   margin-right: 0.5rem;
 }
+
+/* Enhanced Dashboard Statistics Styles */
+.metric-card {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  padding: 1rem;
+  transition: var(--transition);
+}
+
+.metric-card:hover {
+  background: rgba(255,255,255,0.08);
+  transform: translateY(-1px);
+}
+
+html:not(.dark) .metric-card {
+  background: rgba(255,255,255,0.9);
+  border-color: rgba(0,0,0,0.06);
+}
+
+html:not(.dark) .metric-card:hover {
+  background: rgba(255,255,255,0.95);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+.metric-header {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.metric-value {
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.status-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  position: relative;
+}
+
+.status-online {
+  background-color: var(--success);
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+}
+
+.status-offline {
+  background-color: var(--danger);
+  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2);
+}
+
+.status-online::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  border-radius: 50%;
+  background-color: inherit;
+  opacity: 0.3;
+  animation: pulse-dot 2s infinite;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { transform: scale(1); opacity: 0.3; }
+  50% { transform: scale(1.2); opacity: 0.1; }
+}
+
+.health-overview {
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.health-item {
+  padding: 0.75rem;
+  background: rgba(255,255,255,0.02);
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(255,255,255,0.05);
+  transition: var(--transition);
+}
+
+.health-item:hover {
+  background: rgba(255,255,255,0.04);
+  border-color: rgba(255,255,255,0.1);
+}
+
+html:not(.dark) .health-item {
+  background: rgba(0,0,0,0.02);
+  border-color: rgba(0,0,0,0.05);
+}
+
+html:not(.dark) .health-item:hover {
+  background: rgba(0,0,0,0.04);
+  border-color: rgba(0,0,0,0.1);
+}
+
+.mini-progress {
+  background-color: rgba(255,255,255,0.1);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+html:not(.dark) .mini-progress {
+  background-color: rgba(0,0,0,0.1);
+}
+
+/* Activity list improvements */
+.activity-indicator {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.activity-item {
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  transition: var(--transition);
+}
+
+.activity-item:last-child {
+  border-bottom: none;
+}
+
+.activity-item:hover {
+  background: rgba(255,255,255,0.02);
+  margin: 0 -0.75rem;
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
+  border-radius: var(--radius-sm);
+}
+
+html:not(.dark) .activity-item {
+  border-bottom-color: rgba(0,0,0,0.05);
+}
+
+html:not(.dark) .activity-item:hover {
+  background: rgba(0,0,0,0.02);
+}
+
+/* Command stats styling */
+.command-stat {
+  padding: 0.5rem 0;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  transition: var(--transition);
+}
+
+.command-stat:last-child {
+  border-bottom: none;
+}
+
+.command-stat:hover {
+  background: rgba(255,255,255,0.02);
+  margin: 0 -0.75rem;
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
+  border-radius: var(--radius-sm);
+}
+
+html:not(.dark) .command-stat {
+  border-bottom-color: rgba(0,0,0,0.05);
+}
+
+html:not(.dark) .command-stat:hover {
+  background: rgba(0,0,0,0.02);
+}
+
+/* Enhanced Dashboard Metrics Styles */
+.metric-card {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  padding: 1rem;
+  transition: all var(--transition);
+}
+
+.metric-card:hover {
+  background: rgba(255,255,255,0.08);
+  transform: translateY(-1px);
+}
+
+.activity-stream {
+  background: rgba(255,255,255,0.02);
+  border-radius: var(--radius-sm);
+  padding: 0.5rem;
+}
+
+.activity-dot {
+  flex-shrink: 0;
+  animation: pulse 2s infinite;
+}
+
+.command-leaderboard .command-rank {
+  border-radius: var(--radius-sm);
+  transition: all var(--transition);
+}
+
+.command-leaderboard .command-rank:hover {
+  background: rgba(255,255,255,0.05);
+  transform: translateX(4px);
+}
+
+.rank-badge {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: white;
+}
+
+.rank-badge.gold {
+  background: linear-gradient(135deg, #ffd700, #ffed4e);
+  color: #1f2937;
+  box-shadow: 0 2px 8px rgba(255, 215, 0, 0.3);
+}
+
+.rank-badge.silver {
+  background: linear-gradient(135deg, #c0c0c0, #e5e7eb);
+  color: #1f2937;
+  box-shadow: 0 2px 8px rgba(192, 192, 192, 0.3);
+}
+
+.rank-badge.bronze {
+  background: linear-gradient(135deg, #cd7f32, #d97706);
+  color: white;
+  box-shadow: 0 2px 8px rgba(205, 127, 50, 0.3);
+}
+
+.rank-badge.default {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  color: var(--text-muted);
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  animation: statusPulse 2s infinite;
+}
+
+.status-item {
+  transition: all var(--transition);
+  border-radius: var(--radius-sm);
+}
+
+.status-item:hover {
+  background: rgba(255,255,255,0.03);
+  padding-left: 0.75rem;
+}
+
+.progress-ring {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Animations */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+@keyframes statusPulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.1); opacity: 0.8; }
+}
+
+.metric-card .progress {
+  background: rgba(255,255,255,0.1);
+  border-radius: 4px;
+}
+
+.activity-stream::-webkit-scrollbar {
+  width: 4px;
+}
+
+.activity-stream::-webkit-scrollbar-track {
+  background: rgba(255,255,255,0.05);
+  border-radius: 2px;
+}
+
+.activity-stream::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.2);
+  border-radius: 2px;
+}
+
+.activity-stream::-webkit-scrollbar-thumb:hover {
+  background: rgba(255,255,255,0.3);
+}
+
+/* Light theme adjustments for new components */
+html:not(.dark) .metric-card {
+  background: rgba(255,255,255,0.8);
+  border-color: rgba(0,0,0,0.08);
+}
+
+html:not(.dark) .metric-card:hover {
+  background: rgba(255,255,255,0.9);
+}
+
+html:not(.dark) .activity-stream {
+  background: rgba(0,0,0,0.02);
+}
+
+html:not(.dark) .command-rank:hover {
+  background: rgba(0,0,0,0.02);
+}
+
+html:not(.dark) .status-item:hover {
+  background: rgba(0,0,0,0.02);
+}
+
+html:not(.dark) .metric-card .progress {
+  background: rgba(0,0,0,0.1);
+}
+
+/* Responsive adjustments for dashboard metrics */
+@media (max-width: 768px) {
+  .metric-card {
+    padding: 0.75rem;
+  }
+  
+  .metric-value .h5 {
+    font-size: 1.1rem;
+  }
+  
+  .health-overview {
+    max-height: none;
+  }
+  
+  .activity-stream {
+    max-height: 150px;
+  }
+  
+  .rank-badge {
+    width: 20px;
+    height: 20px;
+    font-size: 0.7rem;
+  }
+}
+
+/* Anti-Raid & Moderation Dashboard Styles */
+.security-status-grid {
+  background: rgba(255,255,255,0.02);
+  border-radius: var(--radius-sm);
+  padding: 0.75rem;
+}
+
+.security-metric {
+  transition: all var(--transition);
+}
+
+.security-details {
+  margin-top: 0.5rem;
+}
+
+.raid-stat {
+  background: rgba(255,255,255,0.03);
+  border-radius: var(--radius-sm);
+  padding: 0.5rem;
+  transition: all var(--transition);
+}
+
+.raid-stat:hover {
+  background: rgba(255,255,255,0.06);
+  transform: translateY(-1px);
+}
+
+.raid-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.raid-label {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  margin-top: 0.25rem;
+}
+
+.moderation-effectiveness {
+  background: rgba(255,255,255,0.02);
+  border-radius: var(--radius-sm);
+  padding: 0.75rem;
+}
+
+.violation-breakdown {
+  background: rgba(255,255,255,0.02);
+  border-radius: var(--radius-sm);
+  padding: 0.75rem;
+}
+
+.violation-item {
+  background: rgba(255,255,255,0.03);
+  border-radius: 4px;
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  transition: all var(--transition);
+}
+
+.violation-item:hover {
+  background: rgba(255,255,255,0.06);
+}
+
+.trend-chart-container {
+  background: rgba(255,255,255,0.02);
+  border-radius: var(--radius-sm);
+  padding: 0.75rem;
+}
+
+.security-score-card {
+  background: rgba(255,255,255,0.02);
+  border-radius: var(--radius-sm);
+  padding: 1rem;
+  text-align: center;
+}
+
+.security-score-circle {
+  position: relative;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(16,185,129,0.2) 0%, rgba(34,197,94,0.1) 100%);
+  border: 2px solid rgba(16,185,129,0.3);
+}
+
+.score-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #10b981;
+  line-height: 1;
+}
+
+.score-label {
+  font-size: 0.6rem;
+  color: var(--text-muted);
+  margin-top: 0.25rem;
+}
+
+.member-safety-metrics {
+  background: rgba(255,255,255,0.02);
+  border-radius: var(--radius-sm);
+  padding: 0.75rem;
+}
+
+.metric-row {
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  transition: all var(--transition);
+}
+
+.metric-row:last-child {
+  border-bottom: none;
+}
+
+.metric-row:hover {
+  background: rgba(255,255,255,0.03);
+  margin: 0 -0.75rem;
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
+  border-radius: 4px;
+}
+
+.quick-actions {
+  background: rgba(255,255,255,0.02);
+  border-radius: var(--radius-sm);
+  padding: 0.75rem;
+}
+
+.security-insights .btn {
+  font-size: 0.75rem;
+  padding: 0.375rem 0.75rem;
+}
+
+/* Animation for security elements */
+.security-metric, .raid-stat, .violation-item {
+  animation: securityFadeIn 0.6s ease-out;
+}
+
+@keyframes securityFadeIn {
+  from { 
+    opacity: 0; 
+    transform: translateY(10px); 
+  }
+  to { 
+    opacity: 1; 
+    transform: translateY(0); 
+  }
+}
+
+/* Pulsing effect for active security status */
+.security-status-grid .badge.bg-success {
+  animation: securityPulse 2s infinite;
+}
+
+@keyframes securityPulse {
+  0%, 100% { 
+    box-shadow: 0 0 5px rgba(16,185,129,0.3); 
+  }
+  50% { 
+    box-shadow: 0 0 15px rgba(16,185,129,0.6); 
+  }
+}
+
+/* Light theme adjustments for security components */
+html:not(.dark) .security-status-grid,
+html:not(.dark) .moderation-effectiveness,
+html:not(.dark) .violation-breakdown,
+html:not(.dark) .trend-chart-container,
+html:not(.dark) .security-score-card,
+html:not(.dark) .member-safety-metrics,
+html:not(.dark) .quick-actions {
+  background: rgba(0,0,0,0.02);
+}
+
+html:not(.dark) .raid-stat,
+html:not(.dark) .violation-item {
+  background: rgba(0,0,0,0.03);
+}
+
+html:not(.dark) .raid-stat:hover,
+html:not(.dark) .violation-item:hover {
+  background: rgba(0,0,0,0.06);
+}
+
+html:not(.dark) .metric-row {
+  border-bottom-color: rgba(0,0,0,0.05);
+}
+
+html:not(.dark) .metric-row:hover {
+  background: rgba(0,0,0,0.02);
+}
+
+html:not(.dark) .security-score-circle {
+  background: linear-gradient(135deg, rgba(16,185,129,0.1) 0%, rgba(34,197,94,0.05) 100%);
+  border-color: rgba(16,185,129,0.2);
+}
+
+/* Responsive adjustments for security dashboard */
+@media (max-width: 768px) {
+  .security-score-circle {
+    width: 60px;
+    height: 60px;
+  }
+  
+  .score-value {
+    font-size: 1.2rem;
+  }
+  
+  .raid-value {
+    font-size: 1rem;
+  }
+  
+  .security-insights .btn {
+    font-size: 0.7rem;
+    padding: 0.25rem 0.5rem;
+  }
+}
+
+/* Feature Status Section Styles */
+.feature-group {
+  background: rgba(255,255,255,0.02);
+  border-radius: var(--radius-sm);
+  padding: 0.75rem;
+}
+
+.feature-list {
+  background: rgba(255,255,255,0.02);
+  border-radius: var(--radius-sm);
+  padding: 0.5rem;
+}
+
+.feature-item {
+  border-radius: 4px;
+  transition: all var(--transition);
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+.feature-item:last-child {
+  border-bottom: none;
+}
+
+.feature-item:hover {
+  background: rgba(255,255,255,0.05);
+  transform: translateX(2px);
+  margin: 0 -0.5rem;
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+}
+
+.feature-icon {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.1);
+  flex-shrink: 0;
+}
+
+.feature-icon i {
+  font-size: 0.75rem;
+}
+
+.feature-summary {
+  background: rgba(255,255,255,0.03);
+  border-radius: var(--radius-sm);
+  padding: 0.75rem;
+  transition: all var(--transition);
+}
+
+.feature-summary:hover {
+  background: rgba(255,255,255,0.06);
+  transform: translateY(-2px);
+}
+
+.summary-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.summary-label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 0.25rem;
+}
+
+/* Purple color for role management */
+.text-purple {
+  color: #8b5cf6 !important;
+}
+
+/* Feature status animations */
+.feature-item {
+  animation: featureSlideIn 0.5s ease-out;
+}
+
+@keyframes featureSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.feature-summary {
+  animation: summaryPop 0.6s ease-out;
+}
+
+@keyframes summaryPop {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Badge pulse for active features */
+.feature-item .badge.bg-success {
+  animation: featurePulse 3s infinite;
+}
+
+@keyframes featurePulse {
+  0%, 100% {
+    box-shadow: 0 0 5px rgba(34,197,94,0.3);
+  }
+  50% {
+    box-shadow: 0 0 15px rgba(34,197,94,0.6);
+  }
+}
+
+/* Light theme adjustments for feature status */
+html:not(.dark) .feature-group,
+html:not(.dark) .feature-list,
+html:not(.dark) .feature-summary {
+  background: rgba(0,0,0,0.02);
+}
+
+html:not(.dark) .feature-item {
+  border-bottom-color: rgba(0,0,0,0.05);
+}
+
+html:not(.dark) .feature-item:hover {
+  background: rgba(0,0,0,0.03);
+}
+
+html:not(.dark) .feature-icon {
+  background: rgba(0,0,0,0.08);
+}
+
+html:not(.dark) .feature-summary:hover {
+  background: rgba(0,0,0,0.04);
+}
+
+/* Responsive adjustments for feature status */
+@media (max-width: 768px) {
+  .feature-group {
+    padding: 0.5rem;
+  }
+  
+  .feature-list {
+    padding: 0.25rem;
+  }
+  
+  .summary-value {
+    font-size: 1.25rem;
+  }
+  
+  .feature-icon {
+    width: 16px;
+    height: 16px;
+  }
+  
+  .feature-icon i {
+    font-size: 0.7rem;
+  }
+}
+
+/* Quick Actions Styles */
+.action-group h6 {
+  color: rgba(156, 163, 175, 0.8);
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  margin-bottom: 1rem;
+}
+
+.action-group .btn {
+  transition: all 0.3s ease;
+  border-radius: 8px;
+  padding: 0.6rem 1rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  border-width: 1px;
+}
+
+.action-group .btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+.action-group .btn .badge {
+  font-size: 0.7rem;
+  padding: 0.2rem 0.4rem;
+}
+
+.action-group .btn-outline-primary {
+  border-color: rgba(99, 102, 241, 0.3);
+  color: #6366f1;
+  background: rgba(99, 102, 241, 0.05);
+}
+
+.action-group .btn-outline-primary:hover {
+  background: rgba(99, 102, 241, 0.15);
+  border-color: rgba(99, 102, 241, 0.5);
+  color: #ffffff;
+}
+
+.action-group .btn-outline-info {
+  border-color: rgba(6, 182, 212, 0.3);
+  color: #06b6d4;
+  background: rgba(6, 182, 212, 0.05);
+}
+
+.action-group .btn-outline-info:hover {
+  background: rgba(6, 182, 212, 0.15);
+  border-color: rgba(6, 182, 212, 0.5);
+  color: #ffffff;
+}
+
+.action-group .btn-outline-warning {
+  border-color: rgba(245, 158, 11, 0.3);
+  color: #f59e0b;
+  background: rgba(245, 158, 11, 0.05);
+}
+
+.action-group .btn-outline-warning:hover {
+  background: rgba(245, 158, 11, 0.15);
+  border-color: rgba(245, 158, 11, 0.5);
+  color: #ffffff;
+}
+
+.action-group .btn-outline-success {
+  border-color: rgba(34, 197, 94, 0.3);
+  color: #22c55e;
+  background: rgba(34, 197, 94, 0.05);
+}
+
+.action-group .btn-outline-success:hover {
+  background: rgba(34, 197, 94, 0.15);
+  border-color: rgba(34, 197, 94, 0.5);
+  color: #ffffff;
+}
+
+.action-group .btn-outline-secondary {
+  border-color: rgba(107, 114, 128, 0.3);
+  color: #6b7280;
+  background: rgba(107, 114, 128, 0.05);
+}
+
+.action-group .btn-outline-secondary:hover {
+  background: rgba(107, 114, 128, 0.15);
+  border-color: rgba(107, 114, 128, 0.5);
+  color: #ffffff;
+}
+
+.action-group .btn-outline-danger {
+  border-color: rgba(239, 68, 68, 0.3);
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.05);
+}
+
+.action-group .btn-outline-danger:hover {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.5);
+  color: #ffffff;
+}
+
+/* System Info Items */
+.system-info-item {
+  padding: 0.75rem;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  transition: all 0.3s ease;
+}
+
+.system-info-item:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.15);
+  transform: translateY(-2px);
+}
+
+.info-value {
+  font-size: 1.2rem;
+  margin-bottom: 0.25rem;
+}
+
+.info-label {
+  color: rgba(156, 163, 175, 0.8);
+  font-weight: 500;
+  font-size: 0.75rem;
+}
+
+/* Light theme overrides for quick actions */
+html:not(.dark) .action-group .btn {
+  color: #374151;
+  border-color: rgba(156, 163, 175, 0.3);
+  background: rgba(255, 255, 255, 0.7);
+}
+
+html:not(.dark) .action-group .btn:hover {
+  background: rgba(255, 255, 255, 0.9);
+  color: #111827;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+html:not(.dark) .system-info-item {
+  background: rgba(255, 255, 255, 0.6);
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+html:not(.dark) .system-info-item:hover {
+  background: rgba(255, 255, 255, 0.8);
+  border-color: rgba(0, 0, 0, 0.15);
+}
+
+html:not(.dark) .info-label {
+  color: rgba(75, 85, 99, 0.8);
+}
+
+/* Animations for quick actions */
+@keyframes actionPulse {
+  0% { opacity: 0.6; }
+  50% { opacity: 1; }
+  100% { opacity: 0.6; }
+}
+
+.action-group .btn .text-success i {
+  animation: actionPulse 2s infinite;
+}
+
+/* Responsive adjustments for quick actions */
+@media (max-width: 768px) {
+  .action-group {
+    margin-bottom: 1rem;
+  }
+  
+  .action-group .btn {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8rem;
+  }
+  
+  .system-info-item {
+    padding: 0.5rem;
+  }
+  
+  .info-value {
+    font-size: 1rem;
+  }
+  
+  .info-label {
+    font-size: 0.7rem;
+  }
+}

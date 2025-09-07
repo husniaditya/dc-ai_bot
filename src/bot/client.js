@@ -2,6 +2,9 @@ const { Client, GatewayIntentBits, Partials, ActivityType, PermissionsBitField }
 const fs = require('fs');
 const path = require('path');
 
+// Import intents configuration
+const { getIntents } = require('../config/intents');
+
 // Event handlers
 const readyHandler = require('./events/ready');
 const guildMemberAddHandler = require('./events/guildMemberAdd');
@@ -23,26 +26,8 @@ function createDiscordClient(store, startTimestamp) {
     process.exit(0);
   }
 
-  // Intents: make privileged intents optional (to avoid 'Disallowed intents' login error)
-  const enableAutoReply = process.env.AUTOREPLY_ENABLED === '1';
-  const intents = [
-    GatewayIntentBits.Guilds, 
-    GatewayIntentBits.GuildMessages, 
-    GatewayIntentBits.GuildMessageReactions,
-    GatewayIntentBits.GuildVoiceStates, // For voice XP tracking and voice logging
-    GatewayIntentBits.GuildModeration, // For ban/unban events
-    GatewayIntentBits.GuildEmojisAndStickers // For emoji events
-  ];
-  
-  // Message Content intent (privileged) – required for reading message text for auto-replies & AI commands
-  if (process.env.ENABLE_MESSAGE_CONTENT !== '0') {
-    intents.push(GatewayIntentBits.MessageContent);
-  }
-  
-  // Guild Members intent (privileged) – required for welcome join tracking & some member operations
-  if (process.env.ENABLE_GUILD_MEMBERS === '1' || process.env.ENABLE_WELCOME === '1') {
-    intents.push(GatewayIntentBits.GuildMembers);
-  }
+  // Use intents from the centralized configuration
+  const intents = getIntents();
 
   const client = new Client({ 
     intents, 
@@ -83,7 +68,7 @@ function createDiscordClient(store, startTimestamp) {
       
       // Re-bind minimal events needed
       safeClient.once('ready', () => {
-        console.warn('Logged in with reduced intents (welcome & content-dependent features disabled). Enable intents in Developer Portal for full features.');
+        console.warn('Logged in with reduced intents (welcome, presence & content-dependent features disabled). Enable intents in Developer Portal for full features.');
       });
       
       safeClient.login(token).catch(e2 => { 

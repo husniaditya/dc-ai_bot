@@ -8,10 +8,23 @@ module.exports = {
     try {
       await interaction.deferReply();
 
+      // Check if store and getUserXp method are available
+      if (!store || typeof store.getUserXp !== 'function') {
+        return interaction.editReply({
+          content: '❌ XP system is not available. Please try again later.'
+        });
+      }
+
       const targetUser = interaction.options.getUser('user') || interaction.user;
       
       // Get user's XP data
       const userData = await store.getUserXp(interaction.guild.id, targetUser.id);
+      
+      if (!userData) {
+        return interaction.editReply({
+          content: '❌ Unable to retrieve XP data. The XP system may not be properly initialized.'
+        });
+      }
       
       if (!userData || userData.total_xp === 0) {
         return interaction.editReply({
@@ -20,13 +33,20 @@ module.exports = {
       }
 
       // Get leaderboard to find rank
-      const leaderboard = await store.getUserLeaderboard(interaction.guild.id, 100);
-      const userRank = leaderboard.findIndex(user => user.user_id === targetUser.id) + 1;
+      let userRank = 0;
+      try {
+        if (typeof store.getUserLeaderboard === 'function') {
+          const leaderboard = await store.getUserLeaderboard(interaction.guild.id, 100);
+          userRank = leaderboard.findIndex(user => user.user_id === targetUser.id) + 1;
+        }
+      } catch (leaderboardError) {
+        console.warn('Failed to get leaderboard for rank calculation:', leaderboardError.message);
+        // Continue without rank information
+      }
 
       if (userRank === 0) {
-        return interaction.editReply({
-          content: `${targetUser.id === interaction.user.id ? 'You are' : `${targetUser} is`} not on the leaderboard yet.`
-        });
+        // If we couldn't get rank from leaderboard, just show the XP without rank
+        console.warn('Could not determine user rank, showing XP only');
       }
 
       const xpForCurrentLevel = store.getXpForLevel ? store.getXpForLevel(userData.level) : (userData.level - 1) * 100;
@@ -42,10 +62,10 @@ module.exports = {
       const progressBar = '█'.repeat(filledBars) + '░'.repeat(emptyBars);
 
       const rankEmbed = new EmbedBuilder()
-        .setTitle(`🏆 Rank Information`)
-        .setDescription(`${targetUser.id === interaction.user.id ? 'Your' : `${targetUser.username}'s`} current rank in ${interaction.guild.name}`)
+        .setTitle(`🏆 ${userRank > 0 ? 'Rank Information' : 'XP Information'}`)
+        .setDescription(`${targetUser.id === interaction.user.id ? 'Your' : `${targetUser.username}'s`} current ${userRank > 0 ? 'rank in' : 'XP in'} ${interaction.guild.name}`)
         .addFields(
-          { name: '📊 Rank', value: `#${userRank}`, inline: true },
+          ...(userRank > 0 ? [{ name: '📊 Rank', value: `#${userRank}`, inline: true }] : []),
           { name: '⭐ Level', value: userData.level.toString(), inline: true },
           { name: '💫 Total XP', value: userData.total_xp.toLocaleString(), inline: true },
           { name: '📈 Progress to Next Level', value: `${progressXp}/${neededXp} XP (${progressPercent}%)\n\`${progressBar}\``, inline: false }
@@ -54,13 +74,15 @@ module.exports = {
         .setThumbnail(targetUser.displayAvatarURL())
         .setTimestamp();
 
-      // Add rank emoji
-      if (userRank === 1) {
-        rankEmbed.setDescription(`🥇 ${targetUser.id === interaction.user.id ? 'You are' : `${targetUser.username} is`} the top ranked member in ${interaction.guild.name}!`);
-      } else if (userRank === 2) {
-        rankEmbed.setDescription(`🥈 ${targetUser.id === interaction.user.id ? 'You are' : `${targetUser.username} is`} the 2nd ranked member in ${interaction.guild.name}!`);
-      } else if (userRank === 3) {
-        rankEmbed.setDescription(`🥉 ${targetUser.id === interaction.user.id ? 'You are' : `${targetUser.username} is`} the 3rd ranked member in ${interaction.guild.name}!`);
+      // Add rank emoji and special descriptions only if rank is available
+      if (userRank > 0) {
+        if (userRank === 1) {
+          rankEmbed.setDescription(`🥇 ${targetUser.id === interaction.user.id ? 'You are' : `${targetUser.username} is`} the top ranked member in ${interaction.guild.name}!`);
+        } else if (userRank === 2) {
+          rankEmbed.setDescription(`🥈 ${targetUser.id === interaction.user.id ? 'You are' : `${targetUser.username} is`} the 2nd ranked member in ${interaction.guild.name}!`);
+        } else if (userRank === 3) {
+          rankEmbed.setDescription(`🥉 ${targetUser.id === interaction.user.id ? 'You are' : `${targetUser.username} is`} the 3rd ranked member in ${interaction.guild.name}!`);
+        }
       }
 
       await interaction.editReply({ embeds: [rankEmbed] });

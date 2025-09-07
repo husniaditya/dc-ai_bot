@@ -101,6 +101,20 @@ async function initializeApp() {
     store.persistenceModeRef.mode = mode;
     console.log('Persistence mode:', mode);
     
+    // Initialize command logging services after database is ready
+    if (mode === 'mariadb' && store.sqlPool) {
+      try {
+        const { createCommandLogger } = require('./config/store/services/commandLogger');
+        const { createAnalyticsService } = require('./config/store/services/enhancedAnalytics');
+        
+        createCommandLogger({ sqlPool: store.sqlPool });
+        createAnalyticsService({ sqlPool: store.sqlPool });
+        console.log('✅ Command logging services initialized');
+      } catch (logError) {
+        console.warn('⚠️ Failed to initialize command logging:', logError.message);
+      }
+    }
+    
     // Create and start the API server AFTER database is ready
     const app = createApiServer(client, store, commandMap, startTimestamp);
     const DASHBOARD_PORT = process.env.DASHBOARD_PORT || 3001;
