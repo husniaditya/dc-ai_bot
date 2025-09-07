@@ -1,15 +1,18 @@
 import React from 'react';
 import LoadingSection from '../components/LoadingSection';
+import { useI18n } from '../i18n';
 
 export default function CommandsSection({ commandGroups, commandTogglesState, commandMeta, toggleCommand, hasManageGuild, loading }){
+  const { t } = useI18n();
+  
   return (
     <LoadingSection
       loading={loading}
-      title="Loading Commands"
-      message="Fetching your server's command settings and permissions..."
+      title={t('commands.title')}
+      message={t('commands.subtitle')}
       className="commands-section fade-in-soft position-relative"
     >
-      <h5 className="mb-3">Commands</h5>
+      <h5 className="mb-3">{t('commands.title')}</h5>
     <div className="cmd-groups">
       {commandGroups.map(gr => <div key={gr.key} className="cmd-group-card">
         <div className="cmd-group-head" style={{'--grp-accent': gr.accent}}>

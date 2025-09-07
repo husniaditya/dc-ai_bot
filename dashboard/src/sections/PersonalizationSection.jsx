@@ -1,18 +1,20 @@
 import React from 'react';
 import LoadingSection from '../components/LoadingSection';
+import { useI18n } from '../i18n';
 
 export default function PersonalizationSection({ personalization, personalizationLoading, personalizationDirty, resetPersonalization, savePersonalization, handleAvatarFile, renderStatusDot, setPersonalization }) {
+  const { t } = useI18n();
   const showOverlay = personalizationLoading;
   return (
     <LoadingSection
       loading={showOverlay}
-      title="Loading Bot Personalization"
-      message="Fetching your bot's appearance and activity settings..."
+      title={t('personalization.title')}
+      message={t('personalization.subtitle')}
       className="fade-in-soft personalization-section-wrapper position-relative"
     >
     <div className="d-flex align-items-center gap-2 mb-3">
-      <h5 className="mb-0">Bot Personalization</h5>
-      {personalizationDirty() && <span className="dirty-badge">Unsaved</span>}
+      <h5 className="mb-0">{t('personalization.title')}</h5>
+      {personalizationDirty() && <span className="dirty-badge">{t('common.unsaved')}</span>}
     </div>
     {personalization && <div className="row g-4">
       <div className="col-lg-6">

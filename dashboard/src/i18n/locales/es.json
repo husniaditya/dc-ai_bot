@@ -1,0 +1,116 @@
+{
+  "common": {
+    "save": "Guardar",
+    "reset": "Restablecer",
+    "cancel": "Cancelar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "add": "Agregar",
+    "loading": "Cargando...",
+    "saving": "Guardando...",
+    "success": "Éxito",
+    "error": "Error",
+    "warning": "Advertencia",
+    "info": "Información",
+    "yes": "Sí",
+    "no": "No",
+    "enabled": "Habilitado",
+    "disabled": "Deshabilitado",
+    "name": "Nombre",
+    "description": "Descripción",
+    "actions": "Acciones",
+    "settings": "Configuración",
+    "search": "Buscar",
+    "filter": "Filtrar",
+    "clear": "Limpiar",
+    "apply": "Aplicar",
+    "close": "Cerrar",
+    "back": "Atrás",
+    "next": "Siguiente",
+    "previous": "Anterior",
+    "unsaved": "Sin guardar"
+  },
+  "navigation": {
+    "dashboard": "Panel",
+    "settings": "Configuración",
+    "moderation": "Moderación",
+    "games": "Juegos y Social",
+    "logout": "Cerrar sesión",
+    "selectServer": "Seleccionar Servidor"
+  },
+  "settings": {
+    "title": "Configuración del Servidor",
+    "subtitle": "Configura las preferencias y comportamiento de tu servidor",
+    "loadingTitle": "Cargando Configuración del Servidor",
+    "loadingMessage": "Obteniendo la configuración y preferencias de tu servidor...",
+    "selectServerFirst": "Selecciona un servidor primero.",
+    "autoReply": {
+      "enabled": "Respuesta Automática Habilitada",
+      "cooldown": "Tiempo de Espera de Respuesta Automática (ms)",
+      "cooldownHelp": "Tiempo mínimo entre respuestas automáticas en milisegundos"
+    },
+    "language": {
+      "label": "Idioma",
+      "help": "Idioma predeterminado para las respuestas del bot"
+    },
+    "timezone": {
+      "label": "Zona Horaria",
+      "placeholder": "Escribe para buscar (ej. Madrid, UTC+01)",
+      "help": "Escribe para filtrar. Valor guardado: {{value}}",
+      "searchHelp": "Escribe para buscar tu zona horaria"
+    },
+    "hourFormat": {
+      "label": "Formato de Hora",
+      "24hour": "24 Horas",
+      "12hour": "12 Horas"
+    },
+    "slashCommands": {
+      "enabled": "Habilitar Comandos de Barra",
+      "help": "Permitir a los usuarios usar comandos de barra"
+    },
+    "preview": {
+      "title": "Vista Previa",
+      "sampleTimestamp": "Marca de tiempo de ejemplo: {{timestamp}}",
+      "help": "Ajusta la configuración y luego guarda. Las futuras respuestas de IA pueden respetar el idioma y la hora local."
+    },
+    "messages": {
+      "saved": "Configuración guardada",
+      "saveFailed": "Error al guardar",
+      "resetConfirm": "¿Estás seguro de que quieres restablecer todos los cambios?",
+      "unsavedChanges": "Tienes cambios sin guardar. ¿Estás seguro de que quieres salir?"
+    }
+  },
+  "auth": {
+    "login": "Iniciar Sesión",
+    "logout": "Cerrar Sesión",
+    "loginWithDiscord": "Iniciar Sesión con Discord",
+    "loggingIn": "Iniciando sesión...",
+    "welcomeBack": "¡Bienvenido de vuelta!",
+    "loginRequired": "Por favor inicia sesión para continuar",
+    "sessionExpired": "Tu sesión ha expirado. Por favor inicia sesión nuevamente."
+  },
+  "errors": {
+    "general": "Ocurrió un error. Por favor intenta nuevamente.",
+    "network": "Error de red. Por favor verifica tu conexión.",
+    "unauthorized": "No estás autorizado para realizar esta acción.",
+    "forbidden": "Acceso denegado.",
+    "notFound": "El recurso solicitado no fue encontrado.",
+    "serverError": "Error del servidor. Por favor intenta más tarde.",
+    "validationFailed": "La validación falló. Por favor verifica tu entrada.",
+    "timeout": "Tiempo de espera agotado. Por favor intenta nuevamente."
+  },
+  "loading": {
+    "pleaseWait": "Por favor espera...",
+    "fetchingData": "Obteniendo datos...",
+    "processing": "Procesando...",
+    "almostDone": "Casi terminado..."
+  },
+  "languages": {
+    "en": "English",
+    "id": "Bahasa Indonesia",
+    "es": "Español",
+    "fr": "Français",
+    "de": "Deutsch",
+    "ja": "日本語"
+  }
+}

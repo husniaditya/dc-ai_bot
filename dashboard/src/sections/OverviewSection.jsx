@@ -1,6 +1,8 @@
 import React from 'react';
+import { useI18n } from '../i18n';
 
 export default function OverviewSection({ analytics, apiStatus, autos, totalEnabled, totalDisabled, error, info, loading, dashSection, chartsReady, Highcharts, HighchartsReact, refreshAnalytics }) {
+  const { t } = useI18n();
   const [lastUpdate, setLastUpdate] = React.useState(new Date());
   
   // Update last update time when analytics data changes
@@ -13,18 +15,18 @@ export default function OverviewSection({ analytics, apiStatus, autos, totalEnab
   return <div className="overview-section fade-in-soft">
     <h5 className="mb-3 d-flex justify-content-between align-items-center">
       <span>
-        Overview
+        {t('overview.title')}
         {analytics?.totals?.guildName && <small className="text-muted ms-2">- {analytics.totals.guildName}</small>}
       </span>
       <div className="d-flex align-items-center">
         <small className="text-muted me-2">
-          Last updated: {lastUpdate.toLocaleTimeString()}
+          {t('common.loading')}: {lastUpdate.toLocaleTimeString()}
         </small>
         {refreshAnalytics && (
           <button 
             className="btn btn-sm btn-outline-secondary" 
             onClick={refreshAnalytics}
-            title="Refresh analytics data"
+            title={t('common.refresh', { default: 'Refresh analytics data' })}
           >
             <i className="fas fa-sync-alt"></i>
           </button>
@@ -33,107 +35,107 @@ export default function OverviewSection({ analytics, apiStatus, autos, totalEnab
     </h5>
     {error && <div className="alert alert-danger py-2 mb-2">{error}</div>}
     {info && <div className="alert alert-success py-2 mb-2">{info}</div>}
-    {loading && <div className="alert alert-info py-2 mb-2">Loading...</div>}
+    {loading && <div className="alert alert-info py-2 mb-2">{t('common.loading')}</div>}
     <div className="row g-4">
       <div className="col-12 col-lg-5">
         {analytics && <div className="card card-glass shadow-sm h-100"><div className="card-body d-flex flex-column">
-          <h6 className="mb-3 text-muted" style={{letterSpacing:'.5px'}}>Quick Statistics</h6>
+          <h6 className="mb-3 text-muted" style={{letterSpacing:'.5px'}}>{t('overview.quickStats')}</h6>
           <div className="row g-3 mb-3">
             <div className="col-6">
               <div className="mini-stat">
-                <div className="mini-label">Autos Enabled</div>
+                <div className="mini-label">{t('overview.autosEnabled')}</div>
                 <div className="mini-value text-accent">{analytics.totals.autosEnabled}</div>
-                <div className="mini-sub text-muted">of {analytics.totals.autos}</div>
+                <div className="mini-sub text-muted">{t('overview.of')} {analytics.totals.autos}</div>
               </div>
             </div>
             <div className="col-6">
               <div className="mini-stat">
-                <div className="mini-label">Commands Enabled</div>
+                <div className="mini-label">{t('overview.commandsEnabled')}</div>
                 <div className="mini-value text-success">{analytics.totals.commandsEnabled}</div>
-                <div className="mini-sub text-muted">of {analytics.totals.commands}</div>
+                <div className="mini-sub text-muted">{t('overview.of')} {analytics.totals.commands}</div>
               </div>
             </div>
           </div>
           <div className="row">
             <div className="col-6">
               <div className="mini-stat">
-                <div className="mini-label">Guild Members</div>
+                <div className="mini-label">{t('overview.guildMembers')}</div>
                 <div className="mini-value text-info">{analytics.totals.members || 'N/A'}</div>
               </div>
             </div>
             <div className="col-6">
               <div className="mini-stat">
-                <div className="mini-label">Commands Today</div>
+                <div className="mini-label">{t('overview.commandsToday')}</div>
                 <div className="mini-value text-accent">{analytics?.commands?.today || 0}</div>
               </div>
             </div>
             {apiStatus && <div className="col-12">
               <div className="mini-stat api-status-grid small" style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(120px,1fr))',gap:'12px'}}>
                 <div className="api-pill">
-                  <div className="mini-label">Gemini AI</div>
-                  <div className={'mini-value '+(apiStatus.gemini.enabled ? 'text-success':'text-danger')}>{apiStatus.gemini.enabled ? 'On':'Off'}</div>
+                  <div className="mini-label">{t('overview.apiStatus.geminiAi')}</div>
+                  <div className={'mini-value '+(apiStatus.gemini.enabled ? 'text-success':'text-danger')}>{apiStatus.gemini.enabled ? t('overview.apiStatus.on') : t('overview.apiStatus.off')}</div>
                   {apiStatus.gemini.model && <div className="mini-sub text-muted">{apiStatus.gemini.model}</div>}
                 </div>
                 <div className="api-pill">
-                  <div className="mini-label">Discord</div>
-                  <div className={'mini-value '+(apiStatus.discord.ready ? 'text-success':'text-danger')}>{apiStatus.discord.ready ? 'Ready':'Down'}</div>
+                  <div className="mini-label">{t('overview.apiStatus.discord')}</div>
+                  <div className={'mini-value '+(apiStatus.discord.ready ? 'text-success':'text-danger')}>{apiStatus.discord.ready ? t('overview.apiStatus.ready') : t('overview.apiStatus.down')}</div>
                   {apiStatus.discord.ping!=null && <div className="mini-sub text-muted">{apiStatus.discord.ping} ms</div>}
                 </div>
                 <div className="api-pill">
-                  <div className="mini-label">Database</div>
+                  <div className="mini-label">{t('overview.apiStatus.database')}</div>
                   <div className={'mini-value '+(apiStatus.database.connected ? 'text-success':'text-danger')}>{apiStatus.database.mode}</div>
                   {apiStatus.database.responseTime && <div className="mini-sub text-muted">{apiStatus.database.responseTime} ms</div>}
                 </div>
                 <div className="api-pill">
-                  <div className="mini-label">Uptime</div>
+                  <div className="mini-label">{t('overview.apiStatus.uptime')}</div>
                   <div className="mini-value text-accent">{Math.floor(apiStatus.uptime.seconds/3600)}h</div>
                   <div className="mini-sub text-muted">{Math.floor((apiStatus.uptime.seconds%3600)/60)}m</div>
                 </div>
                 {apiStatus.system?.memory && <div className="api-pill">
-                  <div className="mini-label">Memory</div>
+                  <div className="mini-label">{t('overview.apiStatus.memory')}</div>
                   <div className="mini-value text-warning">{apiStatus.system.memory.used} MB</div>
-                  <div className="mini-sub text-muted">{apiStatus.system.memory.percentage}% used</div>
+                  <div className="mini-sub text-muted">{apiStatus.system.memory.percentage}% {t('overview.apiStatus.used')}</div>
                 </div>}
                 {apiStatus.system?.performance && <div className="api-pill">
-                  <div className="mini-label">Errors/Hour</div>
+                  <div className="mini-label">{t('overview.apiStatus.errorsHour')}</div>
                   <div className={'mini-value '+(apiStatus.system.performance.errorsLastHour > 10 ? 'text-danger' : apiStatus.system.performance.errorsLastHour > 5 ? 'text-warning' : 'text-success')}>{apiStatus.system.performance.errorsLastHour || 0}</div>
-                  <div className="mini-sub text-muted">last hour</div>
+                  <div className="mini-sub text-muted">{t('overview.apiStatus.lastHour')}</div>
                 </div>}
                 {apiStatus.cache && <div className="api-pill">
-                  <div className="mini-label">Cache Hit</div>
+                  <div className="mini-label">{t('overview.apiStatus.cacheHit')}</div>
                   <div className="mini-value text-accent">{Math.round(apiStatus.cache.hitRate * 100)}%</div>
-                  <div className="mini-sub text-muted">{apiStatus.cache.entries} entries</div>
+                  <div className="mini-sub text-muted">{apiStatus.cache.entries} {t('overview.apiStatus.entries')}</div>
                 </div>}
               </div>
             </div>}
           </div>
           <div className="flex-grow-1 d-flex flex-column">
-            {!chartsReady && dashSection==='overview' && <div className="text-muted small">Loading charts…</div>}
+            {!chartsReady && dashSection==='overview' && <div className="text-muted small">{t('overview.charts.loadingCharts')}</div>}
             {chartsReady && HighchartsReact && Highcharts && <HighchartsReact highcharts={Highcharts} options={{
               // Reduced height for better balance; keeps Quick Statistics card tighter
               chart:{ type:'bar', backgroundColor:'transparent', height:220, styledMode:false },
               title:{ text:null },
               xAxis:{ categories:['Autos','Commands'], labels:{ style:{ color:'#9ca3af' } } },
-              yAxis:{ min:0, title:{ text:'Count' }, gridLineColor:'rgba(255,255,255,0.08)', labels:{ style:{ color:'#9ca3af' } } },
+              yAxis:{ min:0, title:{ text: t('overview.charts.count') }, gridLineColor:'rgba(255,255,255,0.08)', labels:{ style:{ color:'#9ca3af' } } },
               legend:{ reversed:true, itemStyle:{ color:'#9ca3af' } },
               plotOptions:{ series:{ stacking:'normal', borderWidth:0 } },
               series:[
-                { name:'Disabled', data:[analytics.totals.autos - analytics.totals.autosEnabled, analytics.totals.commandsDisabled], color:'#b81619ff' },
-                { name:'Enabled', data:[analytics.totals.autosEnabled, analytics.totals.commandsEnabled], color:'#6366f1' }
+                { name: t('overview.disabled'), data:[analytics.totals.autos - analytics.totals.autosEnabled, analytics.totals.commandsDisabled], color:'#b81619ff' },
+                { name: t('overview.enabled'), data:[analytics.totals.autosEnabled, analytics.totals.commandsEnabled], color:'#6366f1' }
               ],
               credits:{ enabled:false },
               tooltip:{ shared:true, backgroundColor:'#111827', borderColor:'#374151', style:{ color:'#f9fafb' } }
             }} />}
-            <div className="small text-muted mt-2" style={{opacity:.75}}>Stacked bar compares enabled vs disabled for autos and commands.</div>
+            <div className="small text-muted mt-2" style={{opacity:.75}}>{t('overview.charts.stackedBarDescription')}</div>
           </div>
         </div></div>}
-        {!analytics && <div className="card card-glass shadow-sm h-100"><div className="card-body d-flex align-items-center justify-content-center text-muted small">Loading analytics…</div></div>}
+        {!analytics && <div className="card card-glass shadow-sm h-100"><div className="card-body d-flex align-items-center justify-content-center text-muted small">{t('overview.loadingAnalytics')}</div></div>}
       </div>
       <div className="col-12 col-lg-7">
         <div className="stat-cards mb-3">
-          <div className="stat-card"><h6>Total Autos</h6><div className="value">{autos.length}</div></div>
-          <div className="stat-card"><h6>Enabled</h6><div className="value text-success">{totalEnabled}</div></div>
-          <div className="stat-card"><h6>Disabled</h6><div className="value text-danger">{totalDisabled}</div></div>
+          <div className="stat-card"><h6>{t('overview.totalAutos')}</h6><div className="value">{autos.length}</div></div>
+          <div className="stat-card"><h6>{t('overview.enabled')}</h6><div className="value text-success">{totalEnabled}</div></div>
+          <div className="stat-card"><h6>{t('overview.disabled')}</h6><div className="value text-danger">{totalDisabled}</div></div>
         </div>
         
         {/* Feature Status Section */}
@@ -141,24 +143,24 @@ export default function OverviewSection({ analytics, apiStatus, autos, totalEnab
           <div className="card-body">
             <h6 className="text-muted mb-3 d-flex align-items-center" style={{letterSpacing:'.5px'}}>
               <i className="fas fa-cogs me-2 text-primary"></i>
-              Feature Status
+              {t('overview.featureStatus')}
             </h6>
             
             <div className="row g-3">
               {/* Core Features */}
               <div className="col-md-6">
                 <div className="feature-group">
-                  <h6 className="small text-muted mb-2">Core Features</h6>
+                  <h6 className="small text-muted mb-2">{t('overview.coreFeatures')}</h6>
                   <div className="feature-list">
                     <div className="feature-item d-flex justify-content-between align-items-center py-2">
                       <div className="d-flex align-items-center">
                         <div className="feature-icon me-2">
                           <i className="fas fa-door-open text-info"></i>
                         </div>
-                        <span className="small">Welcome System</span>
+                        <span className="small">{t('overview.welcomeSystem')}</span>
                       </div>
                       <span className={`badge ${analytics?.features?.welcome_enabled === true ? 'bg-success' : analytics?.features?.welcome_enabled === false ? 'bg-danger' : 'bg-secondary'}`}>
-                        {analytics?.features?.welcome_enabled === true ? 'Enabled' : analytics?.features?.welcome_enabled === false ? 'Disabled' : 'Unknown'}
+                        {analytics?.features?.welcome_enabled === true ? t('overview.status.enabled') : analytics?.features?.welcome_enabled === false ? t('overview.status.disabled') : t('overview.status.unknown')}
                       </span>
                     </div>
                     <div className="feature-item d-flex justify-content-between align-items-center py-2">
@@ -166,10 +168,10 @@ export default function OverviewSection({ analytics, apiStatus, autos, totalEnab
                         <div className="feature-icon me-2">
                           <i className="fas fa-users-cog text-purple"></i>
                         </div>
-                        <span className="small">Role Management</span>
+                        <span className="small">{t('overview.roleManagement')}</span>
                       </div>
                       <span className={`badge ${analytics?.features?.role_management_enabled === true ? 'bg-success' : analytics?.features?.role_management_enabled === false ? 'bg-danger' : 'bg-warning'}`}>
-                        {analytics?.features?.role_management_enabled === true ? 'Enabled' : analytics?.features?.role_management_enabled === false ? 'Disabled' : 'Partial'}
+                        {analytics?.features?.role_management_enabled === true ? t('overview.status.enabled') : analytics?.features?.role_management_enabled === false ? t('overview.status.disabled') : t('overview.status.partial')}
                       </span>
                     </div>
                     <div className="feature-item d-flex justify-content-between align-items-center py-2">
@@ -177,10 +179,10 @@ export default function OverviewSection({ analytics, apiStatus, autos, totalEnab
                         <div className="feature-icon me-2">
                           <i className="fas fa-star text-warning"></i>
                         </div>
-                        <span className="small">XP & Leveling</span>
+                        <span className="small">{t('overview.xpLeveling')}</span>
                       </div>
                       <span className={`badge ${analytics?.features?.xp_enabled ? 'bg-success' : analytics?.features?.xp_enabled === false ? 'bg-danger' : 'bg-success'}`}>
-                        {analytics?.features?.xp_enabled ? 'Enabled' : analytics?.features?.xp_enabled === false ? 'Disabled' : 'Active'}
+                        {analytics?.features?.xp_enabled ? t('overview.status.enabled') : analytics?.features?.xp_enabled === false ? t('overview.status.disabled') : t('overview.status.active')}
                       </span>
                     </div>
                     <div className="feature-item d-flex justify-content-between align-items-center py-2">
@@ -188,10 +190,10 @@ export default function OverviewSection({ analytics, apiStatus, autos, totalEnab
                         <div className="feature-icon me-2">
                           <i className="fas fa-calendar-alt text-success"></i>
                         </div>
-                        <span className="small">Scheduler</span>
+                        <span className="small">{t('overview.scheduler')}</span>
                       </div>
                       <span className={`badge ${analytics?.features?.scheduler_enabled ? 'bg-success' : analytics?.features?.scheduler_enabled === false ? 'bg-danger' : 'bg-success'}`}>
-                        {analytics?.features?.scheduler_enabled ? 'Enabled' : analytics?.features?.scheduler_enabled === false ? 'Disabled' : 'Active'}
+                        {analytics?.features?.scheduler_enabled ? t('overview.status.enabled') : analytics?.features?.scheduler_enabled === false ? t('overview.status.disabled') : t('overview.status.active')}
                       </span>
                     </div>
                   </div>
@@ -201,17 +203,17 @@ export default function OverviewSection({ analytics, apiStatus, autos, totalEnab
               {/* Advanced Features */}
               <div className="col-md-6">
                 <div className="feature-group">
-                  <h6 className="small text-muted mb-2">Advanced Features</h6>
+                  <h6 className="small text-muted mb-2">{t('overview.advancedFeatures')}</h6>
                   <div className="feature-list">
                     <div className="feature-item d-flex justify-content-between align-items-center py-2">
                       <div className="d-flex align-items-center">
                         <div className="feature-icon me-2">
                           <i className="fas fa-robot text-warning"></i>
                         </div>
-                        <span className="small">Auto Moderation</span>
+                        <span className="small">{t('overview.autoModeration')}</span>
                       </div>
                       <span className={`badge ${analytics?.features?.automod_enabled === true ? 'bg-success' : analytics?.features?.automod_enabled === false ? 'bg-danger' : 'bg-secondary'}`}>
-                        {analytics?.features?.automod_enabled === true ? 'Enabled' : analytics?.features?.automod_enabled === false ? 'Disabled' : 'Unknown'}
+                        {analytics?.features?.automod_enabled === true ? t('overview.status.enabled') : analytics?.features?.automod_enabled === false ? t('overview.status.disabled') : t('overview.status.unknown')}
                       </span>
                     </div>
                     <div className="feature-item d-flex justify-content-between align-items-center py-2">
@@ -219,10 +221,10 @@ export default function OverviewSection({ analytics, apiStatus, autos, totalEnab
                         <div className="feature-icon me-2">
                           <i className="fas fa-shield-alt text-danger"></i>
                         </div>
-                        <span className="small">Anti-Raid</span>
+                        <span className="small">{t('overview.antiRaid')}</span>
                       </div>
                       <span className={`badge ${analytics?.features?.antiraid_enabled ? 'bg-success' : analytics?.features?.antiraid_enabled === false ? 'bg-danger' : 'bg-success'}`}>
-                        {analytics?.features?.antiraid_enabled ? 'Enabled' : analytics?.features?.antiraid_enabled === false ? 'Disabled' : 'Active'}
+                        {analytics?.features?.antiraid_enabled ? t('overview.status.enabled') : analytics?.features?.antiraid_enabled === false ? t('overview.status.disabled') : t('overview.status.active')}
                       </span>
                     </div>
                     <div className="feature-item d-flex justify-content-between align-items-center py-2">
@@ -230,10 +232,10 @@ export default function OverviewSection({ analytics, apiStatus, autos, totalEnab
                         <div className="feature-icon me-2">
                           <i className="fas fa-clipboard-list text-info"></i>
                         </div>
-                        <span className="small">Audit Logging</span>
+                        <span className="small">{t('overview.auditLogging')}</span>
                       </div>
                       <span className={`badge ${analytics?.features?.audit_enabled ? 'bg-success' : analytics?.features?.audit_enabled === false ? 'bg-danger' : 'bg-success'}`}>
-                        {analytics?.features?.audit_enabled ? 'Enabled' : analytics?.features?.audit_enabled === false ? 'Disabled' : 'Active'}
+                        {analytics?.features?.audit_enabled ? t('overview.status.enabled') : analytics?.features?.audit_enabled === false ? t('overview.status.disabled') : t('overview.status.active')}
                       </span>
                     </div>
                   </div>
@@ -266,7 +268,7 @@ export default function OverviewSection({ analytics, apiStatus, autos, totalEnab
                         return activeCount > 0 ? activeCount : 7;
                       })()}
                     </div>
-                    <div className="summary-label">Active</div>
+                    <div className="summary-label">{t('overview.active')}</div>
                   </div>
                 </div>
                 <div className="col-4">
@@ -290,7 +292,7 @@ export default function OverviewSection({ analytics, apiStatus, autos, totalEnab
                         return partialCount;
                       })()}
                     </div>
-                    <div className="summary-label">Partial</div>
+                    <div className="summary-label">{t('overview.partial')}</div>
                   </div>
                 </div>
                 <div className="col-4">
@@ -314,7 +316,7 @@ export default function OverviewSection({ analytics, apiStatus, autos, totalEnab
                         return disabledCount;
                       })()}
                     </div>
-                    <div className="summary-label">Disabled</div>
+                    <div className="summary-label">{t('overview.disabled')}</div>
                   </div>
                 </div>
               </div>
@@ -549,7 +551,7 @@ export default function OverviewSection({ analytics, apiStatus, autos, totalEnab
                 <span>Recent Activity Stream</span>
                 <span className="badge bg-secondary">{(analytics?.activity?.recent || []).length} recent</span>
               </div>
-              <div className="activity-stream" style={{maxHeight: '200px', overflowY: 'auto'}}>
+              <div className="activity-stream" style={{maxHeight: '250px', overflowY: 'auto'}}>
                 {(analytics?.activity?.recent || [
                   { action: '/scheduler used', guild: 'Discord Server', type: 'command', timestamp: new Date(Date.now() - 180000).toISOString() },
                   { action: 'Auto-reply triggered', guild: 'Discord Server', type: 'auto', timestamp: new Date(Date.now() - 420000).toISOString() },

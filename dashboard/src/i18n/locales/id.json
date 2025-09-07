@@ -1,0 +1,238 @@
+{
+  "common": {
+    "save": "Simpan",
+    "reset": "Reset",
+    "cancel": "Batal",
+    "delete": "Hapus",
+    "edit": "Edit",
+    "add": "Tambah",
+    "loading": "Memuat...",
+    "saving": "Menyimpan...",
+    "success": "Berhasil",
+    "error": "Error",
+    "warning": "Peringatan",
+    "info": "Info",
+    "yes": "Ya",
+    "no": "Tidak",
+    "enabled": "Aktif",
+    "disabled": "Nonaktif",
+    "name": "Nama",
+    "description": "Deskripsi",
+    "actions": "Aksi",
+    "settings": "Pengaturan",
+    "search": "Cari",
+    "filter": "Filter",
+    "clear": "Bersihkan",
+    "apply": "Terapkan",
+    "close": "Tutup",
+    "back": "Kembali",
+    "next": "Selanjutnya",
+    "previous": "Sebelumnya",
+    "unsaved": "Belum disimpan"
+  },
+  "navigation": {
+    "dashboard": "Dashboard",
+    "changeServer": "Ganti server",
+    "selectServer": "Pilih Server",
+    "overview": "Gambaran Umum",
+    "autos": "Respons Otomatis",
+    "commands": "Perintah",
+    "personal": "Personalisasi Bot",
+    "moderation": "Moderasi",
+    "games": "Game & Sosial",
+    "settings": "Pengaturan",
+    "logout": "Keluar",
+    "signOut": "Keluar",
+    "collapseSidebar": "Ciutkan sidebar",
+    "expandSidebar": "Perluas sidebar",
+    "toggleTheme": "Alihkan tema terang / gelap"
+  },
+  "settings": {
+    "title": "Pengaturan Server",
+    "subtitle": "Konfigurasi preferensi dan perilaku server Anda",
+    "loadingTitle": "Memuat Pengaturan Server",
+    "loadingMessage": "Mengambil konfigurasi dan preferensi server Anda...",
+    "selectServerFirst": "Pilih server terlebih dahulu.",
+    "autoReply": {
+      "enabled": "Auto Reply Aktif",
+      "cooldown": "Cooldown Auto Reply (ms)",
+      "cooldownHelp": "Waktu minimum antara auto reply dalam milidetik"
+    },
+    "language": {
+      "label": "Bahasa",
+      "help": "Bahasa default untuk respons bot dan antarmuka dashboard",
+      "changeNote": "Bahasa dashboard akan berubah setelah menyimpan pengaturan",
+      "saved": "Pengaturan bahasa berhasil disimpan",
+      "saveFailed": "Gagal menyimpan pengaturan bahasa"
+    },
+    "timezone": {
+      "label": "Zona Waktu",
+      "placeholder": "Ketik untuk mencari (contoh: Jakarta, UTC+07)",
+      "help": "Ketik untuk filter. Nilai tersimpan: {{value}}",
+      "searchHelp": "Ketik untuk mencari zona waktu Anda"
+    },
+    "hourFormat": {
+      "label": "Format Jam",
+      "24hour": "24 Jam",
+      "12hour": "12 Jam"
+    },
+    "slashCommands": {
+      "enabled": "Aktifkan Slash Commands",
+      "help": "Izinkan pengguna menggunakan slash commands"
+    },
+    "preview": {
+      "title": "Pratinjau",
+      "sampleTimestamp": "Contoh timestamp: {{timestamp}}",
+      "help": "Sesuaikan pengaturan lalu simpan. Respons AI masa depan mungkin menghormati bahasa & waktu lokal."
+    },
+    "messages": {
+      "saved": "Pengaturan tersimpan",
+      "saveFailed": "Gagal menyimpan",
+      "resetConfirm": "Apakah Anda yakin ingin mereset semua perubahan?",
+      "unsavedChanges": "Anda memiliki perubahan yang belum disimpan. Apakah Anda yakin ingin pergi?"
+    }
+  },
+  "auth": {
+    "login": "Masuk",
+    "logout": "Keluar",
+    "loginWithDiscord": "Masuk dengan Discord",
+    "loggingIn": "Sedang masuk...",
+    "welcomeBack": "Selamat datang kembali!",
+    "loginRequired": "Silakan masuk untuk melanjutkan",
+    "sessionExpired": "Sesi Anda telah kedaluwarsa. Silakan masuk lagi."
+  },
+  "errors": {
+    "general": "Terjadi kesalahan. Silakan coba lagi.",
+    "network": "Kesalahan jaringan. Silakan periksa koneksi Anda.",
+    "unauthorized": "Anda tidak diizinkan untuk melakukan tindakan ini.",
+    "forbidden": "Akses ditolak.",
+    "notFound": "Sumber daya yang diminta tidak ditemukan.",
+    "serverError": "Kesalahan server. Silakan coba lagi nanti.",
+    "validationFailed": "Validasi gagal. Silakan periksa input Anda.",
+    "timeout": "Timeout permintaan. Silakan coba lagi."
+  },
+  "loading": {
+    "pleaseWait": "Mohon tunggu...",
+    "fetchingData": "Mengambil data...",
+    "processing": "Memproses...",
+    "almostDone": "Hampir selesai..."
+  },
+  "languages": {
+    "en": "Bahasa Inggris",
+    "id": "Bahasa Indonesia",
+    "es": "Bahasa Spanyol",
+    "fr": "Bahasa Prancis",
+    "de": "Bahasa Jerman",
+    "ja": "Bahasa Jepang"
+  },
+  "overview": {
+    "title": "Gambaran Umum Server",
+    "subtitle": "Gambaran umum dashboard dan statistik server",
+    "serverInfo": "Informasi Server",
+    "botStatus": "Status Bot",
+    "quickActions": "Aksi Cepat",
+    "quickStats": "Statistik Cepat",
+    "autosEnabled": "Auto Diaktifkan",
+    "commandsEnabled": "Perintah Diaktifkan",
+    "guildMembers": "Anggota Server",
+    "commandsToday": "Perintah Hari Ini",
+    "totalAutos": "Total Auto",
+    "enabled": "Diaktifkan",
+    "disabled": "Dinonaktifkan",
+    "featureStatus": "Status Fitur",
+    "coreFeatures": "Fitur Inti",
+    "advancedFeatures": "Fitur Lanjutan",
+    "welcomeSystem": "Sistem Selamat Datang",
+    "roleManagement": "Manajemen Peran",
+    "xpLeveling": "XP & Leveling",
+    "scheduler": "Penjadwal",
+    "autoModeration": "Moderasi Otomatis",
+    "antiRaid": "Anti-Raid",
+    "auditLogging": "Log Audit",
+    "active": "Aktif",
+    "partial": "Sebagian",
+    "unknown": "Tidak Diketahui",
+    "status": {
+      "enabled": "Diaktifkan",
+      "disabled": "Dinonaktifkan",
+      "active": "Aktif",
+      "partial": "Sebagian",
+      "unknown": "Tidak Diketahui"
+    },
+    "apiStatus": {
+      "geminiAi": "Gemini AI",
+      "discord": "Discord",
+      "database": "Database",
+      "uptime": "Waktu Aktif",
+      "memory": "Memori",
+      "errorsHour": "Error/Jam",
+      "cacheHit": "Cache Hit",
+      "ready": "Siap",
+      "down": "Mati",
+      "on": "Hidup",
+      "off": "Mati",
+      "lastHour": "jam terakhir",
+      "entries": "entri",
+      "used": "digunakan"
+    },
+    "charts": {
+      "loadingCharts": "Memuat grafik…",
+      "stackedBarDescription": "Grafik batang menampilkan perbandingan yang diaktifkan vs dinonaktifkan untuk auto dan perintah.",
+      "count": "Jumlah"
+    },
+    "loadingAnalytics": "Memuat analitik…",
+    "of": "dari"
+  },
+  "autoResponses": {
+    "title": "Respons Otomatis",
+    "subtitle": "Kelola respons otomatis bot",
+    "enabled": "Respons otomatis diaktifkan",
+    "disabled": "Respons otomatis dinonaktifkan",
+    "cooldown": "Cooldown respons",
+    "addResponse": "Tambah Respons",
+    "editResponse": "Edit Respons",
+    "deleteResponse": "Hapus Respons"
+  },
+  "commands": {
+    "title": "Perintah",
+    "subtitle": "Kelola perintah bot dan izin",
+    "slashCommands": "Perintah Slash",
+    "prefixCommands": "Perintah Prefix",
+    "permissions": "Izin Perintah",
+    "enableAll": "Aktifkan Semua",
+    "disableAll": "Nonaktifkan Semua"
+  },
+  "personalization": {
+    "title": "Personalisasi Bot",
+    "subtitle": "Sesuaikan tampilan dan perilaku bot Anda",
+    "avatar": "Avatar Bot",
+    "nickname": "Nama Panggilan Bot",
+    "status": "Status Bot",
+    "embedColor": "Warna Embed",
+    "prefix": "Prefix Perintah"
+  },
+  "moderation": {
+    "title": "Moderasi",
+    "subtitle": "Konfigurasi alat dan pengaturan moderasi",
+    "automod": "Moderasi Otomatis",
+    "warnings": "Sistem Peringatan",
+    "roles": "Manajemen Role",
+    "logging": "Log Audit"
+  },
+  "gamesSocials": {
+    "title": "Game & Sosial",
+    "subtitle": "Konfigurasi fitur gaming dan sosial",
+    "leveling": "XP & Leveling",
+    "economy": "Sistem Ekonomi",
+    "socialFeatures": "Fitur Sosial",
+    "miniGames": "Mini Game"
+  },
+  "welcome": {
+    "title": "Sistem Selamat Datang",
+    "subtitle": "Konfigurasi pesan selamat datang dan pengaturan member baru",
+    "enabled": "Pesan selamat datang diaktifkan",
+    "channel": "Channel Selamat Datang",
+    "message": "Pesan Selamat Datang",
+    "roles": "Role Otomatis"
+  }
+}

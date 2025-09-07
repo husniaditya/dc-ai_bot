@@ -1,0 +1,116 @@
+{
+  "common": {
+    "save": "保存",
+    "reset": "リセット",
+    "cancel": "キャンセル",
+    "delete": "削除",
+    "edit": "編集",
+    "add": "追加",
+    "loading": "読み込み中...",
+    "saving": "保存中...",
+    "success": "成功",
+    "error": "エラー",
+    "warning": "警告",
+    "info": "情報",
+    "yes": "はい",
+    "no": "いいえ",
+    "enabled": "有効",
+    "disabled": "無効",
+    "name": "名前",
+    "description": "説明",
+    "actions": "アクション",
+    "settings": "設定",
+    "search": "検索",
+    "filter": "フィルター",
+    "clear": "クリア",
+    "apply": "適用",
+    "close": "閉じる",
+    "back": "戻る",
+    "next": "次へ",
+    "previous": "前へ",
+    "unsaved": "未保存"
+  },
+  "navigation": {
+    "dashboard": "ダッシュボード",
+    "settings": "設定",
+    "moderation": "モデレーション",
+    "games": "ゲーム・ソーシャル",
+    "logout": "ログアウト",
+    "selectServer": "サーバーを選択"
+  },
+  "settings": {
+    "title": "サーバー設定",
+    "subtitle": "サーバーの設定と動作を構成します",
+    "loadingTitle": "サーバー設定を読み込み中",
+    "loadingMessage": "サーバーの構成と設定を取得しています...",
+    "selectServerFirst": "最初にサーバーを選択してください。",
+    "autoReply": {
+      "enabled": "自動返信を有効にする",
+      "cooldown": "自動返信クールダウン（ミリ秒）",
+      "cooldownHelp": "自動返信間の最小時間（ミリ秒）"
+    },
+    "language": {
+      "label": "言語",
+      "help": "ボット応答のデフォルト言語"
+    },
+    "timezone": {
+      "label": "タイムゾーン",
+      "placeholder": "検索するには入力してください（例：東京、UTC+09）",
+      "help": "フィルターするには入力してください。保存された値：{{value}}",
+      "searchHelp": "タイムゾーンを検索するには入力してください"
+    },
+    "hourFormat": {
+      "label": "時刻形式",
+      "24hour": "24時間",
+      "12hour": "12時間"
+    },
+    "slashCommands": {
+      "enabled": "スラッシュコマンドを有効にする",
+      "help": "ユーザーがスラッシュコマンドを使用できるようにします"
+    },
+    "preview": {
+      "title": "プレビュー",
+      "sampleTimestamp": "タイムスタンプの例：{{timestamp}}",
+      "help": "設定を調整してから保存してください。将来のAI応答は言語と現地時間を考慮する場合があります。"
+    },
+    "messages": {
+      "saved": "設定が保存されました",
+      "saveFailed": "保存に失敗しました",
+      "resetConfirm": "本当にすべての変更をリセットしますか？",
+      "unsavedChanges": "未保存の変更があります。本当に離れますか？"
+    }
+  },
+  "auth": {
+    "login": "ログイン",
+    "logout": "ログアウト",
+    "loginWithDiscord": "Discordでログイン",
+    "loggingIn": "ログイン中...",
+    "welcomeBack": "おかえりなさい！",
+    "loginRequired": "続行するにはログインしてください",
+    "sessionExpired": "セッションが期限切れです。再度ログインしてください。"
+  },
+  "errors": {
+    "general": "エラーが発生しました。もう一度お試しください。",
+    "network": "ネットワークエラー。接続を確認してください。",
+    "unauthorized": "このアクションを実行する権限がありません。",
+    "forbidden": "アクセスが拒否されました。",
+    "notFound": "要求されたリソースが見つかりませんでした。",
+    "serverError": "サーバーエラー。後でもう一度お試しください。",
+    "validationFailed": "検証に失敗しました。入力を確認してください。",
+    "timeout": "リクエストがタイムアウトしました。もう一度お試しください。"
+  },
+  "loading": {
+    "pleaseWait": "お待ちください...",
+    "fetchingData": "データを取得中...",
+    "processing": "処理中...",
+    "almostDone": "もうすぐ完了します..."
+  },
+  "languages": {
+    "en": "English",
+    "id": "Bahasa Indonesia",
+    "es": "Español",
+    "fr": "Français",
+    "de": "Deutsch",
+    "ja": "日本語"
+  }
+}

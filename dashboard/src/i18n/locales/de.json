@@ -1,0 +1,116 @@
+{
+  "common": {
+    "save": "Speichern",
+    "reset": "Zurücksetzen",
+    "cancel": "Abbrechen",
+    "delete": "Löschen",
+    "edit": "Bearbeiten",
+    "add": "Hinzufügen",
+    "loading": "Lädt...",
+    "saving": "Speichert...",
+    "success": "Erfolg",
+    "error": "Fehler",
+    "warning": "Warnung",
+    "info": "Information",
+    "yes": "Ja",
+    "no": "Nein",
+    "enabled": "Aktiviert",
+    "disabled": "Deaktiviert",
+    "name": "Name",
+    "description": "Beschreibung",
+    "actions": "Aktionen",
+    "settings": "Einstellungen",
+    "search": "Suchen",
+    "filter": "Filtern",
+    "clear": "Löschen",
+    "apply": "Anwenden",
+    "close": "Schließen",
+    "back": "Zurück",
+    "next": "Weiter",
+    "previous": "Vorherige",
+    "unsaved": "Nicht gespeichert"
+  },
+  "navigation": {
+    "dashboard": "Dashboard",
+    "settings": "Einstellungen",
+    "moderation": "Moderation",
+    "games": "Spiele & Soziales",
+    "logout": "Abmelden",
+    "selectServer": "Server auswählen"
+  },
+  "settings": {
+    "title": "Server-Einstellungen",
+    "subtitle": "Konfigurieren Sie die Einstellungen und das Verhalten Ihres Servers",
+    "loadingTitle": "Server-Einstellungen werden geladen",
+    "loadingMessage": "Ihre Server-Konfiguration und -Einstellungen werden abgerufen...",
+    "selectServerFirst": "Wählen Sie zuerst einen Server aus.",
+    "autoReply": {
+      "enabled": "Auto-Antwort aktiviert",
+      "cooldown": "Auto-Antwort Abklingzeit (ms)",
+      "cooldownHelp": "Mindestzeit zwischen Auto-Antworten in Millisekunden"
+    },
+    "language": {
+      "label": "Sprache",
+      "help": "Standardsprache für Bot-Antworten"
+    },
+    "timezone": {
+      "label": "Zeitzone",
+      "placeholder": "Tippen Sie zum Suchen (z.B. Berlin, UTC+01)",
+      "help": "Tippen Sie zum Filtern. Gespeicherter Wert: {{value}}",
+      "searchHelp": "Tippen Sie, um Ihre Zeitzone zu suchen"
+    },
+    "hourFormat": {
+      "label": "Zeitformat",
+      "24hour": "24 Stunden",
+      "12hour": "12 Stunden"
+    },
+    "slashCommands": {
+      "enabled": "Slash-Befehle aktivieren",
+      "help": "Benutzern erlauben, Slash-Befehle zu verwenden"
+    },
+    "preview": {
+      "title": "Vorschau",
+      "sampleTimestamp": "Beispiel-Zeitstempel: {{timestamp}}",
+      "help": "Passen Sie die Einstellungen an und speichern Sie dann. Zukünftige KI-Antworten können Sprache und lokale Zeit berücksichtigen."
+    },
+    "messages": {
+      "saved": "Einstellungen gespeichert",
+      "saveFailed": "Speichern fehlgeschlagen",
+      "resetConfirm": "Sind Sie sicher, dass Sie alle Änderungen zurücksetzen möchten?",
+      "unsavedChanges": "Sie haben ungespeicherte Änderungen. Sind Sie sicher, dass Sie die Seite verlassen möchten?"
+    }
+  },
+  "auth": {
+    "login": "Anmelden",
+    "logout": "Abmelden",
+    "loginWithDiscord": "Mit Discord anmelden",
+    "loggingIn": "Anmeldung läuft...",
+    "welcomeBack": "Willkommen zurück!",
+    "loginRequired": "Bitte melden Sie sich an, um fortzufahren",
+    "sessionExpired": "Ihre Sitzung ist abgelaufen. Bitte melden Sie sich erneut an."
+  },
+  "errors": {
+    "general": "Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut.",
+    "network": "Netzwerkfehler. Bitte überprüfen Sie Ihre Verbindung.",
+    "unauthorized": "Sie sind nicht berechtigt, diese Aktion auszuführen.",
+    "forbidden": "Zugriff verweigert.",
+    "notFound": "Die angeforderte Ressource wurde nicht gefunden.",
+    "serverError": "Serverfehler. Bitte versuchen Sie es später erneut.",
+    "validationFailed": "Validierung fehlgeschlagen. Bitte überprüfen Sie Ihre Eingabe.",
+    "timeout": "Zeitüberschreitung. Bitte versuchen Sie es erneut."
+  },
+  "loading": {
+    "pleaseWait": "Bitte warten...",
+    "fetchingData": "Daten werden abgerufen...",
+    "processing": "Verarbeitung läuft...",
+    "almostDone": "Fast fertig..."
+  },
+  "languages": {
+    "en": "English",
+    "id": "Bahasa Indonesia",
+    "es": "Español",
+    "fr": "Français",
+    "de": "Deutsch",
+    "ja": "日本語"
+  }
+}

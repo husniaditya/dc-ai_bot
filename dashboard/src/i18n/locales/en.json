@@ -1,0 +1,238 @@
+{
+  "common": {
+    "save": "Save",
+    "reset": "Reset",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "add": "Add",
+    "loading": "Loading...",
+    "saving": "Saving...",
+    "success": "Success",
+    "error": "Error",
+    "warning": "Warning",
+    "info": "Info",
+    "yes": "Yes",
+    "no": "No",
+    "enabled": "Enabled",
+    "disabled": "Disabled",
+    "name": "Name",
+    "description": "Description",
+    "actions": "Actions",
+    "settings": "Settings",
+    "search": "Search",
+    "filter": "Filter",
+    "clear": "Clear",
+    "apply": "Apply",
+    "close": "Close",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "unsaved": "Unsaved"
+  },
+  "navigation": {
+    "dashboard": "Dashboard",
+    "changeServer": "Change server",
+    "selectServer": "Select a Server",
+    "overview": "Overview",
+    "autos": "Auto Responses", 
+    "commands": "Commands",
+    "personal": "Bot Personalization",
+    "moderation": "Moderation",
+    "games": "Games & Socials",
+    "settings": "Settings",
+    "logout": "Logout",
+    "signOut": "Sign out",
+    "collapseSidebar": "Collapse sidebar",
+    "expandSidebar": "Expand sidebar",
+    "toggleTheme": "Toggle light / dark theme"
+  },
+  "settings": {
+    "title": "Server Settings",
+    "subtitle": "Configure your server preferences and behavior",
+    "loadingTitle": "Loading Server Settings",
+    "loadingMessage": "Fetching your server configuration and preferences...",
+    "selectServerFirst": "Select a server first.",
+    "autoReply": {
+      "enabled": "Auto Reply Enabled",
+      "cooldown": "Auto Reply Cooldown (ms)",
+      "cooldownHelp": "Minimum time between auto replies in milliseconds"
+    },
+    "language": {
+      "label": "Language",
+      "help": "Default language for bot responses and dashboard interface",
+      "changeNote": "Dashboard language will change after saving settings",
+      "saved": "Language setting saved successfully",
+      "saveFailed": "Failed to save language setting"
+    },
+    "timezone": {
+      "label": "Timezone",
+      "placeholder": "Type to search (e.g. Jakarta, UTC+07)",
+      "help": "Type to filter. Saved value: {{value}}",
+      "searchHelp": "Type to search for your timezone"
+    },
+    "hourFormat": {
+      "label": "Hour Format",
+      "24hour": "24 Hour",
+      "12hour": "12 Hour"
+    },
+    "slashCommands": {
+      "enabled": "Enable Slash Commands",
+      "help": "Allow users to use slash commands"
+    },
+    "preview": {
+      "title": "Preview",
+      "sampleTimestamp": "Example timestamp: {{timestamp}}",
+      "help": "Adjust settings then save. Future AI responses may honor language & local time."
+    },
+    "messages": {
+      "saved": "Settings saved",
+      "saveFailed": "Save failed",
+      "resetConfirm": "Are you sure you want to reset all changes?",
+      "unsavedChanges": "You have unsaved changes. Are you sure you want to leave?"
+    }
+  },
+  "auth": {
+    "login": "Login",
+    "logout": "Logout",
+    "loginWithDiscord": "Login with Discord",
+    "loggingIn": "Logging in...",
+    "welcomeBack": "Welcome back!",
+    "loginRequired": "Please login to continue",
+    "sessionExpired": "Your session has expired. Please login again."
+  },
+  "errors": {
+    "general": "An error occurred. Please try again.",
+    "network": "Network error. Please check your connection.",
+    "unauthorized": "You are not authorized to perform this action.",
+    "forbidden": "Access denied.",
+    "notFound": "The requested resource was not found.",
+    "serverError": "Server error. Please try again later.",
+    "validationFailed": "Validation failed. Please check your input.",
+    "timeout": "Request timeout. Please try again."
+  },
+  "loading": {
+    "pleaseWait": "Please wait...",
+    "fetchingData": "Fetching data...",
+    "processing": "Processing...",
+    "almostDone": "Almost done..."
+  },
+  "languages": {
+    "en": "English",
+    "id": "Indonesian", 
+    "es": "Spanish",
+    "fr": "French",
+    "de": "German",
+    "ja": "Japanese"
+  },
+  "overview": {
+    "title": "Server Overview",
+    "subtitle": "Dashboard overview and server statistics",
+    "serverInfo": "Server Information",
+    "botStatus": "Bot Status",
+    "quickActions": "Quick Actions",
+    "quickStats": "Quick Statistics",
+    "autosEnabled": "Autos Enabled",
+    "commandsEnabled": "Commands Enabled",
+    "guildMembers": "Guild Members",
+    "commandsToday": "Commands Today",
+    "totalAutos": "Total Autos",
+    "enabled": "Enabled",
+    "disabled": "Disabled",
+    "featureStatus": "Feature Status",
+    "coreFeatures": "Core Features",
+    "advancedFeatures": "Advanced Features",
+    "welcomeSystem": "Welcome System",
+    "roleManagement": "Role Management",
+    "xpLeveling": "XP & Leveling",
+    "scheduler": "Scheduler",
+    "autoModeration": "Auto Moderation",
+    "antiRaid": "Anti-Raid",
+    "auditLogging": "Audit Logging",
+    "active": "Active",
+    "partial": "Partial",
+    "unknown": "Unknown",
+    "status": {
+      "enabled": "Enabled",
+      "disabled": "Disabled",
+      "active": "Active",
+      "partial": "Partial",
+      "unknown": "Unknown"
+    },
+    "apiStatus": {
+      "geminiAi": "Gemini AI",
+      "discord": "Discord",
+      "database": "Database",
+      "uptime": "Uptime",
+      "memory": "Memory",
+      "errorsHour": "Errors/Hour",
+      "cacheHit": "Cache Hit",
+      "ready": "Ready",
+      "down": "Down",
+      "on": "On",
+      "off": "Off",
+      "lastHour": "last hour",
+      "entries": "entries",
+      "used": "used"
+    },
+    "charts": {
+      "loadingCharts": "Loading charts…",
+      "stackedBarDescription": "Stacked bar compares enabled vs disabled for autos and commands.",
+      "count": "Count"
+    },
+    "loadingAnalytics": "Loading analytics…",
+    "of": "of"
+  },
+  "autoResponses": {
+    "title": "Auto Responses",
+    "subtitle": "Manage automatic bot responses",
+    "enabled": "Auto responses enabled",
+    "disabled": "Auto responses disabled",
+    "cooldown": "Response cooldown",
+    "addResponse": "Add Response",
+    "editResponse": "Edit Response",
+    "deleteResponse": "Delete Response"
+  },
+  "commands": {
+    "title": "Commands",
+    "subtitle": "Manage bot commands and permissions",
+    "slashCommands": "Slash Commands",
+    "prefixCommands": "Prefix Commands",
+    "permissions": "Command Permissions",
+    "enableAll": "Enable All",
+    "disableAll": "Disable All"
+  },
+  "personalization": {
+    "title": "Bot Personalization",
+    "subtitle": "Customize your bot's appearance and behavior",
+    "avatar": "Bot Avatar",
+    "nickname": "Bot Nickname",
+    "status": "Bot Status",
+    "embedColor": "Embed Color",
+    "prefix": "Command Prefix"
+  },
+  "moderation": {
+    "title": "Moderation",
+    "subtitle": "Configure moderation tools and settings",
+    "automod": "Auto Moderation",
+    "warnings": "Warning System",
+    "roles": "Role Management",
+    "logging": "Audit Logging"
+  },
+  "gamesSocials": {
+    "title": "Games & Socials", 
+    "subtitle": "Configure gaming and social features",
+    "leveling": "XP & Leveling",
+    "economy": "Economy System",
+    "socialFeatures": "Social Features",
+    "miniGames": "Mini Games"
+  },
+  "welcome": {
+    "title": "Welcome System",
+    "subtitle": "Configure welcome messages and new member settings",
+    "enabled": "Welcome messages enabled",
+    "channel": "Welcome Channel",
+    "message": "Welcome Message",
+    "roles": "Auto Roles"
+  }
+}

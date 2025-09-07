@@ -4,8 +4,10 @@ import { MODERATION_FEATURES } from './constants';
 import FeatureCard from './components/FeatureCard';
 import ConfigurationModal from './components/ConfigurationModal';
 import LoadingSection from '../../components/LoadingSection';
+import { useI18n } from '../../i18n';
 
 export default function ModerationSection({ guildId, pushToast }) {
+  const { t } = useI18n();
   const [features, setFeatures] = useState({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState({});

@@ -12,6 +12,8 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import './theme.css';
 import './styles/responsive-tables.css';
 import '@fortawesome/fontawesome-free/css/all.min.css';
+// Internationalization
+import { I18nProvider } from './i18n';
 // Layout & structural components
 import Sidebar from './components/Sidebar.jsx';
 import AutoResponseModal from './components/AutoResponseModal.jsx';
@@ -20,6 +22,7 @@ import Navbar from './components/Navbar.jsx';
 import LoginView from './components/LoginView.jsx';
 import GuildSelectionView from './components/GuildSelectionView.jsx';
 import Toasts from './components/Toasts.jsx';
+import LanguageSyncHandler from './components/LanguageSyncHandler.jsx';
 // Highcharts libs will be loaded dynamically (not via React.lazy because they export objects, not components)
 // We'll load them when the Overview section is first viewed
 // Option B: removed DataTables – using pure React table implementation
@@ -1038,35 +1041,39 @@ export default function App(){
   // Login view
   if(view==='login' && !token){
     if(typeof document!=='undefined'){ document.body.classList.add('login-mode'); }
-    return <>
-      <Navbar />
-      <LoginView
-        error={error}
-        authProcessing={authProcessing}
-        loginLoading={loginLoading}
-        startDiscordLogin={startDiscordLogin}
-      />
-      <Footer />
-    </>;
+    return (
+      <I18nProvider>
+        <Navbar guildId={selectedGuild} pushToast={pushToast} />
+        <LoginView
+          error={error}
+          authProcessing={authProcessing}
+          loginLoading={loginLoading}
+          startDiscordLogin={startDiscordLogin}
+        />
+        <Footer />
+      </I18nProvider>
+    );
   } else if(typeof document!=='undefined'){ document.body.classList.remove('login-mode'); }
 
   // Guild selection view
   if(view==='guild'){
-    return <>
-      <Navbar />
-      <GuildSelectionView
-        guilds={guilds}
-        guildSearch={guildSearch}
-        setGuildSearch={setGuildSearch}
-        selectedGuild={selectedGuild}
-        setSelectedGuild={setSelectedGuild}
-        error={error}
-        saveSelectedGuild={saveSelectedGuild}
-        doLogout={doLogout}
-        refreshGuilds={refreshGuilds}
-      />
-      <Footer />
-    </>;
+    return (
+      <I18nProvider>
+        <Navbar guildId={selectedGuild} pushToast={pushToast} />
+        <GuildSelectionView
+          guilds={guilds}
+          guildSearch={guildSearch}
+          setGuildSearch={setGuildSearch}
+          selectedGuild={selectedGuild}
+          setSelectedGuild={setSelectedGuild}
+          error={error}
+          saveSelectedGuild={saveSelectedGuild}
+          doLogout={doLogout}
+          refreshGuilds={refreshGuilds}
+        />
+        <Footer />
+      </I18nProvider>
+    );
   }
 
   // Dashboard view --------------------------------------------------
@@ -1330,13 +1337,16 @@ export default function App(){
     />
   </div>;
   // Toasts container
-  const header = <Navbar />;
-  return <>
-  {header}
-    {content}
-    <Footer />
-    <Toasts toasts={toasts} setToasts={setToasts} />
-  </>;
+  const header = <Navbar guildId={selectedGuild} pushToast={pushToast} />;
+  return (
+    <I18nProvider>
+      <LanguageSyncHandler guildId={selectedGuild} enabled={view === 'dashboard'} />
+      {header}
+      {content}
+      <Footer />
+      <Toasts toasts={toasts} setToasts={setToasts} />
+    </I18nProvider>
+  );
 }
 
 // Self-mount when imported directly as entry (allows removal of main.jsx)
