@@ -64,8 +64,59 @@ module.exports = {
             const channel = await client.channels.fetch(channelId).catch(()=>null);
             if(!channel) return interaction.editReply('Channel fetch failed.');
             if (m.embed_data || m.embedData) {
-              const embedData = m.embed_data || m.embedData;
-              await channel.send({ content: m.message_content || m.messageContent || undefined, embeds: Array.isArray(embedData)? embedData : [embedData] });
+              let embedData = m.embed_data || m.embedData;
+              
+              // Parse JSON if it's a string
+              if (typeof embedData === 'string') {
+                try {
+                  embedData = JSON.parse(embedData);
+                } catch (e) {
+                  console.error('Failed to parse embed data:', e);
+                  return interaction.editReply('Invalid embed data format.');
+                }
+              }
+              
+              // Process embed data similar to scheduler service
+              let embedArray = Array.isArray(embedData) ? embedData : [embedData];
+              
+              embedArray = embedArray.map(embed => {
+                const processedEmbed = { ...embed };
+                
+                // Convert color from hex string to integer
+                if (processedEmbed.color && typeof processedEmbed.color === 'string') {
+                  const hexColor = processedEmbed.color.replace('#', '');
+                  processedEmbed.color = parseInt(hexColor, 16);
+                }
+                
+                // Ensure footer, thumbnail, and image are proper objects or removed if empty
+                if (processedEmbed.footer && typeof processedEmbed.footer === 'string') {
+                  if (processedEmbed.footer.trim()) {
+                    processedEmbed.footer = { text: processedEmbed.footer };
+                  } else {
+                    delete processedEmbed.footer;
+                  }
+                }
+                
+                if (processedEmbed.thumbnail && typeof processedEmbed.thumbnail === 'string') {
+                  if (processedEmbed.thumbnail.trim()) {
+                    processedEmbed.thumbnail = { url: processedEmbed.thumbnail };
+                  } else {
+                    delete processedEmbed.thumbnail;
+                  }
+                }
+                
+                if (processedEmbed.image && typeof processedEmbed.image === 'string') {
+                  if (processedEmbed.image.trim()) {
+                    processedEmbed.image = { url: processedEmbed.image };
+                  } else {
+                    delete processedEmbed.image;
+                  }
+                }
+                
+                return processedEmbed;
+              });
+              
+              await channel.send({ content: m.message_content || m.messageContent || undefined, embeds: embedArray });
             } else {
               await channel.send({ content: m.message_content || m.messageContent });
             }

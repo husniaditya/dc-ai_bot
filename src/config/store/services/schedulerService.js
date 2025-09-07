@@ -100,13 +100,56 @@ async function dispatch(client, guildId, message){
     const channel = await client.channels.fetch(message.channelId).catch(()=>null);
     if (!channel || !channel.send) return log('Channel fetch/send failed', message.channelId);
     if (message.embedData){
-      // Simple embed support (expects already validated embedData structure)
-      await channel.send({ content: message.messageContent || undefined, embeds: Array.isArray(message.embedData)? message.embedData : [message.embedData] });
+      // Simple embed support with proper color conversion
+      let embedArray = Array.isArray(message.embedData) ? message.embedData : [message.embedData];
+      
+      // Convert string colors to integers and fix embed structure
+      embedArray = embedArray.map(embed => {
+        const processedEmbed = { ...embed };
+        
+        // Convert color from hex string to integer
+        if (processedEmbed.color && typeof processedEmbed.color === 'string') {
+          const hexColor = processedEmbed.color.replace('#', '');
+          processedEmbed.color = parseInt(hexColor, 16);
+        }
+        
+        // Ensure footer, thumbnail, and image are proper objects or removed if empty
+        if (processedEmbed.footer && typeof processedEmbed.footer === 'string') {
+          if (processedEmbed.footer.trim()) {
+            processedEmbed.footer = { text: processedEmbed.footer };
+          } else {
+            delete processedEmbed.footer;
+          }
+        }
+        
+        if (processedEmbed.thumbnail && typeof processedEmbed.thumbnail === 'string') {
+          if (processedEmbed.thumbnail.trim()) {
+            processedEmbed.thumbnail = { url: processedEmbed.thumbnail };
+          } else {
+            delete processedEmbed.thumbnail;
+          }
+        }
+        
+        if (processedEmbed.image && typeof processedEmbed.image === 'string') {
+          if (processedEmbed.image.trim()) {
+            processedEmbed.image = { url: processedEmbed.image };
+          } else {
+            delete processedEmbed.image;
+          }
+        }
+        
+        return processedEmbed;
+      });
+      
+      await channel.send({ content: message.messageContent || undefined, embeds: embedArray });
     } else {
       await channel.send({ content: message.messageContent });
     }
     await markLastRun(guildId, message.id);
-  } catch (e) { log('Dispatch error', e.message); }
+  } catch (e) { 
+    log('Dispatch error', e.message);
+    console.error('Full dispatch error:', e);
+  }
 }
 
 function scheduleJob(client, guildId, message){

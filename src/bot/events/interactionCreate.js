@@ -1,6 +1,7 @@
 const { explainImage } = require('../../utils/ai-client');
 const { sendLongReply } = require('../../utils/util');
 const { checkCommandAndReply } = require('../../utils/validation');
+const { withCommandLogging } = require('../../config/store/middleware/commandLogging');
 const axios = require('axios');
 
 function setupInteractionCreateHandler(client, store, startTimestamp, commandMap) {
@@ -223,7 +224,12 @@ async function handleChatInputCommand(interaction, client, store, commandMap) {
   }
 
   try { 
-    await cmd.execute(interaction, store); 
+    // Wrap command execution with automatic logging
+    const loggedExecute = withCommandLogging(cmd.execute, { 
+      name: interaction.commandName,
+      category: getCategoryForCommand(interaction.commandName)
+    });
+    await loggedExecute(interaction, store); 
   } catch (e) {
     console.error(`Command error for ${interaction.commandName}:`, e);
     
@@ -362,6 +368,67 @@ async function handleRoleMenuSelect(interaction) {
       });
     }
   }
+}
+
+// Helper function to categorize commands for analytics
+function getCategoryForCommand(commandName) {
+  const categories = {
+    // Moderation commands
+    'ban': 'moderation',
+    'kick': 'moderation', 
+    'timeout': 'moderation',
+    'warn': 'moderation',
+    'purge': 'moderation',
+    'mute': 'moderation',
+    'unmute': 'moderation',
+    'automod': 'moderation',
+    'audit': 'moderation',
+    
+    // Utility commands
+    'ping': 'utility',
+    'help': 'utility',
+    'whoami': 'utility',
+    'uptime': 'utility',
+    'user': 'utility',
+    'math': 'utility',
+    
+    // Fun commands
+    'poll': 'fun',
+    'echo': 'fun',
+    
+    // XP/Leveling
+    'level': 'leveling',
+    'rank': 'leveling',
+    'leaderboard': 'leveling',
+    'xp': 'leveling',
+    'xpadmin': 'leveling',
+    
+    // Auto systems
+    'scheduler': 'automation',
+    'autorole': 'automation',
+    'welcome': 'automation',
+    'role': 'automation',
+    
+    // AI Integration
+    'ask': 'ai',
+    'askfollow': 'ai',
+    'explain_image': 'ai',
+    'summarize': 'ai',
+    'translate': 'ai',
+    
+    // Streaming/Social
+    'ytwatch': 'streaming',
+    'ytstats': 'streaming',
+    'ytdebug': 'streaming',
+    'twitchstats': 'streaming',
+    'twitchdebug': 'streaming',
+    
+    // Configuration
+    'config': 'configuration',
+    'settings': 'configuration'
+  };
+  
+  return categories[commandName.toLowerCase()] || 'other';
 }
 
 module.exports = setupInteractionCreateHandler;

@@ -8,7 +8,8 @@ const DEFAULT_INTENTS = [
 
 const PRIVILEGED_INTENTS = [
   GatewayIntentBits.MessageContent,
-  GatewayIntentBits.GuildMembers
+  GatewayIntentBits.GuildMembers,
+  GatewayIntentBits.GuildPresences
 ];
 
 function getIntents() {
@@ -22,6 +23,11 @@ function getIntents() {
   // Guild Members intent (privileged) – required for welcome join tracking & some member operations
   if (process.env.ENABLE_GUILD_MEMBERS === '1' || process.env.ENABLE_WELCOME === '1') {
     intents.push(GatewayIntentBits.GuildMembers);
+  }
+  
+  // Guild Presences intent (privileged) – required for member online/offline status
+  if (process.env.ENABLE_GUILD_PRESENCES === '1') {
+    intents.push(GatewayIntentBits.GuildPresences);
   }
   
   return intents;
