@@ -439,6 +439,97 @@ html:not(.dark) .theme-toggle input:checked + .track .thumb { background:linear-
 html:not(.dark) .brand-logo { box-shadow:0 2px 6px -2px rgba(0,0,0,0.4),0 0 0 1px rgba(0,0,0,0.1); }
 html:not(.dark) .app-footer { color: var(--text-muted); }
 
+/* Light theme overrides for overview section activity stream and command leaderboard */
+html:not(.dark) .activity-stream {
+  background: rgba(248, 250, 252, 0.8) !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  border-radius: 8px;
+  padding: 0.5rem;
+}
+
+html:not(.dark) .activity-item {
+  background: rgba(255, 255, 255, 0.7) !important;
+  border: 1px solid rgba(0, 0, 0, 0.05) !important;
+  border-radius: 6px;
+  margin-bottom: 0.25rem;
+  padding: 0.5rem !important;
+}
+
+html:not(.dark) .activity-item:hover {
+  background: rgba(255, 255, 255, 0.9) !important;
+  border-color: rgba(0, 0, 0, 0.1) !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+}
+
+html:not(.dark) .activity-item .text-light {
+  color: #1f2937 !important;
+}
+
+html:not(.dark) .activity-item .text-muted {
+  color: #6b7280 !important;
+}
+
+html:not(.dark) .activity-dot {
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+html:not(.dark) .command-leaderboard {
+  background: rgba(248, 250, 252, 0.8) !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  border-radius: 8px;
+  padding: 0.5rem;
+}
+
+html:not(.dark) .command-rank {
+  background: rgba(255, 255, 255, 0.7) !important;
+  border: 1px solid rgba(0, 0, 0, 0.05) !important;
+  border-radius: 6px;
+  margin-bottom: 0.25rem;
+  padding: 0.5rem !important;
+}
+
+html:not(.dark) .command-rank:hover {
+  background: rgba(255, 255, 255, 0.9) !important;
+  border-color: rgba(0, 0, 0, 0.1) !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+}
+
+html:not(.dark) .command-rank .text-light {
+  color: #1f2937 !important;
+}
+
+html:not(.dark) .command-rank .text-muted {
+  color: #6b7280 !important;
+}
+
+html:not(.dark) .rank-badge {
+  background: rgba(99, 102, 241, 0.1) !important;
+  color: #6366f1 !important;
+  border: 1px solid rgba(99, 102, 241, 0.2) !important;
+}
+
+html:not(.dark) .rank-badge.gold {
+  background: rgba(245, 158, 11, 0.1) !important;
+  color: #d97706 !important;
+  border: 1px solid rgba(245, 158, 11, 0.2) !important;
+}
+
+html:not(.dark) .rank-badge.silver {
+  background: rgba(107, 114, 128, 0.1) !important;
+  color: #6b7280 !important;
+  border: 1px solid rgba(107, 114, 128, 0.2) !important;
+}
+
+html:not(.dark) .rank-badge.bronze {
+  background: rgba(194, 120, 77, 0.1) !important;
+  color: #c2784d !important;
+  border: 1px solid rgba(194, 120, 77, 0.2) !important;
+}
+
+html:not(.dark) .progress-ring {
+  background: rgba(0, 0, 0, 0.08) !important;
+}
+
 html.dark body {
   --bg-gradient: linear-gradient(135deg,#0f1119 0%, #131826 40%, #0d1018 100%);
 }
@@ -4008,18 +4099,22 @@ html:not(.dark) .mini-progress {
 .activity-item {
   border-bottom: 1px solid rgba(255,255,255,0.05);
   transition: var(--transition);
+  border-radius: 6px;
+  margin-bottom: 0.25rem;
+  padding: 0.5rem;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.08);
 }
 
 .activity-item:last-child {
-  border-bottom: none;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
 }
 
 .activity-item:hover {
-  background: rgba(255,255,255,0.02);
-  margin: 0 -0.75rem;
-  padding-left: 0.75rem;
-  padding-right: 0.75rem;
-  border-radius: var(--radius-sm);
+  background: rgba(255,255,255,0.08);
+  border-color: rgba(255,255,255,0.15);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  transform: translateY(-1px);
 }
 
 html:not(.dark) .activity-item {

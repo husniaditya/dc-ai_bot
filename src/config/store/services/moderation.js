@@ -2273,6 +2273,48 @@ async function deleteAuditLogEntry(guildId, logId) {
   throw new Error('Database not available');
 }
 
+// Anti-raid logging
+async function insertAntiRaidLog(guildId, logData) {
+  if (!guildId) throw new Error('guildId required');
+  if (!logData.eventType) throw new Error('eventType required');
+  
+  if (db.mariaAvailable && db.sqlPool) {
+    try {
+      const [result] = await db.sqlPool.query(`
+        INSERT INTO guild_antiraid_logs(
+          guild_id, event_type, user_id, user_tag, account_age_days, join_timestamp,
+          raid_id, joins_in_window, young_account_ratio, action_type, action_duration,
+          moderator_id, member_count_at_join, join_source, verification_level_at_join,
+          created_at
+        ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,NOW())
+      `, [
+        guildId,
+        logData.eventType,
+        logData.userId || null,
+        logData.userTag || null,
+        logData.accountAgeDays || null,
+        logData.joinTimestamp || null,
+        logData.raidId || null,
+        logData.joinsInWindow || null,
+        logData.youngAccountRatio || null,
+        logData.actionType || null,
+        logData.actionDuration || null,
+        logData.moderatorId || null,
+        logData.memberCountAtJoin || null,
+        logData.joinSource || null,
+        logData.verificationLevelAtJoin || null
+      ]);
+      
+      return result.insertId;
+    } catch (e) {
+      console.error('Error inserting anti-raid log:', e.message);
+      throw e;
+    }
+  }
+  
+  throw new Error('Database not available');
+}
+
 module.exports = {
   getModerationFeatures,
   toggleModerationFeature,
@@ -2338,5 +2380,7 @@ module.exports = {
   updateGuildAuditLogConfig,
   getGuildAuditLogs,
   createAuditLogEntry,
-  deleteAuditLogEntry
+  deleteAuditLogEntry,
+  // Anti-raid logging
+  insertAntiRaidLog
 };
