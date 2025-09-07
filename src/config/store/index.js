@@ -239,6 +239,9 @@ module.exports = {
   createAuditLogEntry: moderationService.createAuditLogEntry,
   deleteAuditLogEntry: moderationService.deleteAuditLogEntry,
   
+  // Anti-Raid Logging API
+  insertAntiRaidLog: moderationService.insertAntiRaidLog,
+  
   // Self-Assignable Roles API
   getGuildSelfAssignableRoles: moderationService.getGuildSelfAssignableRoles,
   addGuildSelfAssignableRole: moderationService.addGuildSelfAssignableRole,

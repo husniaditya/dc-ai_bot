@@ -10,6 +10,23 @@ const guildJoinTracking = new Map();
 const newMemberTracking = new Map();
 
 /**
+ * Map raid action config values to database enum values
+ * @param {string} action - The configured raid action
+ * @returns {string|null} - Valid enum value or null
+ */
+function mapRaidActionToEnum(action) {
+  const actionMap = {
+    'kick': 'kick',
+    'ban': 'ban',
+    'mute': 'mute',
+    'lockdown': 'lockdown',
+    'none': 'alert_only',
+    'alert': 'alert_only'
+  };
+  return actionMap[action] || 'alert_only';
+}
+
+/**
  * Initialize anti-raid monitoring for a guild member join
  * @param {GuildMember} member - The member who joined
  * @param {Object} store - Database store instance
@@ -34,6 +51,30 @@ async function handleMemberJoin(member, store, client) {
       );
       if (hasBypassRole) {
         console.log(`[AntiRaid] User ${userId} bypassed anti-raid protection in guild ${guildId} (bypass role)`);
+        
+        // Log bypass event
+        try {
+          if (store.insertAntiRaidLog) {
+            await store.insertAntiRaidLog(guildId, {
+              eventType: 'legitimate_join',
+              userId: userId,
+              userTag: member.user.tag,
+              accountAgeDays: Math.round(((Date.now() - member.user.createdTimestamp) / (1000 * 60 * 60 * 24)) * 10) / 10,
+              joinTimestamp: member.joinedAt || new Date(),
+              joinsInWindow: 1, // Single join
+              youngAccountRatio: 0.0, // Bypass users are trusted
+              actionType: 'none', // No action taken for bypass
+              actionDuration: 0, // No duration for bypass
+              moderatorId: null, // Automated system action
+              memberCountAtJoin: member.guild.memberCount,
+              verificationLevelAtJoin: member.guild.verificationLevel,
+              joinSource: 'bypass_role'
+            });
+          }
+        } catch (logError) {
+          console.error('[AntiRaid] Error logging bypass join:', logError);
+        }
+        
         return;
       }
     }
@@ -61,6 +102,33 @@ async function handleMemberJoin(member, store, client) {
     // Check for raid conditions
     const isRaid = checkForRaid(recentJoins, config);
     const isSuspicious = checkSuspiciousAccount(member, config, accountAgeDays);
+    
+    // Calculate young account ratio for this join window
+    const youngAccounts = recentJoins.filter(join => join.accountAgeDays < (config.accountAge || 7)).length;
+    const youngAccountRatio = recentJoins.length > 0 ? youngAccounts / recentJoins.length : 0;
+    
+    // Log member join to database
+    try {
+      if (store.insertAntiRaidLog) {
+        await store.insertAntiRaidLog(guildId, {
+          eventType: isSuspicious ? 'suspicious_member' : 'legitimate_join',
+          userId: userId,
+          userTag: member.user.tag,
+          accountAgeDays: Math.round(accountAgeDays * 10) / 10, // Round to 1 decimal
+          joinTimestamp: member.joinedAt || new Date(), // Actual join timestamp
+          joinsInWindow: recentJoins.length,
+          youngAccountRatio: Math.round(youngAccountRatio * 100) / 100, // Round to 2 decimals
+          actionType: isSuspicious ? 'monitor' : 'none', // Action taken for this specific join
+          actionDuration: 0, // No immediate action duration for regular joins
+          moderatorId: null, // Automated system detection
+          memberCountAtJoin: member.guild.memberCount,
+          verificationLevelAtJoin: member.guild.verificationLevel,
+          joinSource: 'direct' // Default, can be enhanced with invite tracking
+        });
+      }
+    } catch (logError) {
+      console.error('[AntiRaid] Error logging member join:', logError);
+    }
     
     if (isRaid) {
       await handleRaidDetected(member.guild, config, store, client, recentJoins);
@@ -146,6 +214,29 @@ async function handleRaidDetected(guild, config, store, client, recentJoins) {
   try {
     console.log(`[AntiRaid] RAID DETECTED in guild ${guild.id} - ${recentJoins.length} recent joins`);
     
+    // Log raid detection to database
+    try {
+      if (store.insertAntiRaidLog) {
+        const youngAccounts = recentJoins.filter(join => join.accountAgeDays < (config.accountAge || 7)).length;
+        const raidId = `raid_${guild.id}_${Date.now()}`; // Generate unique raid ID
+        
+        await store.insertAntiRaidLog(guild.id, {
+          eventType: 'raid_detected',
+          raidId: raidId,
+          joinTimestamp: new Date(),
+          joinsInWindow: recentJoins.length,
+          youngAccountRatio: Math.round((youngAccounts / recentJoins.length) * 100) / 100,
+          actionType: config.raidAction || 'lockdown',
+          actionDuration: config.raidActionDuration || 5,
+          moderatorId: null, // Automated raid response
+          memberCountAtJoin: guild.memberCount,
+          verificationLevelAtJoin: guild.verificationLevel
+        });
+      }
+    } catch (logError) {
+      console.error('[AntiRaid] Error logging raid detection:', logError);
+    }
+    
     // Send alert to configured channel
     if (config.alertChannel) {
       await sendRaidAlert(guild, config.alertChannel, recentJoins, client);
@@ -200,6 +291,29 @@ async function handleSuspiciousAccount(member, config, store, client, accountAge
       try {
         await member.kick('Auto-kick: Suspicious account detected by anti-raid protection');
         console.log(`[AntiRaid] Auto-kicked suspicious account: ${member.user.tag}`);
+        
+        // Log the kick action
+        try {
+          if (store.insertAntiRaidLog) {
+            await store.insertAntiRaidLog(member.guild.id, {
+              eventType: 'suspicious_member',
+              userId: member.user.id,
+              userTag: member.user.tag,
+              accountAgeDays: Math.round(accountAgeDays * 10) / 10,
+              joinTimestamp: member.joinedAt || new Date(),
+              joinsInWindow: 1, // Individual action
+              youngAccountRatio: 1.0, // 100% young account (the kicked user)
+              actionType: 'kick',
+              actionDuration: 0, // Kick is immediate, no duration
+              moderatorId: null, // Automated auto-kick
+              memberCountAtJoin: member.guild.memberCount,
+              verificationLevelAtJoin: member.guild.verificationLevel,
+              joinSource: 'auto_kicked'
+            });
+          }
+        } catch (logError) {
+          console.error('[AntiRaid] Error logging auto-kick:', logError);
+        }
         
         // Send notification to alert channel
         if (config.alertChannel) {
@@ -468,6 +582,29 @@ async function handleNewMemberMessage(message, config, store, client) {
         if (member && member.kickable) {
           await member.kick(`Anti-raid protection: ${reason} during grace period`);
           console.log(`[AntiRaid] Auto-kicked new member for ${reason}: ${message.author.tag}`);
+          
+          // Log the grace period kick
+          try {
+            if (store.insertAntiRaidLog) {
+              await store.insertAntiRaidLog(message.guild.id, {
+                eventType: 'suspicious_member',
+                userId: message.author.id,
+                userTag: message.author.tag,
+                accountAgeDays: Math.round(((Date.now() - message.author.createdTimestamp) / (1000 * 60 * 60 * 24)) * 10) / 10,
+                joinTimestamp: new Date(),
+                joinsInWindow: 1, // Individual violation
+                youngAccountRatio: 1.0, // 100% - this is the violating user
+                actionType: 'kick',
+                actionDuration: 0, // Kick is immediate
+                moderatorId: null, // Automated grace period enforcement
+                memberCountAtJoin: message.guild.memberCount,
+                verificationLevelAtJoin: message.guild.verificationLevel,
+                joinSource: `grace_violation_${reason.toLowerCase().replace(/\s+/g, '_')}`
+              });
+            }
+          } catch (logError) {
+            console.error('[AntiRaid] Error logging grace period kick:', logError);
+          }
           
           // Send notification
           if (config.alertChannel) {

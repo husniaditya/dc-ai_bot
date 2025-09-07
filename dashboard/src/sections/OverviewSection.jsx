@@ -164,6 +164,48 @@ export default function OverviewSection({ analytics, apiStatus, autos, totalEnab
                     <div className="feature-item d-flex justify-content-between align-items-center py-2">
                       <div className="d-flex align-items-center">
                         <div className="feature-icon me-2">
+                          <i className="fas fa-users-cog text-purple"></i>
+                        </div>
+                        <span className="small">Role Management</span>
+                      </div>
+                      <span className={`badge ${analytics?.features?.role_management_enabled === true ? 'bg-success' : analytics?.features?.role_management_enabled === false ? 'bg-danger' : 'bg-warning'}`}>
+                        {analytics?.features?.role_management_enabled === true ? 'Enabled' : analytics?.features?.role_management_enabled === false ? 'Disabled' : 'Partial'}
+                      </span>
+                    </div>
+                    <div className="feature-item d-flex justify-content-between align-items-center py-2">
+                      <div className="d-flex align-items-center">
+                        <div className="feature-icon me-2">
+                          <i className="fas fa-star text-warning"></i>
+                        </div>
+                        <span className="small">XP & Leveling</span>
+                      </div>
+                      <span className={`badge ${analytics?.features?.xp_enabled ? 'bg-success' : analytics?.features?.xp_enabled === false ? 'bg-danger' : 'bg-success'}`}>
+                        {analytics?.features?.xp_enabled ? 'Enabled' : analytics?.features?.xp_enabled === false ? 'Disabled' : 'Active'}
+                      </span>
+                    </div>
+                    <div className="feature-item d-flex justify-content-between align-items-center py-2">
+                      <div className="d-flex align-items-center">
+                        <div className="feature-icon me-2">
+                          <i className="fas fa-calendar-alt text-success"></i>
+                        </div>
+                        <span className="small">Scheduler</span>
+                      </div>
+                      <span className={`badge ${analytics?.features?.scheduler_enabled ? 'bg-success' : analytics?.features?.scheduler_enabled === false ? 'bg-danger' : 'bg-success'}`}>
+                        {analytics?.features?.scheduler_enabled ? 'Enabled' : analytics?.features?.scheduler_enabled === false ? 'Disabled' : 'Active'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Advanced Features */}
+              <div className="col-md-6">
+                <div className="feature-group">
+                  <h6 className="small text-muted mb-2">Advanced Features</h6>
+                  <div className="feature-list">
+                    <div className="feature-item d-flex justify-content-between align-items-center py-2">
+                      <div className="d-flex align-items-center">
+                        <div className="feature-icon me-2">
                           <i className="fas fa-robot text-warning"></i>
                         </div>
                         <span className="small">Auto Moderation</span>
@@ -186,54 +228,12 @@ export default function OverviewSection({ analytics, apiStatus, autos, totalEnab
                     <div className="feature-item d-flex justify-content-between align-items-center py-2">
                       <div className="d-flex align-items-center">
                         <div className="feature-icon me-2">
-                          <i className="fas fa-star text-warning"></i>
-                        </div>
-                        <span className="small">XP & Leveling</span>
-                      </div>
-                      <span className={`badge ${analytics?.features?.xp_enabled ? 'bg-success' : analytics?.features?.xp_enabled === false ? 'bg-danger' : 'bg-success'}`}>
-                        {analytics?.features?.xp_enabled ? 'Enabled' : analytics?.features?.xp_enabled === false ? 'Disabled' : 'Active'}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              
-              {/* Advanced Features */}
-              <div className="col-md-6">
-                <div className="feature-group">
-                  <h6 className="small text-muted mb-2">Advanced Features</h6>
-                  <div className="feature-list">
-                    <div className="feature-item d-flex justify-content-between align-items-center py-2">
-                      <div className="d-flex align-items-center">
-                        <div className="feature-icon me-2">
-                          <i className="fas fa-calendar-alt text-success"></i>
-                        </div>
-                        <span className="small">Scheduler</span>
-                      </div>
-                      <span className={`badge ${analytics?.features?.scheduler_enabled ? 'bg-success' : analytics?.features?.scheduler_enabled === false ? 'bg-danger' : 'bg-success'}`}>
-                        {analytics?.features?.scheduler_enabled ? 'Enabled' : analytics?.features?.scheduler_enabled === false ? 'Disabled' : 'Active'}
-                      </span>
-                    </div>
-                    <div className="feature-item d-flex justify-content-between align-items-center py-2">
-                      <div className="d-flex align-items-center">
-                        <div className="feature-icon me-2">
                           <i className="fas fa-clipboard-list text-info"></i>
                         </div>
                         <span className="small">Audit Logging</span>
                       </div>
                       <span className={`badge ${analytics?.features?.audit_enabled ? 'bg-success' : analytics?.features?.audit_enabled === false ? 'bg-danger' : 'bg-success'}`}>
                         {analytics?.features?.audit_enabled ? 'Enabled' : analytics?.features?.audit_enabled === false ? 'Disabled' : 'Active'}
-                      </span>
-                    </div>
-                    <div className="feature-item d-flex justify-content-between align-items-center py-2">
-                      <div className="d-flex align-items-center">
-                        <div className="feature-icon me-2">
-                          <i className="fas fa-users-cog text-purple"></i>
-                        </div>
-                        <span className="small">Role Management</span>
-                      </div>
-                      <span className={`badge ${analytics?.features?.role_management_enabled === true ? 'bg-success' : analytics?.features?.role_management_enabled === false ? 'bg-danger' : 'bg-warning'}`}>
-                        {analytics?.features?.role_management_enabled === true ? 'Enabled' : analytics?.features?.role_management_enabled === false ? 'Disabled' : 'Partial'}
                       </span>
                     </div>
                   </div>
@@ -725,13 +725,13 @@ export default function OverviewSection({ analytics, apiStatus, autos, totalEnab
               <div className="security-metric">
                 <div className="d-flex justify-content-between align-items-center mb-2">
                   <span className="small text-muted">Protection Status</span>
-                  <span className={`badge ${(analytics?.security?.antiRaid?.enabled || true) ? 'bg-success' : 'bg-danger'}`}>
-                    {(analytics?.security?.antiRaid?.enabled || true) ? 'Active' : 'Disabled'}
+                  <span className={`badge ${analytics?.security?.antiRaid?.enabled ? 'bg-success' : 'bg-danger'}`}>
+                    {analytics?.security?.antiRaid?.enabled ? 'Enabled' : 'Disabled'}
                   </span>
                 </div>
                 <div className="security-details">
-                  <div className="small text-muted">Join Rate Limit: <span className="text-info">{analytics?.security?.antiRaid?.joinRate || 5}/10s</span></div>
-                  <div className="small text-muted">Min Account Age: <span className="text-info">{analytics?.security?.antiRaid?.accountAge || 7} days</span></div>
+                  <div className="small text-muted">Join Rate Limit: <span className="text-info">{analytics?.security?.antiRaid?.joinRate || 5}/{analytics?.security?.antiRaid?.joinWindow || 60}s</span></div>
+                  <div className="small text-muted">Min Account Age: <span className="text-info">{analytics?.security?.antiRaid?.accountAge || 7} day(s)</span></div>
                 </div>
               </div>
             </div>
@@ -742,19 +742,19 @@ export default function OverviewSection({ analytics, apiStatus, autos, totalEnab
               <div className="row g-2 text-center">
                 <div className="col-4">
                   <div className="raid-stat">
-                    <div className="raid-value text-danger">{analytics?.security?.antiRaid?.raidsBlocked || 2}</div>
+                    <div className="raid-value text-danger">{analytics?.security?.antiRaid?.raidsBlockedToday || 'N/A'}</div>
                     <div className="raid-label">Raids Blocked</div>
                   </div>
                 </div>
                 <div className="col-4">
                   <div className="raid-stat">
-                    <div className="raid-value text-warning">{analytics?.security?.antiRaid?.suspiciousAccounts || 14}</div>
+                    <div className="raid-value text-warning">{analytics?.security?.antiRaid?.suspiciousToday || 'N/A'}</div>
                     <div className="raid-label">Suspicious</div>
                   </div>
                 </div>
                 <div className="col-4">
                   <div className="raid-stat">
-                    <div className="raid-value text-success">{analytics?.security?.antiRaid?.legitimateJoins || 48}</div>
+                    <div className="raid-value text-success">{analytics?.security?.antiRaid?.legitimateToday || 'N/A'}</div>
                     <div className="raid-label">Legitimate</div>
                   </div>
                 </div>

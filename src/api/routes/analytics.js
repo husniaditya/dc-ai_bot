@@ -308,6 +308,76 @@ function createAnalyticsRoutes(client, store, startTimestamp, commandMap) {
         console.warn('Could not fetch moderation features:', featuresError.message);
       }
       
+      // Get anti-raid settings and statistics
+      let antiRaidData = {
+        enabled: false,
+        joinRate: 5,
+        joinWindow: 60,
+        accountAge: 7,
+        raidsBlockedToday: 0,
+        suspiciousToday: 0,
+        legitimateToday: 0,
+        joinPattern: [0, 0, 0, 0, 0, 0] // Last 6 hours
+      };
+      
+      try {
+        if (guildId && store.getGuildAntiRaidSettings) {
+          const antiRaidSettings = await store.getGuildAntiRaidSettings(guildId);
+          antiRaidData.enabled = antiRaidSettings.enabled;
+          antiRaidData.joinRate = antiRaidSettings.joinRate;
+          antiRaidData.joinWindow = antiRaidSettings.joinWindow;
+          antiRaidData.accountAge = antiRaidSettings.accountAge;
+        }
+        
+        // Get anti-raid statistics from logs table
+        if (guildId && store.sqlPool) {
+          // Get today's raid statistics
+          const [todayStats] = await store.sqlPool.query(`
+            SELECT 
+              SUM(CASE WHEN event_type = 'raid_detected' THEN 1 ELSE 0 END) as raids_blocked,
+              SUM(CASE WHEN event_type = 'suspicious_member' THEN 1 ELSE 0 END) as suspicious,
+              SUM(CASE WHEN event_type = 'legitimate_join' THEN 1 ELSE 0 END) as legitimate
+            FROM guild_antiraid_logs 
+            WHERE guild_id = ? AND DATE(created_at) = CURDATE()
+          `, [guildId]);
+          
+          if (todayStats.length > 0) {
+            antiRaidData.raidsBlockedToday = todayStats[0].raids_blocked || 0;
+            antiRaidData.suspiciousToday = todayStats[0].suspicious || 0;
+            antiRaidData.legitimateToday = todayStats[0].legitimate || 0;
+          }
+          
+          // Get join pattern for last 6 hours
+          const [joinPattern] = await store.sqlPool.query(`
+            SELECT 
+              HOUR(created_at) as hour,
+              COUNT(*) as joins
+            FROM guild_antiraid_logs 
+            WHERE guild_id = ? 
+              AND event_type IN ('legitimate_join', 'suspicious_member')
+              AND created_at >= NOW() - INTERVAL 6 HOUR
+            GROUP BY HOUR(created_at)
+            ORDER BY hour DESC
+            LIMIT 6
+          `, [guildId]);
+          
+          // Fill join pattern array (6 hours ago to now)
+          const currentHour = new Date().getHours();
+          const pattern = new Array(6).fill(0);
+          
+          joinPattern.forEach(row => {
+            const hourDiff = (currentHour - row.hour + 24) % 24;
+            if (hourDiff < 6) {
+              pattern[5 - hourDiff] = row.joins;
+            }
+          });
+          
+          antiRaidData.joinPattern = pattern;
+        }
+      } catch (antiRaidError) {
+        console.warn('Could not fetch anti-raid settings:', antiRaidError.message);
+      }
+
       if (guildId && store.sqlPool) {
         try {
           // Total violations today
@@ -471,6 +541,16 @@ function createAnalyticsRoutes(client, store, startTimestamp, commandMap) {
             effectivenessImprovement: violationData.effectivenessImprovement,
             violations: violationData.byType,
             actions: violationData.byAction
+          },
+          antiRaid: {
+            enabled: antiRaidData.enabled,
+            joinRate: antiRaidData.joinRate,
+            joinWindow: antiRaidData.joinWindow,
+            accountAge: antiRaidData.accountAge,
+            raidsBlockedToday: antiRaidData.raidsBlockedToday,
+            suspiciousToday: antiRaidData.suspiciousToday,
+            legitimateToday: antiRaidData.legitimateToday,
+            joinPattern: antiRaidData.joinPattern
           },
           violationsToday: violationData.todayTotal,
           violationsWeek: violationData.weeklyTotal,
