@@ -2,12 +2,7 @@
 
 # 🤖 Discord AI Bot & Modern Dashboard
 
-A comprehensive Discord bot powered by Google's Gemini AI with an elegant React dashboard. Features int## 📚 Documentation
-
-### 🛡️ Moderation System Documentationigent conversations,## 🛠️ Comprehensive Moderation System
-
-### Core Moderation Featuresage analysis, content mod### Planned Features 🚧
-- **📊 Enhanced Analytics**: Detailed usage statistics and performance metricsation, and advanced server management tools.
+A comprehensive Discord bot powered by Google's Gemini AI with an elegant React dashboard. Features intelligent conversations, image analysis, content moderation, and advanced server management tools.
 
 [![Discord.js](https://img.shields.io/badge/discord.js-v14.21.0-blue.svg)](https://discord.js.org/)
 [![Node.js](https://img.shields.io/badge/node.js-16.9.0+-green.svg)](https://nodejs.org/)
@@ -35,6 +30,21 @@ https://discord.com/oauth2/authorize?client_id=951335667756072981&scope=bot%20ap
 - **Context Menu Integration**: Right-click actions for quick AI operations
 
 ### 📊 Modern Dashboard
+
+<div align="center">
+  <img src="https://github.com/husniaditya/dc-ai_bot/blob/main/dashboard/public/images/dashboard/dashboard_statistics.png" alt="Dashboard Statistics" width="48%">
+  <img src="https://github.com/husniaditya/dc-ai_bot/blob/main/dashboard/public/images/dashboard/dashboard_activity.png" alt="Dashboard Activity" width="48%">
+</div>
+
+<div align="center">
+  <img src="https://github.com/husniaditya/dc-ai_bot/blob/main/dashboard/public/images/dashboard/dashboard_automod.png" alt="Dashboard Auto Moderation" width="48%">
+  <img src="https://github.com/husniaditya/dc-ai_bot/blob/main/dashboard/public/images/dashboard/dashboard_security.png" alt="Dashboard Security" width="48%">
+</div>
+
+<p align="center">
+  <em>Dashboard overview showing statistics, activity monitoring, auto-moderation settings, and security features</em>
+</p>
+
 - **OAuth2 Integration**: Secure Discord login with guild management
 - **Real-time Management**: Live auto-response configuration and testing
 - **Intuitive UI**: Glass-morphism design with dark/light theme support
@@ -42,6 +52,15 @@ https://discord.com/oauth2/authorize?client_id=951335667756072981&scope=bot%20ap
 - **Comprehensive Moderation**: Full suite of moderation tools and configuration
 
 ### 🛡️ Advanced Moderation System
+
+<div align="center">
+  <img src="https://github.com/husniaditya/dc-ai_bot/blob/main/dashboard/public/images/dashboard/moderation.png" alt="Moderation Dashboard" width="70%">
+</div>
+
+<p align="center">
+  <em>Comprehensive moderation dashboard with real-time controls and configuration options</em>
+</p>
+
 - **🚪 Welcome System**: Customizable welcome messages, cards, and auto-role assignment
 - **🤖 Auto Moderation**: Spam detection, content filtering, link security with VirusTotal/SafeBrowsing integration
 - **👥 Role Management**: Reaction roles, self-assignable roles, and permission management
@@ -81,6 +100,15 @@ https://discord.com/oauth2/authorize?client_id=951335667756072981&scope=bot%20ap
 ## 📋 Available Commands
 
 ### 🎯 Core Commands
+
+<div align="center">
+  <img src="https://github.com/husniaditya/dc-ai_bot/blob/main/dashboard/public/images/dashboard/commands_list.png" alt="Commands List" width="60%">
+</div>
+
+<p align="center">
+  <em>Interactive commands interface showing all available bot commands and their usage</em>
+</p>
+
 | Command | Description | Usage |
 |---------|-------------|--------|
 | `/ping` | Check bot responsiveness | `/ping` |
@@ -165,7 +193,8 @@ The bot requires the following Discord permissions:
 - `Read Message History`
 - `Add Reactions`
 - `Manage Messages` (for polls and moderation)
-## � Documentation
+
+## 📚 Documentation
 
 ### 🛡️ Moderation System Documentation
 The bot includes a comprehensive moderation system with detailed documentation for each feature:
@@ -245,7 +274,8 @@ Use `/explain_image` with up to 3 image attachments:
 - **Spam Detection**: Multi-layered spam detection algorithms
 - **Content Filtering**: Custom word and pattern filtering
 - **Account Analysis**: New member screening and risk assessment
-## �️ Comprehensive Moderation System
+
+## 🛠️ Comprehensive Moderation System
 
 ### Core Moderation Features
 
@@ -339,7 +369,7 @@ Use `/explain_image` with up to 3 image attachments:
 - **Dashboard Interface**: Modern web interface for all configurations
 
 ### Planned Features 🚧
-- **� Enhanced Analytics**: Detailed usage statistics and performance metrics
+- **📊 Enhanced Analytics**: Detailed usage statistics and performance metrics
 - **🌐 Multi-language**: Complete internationalization support
 - **🎮 Game Integration**: Enhanced gaming features and social platform connections
 - **📱 Mobile Dashboard**: Responsive mobile interface improvements
