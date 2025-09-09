@@ -2,6 +2,26 @@ import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { getSettings, updateSettings } from '../api';
 import LoadingSection from '../components/LoadingSection';
 import { useI18n } from '../i18n';
+// For showing toasts in the newly selected language immediately
+import en from '../i18n/locales/en.json';
+import id from '../i18n/locales/id.json';
+import es from '../i18n/locales/es.json';
+import fr from '../i18n/locales/fr.json';
+import de from '../i18n/locales/de.json';
+import ja from '../i18n/locales/ja.json';
+import cn from '../i18n/locales/cn.json';
+
+const localeMap = { en, id, es, fr, de, ja, cn };
+function getNested(obj, path, fallback){
+  return path.split('.').reduce((acc,k)=> (acc && acc[k]!==undefined ? acc[k] : undefined), obj) ?? fallback;
+}
+function tIn(langCode, key, interpolations = {}){
+  const dict = localeMap[langCode] || en;
+  const fallback = getNested(en, key, key);
+  const template = getNested(dict, key, fallback);
+  if (typeof template !== 'string') return template;
+  return template.replace(/\{\{(\w+)\}\}/g, (m, p1) => (interpolations && interpolations[p1] != null ? interpolations[p1] : m));
+}
 
 export default function SettingsSection({ guildId, pushToast }){
   const { t, changeLanguage, currentLanguage } = useI18n();
@@ -55,6 +75,11 @@ export default function SettingsSection({ guildId, pushToast }){
       // Update dashboard language only if it's actually different and we haven't already synced it
       if (settings.language && settings.language !== currentLanguage) {
         isLanguageChanging.current = true;
+        // Show toast immediately in the target language, then update UI language after a tiny delay
+        if (pushToast) {
+          const msg = tIn(settings.language, 'settings.messages.saved');
+          pushToast('success', msg);
+        }
         // Use setTimeout to prevent the blinking effect by updating language after the UI has updated
         setTimeout(() => {
           changeLanguage(settings.language);
@@ -62,9 +87,10 @@ export default function SettingsSection({ guildId, pushToast }){
             isLanguageChanging.current = false;
           }, 200);
         }, 100);
+      } else {
+        // Language unchanged: use current translator
+        pushToast && pushToast('success', t('settings.messages.saved'));
       }
-      
-      pushToast && pushToast('success', t('settings.messages.saved'));
     } catch(e){ 
       setError(e.message); 
       pushToast && pushToast('error', t('settings.messages.saveFailed')); 

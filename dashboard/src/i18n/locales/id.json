@@ -63,6 +63,52 @@
     "toggleTheme": "Alihkan tema terang / gelap",
     "openMenu": "Buka menu"
   },
+  "settings": {
+    "title": "Pengaturan Server",
+    "subtitle": "Atur preferensi dan perilaku server Anda",
+    "loadingTitle": "Memuat Pengaturan Server",
+    "loadingMessage": "Mengambil konfigurasi dan preferensi server Anda...",
+    "selectServerFirst": "Pilih server terlebih dahulu.",
+    "autoReply": {
+      "enabled": "Balas Otomatis Diaktifkan",
+      "cooldown": "Jeda Waktu Balas Otomatis (ms)",
+      "cooldownHelp": "Waktu minimum antar balasan otomatis dalam milidetik"
+    },
+    "language": {
+      "label": "Bahasa",
+      "help": "Bahasa default untuk respons bot dan antarmuka dasbor",
+      "changeNote": "Bahasa dasbor akan berubah setelah menyimpan pengaturan",
+      "saved": "Pengaturan bahasa berhasil disimpan",
+      "saveFailed": "Gagal menyimpan pengaturan bahasa",
+      "changedTo": "Bahasa diubah ke {{language}}"
+    },
+    "timezone": {
+      "label": "Zona Waktu",
+      "placeholder": "Ketik untuk mencari (misal. Jakarta, UTC+07)",
+      "help": "Ketik untuk memfilter. Nilai tersimpan: {{value}}",
+      "searchHelp": "Ketik untuk mencari zona waktu Anda"
+    },
+    "hourFormat": {
+      "label": "Format Jam",
+      "24hour": "24 Jam",
+      "12hour": "12 Jam"
+    },
+    "slashCommands": {
+      "enabled": "Aktifkan Slash Command",
+      "help": "Izinkan pengguna menggunakan slash command"
+    },
+    "preview": {
+      "title": "Pratinjau",
+      "sampleTimestamp": "Contoh stempel waktu: {{timestamp}}",
+      "help": "Sesuaikan pengaturan lalu simpan. Respons AI ke depannya dapat menyesuaikan bahasa & waktu lokal."
+    },
+    "messages": {
+      "saved": "Pengaturan berhasil disimpan",
+      "saveFailed": "Gagal menyimpan",
+      "resetConfirm": "Anda yakin ingin mengatur ulang semua perubahan?",
+      "unsavedChanges": "Anda memiliki perubahan yang belum disimpan. Yakin ingin keluar?"
+    }
+  },
   "auth": {
     "login": "Masuk",
     "logout": "Keluar",
