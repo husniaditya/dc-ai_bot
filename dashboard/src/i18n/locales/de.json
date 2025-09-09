@@ -1023,6 +1023,150 @@
             "placeholder": "DM-Nachricht eingeben"
           }
         }
+      },
+      "scheduler": {
+        "header": "System für geplante Nachrichten",
+        "badge": "Automatische Ankündigungen",
+        "info": {
+          "description": "Richten Sie automatische Nachrichten ein, die zu bestimmten Zeiten oder Intervallen gesendet werden. Ideal für Ankündigungen, Erinnerungen und wiederkehrende Beiträge."
+        },
+        "list": {
+          "title": "Geplante Nachrichten ({{count}})",
+          "emptyTitle": "Keine geplanten Nachrichten konfiguriert",
+          "emptyCta": "Klicken Sie auf \"Nachricht hinzufügen\", um Ihre erste geplante Nachricht zu erstellen"
+        },
+        "unknownChannel": "Unbekannter Kanal",
+        "badges": {
+          "embed": "Embed",
+          "active": "Aktiv",
+          "inactive": "Inaktiv",
+          "type": "{{type}}"
+        },
+        "labels": {
+          "schedule": "Zeitplan: {{value}}"
+        },
+        "buttons": {
+          "add": "Nachricht hinzufügen",
+          "edit": "Bearbeiten",
+          "delete": "Löschen",
+          "cancel": "Abbrechen",
+          "reset": "Zurücksetzen",
+          "saveAdd": "Nachricht hinzufügen",
+          "saveUpdate": "Nachricht aktualisieren"
+        },
+        "delete": {
+          "title": "Löschen bestätigen",
+          "message": "Möchten Sie die geplante Nachricht \"{{title}}\" wirklich löschen? Dies kann nicht rückgängig gemacht werden.",
+          "confirm": "Löschen",
+          "cancel": "Abbrechen"
+        },
+        "form": {
+          "addTitle": "Geplante Nachricht hinzufügen",
+          "editTitle": "Geplante Nachricht bearbeiten",
+          "fields": {
+            "title": {
+              "label": "Nachrichtentitel",
+              "placeholder": "Nachrichtentitel eingeben"
+            },
+            "channel": {
+              "label": "Kanal",
+              "placeholder": "Kanal auswählen"
+            },
+            "scheduleType": {
+              "label": "Zeitplantyp"
+            },
+            "timeDisplay": {
+              "label": "Zeitanzeige",
+              "option24": "24 Stunden",
+              "option12": "12 Stunden (AM/PM)"
+            },
+            "scheduleValue": {
+              "label": "Zeitplanwert",
+              "placeholder": "0 9 * * *"
+            },
+            "message": {
+              "label": "Nachrichteninhalt",
+              "placeholder": "Nachrichteninhalt eingeben..."
+            },
+            "useEmbed": {
+              "label": "Discord Embed verwenden"
+            },
+            "embed": {
+              "header": "Embed-Konfiguration",
+              "title": {
+                "label": "Embed-Titel",
+                "placeholder": "Embed-Titel"
+              },
+              "color": {
+                "label": "Farbe"
+              },
+              "description": {
+                "label": "Beschreibung",
+                "placeholder": "Embed-Beschreibung"
+              },
+              "footer": {
+                "label": "Fußzeilentext",
+                "placeholder": "Fußzeilentext"
+              },
+              "thumbnail": {
+                "label": "Thumbnail-URL",
+                "placeholder": "https://example.com/image.png"
+              },
+              "image": {
+                "label": "Bild-URL",
+                "placeholder": "https://example.com/image.png"
+              }
+            }
+          },
+          "scheduleTypes": {
+            "once": "Einmal (Zeitstempel)",
+            "daily": "Täglich",
+            "weekly": "Wöchentlich",
+            "monthly": "Monatlich",
+            "cron": "Benutzerdefiniert (Cron)"
+          },
+          "pickers": {
+            "once": {
+              "placeholder": "Datum & Uhrzeit auswählen"
+            },
+            "daily": {
+              "timeCaption": "Uhrzeit",
+              "placeholder": "Uhrzeit auswählen",
+              "help": "Gespeichert als HH:MM (24h)."
+            },
+            "weekly": {
+              "placeholder": "Wochentag & Uhrzeit auswählen",
+              "help": "Irgendein Datum wählen; nur Wochentag + Uhrzeit werden als D|HH:MM gespeichert (0=So)."
+            },
+            "monthly": {
+              "placeholder": "Tag & Uhrzeit auswählen",
+              "help": "Irgendeinen Monat wählen; gespeichert als DD|HH:MM."
+            },
+            "cron": {
+              "presetsTitle": "Häufige Voreinstellungen:",
+              "placeholders": {
+                "expression": "0 9 * * *"
+              },
+              "presets": {
+                "everyHour": "Jede Stunde",
+                "everyDay9": "Jeden Tag um 9 Uhr",
+                "everyMonday9": "Jeden Montag um 9 Uhr",
+                "everySunday9": "Jede Woche (Sonntag 9 Uhr)",
+                "everyMonthFirst9": "Jeden Monat (1. um 9 Uhr)",
+                "every6Hours": "Alle 6 Stunden",
+                "everyWeekday8": "Jeden Werktag um 8 Uhr"
+              }
+            }
+          }
+        },
+        "toasts": {
+          "savedAdded": "Nachricht erfolgreich hinzugefügt",
+          "savedUpdated": "Nachricht erfolgreich aktualisiert",
+          "saveFailed": "Nachricht konnte nicht gespeichert werden",
+          "deleted": "Geplante Nachricht erfolgreich gelöscht",
+          "deleteFailed": "Nachricht konnte nicht gelöscht werden",
+          "validationRequired": "Bitte füllen Sie alle Pflichtfelder aus"
+        }
       }
     },
     "cards": {
@@ -1041,7 +1185,7 @@
           "channelSelection": "Kanalauswahl"
         }
       },
-      "automod": {
+  "automod": {
         "label": "Automoderation",
         "desc": "Erkennt und verwaltet automatisch Spam, übermäßige Großschreibung und ungeeignete Inhalte.",
         "features": {
@@ -1051,6 +1195,7 @@
           "profanityFilter": "Schimpfwort-Filter"
         }
       },
+      
       "roles": {
         "label": "Rollenverwaltung",
         "desc": "Verwalten Sie Rollen mit Reaktionsrollen und Rollenmenüs.",

@@ -1061,6 +1061,150 @@
           "multiplierAdded": "Added multiplier {{value}}x for @{{name}}",
           "multiplierRemoved": "Removed multiplier for @{{name}}",
           "invalidMultiplier": "Please select a role and enter a valid multiplier"
+  },
+        "scheduler": {
+          "header": "Scheduled Messages System",
+          "badge": "Automated Announcements",
+          "info": {
+            "description": "Set up automated messages to be sent at specific times or intervals. Perfect for announcements, reminders, and recurring posts."
+          },
+          "list": {
+            "title": "Scheduled Messages ({{count}})",
+            "emptyTitle": "No scheduled messages configured",
+            "emptyCta": "Click \"Add Message\" to create your first scheduled message"
+          },
+          "unknownChannel": "Unknown Channel",
+          "badges": {
+            "embed": "Embed",
+            "active": "Active",
+            "inactive": "Inactive",
+            "type": "{{type}}"
+          },
+          "labels": {
+            "schedule": "Schedule: {{value}}"
+          },
+          "buttons": {
+            "add": "Add Message",
+            "edit": "Edit",
+            "delete": "Delete",
+            "cancel": "Cancel",
+            "reset": "Reset",
+            "saveAdd": "Add Message",
+            "saveUpdate": "Update Message"
+          },
+          "delete": {
+            "title": "Confirm Deletion",
+            "message": "Are you sure you want to delete the scheduled message \"{{title}}\"? This action cannot be undone.",
+            "confirm": "Delete",
+            "cancel": "Cancel"
+          },
+          "form": {
+            "addTitle": "Add Scheduled Message",
+            "editTitle": "Edit Scheduled Message",
+            "fields": {
+              "title": {
+                "label": "Message Title",
+                "placeholder": "Enter message title"
+              },
+              "channel": {
+                "label": "Channel",
+                "placeholder": "Select channel"
+              },
+              "scheduleType": {
+                "label": "Schedule Type"
+              },
+              "timeDisplay": {
+                "label": "Time Display",
+                "option24": "24-hour",
+                "option12": "12-hour (AM/PM)"
+              },
+              "scheduleValue": {
+                "label": "Schedule Value",
+                "placeholder": "0 9 * * *"
+              },
+              "message": {
+                "label": "Message Content",
+                "placeholder": "Enter your message content..."
+              },
+              "useEmbed": {
+                "label": "Use Discord Embed"
+              },
+              "embed": {
+                "header": "Embed Configuration",
+                "title": {
+                  "label": "Embed Title",
+                  "placeholder": "Embed title"
+                },
+                "color": {
+                  "label": "Color"
+                },
+                "description": {
+                  "label": "Description",
+                  "placeholder": "Embed description"
+                },
+                "footer": {
+                  "label": "Footer Text",
+                  "placeholder": "Footer text"
+                },
+                "thumbnail": {
+                  "label": "Thumbnail URL",
+                  "placeholder": "https://example.com/image.png"
+                },
+                "image": {
+                  "label": "Image URL",
+                  "placeholder": "https://example.com/image.png"
+                }
+              }
+            },
+            "scheduleTypes": {
+              "once": "Once (timestamp)",
+              "daily": "Daily",
+              "weekly": "Weekly",
+              "monthly": "Monthly",
+              "cron": "Custom (Cron)"
+            },
+            "pickers": {
+              "once": {
+                "placeholder": "Select date & time"
+              },
+              "daily": {
+                "timeCaption": "Time",
+                "placeholder": "Select time",
+                "help": "Stored as HH:MM (24h)."
+              },
+              "weekly": {
+                "placeholder": "Select weekday & time",
+                "help": "Pick any date; only weekday + time stored as D|HH:MM (0=Sun)."
+              },
+              "monthly": {
+                "placeholder": "Select day & time",
+                "help": "Pick any month; stored as DD|HH:MM."
+              },
+              "cron": {
+                "presetsTitle": "Common presets:",
+                "placeholders": {
+                  "expression": "0 9 * * *"
+                },
+                "presets": {
+                  "everyHour": "Every hour",
+                  "everyDay9": "Every day at 9 AM",
+                  "everyMonday9": "Every Monday at 9 AM",
+                  "everySunday9": "Every week (Sunday 9 AM)",
+                  "everyMonthFirst9": "Every month (1st at 9 AM)",
+                  "every6Hours": "Every 6 hours",
+                  "everyWeekday8": "Every weekday at 8 AM"
+                }
+              }
+            }
+          },
+          "toasts": {
+            "savedAdded": "Message added successfully",
+            "savedUpdated": "Message updated successfully",
+            "saveFailed": "Failed to save message",
+            "deleted": "Scheduled message deleted successfully",
+            "deleteFailed": "Failed to delete message",
+            "validationRequired": "Please fill in all required fields"
+          }
         }
       }
     },

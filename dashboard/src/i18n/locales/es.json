@@ -976,6 +976,150 @@
             "placeholder": "Escribe un mensaje de MD"
           }
         }
+      },
+      "scheduler": {
+        "header": "Sistema de Mensajes Programados",
+        "badge": "Anuncios Automáticos",
+        "info": {
+          "description": "Configura mensajes automáticos para enviarse en momentos o intervalos específicos. Perfecto para anuncios, recordatorios y publicaciones recurrentes."
+        },
+        "list": {
+          "title": "Mensajes Programados ({{count}})",
+          "emptyTitle": "No hay mensajes programados",
+          "emptyCta": "Haz clic en \"Agregar mensaje\" para crear tu primer mensaje programado"
+        },
+        "unknownChannel": "Canal desconocido",
+        "badges": {
+          "embed": "Embed",
+          "active": "Activo",
+          "inactive": "Inactivo",
+          "type": "{{type}}"
+        },
+        "labels": {
+          "schedule": "Horario: {{value}}"
+        },
+        "buttons": {
+          "add": "Agregar mensaje",
+          "edit": "Editar",
+          "delete": "Eliminar",
+          "cancel": "Cancelar",
+          "reset": "Restablecer",
+          "saveAdd": "Agregar mensaje",
+          "saveUpdate": "Actualizar mensaje"
+        },
+        "delete": {
+          "title": "Confirmar eliminación",
+          "message": "¿Seguro que deseas eliminar el mensaje programado \"{{title}}\"? Esta acción no se puede deshacer.",
+          "confirm": "Eliminar",
+          "cancel": "Cancelar"
+        },
+        "form": {
+          "addTitle": "Agregar mensaje programado",
+          "editTitle": "Editar mensaje programado",
+          "fields": {
+            "title": {
+              "label": "Título del mensaje",
+              "placeholder": "Ingresa el título del mensaje"
+            },
+            "channel": {
+              "label": "Canal",
+              "placeholder": "Selecciona un canal"
+            },
+            "scheduleType": {
+              "label": "Tipo de programación"
+            },
+            "timeDisplay": {
+              "label": "Formato de hora",
+              "option24": "24 horas",
+              "option12": "12 horas (AM/PM)"
+            },
+            "scheduleValue": {
+              "label": "Valor de programación",
+              "placeholder": "0 9 * * *"
+            },
+            "message": {
+              "label": "Contenido del mensaje",
+              "placeholder": "Ingresa el contenido de tu mensaje..."
+            },
+            "useEmbed": {
+              "label": "Usar Discord Embed"
+            },
+            "embed": {
+              "header": "Configuración del Embed",
+              "title": {
+                "label": "Título del embed",
+                "placeholder": "Título del embed"
+              },
+              "color": {
+                "label": "Color"
+              },
+              "description": {
+                "label": "Descripción",
+                "placeholder": "Descripción del embed"
+              },
+              "footer": {
+                "label": "Texto del pie",
+                "placeholder": "Texto del pie"
+              },
+              "thumbnail": {
+                "label": "URL de miniatura",
+                "placeholder": "https://example.com/image.png"
+              },
+              "image": {
+                "label": "URL de imagen",
+                "placeholder": "https://example.com/image.png"
+              }
+            }
+          },
+          "scheduleTypes": {
+            "once": "Una vez (timestamp)",
+            "daily": "Diario",
+            "weekly": "Semanal",
+            "monthly": "Mensual",
+            "cron": "Personalizado (Cron)"
+          },
+          "pickers": {
+            "once": {
+              "placeholder": "Selecciona fecha y hora"
+            },
+            "daily": {
+              "timeCaption": "Hora",
+              "placeholder": "Selecciona hora",
+              "help": "Se guarda como HH:MM (24h)."
+            },
+            "weekly": {
+              "placeholder": "Selecciona día y hora",
+              "help": "Elige cualquier fecha; solo se guarda día de la semana + hora como D|HH:MM (0=Dom)."
+            },
+            "monthly": {
+              "placeholder": "Selecciona día del mes y hora",
+              "help": "Elige cualquier mes; se guarda como DD|HH:MM."
+            },
+            "cron": {
+              "presetsTitle": "Preajustes comunes:",
+              "placeholders": {
+                "expression": "0 9 * * *"
+              },
+              "presets": {
+                "everyHour": "Cada hora",
+                "everyDay9": "Cada día a las 9 AM",
+                "everyMonday9": "Cada lunes a las 9 AM",
+                "everySunday9": "Cada semana (domingo 9 AM)",
+                "everyMonthFirst9": "Cada mes (día 1 a las 9 AM)",
+                "every6Hours": "Cada 6 horas",
+                "everyWeekday8": "Cada día laborable a las 8 AM"
+              }
+            }
+          }
+        },
+        "toasts": {
+          "savedAdded": "Mensaje agregado correctamente",
+          "savedUpdated": "Mensaje actualizado correctamente",
+          "saveFailed": "Error al guardar el mensaje",
+          "deleted": "Mensaje programado eliminado correctamente",
+          "deleteFailed": "Error al eliminar el mensaje",
+          "validationRequired": "Completa todos los campos obligatorios"
+        }
       }
     },
     "cards": {

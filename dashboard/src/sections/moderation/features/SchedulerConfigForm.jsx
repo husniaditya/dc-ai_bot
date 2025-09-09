@@ -3,9 +3,11 @@ import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { ChannelSelector, FormField } from '../components/SharedComponents';
 import { createScheduledMessage, updateScheduledMessage, deleteScheduledMessage } from '../../../api';
+import useTranslation from '../../../i18n/useTranslation';
 
 // Delete Confirmation Component
 function DeleteConfirmationModal({ show, onHide, onConfirm, message }) {
+  const { t } = useTranslation();
   if (!show) return null;
 
   return (
@@ -15,7 +17,7 @@ function DeleteConfirmationModal({ show, onHide, onConfirm, message }) {
           <div className="modal-header">
             <h5 className="modal-title">
               <i className="fa-solid fa-triangle-exclamation text-warning me-2"></i>
-              Confirm Deletion
+              {t('moderation.features.scheduler.delete.title')}
             </h5>
             <button type="button" className="btn-close" onClick={onHide}></button>
           </div>
@@ -24,11 +26,11 @@ function DeleteConfirmationModal({ show, onHide, onConfirm, message }) {
           </div>
           <div className="modal-footer">
             <button type="button" className="btn btn-primary" onClick={onHide}>
-              Cancel
+              {t('moderation.features.scheduler.delete.cancel')}
             </button>
             <button type="button" className="btn btn-danger" onClick={onConfirm}>
               <i className="fa-solid fa-trash me-1"></i>
-              Delete
+              {t('moderation.features.scheduler.delete.confirm')}
             </button>
           </div>
         </div>
@@ -39,6 +41,7 @@ function DeleteConfirmationModal({ show, onHide, onConfirm, message }) {
 
 // Scheduled Messages Configuration
 export default forwardRef(function SchedulerConfigForm({ config, updateConfig, channels, guildId, showToast, onConfigSaved, onClose }, ref) {
+  const { t } = useTranslation();
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingMessage, setEditingMessage] = useState(null);
   const [deleteConfirmation, setDeleteConfirmation] = useState({ show: false, messageId: null, messageTitle: '' });
@@ -143,7 +146,7 @@ export default forwardRef(function SchedulerConfigForm({ config, updateConfig, c
 
   const saveMessage = async () => {
     if (!formData.title || !formData.channelId || !formData.message || !formData.scheduleValue) {
-      showToast?.('error', 'Please fill in all required fields');
+  showToast?.('error', t('moderation.features.scheduler.toasts.validationRequired'));
       return;
     }
 
@@ -188,10 +191,10 @@ export default forwardRef(function SchedulerConfigForm({ config, updateConfig, c
       setShowAddForm(false);
       
       // Show success message
-      showToast?.('success', editingMessage ? 'Message updated successfully' : 'Message added successfully');
+  showToast?.('success', editingMessage ? t('moderation.features.scheduler.toasts.savedUpdated') : t('moderation.features.scheduler.toasts.savedAdded'));
     } catch (error) {
       console.error('Failed to save scheduler message:', error);
-      showToast?.('error', 'Failed to save message');
+  showToast?.('error', t('moderation.features.scheduler.toasts.saveFailed'));
     }
   };
 
@@ -200,7 +203,7 @@ export default forwardRef(function SchedulerConfigForm({ config, updateConfig, c
     setDeleteConfirmation({
       show: true,
       messageId: messageId,
-      messageTitle: message?.title || 'Unknown Message'
+  messageTitle: message?.title || t('common.unknown')
     });
   };
 
@@ -222,10 +225,10 @@ export default forwardRef(function SchedulerConfigForm({ config, updateConfig, c
       onConfigSaved?.(newConfig);
       
       setDeleteConfirmation({ show: false, messageId: null, messageTitle: '' });
-      showToast?.('success', 'Scheduled message deleted successfully');
+  showToast?.('success', t('moderation.features.scheduler.toasts.deleted'));
     } catch (error) {
       console.error('Failed to delete scheduler message:', error);
-      showToast?.('error', 'Failed to delete message');
+  showToast?.('error', t('moderation.features.scheduler.toasts.deleteFailed'));
     }
   };
 
@@ -285,25 +288,24 @@ export default forwardRef(function SchedulerConfigForm({ config, updateConfig, c
 
   const getChannelName = (channelId) => {
     const channel = channels.find(c => c.id === channelId);
-    return channel ? `#${channel.name}` : 'Unknown Channel';
+    return channel ? `#${channel.name}` : t('moderation.features.scheduler.unknownChannel');
   };
-
   const cronPresets = [
-    { label: 'Every hour', value: '0 * * * *' },
-    { label: 'Every day at 9 AM', value: '0 9 * * *' },
-    { label: 'Every Monday at 9 AM', value: '0 9 * * 1' },
-    { label: 'Every week (Sunday 9 AM)', value: '0 9 * * 0' },
-    { label: 'Every month (1st at 9 AM)', value: '0 9 1 * *' },
-    { label: 'Every 6 hours', value: '0 */6 * * *' },
-    { label: 'Every weekday at 8 AM', value: '0 8 * * 1-5' }
+    { label: t('moderation.features.scheduler.form.pickers.cron.presets.everyHour'), value: '0 * * * *' },
+    { label: t('moderation.features.scheduler.form.pickers.cron.presets.everyDay9'), value: '0 9 * * *' },
+    { label: t('moderation.features.scheduler.form.pickers.cron.presets.everyMonday9'), value: '0 9 * * 1' },
+    { label: t('moderation.features.scheduler.form.pickers.cron.presets.everySunday9'), value: '0 9 * * 0' },
+    { label: t('moderation.features.scheduler.form.pickers.cron.presets.everyMonthFirst9'), value: '0 9 1 * *' },
+    { label: t('moderation.features.scheduler.form.pickers.cron.presets.every6Hours'), value: '0 */6 * * *' },
+    { label: t('moderation.features.scheduler.form.pickers.cron.presets.everyWeekday8'), value: '0 8 * * 1-5' }
   ];
 
   const scheduleTypes = [
-    { value: 'once', label: 'Once (timestamp)' },
-    { value: 'daily', label: 'Daily' },
-    { value: 'weekly', label: 'Weekly' },
-    { value: 'monthly', label: 'Monthly' },
-    { value: 'cron', label: 'Custom (Cron)' }
+    { value: 'once', label: t('moderation.features.scheduler.form.scheduleTypes.once') },
+    { value: 'daily', label: t('moderation.features.scheduler.form.scheduleTypes.daily') },
+    { value: 'weekly', label: t('moderation.features.scheduler.form.scheduleTypes.weekly') },
+    { value: 'monthly', label: t('moderation.features.scheduler.form.scheduleTypes.monthly') },
+    { value: 'cron', label: t('moderation.features.scheduler.form.scheduleTypes.cron') }
   ];
 
   const renderScheduleInput = () => {
@@ -331,7 +333,7 @@ export default forwardRef(function SchedulerConfigForm({ config, updateConfig, c
             dateFormat={onceDateFormat}
             minDate={new Date()}
             className="form-control form-control-sm"
-            placeholderText="Select date & time"
+            placeholderText={t('moderation.features.scheduler.form.pickers.once.placeholder')}
           />
         );
       case 'daily':
@@ -349,13 +351,13 @@ export default forwardRef(function SchedulerConfigForm({ config, updateConfig, c
               showTimeSelect
               showTimeSelectOnly
               timeIntervals={30}
-              timeCaption="Time"
+              timeCaption={t('moderation.features.scheduler.form.pickers.daily.timeCaption')}
               timeFormat={is12h ? 'h:mm aa' : 'HH:mm'}
               dateFormat={dailyDateFormat}
               className="form-control form-control-sm"
-              placeholderText="Select time"
+              placeholderText={t('moderation.features.scheduler.form.pickers.daily.placeholder')}
             />
-            <div className="form-text small">Stored as HH:MM (24h).</div>
+            <div className="form-text small">{t('moderation.features.scheduler.form.pickers.daily.help')}</div>
           </div>
         );
       case 'weekly':
@@ -376,9 +378,9 @@ export default forwardRef(function SchedulerConfigForm({ config, updateConfig, c
               timeFormat={is12h ? 'h:mm aa' : 'HH:mm'}
               dateFormat={weeklyDateFormat}
               className="form-control form-control-sm"
-              placeholderText="Select weekday & time"
+              placeholderText={t('moderation.features.scheduler.form.pickers.weekly.placeholder')}
             />
-            <div className="form-text small">Pick any date; only weekday + time stored as D|HH:MM (0=Sun).</div>
+            <div className="form-text small">{t('moderation.features.scheduler.form.pickers.weekly.help')}</div>
           </div>
         );
       case 'monthly':
@@ -399,9 +401,9 @@ export default forwardRef(function SchedulerConfigForm({ config, updateConfig, c
               timeFormat={is12h ? 'h:mm aa' : 'HH:mm'}
               dateFormat={monthlyDateFormat}
               className="form-control form-control-sm"
-              placeholderText="Select day & time"
+              placeholderText={t('moderation.features.scheduler.form.pickers.monthly.placeholder')}
             />
-            <div className="form-text small">Pick any month; stored as DD|HH:MM.</div>
+            <div className="form-text small">{t('moderation.features.scheduler.form.pickers.monthly.help')}</div>
           </div>
         );
       case 'cron':
@@ -414,10 +416,10 @@ export default forwardRef(function SchedulerConfigForm({ config, updateConfig, c
                 className="form-control form-control-sm"
                 value={formData.scheduleValue}
                 onChange={(e) => setFormData(prev => ({ ...prev, scheduleValue: e.target.value }))}
-                placeholder="0 9 * * *"
+                placeholder={t('moderation.features.scheduler.form.pickers.cron.placeholders.expression')}
               />
             </div>
-            <div className="small text-muted mb-2">Common presets:</div>
+            <div className="small text-muted mb-2">{t('moderation.features.scheduler.form.pickers.cron.presetsTitle')}</div>
             <div className="d-flex flex-wrap gap-1">
               {cronPresets.map((preset, index) => (
                 <button 
@@ -442,41 +444,41 @@ export default forwardRef(function SchedulerConfigForm({ config, updateConfig, c
         show={deleteConfirmation.show}
         onHide={cancelDelete}
         onConfirm={confirmDelete}
-        message={`Are you sure you want to delete the scheduled message "${deleteConfirmation.messageTitle}"? This action cannot be undone.`}
+        message={t('moderation.features.scheduler.delete.message', { title: deleteConfirmation.messageTitle })}
       />
 
       {/* Information Section */}
       <div className="mb-4">
         <div className="d-flex align-items-center gap-3 mb-3">
-          <h6 className="mb-0 fw-bold">Scheduled Messages System</h6>
+          <h6 className="mb-0 fw-bold">{t('moderation.features.scheduler.header')}</h6>
           <span className="badge badge-soft">
             <i className="fa-solid fa-calendar-clock me-1"></i>
-            Automated Announcements
+            {t('moderation.features.scheduler.badge')}
           </span>
         </div>
         <p className="text-muted mb-0">
-          Set up automated messages to be sent at specific times or intervals. Perfect for announcements, reminders, and recurring posts.
+          {t('moderation.features.scheduler.info.description')}
         </p>
       </div>
 
       {/* Existing Messages */}
       <div className="mb-4">
         <div className="d-flex justify-content-between align-items-center mb-3">
-          <h6 className="mb-0">Scheduled Messages ({scheduledMessages.length})</h6>
+          <h6 className="mb-0">{t('moderation.features.scheduler.list.title', { count: scheduledMessages.length })}</h6>
           <button
             className="btn btn-primary btn-sm"
             onClick={startAdd}
           >
             <i className="fa-solid fa-plus me-1"></i>
-            Add Message
+            {t('moderation.features.scheduler.buttons.add')}
           </button>
         </div>
 
         {scheduledMessages.length === 0 ? (
           <div className="text-center py-4 text-muted">
             <i className="fa-solid fa-calendar-xmark fs-1 mb-3 opacity-50"></i>
-            <p>No scheduled messages configured</p>
-            <p className="small">Click "Add Message" to create your first scheduled message</p>
+            <p>{t('moderation.features.scheduler.list.emptyTitle')}</p>
+            <p className="small">{t('moderation.features.scheduler.list.emptyCta')}</p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -488,12 +490,12 @@ export default forwardRef(function SchedulerConfigForm({ config, updateConfig, c
                       <div className="d-flex align-items-center gap-2 mb-2">
                         <h6 className="mb-0">{message.title}</h6>
                         <span className="badge badge-soft">
-                          {message.scheduleType || 'cron'}
+                          {t(`moderation.features.scheduler.form.scheduleTypes.${message.scheduleType || 'cron'}`)}
                         </span>
                         {message.embedData && (
                           <span className="badge badge-soft">
                             <i className="fa-solid fa-window-maximize me-1"></i>
-                            Embed
+                            {t('moderation.features.scheduler.badges.embed')}
                           </span>
                         )}
                       </div>
@@ -505,10 +507,10 @@ export default forwardRef(function SchedulerConfigForm({ config, updateConfig, c
                       <div className="d-flex align-items-center gap-3 text-muted small">
                         <span>
                           <i className="fa-solid fa-clock me-1"></i>
-                          Schedule: {message.scheduleValue}
+                          {t('moderation.features.scheduler.labels.schedule', { value: message.scheduleValue })}
                         </span>
                         <span className={`badge ${message.enabled ? 'badge-success' : 'badge-soft'}`}>
-                          {message.enabled ? 'Active' : 'Inactive'}
+                          {message.enabled ? t('moderation.features.scheduler.badges.active') : t('moderation.features.scheduler.badges.inactive')}
                         </span>
                       </div>
                     </div>
@@ -539,30 +541,30 @@ export default forwardRef(function SchedulerConfigForm({ config, updateConfig, c
         <div className="card">
           <div className="card-header">
             <h6 className="mb-0">
-              {editingMessage ? 'Edit Scheduled Message' : 'Add Scheduled Message'}
+              {editingMessage ? t('moderation.features.scheduler.form.editTitle') : t('moderation.features.scheduler.form.addTitle')}
             </h6>
           </div>
           <div className="card-body">
             <form onSubmit={(e) => { e.preventDefault(); saveMessage(); }}>
               <div className="row mb-3">
                 <div className="col-md-6">
-                  <FormField label="Message Title" required>
+                  <FormField label={t('moderation.features.scheduler.form.fields.title.label')} required>
                     <input
                       type="text"
                       className="form-control form-control-sm"
                       value={formData.title}
                       onChange={(e) => updateFormData({ title: e.target.value })}
-                      placeholder="Enter message title"
+                      placeholder={t('moderation.features.scheduler.form.fields.title.placeholder')}
                     />
                   </FormField>
                 </div>
                 <div className="col-md-6">
-                  <FormField label="Channel" required>
+                  <FormField label={t('moderation.features.scheduler.form.fields.channel.label')} required>
                     <ChannelSelector
                       channels={channels}
                       value={formData.channelId}
                       onChange={(channelId) => updateFormData({ channelId })}
-                      placeholder="Select channel"
+                      placeholder={t('moderation.features.scheduler.form.fields.channel.placeholder')}
                     />
                   </FormField>
                 </div>
@@ -570,7 +572,7 @@ export default forwardRef(function SchedulerConfigForm({ config, updateConfig, c
 
               <div className="row mb-3">
                 <div className="col-md-4">
-                  <FormField label="Schedule Type" required>
+                  <FormField label={t('moderation.features.scheduler.form.fields.scheduleType.label')} required>
                     <select
                       className="form-select form-select-sm"
                       value={formData.scheduleType}
@@ -586,33 +588,33 @@ export default forwardRef(function SchedulerConfigForm({ config, updateConfig, c
                 </div>
                 {formData.scheduleType !== 'cron' && (
                   <div className="col-md-4">
-                    <FormField label="Time Display" required={false}>
+                    <FormField label={t('moderation.features.scheduler.form.fields.timeDisplay.label')} required={false}>
                       <select
                         className="form-select form-select-sm"
                         value={timeFormatMode}
                         onChange={(e) => setTimeFormatMode(e.target.value)}
                       >
-                        <option value="24h">24-hour</option>
-                        <option value="12h">12-hour (AM/PM)</option>
+                        <option value="24h">{t('moderation.features.scheduler.form.fields.timeDisplay.option24')}</option>
+                        <option value="12h">{t('moderation.features.scheduler.form.fields.timeDisplay.option12')}</option>
                       </select>
                     </FormField>
                   </div>
                 )}
                 <div className={`col-md-${formData.scheduleType === 'cron' ? '8' : '4'}`}>
-                  <FormField label="Schedule Value" required>
+                  <FormField label={t('moderation.features.scheduler.form.fields.scheduleValue.label')} required>
                     {renderScheduleInput()}
                   </FormField>
                 </div>
               </div>
 
               <div className="mb-3">
-                <FormField label="Message Content" required>
+                <FormField label={t('moderation.features.scheduler.form.fields.message.label')} required>
                   <textarea
                     className="form-control form-control-sm"
                     rows="4"
                     value={formData.message}
                     onChange={(e) => updateFormData({ message: e.target.value })}
-                    placeholder="Enter your message content..."
+                    placeholder={t('moderation.features.scheduler.form.fields.message.placeholder')}
                   />
                 </FormField>
               </div>
@@ -641,19 +643,19 @@ export default forwardRef(function SchedulerConfigForm({ config, updateConfig, c
                     }}
                   />
                   <label className="form-check-label" htmlFor="useEmbed">
-                    Use Discord Embed
+                    {t('moderation.features.scheduler.form.fields.useEmbed.label')}
                   </label>
                 </div>
               </div>
 
               {/* Embed Configuration */}
               {formData.useEmbed && (
-                <div className="border border-light rounded p-3 mb-3">
-                  <h6 className="mb-3">Embed Configuration</h6>
+        <div className="border border-light rounded p-3 mb-3">
+          <h6 className="mb-3">{t('moderation.features.scheduler.form.fields.embed.header')}</h6>
                   
                   <div className="row mb-3">
                     <div className="col-md-8">
-                      <FormField label="Embed Title">
+            <FormField label={t('moderation.features.scheduler.form.fields.embed.title.label')}>
                         <input
                           type="text"
                           className="form-control form-control-sm"
@@ -661,12 +663,12 @@ export default forwardRef(function SchedulerConfigForm({ config, updateConfig, c
                           onChange={(e) => updateFormData({
                             embedData: { ...formData.embedData, title: e.target.value }
                           })}
-                          placeholder="Embed title"
+              placeholder={t('moderation.features.scheduler.form.fields.embed.title.placeholder')}
                         />
                       </FormField>
                     </div>
                     <div className="col-md-4">
-                      <FormField label="Color">
+            <FormField label={t('moderation.features.scheduler.form.fields.embed.color.label')}>
                         <input
                           type="color"
                           className="form-control form-control-color form-control-sm"
@@ -680,7 +682,7 @@ export default forwardRef(function SchedulerConfigForm({ config, updateConfig, c
                   </div>
 
                   <div className="mb-3">
-                    <FormField label="Description">
+          <FormField label={t('moderation.features.scheduler.form.fields.embed.description.label')}>
                       <textarea
                         className="form-control form-control-sm"
                         rows="3"
@@ -688,14 +690,14 @@ export default forwardRef(function SchedulerConfigForm({ config, updateConfig, c
                         onChange={(e) => updateFormData({
                           embedData: { ...formData.embedData, description: e.target.value }
                         })}
-                        placeholder="Embed description"
+            placeholder={t('moderation.features.scheduler.form.fields.embed.description.placeholder')}
                       />
                     </FormField>
                   </div>
 
                   <div className="row mb-3">
                     <div className="col-md-6">
-                      <FormField label="Footer Text">
+            <FormField label={t('moderation.features.scheduler.form.fields.embed.footer.label')}>
                         <input
                           type="text"
                           className="form-control form-control-sm"
@@ -703,12 +705,12 @@ export default forwardRef(function SchedulerConfigForm({ config, updateConfig, c
                           onChange={(e) => updateFormData({
                             embedData: { ...formData.embedData, footer: e.target.value }
                           })}
-                          placeholder="Footer text"
+              placeholder={t('moderation.features.scheduler.form.fields.embed.footer.placeholder')}
                         />
                       </FormField>
                     </div>
                     <div className="col-md-6">
-                      <FormField label="Thumbnail URL">
+            <FormField label={t('moderation.features.scheduler.form.fields.embed.thumbnail.label')}>
                         <input
                           type="url"
                           className="form-control form-control-sm"
@@ -716,14 +718,14 @@ export default forwardRef(function SchedulerConfigForm({ config, updateConfig, c
                           onChange={(e) => updateFormData({
                             embedData: { ...formData.embedData, thumbnail: e.target.value }
                           })}
-                          placeholder="https://example.com/image.png"
+              placeholder={t('moderation.features.scheduler.form.fields.embed.thumbnail.placeholder')}
                         />
                       </FormField>
                     </div>
                   </div>
 
                   <div className="mb-3">
-                    <FormField label="Image URL">
+          <FormField label={t('moderation.features.scheduler.form.fields.embed.image.label')}>
                       <input
                         type="url"
                         className="form-control form-control-sm"
@@ -731,7 +733,7 @@ export default forwardRef(function SchedulerConfigForm({ config, updateConfig, c
                         onChange={(e) => updateFormData({
                           embedData: { ...formData.embedData, image: e.target.value }
                         })}
-                        placeholder="https://example.com/image.png"
+            placeholder={t('moderation.features.scheduler.form.fields.embed.image.placeholder')}
                       />
                     </FormField>
                   </div>
@@ -746,7 +748,7 @@ export default forwardRef(function SchedulerConfigForm({ config, updateConfig, c
                     onClick={resetForm}
                   >
                     <i className="fa-solid fa-rotate-left me-1" />
-                    Reset
+          {t('moderation.features.scheduler.buttons.reset')}
                   </button>
                 )}
                 <button
@@ -758,7 +760,7 @@ export default forwardRef(function SchedulerConfigForm({ config, updateConfig, c
                   }}
                 >
                   <i className="fa-solid fa-times me-1" />
-                  Cancel
+          {t('moderation.features.scheduler.buttons.cancel')}
                 </button>
                 <button
                   type="submit"
@@ -766,7 +768,7 @@ export default forwardRef(function SchedulerConfigForm({ config, updateConfig, c
                   disabled={!formData.title || !formData.channelId || !formData.message || !formData.scheduleValue}
                 >
                   <i className="fa-solid fa-plus me-1" />
-                  {editingMessage ? 'Update Message' : 'Add Message'}
+          {editingMessage ? t('moderation.features.scheduler.buttons.saveUpdate') : t('moderation.features.scheduler.buttons.saveAdd')}
                 </button>
               </div>
             </form>

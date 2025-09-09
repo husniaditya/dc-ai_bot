@@ -1039,6 +1039,150 @@
           "multiplierRemoved": "Pengali dihapus untuk @{{name}}",
           "invalidMultiplier": "Pilih peran dan masukkan nilai pengali yang valid"
         }
+      },
+      "scheduler": {
+        "header": "Sistem Pesan Terjadwal",
+        "badge": "Pengumuman Otomatis",
+        "info": {
+          "description": "Atur pesan otomatis untuk dikirim pada waktu atau interval tertentu. Cocok untuk pengumuman, pengingat, dan posting berulang."
+        },
+        "list": {
+          "title": "Pesan Terjadwal ({{count}})",
+          "emptyTitle": "Belum ada pesan terjadwal",
+          "emptyCta": "Klik \"Tambah Pesan\" untuk membuat pesan terjadwal pertama Anda"
+        },
+        "unknownChannel": "Channel Tidak Dikenal",
+        "badges": {
+          "embed": "Embed",
+          "active": "Aktif",
+          "inactive": "Nonaktif",
+          "type": "{{type}}"
+        },
+        "labels": {
+          "schedule": "Jadwal: {{value}}"
+        },
+        "buttons": {
+          "add": "Tambah Pesan",
+          "edit": "Edit",
+          "delete": "Hapus",
+          "cancel": "Batal",
+          "reset": "Reset",
+          "saveAdd": "Tambah Pesan",
+          "saveUpdate": "Perbarui Pesan"
+        },
+        "delete": {
+          "title": "Konfirmasi Hapus",
+          "message": "Yakin ingin menghapus pesan terjadwal \"{{title}}\"? Tindakan ini tidak bisa dibatalkan.",
+          "confirm": "Hapus",
+          "cancel": "Batal"
+        },
+        "form": {
+          "addTitle": "Tambah Pesan Terjadwal",
+          "editTitle": "Edit Pesan Terjadwal",
+          "fields": {
+            "title": {
+              "label": "Judul Pesan",
+              "placeholder": "Masukkan judul pesan"
+            },
+            "channel": {
+              "label": "Channel",
+              "placeholder": "Pilih channel"
+            },
+            "scheduleType": {
+              "label": "Jenis Jadwal"
+            },
+            "timeDisplay": {
+              "label": "Tampilan Waktu",
+              "option24": "24 jam",
+              "option12": "12 jam (AM/PM)"
+            },
+            "scheduleValue": {
+              "label": "Nilai Jadwal",
+              "placeholder": "0 9 * * *"
+            },
+            "message": {
+              "label": "Isi Pesan",
+              "placeholder": "Masukkan isi pesan Anda..."
+            },
+            "useEmbed": {
+              "label": "Gunakan Discord Embed"
+            },
+            "embed": {
+              "header": "Konfigurasi Embed",
+              "title": {
+                "label": "Judul Embed",
+                "placeholder": "Judul embed"
+              },
+              "color": {
+                "label": "Warna"
+              },
+              "description": {
+                "label": "Deskripsi",
+                "placeholder": "Deskripsi embed"
+              },
+              "footer": {
+                "label": "Teks Footer",
+                "placeholder": "Teks footer"
+              },
+              "thumbnail": {
+                "label": "URL Thumbnail",
+                "placeholder": "https://example.com/image.png"
+              },
+              "image": {
+                "label": "URL Gambar",
+                "placeholder": "https://example.com/image.png"
+              }
+            }
+          },
+          "scheduleTypes": {
+            "once": "Sekali (timestamp)",
+            "daily": "Harian",
+            "weekly": "Mingguan",
+            "monthly": "Bulanan",
+            "cron": "Kustom (Cron)"
+          },
+          "pickers": {
+            "once": {
+              "placeholder": "Pilih tanggal & waktu"
+            },
+            "daily": {
+              "timeCaption": "Waktu",
+              "placeholder": "Pilih waktu",
+              "help": "Disimpan sebagai HH:MM (24j)."
+            },
+            "weekly": {
+              "placeholder": "Pilih hari & waktu",
+              "help": "Pilih tanggal apa pun; hanya hari & waktu disimpan sebagai D|HH:MM (0=Minggu)."
+            },
+            "monthly": {
+              "placeholder": "Pilih tanggal & waktu",
+              "help": "Pilih bulan apa pun; disimpan sebagai DD|HH:MM."
+            },
+            "cron": {
+              "presetsTitle": "Preset umum:",
+              "placeholders": {
+                "expression": "0 9 * * *"
+              },
+              "presets": {
+                "everyHour": "Setiap jam",
+                "everyDay9": "Setiap hari pukul 9 pagi",
+                "everyMonday9": "Setiap Senin pukul 9 pagi",
+                "everySunday9": "Setiap minggu (Minggu 9 pagi)",
+                "everyMonthFirst9": "Setiap bulan (tgl 1 pukul 9 pagi)",
+                "every6Hours": "Setiap 6 jam",
+                "everyWeekday8": "Setiap hari kerja pukul 8 pagi"
+              }
+            }
+          }
+        },
+        "toasts": {
+          "savedAdded": "Pesan berhasil ditambahkan",
+          "savedUpdated": "Pesan berhasil diperbarui",
+          "saveFailed": "Gagal menyimpan pesan",
+          "deleted": "Pesan terjadwal berhasil dihapus",
+          "deleteFailed": "Gagal menghapus pesan",
+          "validationRequired": "Harap isi semua field yang wajib"
+        }
       }
     },
     "cards": {

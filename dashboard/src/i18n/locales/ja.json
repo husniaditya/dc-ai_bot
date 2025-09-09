@@ -1023,6 +1023,150 @@
             "placeholder": "DM メッセージを入力"
           }
         }
+      },
+      "scheduler": {
+        "header": "予約メッセージシステム",
+        "badge": "自動アナウンス",
+        "info": {
+          "description": "特定の時間や間隔で送信される自動メッセージを設定します。告知、リマインダー、定期投稿に最適です。"
+        },
+        "list": {
+          "title": "予約メッセージ（{{count}}）",
+          "emptyTitle": "予約メッセージはまだありません",
+          "emptyCta": "\"メッセージを追加\"をクリックして最初の予約メッセージを作成しましょう"
+        },
+        "unknownChannel": "不明なチャンネル",
+        "badges": {
+          "embed": "Embed",
+          "active": "有効",
+          "inactive": "無効",
+          "type": "{{type}}"
+        },
+        "labels": {
+          "schedule": "スケジュール: {{value}}"
+        },
+        "buttons": {
+          "add": "メッセージを追加",
+          "edit": "編集",
+          "delete": "削除",
+          "cancel": "キャンセル",
+          "reset": "リセット",
+          "saveAdd": "メッセージを追加",
+          "saveUpdate": "メッセージを更新"
+        },
+        "delete": {
+          "title": "削除の確認",
+          "message": "予約メッセージ\"{{title}}\"を削除してもよろしいですか？ この操作は元に戻せません。",
+          "confirm": "削除",
+          "cancel": "キャンセル"
+        },
+        "form": {
+          "addTitle": "予約メッセージを追加",
+          "editTitle": "予約メッセージを編集",
+          "fields": {
+            "title": {
+              "label": "メッセージのタイトル",
+              "placeholder": "メッセージのタイトルを入力"
+            },
+            "channel": {
+              "label": "チャンネル",
+              "placeholder": "チャンネルを選択"
+            },
+            "scheduleType": {
+              "label": "スケジュールの種類"
+            },
+            "timeDisplay": {
+              "label": "時刻表示",
+              "option24": "24時間",
+              "option12": "12時間 (AM/PM)"
+            },
+            "scheduleValue": {
+              "label": "スケジュール値",
+              "placeholder": "0 9 * * *"
+            },
+            "message": {
+              "label": "メッセージ内容",
+              "placeholder": "メッセージ内容を入力..."
+            },
+            "useEmbed": {
+              "label": "Discord Embed を使用"
+            },
+            "embed": {
+              "header": "Embed 設定",
+              "title": {
+                "label": "Embed タイトル",
+                "placeholder": "Embed タイトル"
+              },
+              "color": {
+                "label": "カラー"
+              },
+              "description": {
+                "label": "説明",
+                "placeholder": "Embed の説明"
+              },
+              "footer": {
+                "label": "フッターテキスト",
+                "placeholder": "フッターテキスト"
+              },
+              "thumbnail": {
+                "label": "サムネイル URL",
+                "placeholder": "https://example.com/image.png"
+              },
+              "image": {
+                "label": "画像 URL",
+                "placeholder": "https://example.com/image.png"
+              }
+            }
+          },
+          "scheduleTypes": {
+            "once": "一度のみ（タイムスタンプ）",
+            "daily": "毎日",
+            "weekly": "毎週",
+            "monthly": "毎月",
+            "cron": "カスタム（Cron）"
+          },
+          "pickers": {
+            "once": {
+              "placeholder": "日付と時刻を選択"
+            },
+            "daily": {
+              "timeCaption": "時刻",
+              "placeholder": "時刻を選択",
+              "help": "HH:MM（24時間）で保存されます。"
+            },
+            "weekly": {
+              "placeholder": "曜日と時刻を選択",
+              "help": "任意の日付を選択；曜日と時刻のみ D|HH:MM として保存（0=日）。"
+            },
+            "monthly": {
+              "placeholder": "日付と時刻を選択",
+              "help": "任意の月を選択；DD|HH:MM として保存。"
+            },
+            "cron": {
+              "presetsTitle": "一般的なプリセット:",
+              "placeholders": {
+                "expression": "0 9 * * *"
+              },
+              "presets": {
+                "everyHour": "毎時",
+                "everyDay9": "毎日 午前9時",
+                "everyMonday9": "毎週月曜 午前9時",
+                "everySunday9": "毎週（日曜 午前9時）",
+                "everyMonthFirst9": "毎月（1日 午前9時）",
+                "every6Hours": "6時間ごと",
+                "everyWeekday8": "平日 午前8時"
+              }
+            }
+          }
+        },
+        "toasts": {
+          "savedAdded": "メッセージを追加しました",
+          "savedUpdated": "メッセージを更新しました",
+          "saveFailed": "メッセージの保存に失敗しました",
+          "deleted": "予約メッセージを削除しました",
+          "deleteFailed": "メッセージの削除に失敗しました",
+          "validationRequired": "必須項目をすべて入力してください"
+        }
       }
     },
     "cards": {
