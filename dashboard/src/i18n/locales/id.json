@@ -94,7 +94,8 @@
     "es": "Bahasa Spanyol",
     "fr": "Bahasa Prancis",
     "de": "Bahasa Jerman",
-    "ja": "Bahasa Jepang"
+    "ja": "Bahasa Jepang",
+    "cn": "Chinese (Traditional)"
   },
   "overview": {
     "title": "Gambaran Umum Server",
@@ -525,15 +526,6 @@
       "saveFailed": "Gagal menyimpan"
     }
   },
-  "welcome": {
-    "toasts": {
-      "saved": "Pengaturan sambutan tersimpan",
-      "saveFailed": "Gagal menyimpan",
-      "enabled": "Pesan sambutan diaktifkan",
-      "disabled": "Pesan sambutan dinonaktifkan",
-      "toggleFailed": "Gagal memperbarui toggle"
-    }
-  },
   "moderation": {
     "title": "Moderasi",
     "subtitle": "Konfigurasi alat dan pengaturan moderasi",
@@ -776,6 +768,36 @@
           "validationRequired": "Pilih minimal satu channel atau atur channel global"
         }
       },
+      "antiraid": {
+        "header": "Perlindungan Anti-Raid",
+        "badge": "Keamanan",
+        "info": { "description": "Deteksi dan blokir percobaan raid dengan batas laju bergabung, usia akun minimum, respons otomatis, dan perlindungan konten." },
+        "features": {
+          "joinRate": { "title": "Pemantauan laju bergabung", "items": { "trackPatterns": "Lacak lonjakan & pola bergabung yang mencurigakan", "detectAttacks": "Deteksi raid secara real-time", "thresholds": "Ambang yang bisa dikonfigurasi" } },
+          "accountAnalysis": { "title": "Analisis akun", "items": { "age": "Syarat usia akun minimum", "patterns": "Deteksi pola mirip bot", "avatarUsername": "Pertimbangkan avatar/nama pengguna" } },
+          "automatedResponse": { "title": "Respons otomatis", "items": { "lockdown": "Kunci otomatis atau mode lambat", "verification": "Wajibkan level verifikasi lebih tinggi", "removal": "Kick/ban atau timeout akun mencurigakan" } },
+          "contentFiltering": { "title": "Perlindungan konten", "items": { "inviteSpam": "Kurangi spam undangan dari akun baru", "massMention": "Kurangi spam mention massal", "newMember": "Filter ekstra untuk anggota baru" } }
+        },
+        "warning": { "title": "Catatan:", "message": "Tindakan anti-raid bisa ketat. Sesuaikan ambang agar tidak mengganggu anggota sah saat ramai." },
+        "fields": {
+          "joinRate": { "label": "Laju Bergabung", "desc": "Maks bergabung dalam jendela waktu" },
+          "joinWindow": { "label": "Jendela Waktu (detik)", "desc": "Interval untuk pemeriksaan laju" },
+          "accountAge": { "label": "Usia Akun Minimum (hari)", "desc": "Blokir akun yang lebih baru dari ini" },
+          "raidAction": { "label": "Saat Raid Terdeteksi", "desc": "Aksi utama saat raid terdeteksi" },
+          "raidActionDuration": { "label": "Durasi Aksi (menit)", "desc": "Durasi untuk timeout/lockdown", "notApplicable": "Tidak berlaku untuk kick/ban/alert" },
+          "alertChannel": { "label": "Channel Peringatan", "desc": "Tempat mengirim peringatan & ringkasan anti-raid" },
+          "autoKick": { "label": "Kick Otomatis yang Mencurigakan", "desc": "Otomatis kick akun yang gagal pemeriksaan" },
+          "gracePeriod": { "label": "Periode Bertahan (menit)", "desc": "Waktu mempertahankan perlindungan tinggi setelah deteksi" },
+          "whitelistRoles": { "label": "Peran Pengecualian", "desc": "Anggota dengan peran ini melewati pemeriksaan anti-raid" }
+        },
+        "actions": { "lockdown": "Lockdown", "kick": "Kick", "ban": "Ban", "timeout": "Timeout", "alert": "Hanya Peringatan" },
+        "verification": { "label": "Level Verifikasi Wajib", "levels": { "none": "Tidak Ada", "low": "Rendah", "medium": "Sedang", "high": "Tinggi", "highest": "Tertinggi" } },
+        "placeholders": { "noAlerts": "Tidak ada channel peringatan" },
+        "roles": { "placeholder": "Tambah peran untuk dikecualikan...", "meta": { "role": "peran" }, "noMatches": "Tidak ada peran yang cocok.", "allAdded": "Semua peran sudah ditambahkan" },
+        "modal": { "title": "Pengaturan Anti-Raid", "saving": "Menyimpan pengaturan anti-raid...", "saved": "Pengaturan anti-raid disimpan" },
+        "toasts": { "saved": "Pengaturan anti-raid disimpan", "saveFailed": "Gagal menyimpan pengaturan anti-raid" }
+      },
+
       "automod": {
         "header": "Moderasi Otomatis",
         "badge": "Perlindungan",
@@ -1313,6 +1335,177 @@
           "verificationSystem": "Sistem Verifikasi"
         }
       }
+    }
+  },
+  "gamesSocials": {
+    "title": "Game & Sosial",
+    "subtitle": "Konfigurasi fitur game dan sosial",
+    "loading": {
+      "title": "Memuat Pengaturan Integrasi",
+      "message": "Mengambil data konfigurasi integrasi dan server Anda..."
+    },
+    "toasts": {
+      "serviceEnabled": "{{service}} diaktifkan",
+      "serviceDisabled": "{{service}} dinonaktifkan",
+      "toggleFailed": "Gagal memperbarui toggle",
+      "saved": "Pengaturan {{service}} telah disimpan",
+      "saveFailed": "Gagal menyimpan"
+    },
+    "services": {
+      "youtube": {
+        "label": "YouTube",
+        "desc": "Umumkan unggahan baru dan live stream dari channel yang dipilih"
+      },
+      "twitch": {
+        "label": "Twitch",
+        "desc": "Umumkan ketika streamer favorit Anda sedang live"
+      },
+      "pubg": {
+        "label": "PUBG",
+        "desc": "Statistik pemain, ringkasan pertandingan, dan notifikasi (direncanakan)"
+      },
+      "valorant": {
+        "label": "Valorant",
+        "desc": "Update pertandingan, sorotan, dan notifikasi (direncanakan)"
+      },
+      "apex": {
+        "label": "Apex Legends",
+        "desc": "Update pertandingan, sorotan, dan notifikasi (direncanakan)"
+      },
+      "mobilelegends": {
+        "label": "Mobile Legends",
+        "desc": "Update tim dan notifikasi pertandingan (direncanakan)"
+      },
+      "clashofclans": {
+        "label": "Clash of Clans",
+        "desc": "Update perang clan dan kemajuan (direncanakan)"
+      },
+      "fortnite": {
+        "label": "Fortnite",
+        "desc": "Update pertandingan dan notifikasi acara (direncanakan)"
+      },
+      "genshin": {
+        "label": "Genshin Impact",
+        "desc": "Update acara dan berita (direncanakan)"
+      }
+    },
+    "preview": {
+      "samples": {
+        "twitch": {
+          "streamTitle": "Live Stream Menakjubkan",
+          "game": "Just Chatting",
+          "startedAtRelative": "baru saja"
+        },
+        "youtube": {
+          "channel": "Nama Channel",
+          "videoTitle": "Unggahan Baru yang Menakjubkan",
+          "publishedAtRelative": "baru saja",
+          "memberOnly": " (Hanya Member)"
+        }
+      }
+    },
+    "common": {
+      "announcement": "Pengumuman",
+      "select": "Pilih…",
+      "mentionTargets": "Target Mention",
+      "mentionHelper": "Enter untuk menambah • Backspace untuk menghapus • Urutan tetap",
+      "intervalSec": "Interval (detik)",
+      "embeds": "Embed",
+      "plain": "Tanpa Format",
+      "placeholders": "Placeholder",
+      "resolving": "Memproses...",
+      "namePlaceholder": "Nama",
+      "clearOverrides": "Bersihkan Override",
+      "configuration": "Konfigurasi",
+      "announcementsEnabled": "Pengumuman diaktifkan",
+      "announcementsDisabled": "Pengumuman dinonaktifkan",
+      "integrationNotConfigured": "integrasi belum dikonfigurasi.",
+      "plannedFeatures": "Fitur yang direncanakan",
+      "needSooner": "Kalau Anda membutuhkan ini lebih cepat, hubungi kami.",
+      "remove": "Hapus",
+      "loadingConfig": "Memuat konfigurasi {{service}}…",
+      "mentionInputPlaceholder": "Tambahkan @everyone, @here atau peran…",
+      "meta": {
+        "role": "peran",
+        "meta": "meta"
+      },
+      "noTemplate": "Belum ada template.",
+      "preview": "Pratinjau"
+    },
+    "youtube": {
+      "fields": {
+        "uploadAnnounceChannel": "Channel Pengumuman Upload",
+        "liveAnnounceChannel": "Channel Pengumuman Live",
+        "upload": "Upload",
+        "live": "Live"
+      },
+      "sections": {
+        "regularTemplate": "Template Reguler",
+        "memberTemplate": "Template Member",
+        "memberUpload": "Upload Member",
+        "memberLive": "Live Member",
+        "regularPreview": "Pratinjau Template Reguler",
+        "memberPreview": "Pratinjau Template Member"
+      },
+      "channels": {
+        "addLabel": "Tambah Channel (URL)",
+        "addPlaceholder": "https://youtube.com/@handle",
+        "empty": "Belum ada channel yang ditambahkan.",
+        "editTitle": "Edit template per-channel",
+        "fetchTitle": "Ambil nama channel",
+        "uploadTemplate": "Template Upload",
+        "memberUploadTemplate": "Template Upload Member",
+        "liveTemplate": "Template Live",
+        "memberLiveTemplate": "Template Live Member"
+      },
+      "toasts": {
+        "alreadyWatching": "Sudah memantau channel {{id}}",
+        "extracted": "ID channel yang diambil: {{id}}",
+        "extractedWithName": "Berhasil mengambil {{name}} ({{id}})",
+        "added": "Channel {{name}} telah ditambahkan",
+        "addFailed": "Gagal menambah channel"
+      }
+    },
+    "twitch": {
+      "fields": {
+        "announceChannel": "Channel Pengumuman",
+        "liveStream": "Live Stream"
+      },
+      "sections": {
+        "globalTemplate": "Template Global",
+        "templatePreview": "Pratinjau Template"
+      },
+      "streamers": {
+        "addLabel": "Tambah Streamer (username / URL)",
+        "addPlaceholder": "username, https://twitch.tv/username",
+        "empty": "Belum ada streamer yang ditambahkan.",
+        "editTitle": "Edit template per-streamer",
+        "fetchTitle": "Ambil nama streamer",
+        "liveTemplate": "Template Live"
+      },
+      "toasts": {
+        "resolvedTo": "Berhasil dihubungkan ke {{username}}",
+        "resolveFailed": "Streamer tidak dapat dihubungkan"
+      }
+    },
+    "leveling": "XP & Level",
+    "economy": "Sistem Ekonomi",
+    "socialFeatures": "Fitur Sosial",
+    "miniGames": "Game Mini"
+  },
+  "welcome": {
+    "title": "Sistem Sambutan",
+    "subtitle": "Atur pesan sambutan dan pengaturan anggota baru",
+    "enabled": "Pesan sambutan diaktifkan",
+    "channel": "Saluran Sambutan",
+    "message": "Pesan Sambutan",
+    "roles": "Peran Otomatis",
+    "toasts": {
+      "saved": "Pengaturan sambutan berhasil disimpan",
+      "saveFailed": "Gagal menyimpan",
+      "enabled": "Pesan sambutan diaktifkan",
+      "disabled": "Pesan sambutan dinonaktifkan",
+      "toggleFailed": "Gagal memperbarui pengaturan"
     }
   }
 }

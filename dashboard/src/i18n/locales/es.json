@@ -139,7 +139,8 @@
     "es": "Español",
     "fr": "Français",
     "de": "Deutsch",
-    "ja": "日本語"
+    "ja": "日本語",
+    "cn": "Chinese (Traditional)"
   },
   "overview": {
     "title": "Resumen del Servidor",
@@ -532,15 +533,6 @@
     "status": "Estado del bot",
     "embedColor": "Color de embed",
     "prefix": "Prefijo de comando"
-  },
-  "welcome": {
-    "toasts": {
-      "saved": "Configuración de bienvenida guardada",
-      "saveFailed": "Error al guardar",
-      "enabled": "Mensajes de bienvenida habilitados",
-      "disabled": "Mensajes de bienvenida deshabilitados",
-      "toggleFailed": "No se pudo actualizar el interruptor"
-    }
   },
   "moderation": {
     "title": "Moderación",
@@ -1174,6 +1166,83 @@
           "validationRequired": "Selecciona al menos un canal de registro o establece un canal global"
         }
       }
+      ,
+      "antiraid": {
+        "header": "Protección Anti-Raid",
+        "badge": "Seguridad",
+        "info": {
+          "description": "Detecta y bloquea intentos de raid con límites de tasa de uniones, edad mínima de cuenta, respuestas automáticas y salvaguardas de contenido."
+        },
+        "features": {
+          "joinRate": {
+            "title": "Supervisión de tasa de uniones",
+            "items": {
+              "trackPatterns": "Rastrear picos y patrones de uniones sospechosas",
+              "detectAttacks": "Detectar intentos de raid en tiempo real",
+              "thresholds": "Umbrales configurables para activar la protección"
+            }
+          },
+          "accountAnalysis": {
+            "title": "Análisis de cuentas",
+            "items": {
+              "age": "Requisito de antigüedad mínima de la cuenta",
+              "patterns": "Detectar patrones tipo bot",
+              "avatarUsername": "Considerar avatar/nombre de usuario"
+            }
+          },
+          "automatedResponse": {
+            "title": "Respuesta automatizada",
+            "items": {
+              "lockdown": "Bloqueo automático o modo lento",
+              "verification": "Exigir niveles de verificación más altos",
+              "removal": "Expulsar/bloquear o silenciar cuentas sospechosas"
+            }
+          },
+          "contentFiltering": {
+            "title": "Salvaguardas de contenido",
+            "items": {
+              "inviteSpam": "Reducir spam de invitaciones de cuentas nuevas",
+              "massMention": "Mitigar el spam de menciones masivas",
+              "newMember": "Filtros extra para miembros recién llegados"
+            }
+          }
+        },
+        "warning": {
+          "title": "Nota:",
+          "message": "Las acciones anti-raid pueden ser estrictas. Ajusta los umbrales para no afectar a miembros legítimos en periodos de alta actividad."
+        },
+        "fields": {
+          "joinRate": { "label": "Tasa de uniones", "desc": "Uniones máximas permitidas dentro de la ventana" },
+          "joinWindow": { "label": "Ventana (segundos)", "desc": "Intervalo usado para revisar la tasa" },
+          "accountAge": { "label": "Antigüedad mínima de cuenta (días)", "desc": "Bloquear cuentas más recientes que esta antigüedad" },
+          "raidAction": { "label": "Al detectar raid", "desc": "Acción principal cuando se detecta raid" },
+          "raidActionDuration": { "label": "Duración de la acción (min)", "desc": "Duración para acciones de silencio/bloqueo", "notApplicable": "No aplica para expulsar/bloquear/alerta" },
+          "alertChannel": { "label": "Canal de alertas", "desc": "Dónde enviar alertas y resúmenes anti-raid" },
+          "autoKick": { "label": "Expulsión automática de sospechosos", "desc": "Expulsar automáticamente cuentas que fallen las verificaciones" },
+          "gracePeriod": { "label": "Periodo de gracia (min)", "desc": "Tiempo para mantener protección elevada tras la detección" },
+          "whitelistRoles": { "label": "Roles de omisión", "desc": "Miembros con estos roles omiten verificaciones anti-raid" }
+        },
+        "actions": {
+          "lockdown": "Bloqueo",
+          "kick": "Expulsar",
+          "ban": "Banear",
+          "timeout": "Silencio",
+          "alert": "Solo alerta"
+        },
+        "verification": {
+          "label": "Nivel de verificación requerido",
+          "levels": { "none": "Ninguno", "low": "Bajo", "medium": "Medio", "high": "Alto", "highest": "Máximo" }
+        },
+        "placeholders": { "noAlerts": "Sin canal de alertas" },
+        "roles": {
+          "placeholder": "Añade roles a omitir...",
+          "meta": { "role": "rol" },
+          "noMatches": "No hay roles que coincidan con tu búsqueda.",
+          "allAdded": "Todos los roles están añadidos"
+        },
+        "modal": { "title": "Ajustes Anti-Raid", "saving": "Guardando ajustes anti-raid...", "saved": "Ajustes anti-raid guardados" },
+        "toasts": { "saved": "Ajustes anti-raid guardados", "saveFailed": "Error al guardar los ajustes anti-raid" }
+      }
     },
     "cards": {
       "common": {
@@ -1251,6 +1320,177 @@
           "verificationSystem": "Sistema de verificación"
         }
       }
+    }
+  },
+  "gamesSocials": {
+    "title": "Juegos y redes sociales",
+    "subtitle": "Configura funciones de juego y sociales",
+    "loading": {
+      "title": "Cargando ajustes de integración",
+      "message": "Obteniendo tu configuración de integración y datos del servidor..."
+    },
+    "toasts": {
+      "serviceEnabled": "{{service}} habilitado",
+      "serviceDisabled": "{{service}} deshabilitado",
+      "toggleFailed": "No se pudo actualizar la opción",
+      "saved": "Ajustes de {{service}} guardados",
+      "saveFailed": "Fallo al guardar"
+    },
+    "services": {
+      "youtube": {
+        "label": "YouTube",
+        "desc": "Anuncia nuevas subidas y transmisiones en vivo de los canales seleccionados"
+      },
+      "twitch": {
+        "label": "Twitch",
+        "desc": "Anuncia cuando tus streamers favoritos estén en directo"
+      },
+      "pubg": {
+        "label": "PUBG",
+        "desc": "Estadísticas de jugador, resúmenes de partidas y notificaciones (planeado)"
+      },
+      "valorant": {
+        "label": "Valorant",
+        "desc": "Actualizaciones de partidas, resúmenes y notificaciones (planeado)"
+      },
+      "apex": {
+        "label": "Apex Legends",
+        "desc": "Actualizaciones de partidas, resúmenes y notificaciones (planeado)"
+      },
+      "mobilelegends": {
+        "label": "Mobile Legends",
+        "desc": "Actualizaciones del equipo y notificaciones de partidas (planeado)"
+      },
+      "clashofclans": {
+        "label": "Clash of Clans",
+        "desc": "Actualizaciones de guerra de clanes y progreso (planeado)"
+      },
+      "fortnite": {
+        "label": "Fortnite",
+        "desc": "Actualizaciones de partidas y notificaciones de eventos (planeado)"
+      },
+      "genshin": {
+        "label": "Genshin Impact",
+        "desc": "Actualizaciones de eventos y noticias (planeado)"
+      }
+    },
+    "preview": {
+      "samples": {
+        "twitch": {
+          "streamTitle": "Transmisión en vivo sorprendente",
+          "game": "Solo charlando",
+          "startedAtRelative": "justo ahora"
+        },
+        "youtube": {
+          "channel": "Nombre del canal",
+          "videoTitle": "Nueva subida asombrosa",
+          "publishedAtRelative": "justo ahora",
+          "memberOnly": " (Solo miembros)"
+        }
+      }
+    },
+    "common": {
+      "announcement": "Anuncio",
+      "select": "Seleccionar…",
+      "mentionTargets": "Destinatarios de mención",
+      "mentionHelper": "Presiona Intro para agregar • Retroceso para eliminar • El orden se conserva",
+      "intervalSec": "Intervalo (seg)",
+      "embeds": "Incrustados",
+      "plain": "Plano",
+      "placeholders": "Marcadores de posición",
+      "resolving": "Resolviendo...",
+      "namePlaceholder": "Nombre",
+      "clearOverrides": "Limpiar sustituciones",
+      "configuration": "Configuración",
+      "announcementsEnabled": "Anuncios habilitados",
+      "announcementsDisabled": "Anuncios deshabilitados",
+      "integrationNotConfigured": "la integración aún no está configurada.",
+      "plannedFeatures": "Funciones planeadas",
+      "needSooner": "Si lo necesitas antes, háznoslo saber.",
+      "remove": "Eliminar",
+      "loadingConfig": "Cargando la configuración de {{service}}…",
+      "mentionInputPlaceholder": "Agrega @everyone, @here o rol…",
+      "meta": {
+        "role": "rol",
+        "meta": "meta"
+      },
+      "noTemplate": "No se ha definido una plantilla.",
+      "preview": "Vista previa"
+    },
+    "youtube": {
+      "fields": {
+        "uploadAnnounceChannel": "Canal de anuncio de subida",
+        "liveAnnounceChannel": "Canal de anuncio en vivo",
+        "upload": "Subida",
+        "live": "En vivo"
+      },
+      "sections": {
+        "regularTemplate": "Plantilla regular",
+        "memberTemplate": "Plantilla para miembros",
+        "memberUpload": "Subida para miembros",
+        "memberLive": "En vivo para miembros",
+        "regularPreview": "Vista previa de plantilla regular",
+        "memberPreview": "Vista previa de plantilla para miembros"
+      },
+      "channels": {
+        "addLabel": "Agregar canal (URL)",
+        "addPlaceholder": "https://youtube.com/@handle",
+        "empty": "Aún no se han agregado canales.",
+        "editTitle": "Editar plantillas por canal",
+        "fetchTitle": "Obtener nombre del canal",
+        "uploadTemplate": "Plantilla de subida",
+        "memberUploadTemplate": "Plantilla de subida para miembros",
+        "liveTemplate": "Plantilla en vivo",
+        "memberLiveTemplate": "Plantilla en vivo para miembros"
+      },
+      "toasts": {
+        "alreadyWatching": "Ya se está siguiendo el canal {{id}}",
+        "extracted": "ID de canal extraído: {{id}}",
+        "extractedWithName": "Extraído {{name}} ({{id}})",
+        "added": "Canal {{name}} agregado",
+        "addFailed": "No se pudo agregar el canal"
+      }
+    },
+    "twitch": {
+      "fields": {
+        "announceChannel": "Canal de anuncios",
+        "liveStream": "Transmisión en vivo"
+      },
+      "sections": {
+        "globalTemplate": "Plantilla global",
+        "templatePreview": "Vista previa de la plantilla"
+      },
+      "streamers": {
+        "addLabel": "Agregar streamer (usuario / URL)",
+        "addPlaceholder": "usuario, https://twitch.tv/usuario",
+        "empty": "Aún no se han agregado streamers.",
+        "editTitle": "Editar plantillas por streamer",
+        "fetchTitle": "Obtener nombre del streamer",
+        "liveTemplate": "Plantilla en vivo"
+      },
+      "toasts": {
+        "resolvedTo": "Resuelto a {{username}}",
+        "resolveFailed": "No se pudo resolver el streamer"
+      }
+    },
+    "leveling": "XP y nivelación",
+    "economy": "Sistema de economía",
+    "socialFeatures": "Funciones sociales",
+    "miniGames": "Minijuegos"
+  },
+  "welcome": {
+    "title": "Sistema de bienvenida",
+    "subtitle": "Configura los mensajes de bienvenida y la configuración para nuevos miembros",
+    "enabled": "Mensajes de bienvenida activados",
+    "channel": "Canal de bienvenida",
+    "message": "Mensaje de bienvenida",
+    "roles": "Roles automáticos",
+    "toasts": {
+      "saved": "Configuración de bienvenida guardada",
+      "saveFailed": "Error al guardar",
+      "enabled": "Mensajes de bienvenida activados",
+      "disabled": "Mensajes de bienvenida desactivados",
+      "toggleFailed": "No se pudo actualizar la opción"
     }
   }
 }

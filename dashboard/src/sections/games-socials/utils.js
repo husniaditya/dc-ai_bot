@@ -103,13 +103,22 @@ export function cleanStreamerUsernames(streamers) {
  * @param {Array} guildRoles - Array of guild roles
  * @returns {string} - Preview string
  */
-export function buildPreview(template, channelId, type = 'youtube', config = {}, guildRoles = []) {
+export function buildPreview(template, channelId, type = 'youtube', config = {}, guildRoles = [], t) {
   if (!template) return '';
+  const resolve = (key, fallback) => {
+    try {
+      if (typeof t === 'function') {
+        const v = t(key);
+        if (v && typeof v === 'string' && v !== key) return v;
+      }
+    } catch {}
+    return fallback;
+  };
   
   if (type === 'twitch') {
     const streamerNames = config?.streamerNames || {};
     const streamerName = channelId ? (streamerNames[channelId] || 'StreamerName') : (streamerNames[config?.streamers?.[0]] || 'StreamerName');
-    const streamTitle = 'Amazing Live Stream';
+    const streamTitle = resolve('gamesSocials.preview.samples.twitch.streamTitle', 'Amazing Live Stream');
     const url = `https://twitch.tv/${channelId || 'streamername'}`;
     const thumbnail = `https://static-cdn.jtvnw.net/previews-ttv/live_user_${channelId || 'streamername'}-1920x1080.jpg`;
     const list = config?.mentionTargets && config.mentionTargets.length ? config.mentionTargets : (config?.mentionRoleId ? [config.mentionRoleId] : []);
@@ -132,17 +141,19 @@ export function buildPreview(template, channelId, type = 'youtube', config = {},
       .replace(/\{roleMention\}/g, roleMention)
       .replace(/\{roleNames\}/g, roleNames)
       .replace(/\{thumbnail\}/g, thumbnail)
-      .replace(/\{game\}/g, 'Just Chatting')
+      .replace(/\{game\}/g, resolve('gamesSocials.preview.samples.twitch.game', 'Just Chatting'))
       .replace(/\{viewers\}/g, '1337')
       .replace(/\{startedAt\}/g, new Date().toISOString())
-      .replace(/\{startedAtRelative\}/g, 'just now');
+      .replace(/\{startedAtRelative\}/g, resolve('gamesSocials.preview.samples.twitch.startedAtRelative', 'just now'));
   }
   
   // YouTube preview
   const sampleVideoId = 'VIDEO12345';
   const channelNames = config?.channelNames || {};
-  const channelTitle = channelId ? (channelNames[channelId] || 'Channel Name') : (channelNames[config?.channels?.[0]] || 'Channel Name');
-  const videoTitle = 'Amazing New Upload';
+  const channelTitle = channelId 
+    ? (channelNames[channelId] || resolve('gamesSocials.preview.samples.youtube.channel', 'Channel Name')) 
+    : (channelNames[config?.channels?.[0]] || resolve('gamesSocials.preview.samples.youtube.channel', 'Channel Name'));
+  const videoTitle = resolve('gamesSocials.preview.samples.youtube.videoTitle', 'Amazing New Upload');
   const url = `https://youtu.be/${sampleVideoId}`;
   const thumbnail = `https://img.youtube.com/vi/${sampleVideoId}/hqdefault.jpg`;
   const list = config?.mentionTargets && config.mentionTargets.length ? config.mentionTargets : (config?.mentionRoleId ? [config.mentionRoleId] : []);
@@ -166,8 +177,8 @@ export function buildPreview(template, channelId, type = 'youtube', config = {},
     .replace(/\{roleNames\}/g, roleNames)
     .replace(/\{thumbnail\}/g, thumbnail)
     .replace(/\{publishedAt\}/g, new Date().toISOString())
-    .replace(/\{publishedAtRelative\}/g, 'just now')
-    .replace(/\{memberText\}/g, ' (Members Only)');
+    .replace(/\{publishedAtRelative\}/g, resolve('gamesSocials.preview.samples.youtube.publishedAtRelative', 'just now'))
+    .replace(/\{memberText\}/g, resolve('gamesSocials.preview.samples.youtube.memberOnly', ' (Members Only)'));
 }
 
 /**

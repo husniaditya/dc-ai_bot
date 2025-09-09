@@ -139,7 +139,8 @@
     "es": "Español",
     "fr": "Français",
     "de": "Deutsch",
-    "ja": "日本語"
+    "ja": "日本語",
+    "cn": "Chinese (Traditional)"
   },
   "overview": {
     "title": "Aperçu du serveur",
@@ -542,15 +543,6 @@
     "embedColor": "Couleur d'intégration",
     "prefix": "Préfixe de commande"
   },
-  "welcome": {
-    "toasts": {
-      "saved": "Paramètres de bienvenue enregistrés",
-      "saveFailed": "Échec de l'enregistrement",
-      "enabled": "Messages de bienvenue activés",
-      "disabled": "Messages de bienvenue désactivés",
-      "toggleFailed": "Échec de la mise à jour du commutateur"
-    }
-  },
   "moderation": {
     "common": {
       "enabled": "{{feature}} activé",
@@ -788,6 +780,82 @@
           "copiedToEmpty": "Salon global copié vers les catégories vides",
           "validationRequired": "Sélectionnez au moins un salon ou définissez un salon global"
         }
+      },
+      "antiraid": {
+        "header": "Protection Anti-Raid",
+        "badge": "Sécurité",
+        "info": {
+          "description": "Détectez et bloquez les raids avec des limites de taux d’adhésion, des vérifications d’âge de compte, des réponses automatiques et des garde-fous de contenu."
+        },
+        "features": {
+          "joinRate": {
+            "title": "Surveillance du taux d’adhésions",
+            "items": {
+              "trackPatterns": "Suivre les pics soudains et modèles suspects",
+              "detectAttacks": "Détecter les tentatives de raid en temps réel",
+              "thresholds": "Seuils configurables pour déclencher la protection"
+            }
+          },
+          "accountAnalysis": {
+            "title": "Analyse des comptes",
+            "items": {
+              "age": "Âge minimal du compte",
+              "patterns": "Détecter des schémas de type bot",
+              "avatarUsername": "Considérer l’avatar/le nom d’utilisateur"
+            }
+          },
+          "automatedResponse": {
+            "title": "Réponse automatique",
+            "items": {
+              "lockdown": "Verrouillage automatique des salons ou slowmode",
+              "verification": "Exiger un niveau de vérification plus élevé",
+              "removal": "Expulser/bannir ou timeout les comptes suspects"
+            }
+          },
+          "contentFiltering": {
+            "title": "Garde-fous de contenu",
+            "items": {
+              "inviteSpam": "Réduire le spam d’invitations des nouveaux comptes",
+              "massMention": "Atténuer le spam de mentions de masse",
+              "newMember": "Filtres supplémentaires pour les nouveaux membres"
+            }
+          }
+        },
+        "warning": {
+          "title": "Note :",
+          "message": "Les actions anti-raid peuvent être strictes. Ajustez les seuils pour éviter d’impacter les membres légitimes lors de périodes chargées."
+        },
+        "fields": {
+          "joinRate": { "label": "Taux d’adhésions", "desc": "Adhésions max autorisées dans la fenêtre" },
+          "joinWindow": { "label": "Fenêtre (secondes)", "desc": "Intervalle utilisé pour le contrôle du taux" },
+          "accountAge": { "label": "Âge minimal du compte (jours)", "desc": "Bloquer les comptes plus récents que cet âge" },
+          "raidAction": { "label": "En cas de raid détecté", "desc": "Action principale à effectuer lorsqu’un raid est détecté" },
+          "raidActionDuration": { "label": "Durée de l’action (minutes)", "desc": "Durée pour les actions timeout/verrouillage", "notApplicable": "Non applicable pour expulsion/bannissement/alerte" },
+          "alertChannel": { "label": "Salon d’alerte", "desc": "Où envoyer les alertes et résumés anti-raid" },
+          "autoKick": { "label": "Expulsion auto des suspects", "desc": "Expulser automatiquement les comptes qui échouent aux vérifications" },
+          "gracePeriod": { "label": "Période de maintien (minutes)", "desc": "Temps pendant lequel garder la protection élevée après détection" },
+          "whitelistRoles": { "label": "Rôles d’exemption", "desc": "Les membres avec ces rôles contournent les vérifications anti-raid" }
+        },
+        "actions": {
+          "lockdown": "Verrouillage",
+          "kick": "Expulsion",
+          "ban": "Bannissement",
+          "timeout": "Timeout",
+          "alert": "Alerte uniquement"
+        },
+        "verification": {
+          "label": "Niveau de vérification requis",
+          "levels": { "none": "Aucun", "low": "Faible", "medium": "Moyen", "high": "Élevé", "highest": "Maximal" }
+        },
+        "placeholders": { "noAlerts": "Aucun salon d’alerte" },
+        "roles": {
+          "placeholder": "Ajouter des rôles à exclure...",
+          "meta": { "role": "rôle" },
+          "noMatches": "Aucun rôle ne correspond à votre recherche.",
+          "allAdded": "Tous les rôles sont ajoutés"
+        },
+        "modal": { "title": "Paramètres Anti-Raid", "saving": "Enregistrement des paramètres anti-raid...", "saved": "Paramètres anti-raid enregistrés" },
+        "toasts": { "saved": "Paramètres anti-raid enregistrés", "saveFailed": "Échec de l’enregistrement des paramètres anti-raid" }
       },
       "xp": {
         "header": "Système d'XP et de niveaux",
@@ -1326,6 +1394,177 @@
           "verificationSystem": "Système de vérification"
         }
       }
+    }
+  },
+  "gamesSocials": {
+    "title": "Jeux & Réseaux sociaux",
+    "subtitle": "Configurer les fonctionnalités jeux et sociales",
+    "loading": {
+      "title": "Chargement des paramètres d'intégration",
+      "message": "Récupération de la configuration de votre intégration et des données du serveur..."
+    },
+    "toasts": {
+      "serviceEnabled": "{{service}} activé",
+      "serviceDisabled": "{{service}} désactivé",
+      "toggleFailed": "Échec de la mise à jour de l'option",
+      "saved": "Paramètres {{service}} enregistrés",
+      "saveFailed": "Échec de l'enregistrement"
+    },
+    "services": {
+      "youtube": {
+        "label": "YouTube",
+        "desc": "Annonce les nouvelles publications et diffusions en direct des chaînes sélectionnées"
+      },
+      "twitch": {
+        "label": "Twitch",
+        "desc": "Annonce quand vos streamers préférés sont en direct"
+      },
+      "pubg": {
+        "label": "PUBG",
+        "desc": "Statistiques des joueurs, résumés des matchs et notifications (prévu)"
+      },
+      "valorant": {
+        "label": "Valorant",
+        "desc": "Mises à jour des matchs, temps forts et notifications (prévu)"
+      },
+      "apex": {
+        "label": "Apex Legends",
+        "desc": "Mises à jour des matchs, temps forts et notifications (prévu)"
+      },
+      "mobilelegends": {
+        "label": "Mobile Legends",
+        "desc": "Mises à jour de l'équipe et notifications de match (prévu)"
+      },
+      "clashofclans": {
+        "label": "Clash of Clans",
+        "desc": "Mises à jour de guerre de clans et progression (prévu)"
+      },
+      "fortnite": {
+        "label": "Fortnite",
+        "desc": "Mises à jour de match et notifications d'événements (prévu)"
+      },
+      "genshin": {
+        "label": "Genshin Impact",
+        "desc": "Mises à jour des événements et actualités (prévu)"
+      }
+    },
+    "preview": {
+      "samples": {
+        "twitch": {
+          "streamTitle": "Live incroyable",
+          "game": "Just Chatting",
+          "startedAtRelative": "à l’instant"
+        },
+        "youtube": {
+          "channel": "Nom de la chaîne",
+          "videoTitle": "Nouvelle vidéo incroyable",
+          "publishedAtRelative": "à l’instant",
+          "memberOnly": " (Membres uniquement)"
+        }
+      }
+    },
+    "common": {
+      "announcement": "Annonce",
+      "select": "Sélectionner…",
+      "mentionTargets": "Cibles à mentionner",
+      "mentionHelper": "Entrée pour ajouter • Retour pour supprimer • L’ordre est conservé",
+      "intervalSec": "Intervalle (sec)",
+      "embeds": "Intégrations",
+      "plain": "Brut",
+      "placeholders": "Variables",
+      "resolving": "Résolution...",
+      "namePlaceholder": "Nom",
+      "clearOverrides": "Effacer les remplacements",
+      "configuration": "Configuration",
+      "announcementsEnabled": "Annonces activées",
+      "announcementsDisabled": "Annonces désactivées",
+      "integrationNotConfigured": "l’intégration n’est pas encore configurée.",
+      "plannedFeatures": "Fonctionnalités prévues",
+      "needSooner": "Si vous en avez besoin plus tôt, faites-le nous savoir.",
+      "remove": "Supprimer",
+      "loadingConfig": "Chargement de la config {{service}}…",
+      "mentionInputPlaceholder": "Ajouter @everyone, @here ou un rôle…",
+      "meta": {
+        "role": "rôle",
+        "meta": "métadonnée"
+      },
+      "noTemplate": "Aucun modèle défini.",
+      "preview": "Aperçu"
+    },
+    "youtube": {
+      "fields": {
+        "uploadAnnounceChannel": "Salon d’annonce des publications",
+        "liveAnnounceChannel": "Salon d’annonce Live",
+        "upload": "Publication",
+        "live": "En direct"
+      },
+      "sections": {
+        "regularTemplate": "Modèle normal",
+        "memberTemplate": "Modèle membres",
+        "memberUpload": "Publication membres",
+        "memberLive": "Live membres",
+        "regularPreview": "Aperçu du modèle normal",
+        "memberPreview": "Aperçu du modèle membres"
+      },
+      "channels": {
+        "addLabel": "Ajouter une chaîne (URL)",
+        "addPlaceholder": "https://youtube.com/@handle",
+        "empty": "Aucune chaîne ajoutée pour l’instant.",
+        "editTitle": "Éditer les modèles par chaîne",
+        "fetchTitle": "Récupérer le nom de la chaîne",
+        "uploadTemplate": "Modèle publication",
+        "memberUploadTemplate": "Modèle publication membres",
+        "liveTemplate": "Modèle live",
+        "memberLiveTemplate": "Modèle live membres"
+      },
+      "toasts": {
+        "alreadyWatching": "Déjà en surveillance de la chaîne {{id}}",
+        "extracted": "Identifiant de la chaîne extrait : {{id}}",
+        "extractedWithName": "Extrait {{name}} ({{id}})",
+        "added": "Chaîne {{name}} ajoutée",
+        "addFailed": "Échec de l’ajout de la chaîne"
+      }
+    },
+    "twitch": {
+      "fields": {
+        "announceChannel": "Salon d’annonce",
+        "liveStream": "Diffusion en direct"
+      },
+      "sections": {
+        "globalTemplate": "Modèle global",
+        "templatePreview": "Aperçu du modèle"
+      },
+      "streamers": {
+        "addLabel": "Ajouter un streamer (nom d’utilisateur / URL)",
+        "addPlaceholder": "nom d’utilisateur, https://twitch.tv/nomdutilisateur",
+        "empty": "Aucun streamer ajouté pour l’instant.",
+        "editTitle": "Éditer les modèles par streamer",
+        "fetchTitle": "Récupérer le nom du streamer",
+        "liveTemplate": "Modèle live"
+      },
+      "toasts": {
+        "resolvedTo": "Résolu en {{username}}",
+        "resolveFailed": "Impossible de résoudre le streamer"
+      }
+    },
+    "leveling": "XP & progression",
+    "economy": "Système économique",
+    "socialFeatures": "Fonctionnalités sociales",
+    "miniGames": "Mini-jeux"
+  },
+  "welcome": {
+    "title": "Système de bienvenue",
+    "subtitle": "Configure les messages de bienvenue et les paramètres des nouveaux membres",
+    "enabled": "Messages de bienvenue activés",
+    "channel": "Salon de bienvenue",
+    "message": "Message de bienvenue",
+    "roles": "Rôles automatiques",
+    "toasts": {
+      "saved": "Paramètres de bienvenue enregistrés",
+      "saveFailed": "Échec de l'enregistrement",
+      "enabled": "Messages de bienvenue activés",
+      "disabled": "Messages de bienvenue désactivés",
+      "toggleFailed": "Échec de la mise à jour de l'activation"
     }
   }
 }

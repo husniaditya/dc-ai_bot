@@ -8,6 +8,7 @@ import {
   getRoles 
 } from '../../api';
 import LoadingSection from '../../components/LoadingSection';
+import { useI18n } from '../../i18n';
 
 // Components
 import ServiceCard from './components/ServiceCard';
@@ -26,6 +27,7 @@ import { SERVICES, DEFAULT_CONFIGS } from './constants';
  * GamesSocialsSection - Main container for Games & Socials integrations
  */
 export default function GamesSocialsSection({ guildId, pushToast }) {
+  const { t } = useI18n();
   const [activeService, setActiveService] = useState('youtube');
   
   // YouTube state
@@ -115,11 +117,11 @@ export default function GamesSocialsSection({ guildId, pushToast }) {
           ...updated,
           channels: cleanChannelIds(updated?.channels || [])
         };
-        setYtConfig(safeConfig); 
-        setYtOriginal(safeConfig);
-        pushToast && pushToast('success', 'YouTube ' + (newEnabled ? 'enabled' : 'disabled'));
+  setYtConfig(safeConfig); 
+  setYtOriginal(safeConfig);
+  pushToast && pushToast('success', t(newEnabled ? 'gamesSocials.toasts.serviceEnabled' : 'gamesSocials.toasts.serviceDisabled', { service: t('gamesSocials.services.youtube.label') }));
       } catch (err) {
-        pushToast && pushToast('error', 'Toggle failed');
+  pushToast && pushToast('error', t('gamesSocials.toasts.toggleFailed'));
         setYtConfig(prevConfig); // revert
       }
     } else if (serviceKey === 'twitch') {
@@ -138,11 +140,11 @@ export default function GamesSocialsSection({ guildId, pushToast }) {
           ...updated,
           streamers: cleanStreamerUsernames(updated?.streamers || [])
         };
-        setTwitchConfig(safeConfig); 
-        setTwitchOriginal(safeConfig);
-        pushToast && pushToast('success', 'Twitch ' + (newEnabled ? 'enabled' : 'disabled'));
+  setTwitchConfig(safeConfig); 
+  setTwitchOriginal(safeConfig);
+  pushToast && pushToast('success', t(newEnabled ? 'gamesSocials.toasts.serviceEnabled' : 'gamesSocials.toasts.serviceDisabled', { service: t('gamesSocials.services.twitch.label') }));
       } catch (err) {
-        pushToast && pushToast('error', 'Toggle failed');
+  pushToast && pushToast('error', t('gamesSocials.toasts.toggleFailed'));
         setTwitchConfig(prevConfig); // revert
       }
     }
@@ -163,12 +165,12 @@ export default function GamesSocialsSection({ guildId, pushToast }) {
         channelMessages: updated?.channelMessages || {},
         channelNames: updated?.channelNames || {}
       }; 
-      setYtConfig(safe); 
-      setYtOriginal(safe); 
-      pushToast && pushToast('success', 'YouTube config saved'); 
+  setYtConfig(safe); 
+  setYtOriginal(safe); 
+  pushToast && pushToast('success', t('gamesSocials.toasts.saved', { service: t('gamesSocials.services.youtube.label') })); 
     } catch (e) { 
       console.error('YouTube save error:', e);
-      pushToast && pushToast('error', 'Save failed'); 
+  pushToast && pushToast('error', t('gamesSocials.toasts.saveFailed')); 
     } finally { 
       setYtSaving(false); 
     }
@@ -193,12 +195,12 @@ export default function GamesSocialsSection({ guildId, pushToast }) {
         streamerMessages: updated?.streamerMessages || {},
         streamerNames: updated?.streamerNames || {}
       }; 
-      setTwitchConfig(safe); 
-      setTwitchOriginal(safe); 
-      pushToast && pushToast('success', 'Twitch config saved'); 
+  setTwitchConfig(safe); 
+  setTwitchOriginal(safe); 
+  pushToast && pushToast('success', t('gamesSocials.toasts.saved', { service: t('gamesSocials.services.twitch.label') })); 
     } catch (e) { 
       console.error('Twitch save error:', e);
-      pushToast && pushToast('error', 'Save failed'); 
+  pushToast && pushToast('error', t('gamesSocials.toasts.saveFailed')); 
     } finally { 
       setTwitchSaving(false); 
     }
@@ -219,16 +221,16 @@ export default function GamesSocialsSection({ guildId, pushToast }) {
   return (
     <LoadingSection
       loading={showOverlay}
-      title="Loading Integration Settings"
-      message="Fetching your integration configuration and server data..."
+      title={t('gamesSocials.loading.title')}
+      message={t('gamesSocials.loading.message')}
       className="p-4 games-socials-wrapper position-relative"
       style={{ minHeight: '600px' }}
     >
       {/* Header */}
       <div className="d-flex align-items-center gap-2 mb-3">
-        <h5 className="mb-0">Games & Socials</h5>
-        {activeService === 'youtube' && ytHasChanges && <span className="dirty-badge">Unsaved</span>}
-        {activeService === 'twitch' && twitchHasChanges && <span className="dirty-badge">Unsaved</span>}
+        <h5 className="mb-0">{t('gamesSocials.title')}</h5>
+        {activeService === 'youtube' && ytHasChanges && <span className="dirty-badge">{t('common.unsaved')}</span>}
+        {activeService === 'twitch' && twitchHasChanges && <span className="dirty-badge">{t('common.unsaved')}</span>}
       </div>
 
       {/* Service Cards Grid */}
@@ -290,7 +292,7 @@ export default function GamesSocialsSection({ guildId, pushToast }) {
                   disabled={!ytHasChanges || ytSaving} 
                   onClick={handleYtReset}
                 >
-                  <i className="fa-solid fa-rotate-left me-2"/>Reset
+                  <i className="fa-solid fa-rotate-left me-2"/>{t('common.reset')}
                 </button>
                 <button 
                   className="btn btn-primary" 
@@ -298,7 +300,7 @@ export default function GamesSocialsSection({ guildId, pushToast }) {
                   onClick={handleYtSave}
                 >
                   <i className="fa-solid fa-floppy-disk me-2"/>
-                  {ytSaving ? 'Saving…' : 'Save'}
+                  {ytSaving ? t('common.saving') : t('common.save')}
                 </button>
               </div>
             </>
@@ -321,7 +323,7 @@ export default function GamesSocialsSection({ guildId, pushToast }) {
                   disabled={!twitchHasChanges || twitchSaving} 
                   onClick={handleTwitchReset}
                 >
-                  <i className="fa-solid fa-rotate-left me-2"/>Reset
+                  <i className="fa-solid fa-rotate-left me-2"/>{t('common.reset')}
                 </button>
                 <button 
                   className="btn btn-primary" 
@@ -329,7 +331,7 @@ export default function GamesSocialsSection({ guildId, pushToast }) {
                   onClick={handleTwitchSave}
                 >
                   <i className="fa-solid fa-floppy-disk me-2"/>
-                  {twitchSaving ? 'Saving…' : 'Save'}
+                  {twitchSaving ? t('common.saving') : t('common.save')}
                 </button>
               </div>
             </>

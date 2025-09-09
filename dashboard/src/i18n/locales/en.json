@@ -144,7 +144,8 @@
     "es": "Spanish",
     "fr": "French",
     "de": "German",
-    "ja": "Japanese"
+    "ja": "Japanese",
+    "cn": "Chinese (Traditional)"
   },
   "overview": {
     "title": "Server Overview",
@@ -1026,6 +1027,125 @@
           "validationRequired": "Please select at least one log channel or set a global channel"
         }
       },
+      "antiraid": {
+        "header": "Anti-Raid Protection",
+        "badge": "Security",
+        "info": {
+          "description": "Detect and block raid attempts with join-rate limits, account-age checks, automated responses, and content safeguards."
+        },
+        "features": {
+          "joinRate": {
+            "title": "Join-rate Monitoring",
+            "items": {
+              "trackPatterns": "Track sudden spikes and suspicious join patterns",
+              "detectAttacks": "Detect coordinated raid attempts in real-time",
+              "thresholds": "Configurable thresholds to trigger protection"
+            }
+          },
+          "accountAnalysis": {
+            "title": "Account Analysis",
+            "items": {
+              "age": "Minimum account age requirement",
+              "patterns": "Detect bot-like naming and activity patterns",
+              "avatarUsername": "Consider avatar/username characteristics"
+            }
+          },
+          "automatedResponse": {
+            "title": "Automated Response",
+            "items": {
+              "lockdown": "Auto-lockdown channels or slowmode",
+              "verification": "Require higher verification levels",
+              "removal": "Kick/ban or timeout suspicious accounts"
+            }
+          },
+          "contentFiltering": {
+            "title": "Content Safeguards",
+            "items": {
+              "inviteSpam": "Reduce invite spam from new accounts",
+              "massMention": "Mitigate mass-mention spam",
+              "newMember": "Extra filters for brand-new members"
+            }
+          }
+        },
+        "warning": {
+          "title": "Note:",
+          "message": "Anti-raid actions can be strict. Tune thresholds to avoid impacting legitimate members during busy periods."
+        },
+        "fields": {
+          "joinRate": {
+            "label": "Join Rate",
+            "desc": "Max joins allowed within the time window"
+          },
+          "joinWindow": {
+            "label": "Time Window (seconds)",
+            "desc": "Interval used for join-rate checks"
+          },
+          "accountAge": {
+            "label": "Minimum Account Age (days)",
+            "desc": "Block accounts newer than this age"
+          },
+          "raidAction": {
+            "label": "On Raid Detected",
+            "desc": "Primary action to take when a raid is detected"
+          },
+          "raidActionDuration": {
+            "label": "Action Duration (minutes)",
+            "desc": "Duration for timeout/lockdown actions",
+            "notApplicable": "Not applicable for kick/ban/alert"
+          },
+          "alertChannel": {
+            "label": "Alert Channel",
+            "desc": "Where to send anti-raid alerts and summaries"
+          },
+          "autoKick": {
+            "label": "Auto-kick Suspicious",
+            "desc": "Automatically kick accounts that fail checks"
+          },
+          "gracePeriod": {
+            "label": "Grace Period (minutes)",
+            "desc": "Time to keep elevated protections enabled after detection"
+          },
+          "whitelistRoles": {
+            "label": "Bypass Roles",
+            "desc": "Members with these roles bypass anti-raid checks"
+          }
+        },
+        "actions": {
+          "lockdown": "Lockdown",
+          "kick": "Kick",
+          "ban": "Ban",
+          "timeout": "Timeout",
+          "alert": "Alert Only"
+        },
+        "verification": {
+          "label": "Required Verification Level",
+          "levels": {
+            "none": "None",
+            "low": "Low",
+            "medium": "Medium",
+            "high": "High",
+            "highest": "Highest"
+          }
+        },
+        "placeholders": {
+          "noAlerts": "No alert channel"
+        },
+        "roles": {
+          "placeholder": "Add roles to bypass...",
+          "meta": { "role": "role" },
+          "noMatches": "No roles match your search.",
+          "allAdded": "All roles are added"
+        },
+        "modal": {
+          "title": "Anti-Raid Settings",
+          "saving": "Saving anti-raid settings...",
+          "saved": "Anti-raid settings saved"
+        },
+        "toasts": {
+          "saved": "Anti-raid settings saved",
+          "saveFailed": "Failed to save anti-raid settings"
+        }
+      },
       "welcome": {
         "header": "Welcome Messages",
         "badge": "New members",
@@ -1357,26 +1477,174 @@
     }
   },
   "gamesSocials": {
-    "title": "Games & Socials", 
-    "subtitle": "Configure gaming and social features",
+    "title": "Games & Sosial",
+    "subtitle": "Konfigurasi fitur gaming dan sosial",
+    "loading": {
+      "title": "Memuat Pengaturan Integrasi",
+      "message": "Mengambil konfigurasi integrasi dan data server Anda..."
+    },
+    "toasts": {
+      "serviceEnabled": "{{service}} diaktifkan",
+      "serviceDisabled": "{{service}} dinonaktifkan",
+      "toggleFailed": "Gagal memperbarui toggle",
+      "saved": "Pengaturan {{service}} telah disimpan",
+      "saveFailed": "Penyimpanan gagal"
+    },
+    "services": {
+      "youtube": {
+        "label": "YouTube",
+        "desc": "Umumkan upload baru dan live stream dari channel yang dipilih"
+      },
+      "twitch": {
+        "label": "Twitch",
+        "desc": "Umumkan saat streamer favorit Anda mulai live"
+      },
+      "pubg": {
+        "label": "PUBG",
+        "desc": "Statistik pemain, ringkasan pertandingan, dan notifikasi (direncanakan)"
+      },
+      "valorant": {
+        "label": "Valorant",
+        "desc": "Pembaruan pertandingan, highlight, dan notifikasi (direncanakan)"
+      },
+      "apex": {
+        "label": "Apex Legends",
+        "desc": "Pembaruan pertandingan, highlight, dan notifikasi (direncanakan)"
+      },
+      "mobilelegends": {
+        "label": "Mobile Legends",
+        "desc": "Pembaruan tim dan notifikasi pertandingan (direncanakan)"
+      },
+      "clashofclans": {
+        "label": "Clash of Clans",
+        "desc": "Pembaruan dan progres war clan (direncanakan)"
+      },
+      "fortnite": {
+        "label": "Fortnite",
+        "desc": "Pembaruan pertandingan dan notifikasi event (direncanakan)"
+      },
+      "genshin": {
+        "label": "Genshin Impact",
+        "desc": "Pembaruan event dan berita (direncanakan)"
+      }
+    },
+    "preview": {
+      "samples": {
+        "twitch": {
+          "streamTitle": "Live Stream yang Luar Biasa",
+          "game": "Just Chatting",
+          "startedAtRelative": "baru saja"
+        },
+        "youtube": {
+          "channel": "Nama Channel",
+          "videoTitle": "Upload Baru yang Luar Biasa",
+          "publishedAtRelative": "baru saja",
+          "memberOnly": " (Khusus Member)"
+        }
+      }
+    },
+    "common": {
+      "announcement": "Pengumuman",
+      "select": "Pilih…",
+      "mentionTargets": "Target Mention",
+      "mentionHelper": "Tekan Enter untuk menambah • Backspace untuk hapus • Urutan tetap",
+      "intervalSec": "Interval (detik)",
+      "embeds": "Embed",
+      "plain": "Biasa",
+      "placeholders": "Placeholder",
+      "resolving": "Memproses...",
+      "namePlaceholder": "Nama",
+      "clearOverrides": "Hapus Override",
+      "configuration": "Konfigurasi",
+      "announcementsEnabled": "Pengumuman diaktifkan",
+      "announcementsDisabled": "Pengumuman dinonaktifkan",
+      "integrationNotConfigured": "integrasi belum dikonfigurasi.",
+      "plannedFeatures": "Fitur yang direncanakan",
+      "needSooner": "Kalau Anda butuh ini lebih cepat, beri tahu kami.",
+      "remove": "Hapus",
+      "loadingConfig": "Memuat konfigurasi {{service}}…",
+      "mentionInputPlaceholder": "Tambah @everyone, @here atau role…",
+      "meta": {
+        "role": "role",
+        "meta": "meta"
+      },
+      "noTemplate": "Belum ada template.",
+      "preview": "Pratinjau"
+    },
+    "youtube": {
+      "fields": {
+        "uploadAnnounceChannel": "Channel Pengumuman Upload",
+        "liveAnnounceChannel": "Channel Pengumuman Live",
+        "upload": "Upload",
+        "live": "Live"
+      },
+      "sections": {
+        "regularTemplate": "Template Reguler",
+        "memberTemplate": "Template Member",
+        "memberUpload": "Upload Member",
+        "memberLive": "Live Member",
+        "regularPreview": "Pratinjau Template Reguler",
+        "memberPreview": "Pratinjau Template Member"
+      },
+      "channels": {
+        "addLabel": "Tambah Channel (URL)",
+        "addPlaceholder": "https://youtube.com/@handle",
+        "empty": "Belum ada channel yang ditambahkan.",
+        "editTitle": "Edit template per-channel",
+        "fetchTitle": "Ambil nama channel",
+        "uploadTemplate": "Template Upload",
+        "memberUploadTemplate": "Template Upload Member",
+        "liveTemplate": "Template Live",
+        "memberLiveTemplate": "Template Live Member"
+      },
+      "toasts": {
+        "alreadyWatching": "Channel {{id}} sudah dipantau",
+        "extracted": "ID channel yang diambil: {{id}}",
+        "extractedWithName": "Berhasil diambil {{name}} ({{id}})",
+        "added": "Channel {{name}} telah ditambahkan",
+        "addFailed": "Gagal menambah channel"
+      }
+    },
+    "twitch": {
+      "fields": {
+        "announceChannel": "Channel Pengumuman",
+        "liveStream": "Live Stream"
+      },
+      "sections": {
+        "globalTemplate": "Template Global",
+        "templatePreview": "Pratinjau Template"
+      },
+      "streamers": {
+        "addLabel": "Tambah Streamer (username / URL)",
+        "addPlaceholder": "username, https://twitch.tv/username",
+        "empty": "Belum ada streamer yang ditambahkan.",
+        "editTitle": "Edit template per-streamer",
+        "fetchTitle": "Ambil nama streamer",
+        "liveTemplate": "Template Live"
+      },
+      "toasts": {
+        "resolvedTo": "Berhasil diubah menjadi {{username}}",
+        "resolveFailed": "Tidak dapat menghubungkan streamer"
+      }
+    },
     "leveling": "XP & Leveling",
-    "economy": "Economy System",
-    "socialFeatures": "Social Features",
-    "miniGames": "Mini Games"
+    "economy": "Sistem Ekonomi",
+    "socialFeatures": "Fitur Sosial",
+    "miniGames": "Permainan Mini"
   },
   "welcome": {
-    "title": "Welcome System",
-    "subtitle": "Configure welcome messages and new member settings",
-    "enabled": "Welcome messages enabled",
-    "channel": "Welcome Channel",
-    "message": "Welcome Message",
-    "roles": "Auto Roles",
+    "title": "Sistem Sambutan",
+    "subtitle": "Konfigurasi pesan sambutan dan pengaturan anggota baru",
+    "enabled": "Pesan sambutan diaktifkan",
+    "channel": "Saluran Sambutan",
+    "message": "Pesan Sambutan",
+    "roles": "Peran Otomatis",
     "toasts": {
-      "saved": "Welcome settings saved",
-      "saveFailed": "Save failed",
-      "enabled": "Welcome messages enabled",
-      "disabled": "Welcome messages disabled",
-      "toggleFailed": "Failed to update toggle"
+      "saved": "Pengaturan sambutan telah disimpan",
+      "saveFailed": "Gagal menyimpan",
+      "enabled": "Pesan sambutan diaktifkan",
+      "disabled": "Pesan sambutan dinonaktifkan",
+      "toggleFailed": "Gagal memperbarui perubahan"
     }
   }
 }

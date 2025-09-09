@@ -2,83 +2,83 @@
 export const SERVICES = [
   { 
     key: 'youtube', 
-    label: 'YouTube', 
+    labelKey: 'gamesSocials.services.youtube.label', 
     image: 'youtube.png', 
     icon: 'fa-brands fa-youtube', 
     color: '#FF0000', 
-    desc: 'Video uploads & live notifications.',
+    descKey: 'gamesSocials.services.youtube.desc',
     implemented: true
   },
   { 
     key: 'twitch', 
-    label: 'Twitch', 
+    labelKey: 'gamesSocials.services.twitch.label', 
     image: 'twitch.png', 
     icon: 'fa-brands fa-twitch', 
     color: '#9146FF', 
-    desc: 'Streamer live alerts.',
+    descKey: 'gamesSocials.services.twitch.desc',
     implemented: true
   },
   { 
     key: 'pubg', 
-    label: 'PUBG', 
+    labelKey: 'gamesSocials.services.pubg.label', 
     image: 'pubg.png', 
     icon: 'fa-solid fa-crosshairs', 
     color: '#f59e0b', 
-    desc: 'Player / match stats (planned).',
+    descKey: 'gamesSocials.services.pubg.desc',
     implemented: false
   },
   { 
     key: 'valorant', 
-    label: 'Valorant', 
+    labelKey: 'gamesSocials.services.valorant.label', 
     image: 'valorant.png', 
     icon: 'fa-solid fa-bullseye', 
     color: '#e11d48', 
-    desc: 'Match & agent stats (planned).',
+    descKey: 'gamesSocials.services.valorant.desc',
     implemented: false
   },
   { 
     key: 'apex', 
-    label: 'Apex', 
+    labelKey: 'gamesSocials.services.apex.label', 
     image: 'apexlegends.png', 
     icon: 'fa-solid fa-mountain', 
     color: '#7c3aed', 
-    desc: 'Legend stats & map rotation (planned).',
+    descKey: 'gamesSocials.services.apex.desc',
     implemented: false
   },
   { 
     key: 'mobilelegends', 
-    label: 'Mobile Legends', 
+    labelKey: 'gamesSocials.services.mobilelegends.label', 
     image: 'mobilelegends.png', 
     icon: 'fa-solid fa-mobile-screen-button', 
     color: '#0ea5e9', 
-    desc: 'Hero stats & live matches (planned).',
+    descKey: 'gamesSocials.services.mobilelegends.desc',
     implemented: false
   },
   { 
     key: 'clashofclans', 
-    label: 'Clash of Clans', 
+    labelKey: 'gamesSocials.services.clashofclans.label', 
     image: 'clashofclans.png', 
     icon: 'fa-solid fa-shield', 
     color: '#16a34a', 
-    desc: 'Clan & war stats (planned).',
+    descKey: 'gamesSocials.services.clashofclans.desc',
     implemented: false
   },
   { 
     key: 'fortnite', 
-    label: 'Fortnite', 
+    labelKey: 'gamesSocials.services.fortnite.label', 
     image: 'fornite.png', 
     icon: 'fa-solid fa-flag', 
     color: '#6366f1', 
-    desc: 'Player stats & shop rotation (planned).',
+    descKey: 'gamesSocials.services.fortnite.desc',
     implemented: false
   },
   { 
     key: 'genshin', 
-    label: 'Genshin Impact', 
+    labelKey: 'gamesSocials.services.genshin.label', 
     image: 'genshinimpact.png', 
     icon: 'fa-solid fa-flag', 
     color: '#6366f1', 
-    desc: 'Player details & showcases (planned).',
+    descKey: 'gamesSocials.services.genshin.desc',
     implemented: false
   },
 ];

@@ -109,6 +109,7 @@ export default function SettingsSection({ guildId, pushToast }){
                 <option value="fr">{t('languages.fr')}</option>
                 <option value="de">{t('languages.de')}</option>
                 <option value="ja">{t('languages.ja')}</option>
+                <option value="cn">{t('languages.cn')}</option>
               </select>
             </div>
             <div className="col-6">

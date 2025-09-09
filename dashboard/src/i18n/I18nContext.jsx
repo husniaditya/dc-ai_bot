@@ -7,6 +7,7 @@ import es from './locales/es.json';
 import fr from './locales/fr.json';
 import de from './locales/de.json';
 import ja from './locales/ja.json';
+import cn from './locales/cn.json';
 
 // Available translations
 const translations = {
@@ -15,7 +16,8 @@ const translations = {
   es,
   fr,
   de,
-  ja
+  ja,
+  cn
 };
 
 // Supported languages
@@ -25,7 +27,8 @@ export const SUPPORTED_LANGUAGES = [
   { code: 'es', name: 'Spanish', nativeName: 'Español' },
   { code: 'fr', name: 'French', nativeName: 'Français' },
   { code: 'de', name: 'German', nativeName: 'Deutsch' },
-  { code: 'ja', name: 'Japanese', nativeName: '日本語' }
+  { code: 'ja', name: 'Japanese', nativeName: '日本語' },
+  { code: 'cn', name: 'Chinese (Traditional)', nativeName: '中文（繁體）' }
 ];
 
 // Default language

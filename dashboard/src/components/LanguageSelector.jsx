@@ -10,6 +10,7 @@ import es from '../i18n/locales/es.json';
 import fr from '../i18n/locales/fr.json';
 import de from '../i18n/locales/de.json';
 import ja from '../i18n/locales/ja.json';
+import cn from '../i18n/locales/cn.json';
 
 // Map languages to a representative country's ISO 3166-1 alpha-2 code for flag assets
 const FLAG_CODES = {
@@ -19,11 +20,12 @@ const FLAG_CODES = {
   fr: 'fr',
   de: 'de',
   ja: 'jp',
+  cn: 'tw', // Traditional Chinese → Taiwan flag
 };
 const getFlagCode = (code) => FLAG_CODES[code] || 'un';
 
 // Minimal global translator for building toasts in the target language (not the current context)
-const localeMap = { en, id, es, fr, de, ja };
+const localeMap = { en, id, es, fr, de, ja, cn };
 function getNested(obj, path, fallback) {
   return path.split('.').reduce((acc, k) => (acc && acc[k] !== undefined ? acc[k] : undefined), obj) ?? fallback;
 }

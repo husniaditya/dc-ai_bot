@@ -139,7 +139,8 @@
     "es": "Español",
     "fr": "Français",
     "de": "Deutsch",
-    "ja": "日本語"
+    "ja": "日本語",
+    "cn": "Chinese (Traditional)"
   },
   "overview": {
     "title": "サーバー概要",
@@ -533,15 +534,6 @@
     "embedColor": "埋め込みカラー",
     "prefix": "コマンドプレフィックス"
   },
-  "welcome": {
-    "toasts": {
-      "saved": "ウェルカム設定を保存しました",
-      "saveFailed": "保存に失敗しました",
-      "enabled": "ウェルカムメッセージを有効化",
-      "disabled": "ウェルカムメッセージを無効化",
-      "toggleFailed": "切り替えに失敗しました"
-    }
-  },
   "moderation": {
     "title": "モデレーション",
     "subtitle": "モデレーション機能と設定を構成",
@@ -779,6 +771,35 @@
           "copiedToEmpty": "空のカテゴリにグローバルチャンネルを適用しました",
           "validationRequired": "少なくとも1つのチャンネルを選択するか、グローバルチャンネルを設定してください"
         }
+      },
+      "antiraid": {
+        "header": "アンチレイド保護",
+        "badge": "セキュリティ",
+        "info": { "description": "参加レート制限、アカウント年齢チェック、自動応答、コンテンツ保護でレイドを検知・防止します。" },
+        "features": {
+          "joinRate": { "title": "参加レート監視", "items": { "trackPatterns": "急増や不審な参加パターンを追跡", "detectAttacks": "レイド試行をリアルタイム検知", "thresholds": "保護を発動するしきい値を設定可能" } },
+          "accountAnalysis": { "title": "アカウント分析", "items": { "age": "最小アカウント年齢の要件", "patterns": "Bot的なパターンを検出", "avatarUsername": "アバター/ユーザー名の特徴を考慮" } },
+          "automatedResponse": { "title": "自動対応", "items": { "lockdown": "チャンネルのロックダウン/スローモード", "verification": "高い認証レベルを要求", "removal": "不審なアカウントのキック/バン/タイムアウト" } },
+          "contentFiltering": { "title": "コンテンツ保護", "items": { "inviteSpam": "新規アカウントによる招待スパムを低減", "massMention": "大量メンションスパムの抑制", "newMember": "新規メンバー向けの追加フィルター" } }
+        },
+        "warning": { "title": "注意:", "message": "アンチレイドの動作は厳格になる場合があります。混雑時に正当なメンバーへ影響しないよう、しきい値を調整してください。" },
+        "fields": {
+          "joinRate": { "label": "参加レート", "desc": "時間窓内で許可する最大参加数" },
+          "joinWindow": { "label": "時間窓(秒)", "desc": "参加レート判定に使用する間隔" },
+          "accountAge": { "label": "最小アカウント年齢(日)", "desc": "この日数より新しいアカウントをブロック" },
+          "raidAction": { "label": "レイド検知時の対応", "desc": "レイド検知時に実行する主なアクション" },
+          "raidActionDuration": { "label": "アクション時間(分)", "desc": "タイムアウト/ロックダウンの時間", "notApplicable": "Kick/Ban/Alert には該当なし" },
+          "alertChannel": { "label": "アラートチャンネル", "desc": "アンチレイドのアラートやサマリーの送信先" },
+          "autoKick": { "label": "不審アカウントの自動キック", "desc": "チェックに失敗したアカウントを自動でキック" },
+          "gracePeriod": { "label": "延長期間(分)", "desc": "検知後も強化保護を維持する時間" },
+          "whitelistRoles": { "label": "例外ロール", "desc": "これらのロールを持つメンバーはアンチレイドを免除" }
+        },
+        "actions": { "lockdown": "ロックダウン", "kick": "キック", "ban": "BAN", "timeout": "タイムアウト", "alert": "アラートのみ" },
+        "verification": { "label": "必要な認証レベル", "levels": { "none": "なし", "low": "低", "medium": "中", "high": "高", "highest": "最高" } },
+        "placeholders": { "noAlerts": "アラートチャンネルなし" },
+        "roles": { "placeholder": "免除ロールを追加...", "meta": { "role": "ロール" }, "noMatches": "一致するロールはありません。", "allAdded": "すべてのロールが追加されています" },
+        "modal": { "title": "アンチレイド設定", "saving": "アンチレイド設定を保存中...", "saved": "アンチレイド設定を保存しました" },
+        "toasts": { "saved": "アンチレイド設定を保存しました", "saveFailed": "アンチレイド設定の保存に失敗しました" }
       },
       "xp": {
         "header": "XP・レベルの設定",
@@ -1297,6 +1318,177 @@
           "verificationSystem": "認証システム"
         }
       }
+    }
+  },
+  "gamesSocials": {
+    "title": "ゲームとソーシャル",
+    "subtitle": "ゲーム関連・ソーシャル機能の設定",
+    "loading": {
+      "title": "連携設定を読み込み中",
+      "message": "統合設定とサーバーデータを取得しています…"
+    },
+    "toasts": {
+      "serviceEnabled": "{{service}}が有効化されました",
+      "serviceDisabled": "{{service}}が無効化されました",
+      "toggleFailed": "切り替えの更新に失敗しました",
+      "saved": "{{service}}の設定を保存しました",
+      "saveFailed": "保存に失敗しました"
+    },
+    "services": {
+      "youtube": {
+        "label": "YouTube",
+        "desc": "選択したチャンネルの新しい動画・ライブ配信を告知します"
+      },
+      "twitch": {
+        "label": "Twitch",
+        "desc": "お気に入りの配信者がライブ配信を開始したら告知します"
+      },
+      "pubg": {
+        "label": "PUBG",
+        "desc": "プレイヤーの統計、試合要約、お知らせ（予定）"
+      },
+      "valorant": {
+        "label": "Valorant",
+        "desc": "試合アップデート、ハイライト、お知らせ（予定）"
+      },
+      "apex": {
+        "label": "Apex Legends",
+        "desc": "試合アップデート、ハイライト、お知らせ（予定）"
+      },
+      "mobilelegends": {
+        "label": "Mobile Legends",
+        "desc": "チームの更新＆試合のお知らせ（予定）"
+      },
+      "clashofclans": {
+        "label": "Clash of Clans",
+        "desc": "クラン戦の更新、進捗状況（予定）"
+      },
+      "fortnite": {
+        "label": "Fortnite",
+        "desc": "試合アップデート＆イベントのお知らせ（予定）"
+      },
+      "genshin": {
+        "label": "Genshin Impact",
+        "desc": "イベント情報＆ニュース（予定）"
+      }
+    },
+    "preview": {
+      "samples": {
+        "twitch": {
+          "streamTitle": "最高のライブ配信",
+          "game": "雑談配信",
+          "startedAtRelative": "たった今"
+        },
+        "youtube": {
+          "channel": "チャンネル名",
+          "videoTitle": "素晴らしい新作アップロード",
+          "publishedAtRelative": "たった今",
+          "memberOnly": "（メンバー限定）"
+        }
+      }
+    },
+    "common": {
+      "announcement": "お知らせ",
+      "select": "選択…",
+      "mentionTargets": "メンション対象",
+      "mentionHelper": "Enterで追加 • Backspaceで削除 • 順序は保持されます",
+      "intervalSec": "間隔（秒）",
+      "embeds": "埋め込み",
+      "plain": "プレーン",
+      "placeholders": "プレースホルダー",
+      "resolving": "解決中...",
+      "namePlaceholder": "名前",
+      "clearOverrides": "上書きをクリア",
+      "configuration": "構成",
+      "announcementsEnabled": "お知らせが有効になっています",
+      "announcementsDisabled": "お知らせが無効になっています",
+      "integrationNotConfigured": "統合はまだ設定されていません。",
+      "plannedFeatures": "今後予定されている機能",
+      "needSooner": "お急ぎの場合はご連絡ください。",
+      "remove": "削除",
+      "loadingConfig": "{{service}}の設定を読み込み中…",
+      "mentionInputPlaceholder": "@everyone, @here またはロールを追加…",
+      "meta": {
+        "role": "ロール",
+        "meta": "メタ"
+      },
+      "noTemplate": "テンプレートが設定されていません。",
+      "preview": "プレビュー"
+    },
+    "youtube": {
+      "fields": {
+        "uploadAnnounceChannel": "アップロード告知チャンネル",
+        "liveAnnounceChannel": "ライブ告知チャンネル",
+        "upload": "アップロード",
+        "live": "ライブ"
+      },
+      "sections": {
+        "regularTemplate": "通常テンプレート",
+        "memberTemplate": "メンバーテンプレート",
+        "memberUpload": "メンバー限定アップロード",
+        "memberLive": "メンバー限定ライブ",
+        "regularPreview": "通常テンプレートプレビュー",
+        "memberPreview": "メンバーテンプレートプレビュー"
+      },
+      "channels": {
+        "addLabel": "チャンネル追加（URL）",
+        "addPlaceholder": "https://youtube.com/@handle",
+        "empty": "チャンネルはまだ追加されていません。",
+        "editTitle": "チャンネルごとのテンプレート編集",
+        "fetchTitle": "チャンネル名を取得",
+        "uploadTemplate": "アップロードテンプレート",
+        "memberUploadTemplate": "メンバー限定アップロードテンプレート",
+        "liveTemplate": "ライブテンプレート",
+        "memberLiveTemplate": "メンバー限定ライブテンプレート"
+      },
+      "toasts": {
+        "alreadyWatching": "すでにチャンネル{{id}}を監視しています",
+        "extracted": "チャンネルIDを抽出: {{id}}",
+        "extractedWithName": "{{name}}（{{id}}）を抽出しました",
+        "added": "チャンネル{{name}}を追加しました",
+        "addFailed": "チャンネルの追加に失敗しました"
+      }
+    },
+    "twitch": {
+      "fields": {
+        "announceChannel": "告知チャンネル",
+        "liveStream": "ライブ配信"
+      },
+      "sections": {
+        "globalTemplate": "グローバルテンプレート",
+        "templatePreview": "テンプレートプレビュー"
+      },
+      "streamers": {
+        "addLabel": "配信者追加（ユーザー名/URL）",
+        "addPlaceholder": "ユーザー名, https://twitch.tv/username",
+        "empty": "配信者はまだ追加されていません。",
+        "editTitle": "配信者ごとのテンプレート編集",
+        "fetchTitle": "配信者名を取得",
+        "liveTemplate": "ライブテンプレート"
+      },
+      "toasts": {
+        "resolvedTo": "{{username}}に解決されました",
+        "resolveFailed": "配信者を解決できませんでした"
+      }
+    },
+    "leveling": "XPとレベルアップ",
+    "economy": "経済システム",
+    "socialFeatures": "ソーシャル機能",
+    "miniGames": "ミニゲーム"
+  },
+  "welcome": {
+    "title": "ウェルカムシステム",
+    "subtitle": "ウェルカムメッセージや新メンバー設定の構成",
+    "enabled": "ウェルカムメッセージが有効です",
+    "channel": "ウェルカムチャンネル",
+    "message": "ウェルカムメッセージ",
+    "roles": "自動ロール",
+    "toasts": {
+      "saved": "ウェルカム設定が保存されました",
+      "saveFailed": "保存に失敗しました",
+      "enabled": "ウェルカムメッセージが有効になりました",
+      "disabled": "ウェルカムメッセージが無効になりました",
+      "toggleFailed": "トグルの更新に失敗しました"
     }
   }
 }
