@@ -7,6 +7,7 @@
     "edit": "Bearbeiten",
     "add": "Hinzufügen",
     "loading": "Lädt...",
+    "lastLoad": "zuletzt aktualisiert",
     "saving": "Speichert...",
     "success": "Erfolg",
     "error": "Fehler",
@@ -45,7 +46,8 @@
     "signOut": "Abmelden",
     "collapseSidebar": "Seitenleiste einklappen",
     "expandSidebar": "Seitenleiste ausklappen",
-    "toggleTheme": "Helles / dunkles Thema umschalten"
+  "toggleTheme": "Helles / dunkles Thema umschalten",
+  "openMenu": "Menü öffnen"
   },
   "settings": {
     "title": "Server-Einstellungen",
@@ -482,6 +484,57 @@
       "ytdebug": { "usage": "/ytdebug", "desc": "Neueste Debug-Ereignisse des YouTube-Watchers anzeigen (erfordert Server verwalten)." },
       "twitchstats": { "usage": "/twitchstats", "desc": "Twitch-Watcher-Cache & API-Statistiken anzeigen." },
       "twitchdebug": { "usage": "/twitchdebug action:<config|status|test|resolve>", "desc": "Twitch-Integration debuggen und Benachrichtigungen testen." }
+    }
+  },
+  "personalization": {
+    "title": "Bot-Personalisierung",
+    "subtitle": "Passen Sie das Erscheinungsbild und Verhalten Ihres Bots an",
+    "fields": {
+      "nickname": "Bot-Spitzname (nur Guild)",
+      "nicknamePlaceholder": "Leer lassen, um den aktuellen zu behalten",
+      "activityType": "Aktivitätstyp",
+      "activityText": "Aktivitätstext",
+      "activityTextPlaceholder": "z. B. mit deinen Nachrichten",
+      "status": "Status",
+      "avatar": "Avatarbild",
+      "preview": "Live-Vorschau",
+      "permissionsNote": "Spitzname & Avatar erfordern Bot-Berechtigungen; Aktivität gilt global pro Shard, falls implementiert.",
+      "currentBotName": "Aktueller Bot-Name",
+      "defaultStatus": "Standardstatus",
+      "noActivity": "Keine Aktivität festgelegt",
+      "previewNote": "Diese Vorschau aktualisiert sich sofort mit Ihren ungespeicherten Änderungen."
+    },
+    "activityTypes": {
+      "none": "(keine)",
+      "playing": "Spielt",
+      "listening": "Hört",
+      "watching": "Schaut",
+      "competing": "Wettkampf"
+    },
+    "statuses": {
+      "default": "(Standard)",
+      "online": "Online",
+      "idle": "Abwesend",
+      "dnd": "Bitte nicht stören",
+      "invisible": "Unsichtbar"
+    },
+    "toasts": {
+      "saved": "Bot-Personalisierung gespeichert",
+      "saveFailed": "Speichern fehlgeschlagen"
+    },
+    "avatar": "Bot-Avatar",
+    "nickname": "Bot-Spitzname",
+    "status": "Bot-Status",
+    "embedColor": "Einbettungsfarbe",
+    "prefix": "Befehlspräfix"
+  },
+  "welcome": {
+    "toasts": {
+      "saved": "Willkommens-Einstellungen gespeichert",
+      "saveFailed": "Speichern fehlgeschlagen",
+      "enabled": "Willkommensnachrichten aktiviert",
+      "disabled": "Willkommensnachrichten deaktiviert",
+      "toggleFailed": "Umschalten konnte nicht aktualisiert werden"
     }
   }
 }

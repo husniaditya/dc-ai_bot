@@ -7,6 +7,7 @@
     "edit": "Edit",
     "add": "Add",
     "loading": "Loading...",
+    "lastLoad": "Last Refreshed",
     "saving": "Saving...",
     "success": "Success",
     "error": "Error",
@@ -47,7 +48,8 @@
     "signOut": "Sign out",
     "collapseSidebar": "Collapse sidebar",
     "expandSidebar": "Expand sidebar",
-    "toggleTheme": "Toggle light / dark theme"
+  "toggleTheme": "Toggle light / dark theme",
+  "openMenu": "Open menu"
   },
   "settings": {
     "title": "Server Settings",
@@ -500,6 +502,39 @@
   "personalization": {
     "title": "Bot Personalization",
     "subtitle": "Customize your bot's appearance and behavior",
+    "fields": {
+      "nickname": "Bot Nickname (guild only)",
+      "nicknamePlaceholder": "Leave blank to keep current",
+      "activityType": "Activity Type",
+      "activityText": "Activity Text",
+      "activityTextPlaceholder": "e.g. with your messages",
+      "status": "Status",
+      "avatar": "Avatar Image",
+      "preview": "Live Preview",
+      "permissionsNote": "Nickname & avatar require bot permissions; activity applies globally per shard if implemented.",
+      "currentBotName": "Current Bot Name",
+      "defaultStatus": "Default status",
+      "noActivity": "No activity set",
+      "previewNote": "This preview updates instantly with your unsaved changes."
+    },
+    "activityTypes": {
+      "none": "(none)",
+      "playing": "Playing",
+      "listening": "Listening",
+      "watching": "Watching",
+      "competing": "Competing"
+    },
+    "statuses": {
+      "default": "(default)",
+      "online": "Online",
+      "idle": "Idle",
+      "dnd": "Do Not Disturb",
+      "invisible": "Invisible"
+    },
+    "toasts": {
+      "saved": "Bot personalization saved",
+      "saveFailed": "Save failed"
+    },
     "avatar": "Bot Avatar",
     "nickname": "Bot Nickname",
     "status": "Bot Status",
@@ -528,6 +563,13 @@
     "enabled": "Welcome messages enabled",
     "channel": "Welcome Channel",
     "message": "Welcome Message",
-    "roles": "Auto Roles"
+    "roles": "Auto Roles",
+    "toasts": {
+      "saved": "Welcome settings saved",
+      "saveFailed": "Save failed",
+      "enabled": "Welcome messages enabled",
+      "disabled": "Welcome messages disabled",
+      "toggleFailed": "Failed to update toggle"
+    }
   }
 }

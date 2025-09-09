@@ -20,7 +20,7 @@ export default function OverviewSection({ analytics, apiStatus, autos, totalEnab
       </span>
       <div className="d-flex align-items-center">
         <small className="text-muted me-2">
-          {t('common.loading')}: {lastUpdate.toLocaleTimeString()}
+          {t('common.lastLoad')}: {lastUpdate.toLocaleTimeString()}
         </small>
     {refreshAnalytics && (
           <button 

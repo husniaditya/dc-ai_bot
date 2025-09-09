@@ -7,6 +7,7 @@
     "edit": "Edit",
     "add": "Tambah",
     "loading": "Memuat...",
+    "lastLoad": "Terakhir memuat",
     "saving": "Menyimpan...",
     "success": "Berhasil",
     "error": "Error",
@@ -47,7 +48,8 @@
     "signOut": "Keluar",
     "collapseSidebar": "Ciutkan sidebar",
     "expandSidebar": "Perluas sidebar",
-    "toggleTheme": "Alihkan tema terang / gelap"
+  "toggleTheme": "Alihkan tema terang / gelap",
+  "openMenu": "Buka menu"
   },
   "settings": {
     "title": "Pengaturan Server",
@@ -519,6 +521,53 @@
       "repliesPlaceholder": "Halo!\nHai!",
       "enabled": "Aktif",
       "footerNote": "Bot memilih satu balasan secara acak."
+    }
+  }
+  ,
+  "personalization": {
+    "title": "Personalisasi Bot",
+    "subtitle": "Sesuaikan tampilan dan perilaku bot",
+    "fields": {
+      "nickname": "Nama Panggilan Bot (khusus server)",
+      "nicknamePlaceholder": "Kosongkan untuk tetap menggunakan yang sekarang",
+      "activityType": "Jenis Aktivitas",
+      "activityText": "Teks Aktivitas",
+      "activityTextPlaceholder": "contoh: dengan pesan Anda",
+      "status": "Status",
+      "avatar": "Gambar Avatar",
+      "preview": "Pratinjau Langsung",
+      "permissionsNote": "Nama panggilan & avatar memerlukan izin bot; aktivitas berlaku global per shard jika diimplementasikan.",
+      "currentBotName": "Nama Bot Saat Ini",
+      "defaultStatus": "Status default",
+      "noActivity": "Tidak ada aktivitas",
+      "previewNote": "Pratinjau ini akan diperbarui langsung sesuai perubahan Anda."
+    },
+    "activityTypes": {
+      "none": "(tidak ada)",
+      "playing": "Bermain",
+      "listening": "Mendengarkan",
+      "watching": "Menonton",
+      "competing": "Bertanding"
+    },
+    "statuses": {
+      "default": "(default)",
+      "online": "Online",
+      "idle": "Idle",
+      "dnd": "Jangan Ganggu",
+      "invisible": "Tak Terlihat"
+    },
+    "toasts": {
+      "saved": "Personalisasi bot tersimpan",
+      "saveFailed": "Gagal menyimpan"
+    }
+  },
+  "welcome": {
+    "toasts": {
+      "saved": "Pengaturan sambutan tersimpan",
+      "saveFailed": "Gagal menyimpan",
+      "enabled": "Pesan sambutan diaktifkan",
+      "disabled": "Pesan sambutan dinonaktifkan",
+      "toggleFailed": "Gagal memperbarui toggle"
     }
   }
 }

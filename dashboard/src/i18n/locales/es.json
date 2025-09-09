@@ -7,6 +7,7 @@
     "edit": "Editar",
     "add": "Añadir",
     "loading": "Cargando...",
+    "lastLoad": "última actualización",
     "saving": "Guardando...",
     "success": "Éxito",
     "error": "Error",
@@ -47,7 +48,8 @@
     "signOut": "Cerrar sesión",
     "collapseSidebar": "Contraer barra lateral",
     "expandSidebar": "Expandir barra lateral",
-    "toggleTheme": "Cambiar tema claro / oscuro"
+  "toggleTheme": "Cambiar tema claro / oscuro",
+  "openMenu": "Abrir menú"
   },
   "settings": {
     "title": "Configuración del Servidor",
@@ -484,6 +486,57 @@
       "ytdebug": { "usage": "/ytdebug", "desc": "Muestra eventos de depuración recientes del watcher de YouTube (requiere Gestionar Servidor)." },
       "twitchstats": { "usage": "/twitchstats", "desc": "Muestra caché y estadísticas de la API del watcher de Twitch." },
       "twitchdebug": { "usage": "/twitchdebug action:<config|status|test|resolve>", "desc": "Depura la integración de Twitch y prueba notificaciones." }
+    }
+  },
+  "personalization": {
+    "title": "Personalización del bot",
+    "subtitle": "Personaliza la apariencia y el comportamiento de tu bot",
+    "fields": {
+      "nickname": "Apodo del bot (solo en el servidor)",
+      "nicknamePlaceholder": "Déjalo en blanco para mantener el actual",
+      "activityType": "Tipo de actividad",
+      "activityText": "Texto de actividad",
+      "activityTextPlaceholder": "p. ej., con tus mensajes",
+      "status": "Estado",
+      "avatar": "Imagen de avatar",
+      "preview": "Vista previa en vivo",
+      "permissionsNote": "El apodo y el avatar requieren permisos del bot; la actividad se aplica globalmente por shard si está implementado.",
+      "currentBotName": "Nombre actual del bot",
+      "defaultStatus": "Estado predeterminado",
+      "noActivity": "Sin actividad",
+      "previewNote": "Esta vista previa se actualiza al instante con tus cambios no guardados."
+    },
+    "activityTypes": {
+      "none": "(ninguno)",
+      "playing": "Jugando",
+      "listening": "Escuchando",
+      "watching": "Viendo",
+      "competing": "Compitiendo"
+    },
+    "statuses": {
+      "default": "(predeterminado)",
+      "online": "En línea",
+      "idle": "Ausente",
+      "dnd": "No molestar",
+      "invisible": "Invisible"
+    },
+    "toasts": {
+      "saved": "Personalización del bot guardada",
+      "saveFailed": "Error al guardar"
+    },
+    "avatar": "Avatar del bot",
+    "nickname": "Apodo del bot",
+    "status": "Estado del bot",
+    "embedColor": "Color de embed",
+    "prefix": "Prefijo de comando"
+  },
+  "welcome": {
+    "toasts": {
+      "saved": "Configuración de bienvenida guardada",
+      "saveFailed": "Error al guardar",
+      "enabled": "Mensajes de bienvenida habilitados",
+      "disabled": "Mensajes de bienvenida deshabilitados",
+      "toggleFailed": "No se pudo actualizar el interruptor"
     }
   }
 }

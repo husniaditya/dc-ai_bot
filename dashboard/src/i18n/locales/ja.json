@@ -7,6 +7,7 @@
     "edit": "編集",
     "add": "追加",
     "loading": "読み込み中...",
+    "lastLoad": "最後に更新された",
     "saving": "保存中...",
     "success": "成功",
     "error": "エラー",
@@ -45,7 +46,8 @@
     "signOut": "サインアウト",
     "collapseSidebar": "サイドバーを折りたたむ",
     "expandSidebar": "サイドバーを展開",
-    "toggleTheme": "ライト/ダークテーマ切替"
+  "toggleTheme": "ライト/ダークテーマ切替",
+  "openMenu": "メニューを開く"
   },
   "settings": {
     "title": "サーバー設定",
@@ -482,6 +484,57 @@
       "ytdebug": { "usage": "/ytdebug", "desc": "YouTube watcher の最近のデバッグイベントを表示（サーバー管理が必要）。" },
       "twitchstats": { "usage": "/twitchstats", "desc": "Twitch watcher のキャッシュと API 統計を表示。" },
       "twitchdebug": { "usage": "/twitchdebug action:<config|status|test|resolve>", "desc": "Twitch 連携をデバッグし通知をテスト。" }
+    }
+  },
+  "personalization": {
+    "title": "ボットのパーソナライズ",
+    "subtitle": "ボットの外観と動作をカスタマイズ",
+    "fields": {
+      "nickname": "ボットのニックネーム（ギルドのみ）",
+      "nicknamePlaceholder": "現在のままにするには空欄",
+      "activityType": "アクティビティの種類",
+      "activityText": "アクティビティのテキスト",
+      "activityTextPlaceholder": "例：あなたのメッセージと一緒に",
+      "status": "ステータス",
+      "avatar": "アバター画像",
+      "preview": "ライブプレビュー",
+      "permissionsNote": "ニックネームとアバターにはボット権限が必要です。アクティビティは（実装されていれば）シャードごとにグローバルに適用されます。",
+      "currentBotName": "現在のボット名",
+      "defaultStatus": "デフォルトのステータス",
+      "noActivity": "アクティビティなし",
+      "previewNote": "このプレビューは未保存の変更で即時更新されます。"
+    },
+    "activityTypes": {
+      "none": "（なし）",
+      "playing": "プレイ中",
+      "listening": "リスニング",
+      "watching": "視聴中",
+      "competing": "対戦中"
+    },
+    "statuses": {
+      "default": "（デフォルト）",
+      "online": "オンライン",
+      "idle": "退席中",
+      "dnd": "取り込み中",
+      "invisible": "オフライン表示"
+    },
+    "toasts": {
+      "saved": "ボットのパーソナライズを保存しました",
+      "saveFailed": "保存に失敗しました"
+    },
+    "avatar": "ボットのアバター",
+    "nickname": "ボットのニックネーム",
+    "status": "ボットのステータス",
+    "embedColor": "埋め込みカラー",
+    "prefix": "コマンドプレフィックス"
+  },
+  "welcome": {
+    "toasts": {
+      "saved": "ウェルカム設定を保存しました",
+      "saveFailed": "保存に失敗しました",
+      "enabled": "ウェルカムメッセージを有効化",
+      "disabled": "ウェルカムメッセージを無効化",
+      "toggleFailed": "トグルの更新に失敗しました"
     }
   }
 }

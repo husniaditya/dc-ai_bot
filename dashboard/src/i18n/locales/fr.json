@@ -7,6 +7,7 @@
     "edit": "Modifier",
     "add": "Ajouter",
     "loading": "Chargement...",
+    "lastLoad": "dernière actualisation",
     "saving": "Enregistrement...",
     "success": "Succès",
     "error": "Erreur",
@@ -45,7 +46,8 @@
     "signOut": "Se déconnecter",
     "collapseSidebar": "Réduire la barre latérale",
     "expandSidebar": "Agrandir la barre latérale",
-    "toggleTheme": "Basculer thème clair / sombre"
+  "toggleTheme": "Basculer thème clair / sombre",
+  "openMenu": "Ouvrir le menu"
   },
   "settings": {
     "title": "Paramètres du serveur",
@@ -482,6 +484,57 @@
       "ytdebug": { "usage": "/ytdebug", "desc": "Afficher les événements de débogage récents du watcher YouTube (nécessite Gérer le serveur)." },
       "twitchstats": { "usage": "/twitchstats", "desc": "Afficher le cache et les statistiques API du watcher Twitch." },
       "twitchdebug": { "usage": "/twitchdebug action:<config|status|test|resolve>", "desc": "Déboguer l'intégration Twitch et tester les notifications." }
+    }
+  },
+  "personalization": {
+    "title": "Personnalisation du bot",
+    "subtitle": "Personnalisez l'apparence et le comportement de votre bot",
+    "fields": {
+      "nickname": "Surnom du bot (serveur uniquement)",
+      "nicknamePlaceholder": "Laisser vide pour conserver l'actuel",
+      "activityType": "Type d'activité",
+      "activityText": "Texte d'activité",
+      "activityTextPlaceholder": "ex. avec vos messages",
+      "status": "Statut",
+      "avatar": "Image d'avatar",
+      "preview": "Aperçu en direct",
+      "permissionsNote": "Le surnom et l'avatar nécessitent des permissions du bot ; l'activité s'applique globalement par shard si implémenté.",
+      "currentBotName": "Nom actuel du bot",
+      "defaultStatus": "Statut par défaut",
+      "noActivity": "Aucune activité définie",
+      "previewNote": "Cet aperçu se met à jour instantanément avec vos modifications non enregistrées."
+    },
+    "activityTypes": {
+      "none": "(aucun)",
+      "playing": "Joue",
+      "listening": "Écoute",
+      "watching": "Regarde",
+      "competing": "En compétition"
+    },
+    "statuses": {
+      "default": "(par défaut)",
+      "online": "En ligne",
+      "idle": "Inactif",
+      "dnd": "Ne pas déranger",
+      "invisible": "Invisible"
+    },
+    "toasts": {
+      "saved": "Personnalisation du bot enregistrée",
+      "saveFailed": "Échec de l'enregistrement"
+    },
+    "avatar": "Avatar du bot",
+    "nickname": "Surnom du bot",
+    "status": "Statut du bot",
+    "embedColor": "Couleur d'intégration",
+    "prefix": "Préfixe de commande"
+  },
+  "welcome": {
+    "toasts": {
+      "saved": "Paramètres de bienvenue enregistrés",
+      "saveFailed": "Échec de l'enregistrement",
+      "enabled": "Messages de bienvenue activés",
+      "disabled": "Messages de bienvenue désactivés",
+      "toggleFailed": "Échec de la mise à jour du commutateur"
     }
   }
 }

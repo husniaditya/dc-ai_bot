@@ -70,6 +70,7 @@ export default function App(){
   const [error, setError] = useState('');
   const [info, setInfo] = useState('');
   const [toasts, setToasts] = useState([]); // {id,type,message}
+  const lastToastRef = useRef({ type: '', message: '', at: 0 });
   const [loading, setLoading] = useState(false);
   const [loginLoading, setLoginLoading] = useState(false); // Loading state for login button
   const [oauthMode, setOauthMode] = useState(true); // new flag
@@ -848,6 +849,12 @@ export default function App(){
   }
 
   function pushToast(type,message){
+    const now = Date.now();
+    const last = lastToastRef.current;
+    if (last && last.type === type && last.message === message && (now - last.at) < 1000) {
+      return; // suppress duplicate toast fired within 1s
+    }
+    lastToastRef.current = { type, message, at: now };
     const id = Math.random().toString(36).slice(2);
     setToasts(t => [...t, { id, type, message }]);
     setTimeout(()=> setToasts(t => t.filter(x=>x.id!==id)), 3500);
@@ -1117,7 +1124,7 @@ export default function App(){
   // --- Section contents ---
   const overviewContent = <OverviewSection analytics={analytics} apiStatus={apiStatus} autos={autos} totalEnabled={totalEnabled} totalDisabled={totalDisabled} error={error} info={info} loading={loading} dashSection={dashSection} chartsReady={chartsReady} Highcharts={Highcharts} HighchartsReact={HighchartsReact} refreshAnalytics={refreshAnalytics} />;
 
-  const autosContent = <React.Suspense fallback={<div className="text-muted small p-3">Loading auto responses…</div>}>
+  const autosContent = <React.Suspense fallback={<div className="text-muted small p-3">{tGlobal('autosSection.loadingTitle')}</div>}>
     <AutosSectionLazy
     autos={autos}
     setAutos={setAutos}
@@ -1253,7 +1260,14 @@ export default function App(){
   }
   async function savePersonalization(){
     if(!personalization) return;
-    try { const res = await updatePersonalization(personalization, selectedGuild); setPersonalization(res); setPersonalizationOriginal(res); pushToast('success','Bot personalization saved'); } catch(e){ pushToast('error','Save failed'); }
+    try {
+      const res = await updatePersonalization(personalization, selectedGuild);
+      setPersonalization(res);
+      setPersonalizationOriginal(res);
+      pushToast('success', tGlobal('personalization.toasts.saved'));
+    } catch(e){
+      pushToast('error', tGlobal('personalization.toasts.saveFailed'));
+    }
   }
   function personalizationDirty(){
     if(!personalization || !personalizationOriginal) return false;
@@ -1270,7 +1284,14 @@ export default function App(){
   function resetWelcome(){ if(welcomeOriginal) setWelcomeCfg(welcomeOriginal); }
   async function saveWelcome(){
     if(!welcomeCfg) return;
-    try { const res = await updateWelcome(welcomeCfg, selectedGuild); setWelcomeCfg(res); setWelcomeOriginal(res); pushToast('success','Welcome settings saved'); } catch(e){ pushToast('error','Save failed'); }
+    try {
+      const res = await updateWelcome(welcomeCfg, selectedGuild);
+      setWelcomeCfg(res);
+      setWelcomeOriginal(res);
+      pushToast('success', tGlobal('welcome.toasts.saved'));
+    } catch(e){
+      pushToast('error', tGlobal('welcome.toasts.saveFailed'));
+    }
   }
   async function toggleWelcomeEnabled(on){
     if(!welcomeCfg) return;
@@ -1279,9 +1300,9 @@ export default function App(){
     setWelcomeOriginal(o => o ? { ...o, enabled: on } : o);
     try {
       await updateWelcome({ enabled: on }, selectedGuild);
-      pushToast('success', 'Welcome messages ' + (on? 'enabled':'disabled'));
+      pushToast('success', on ? tGlobal('welcome.toasts.enabled') : tGlobal('welcome.toasts.disabled'));
     } catch(e){
-      pushToast('error','Failed to update toggle');
+      pushToast('error', tGlobal('welcome.toasts.toggleFailed'));
       // revert
       setWelcomeCfg(c => ({ ...(c||{}), enabled: !on }));
       setWelcomeOriginal(o => o ? { ...o, enabled: !on } : o);
@@ -1297,14 +1318,14 @@ export default function App(){
 
   // saveWelcome redefined above with dirty tracking
   // Channel selection placeholder (requires channel list API future). For now free text.
-  const moderationContent = <React.Suspense fallback={<div className="text-muted small p-3">Loading Moderation…</div>}>
+  const moderationContent = <React.Suspense fallback={<div className="text-muted small p-3">{tGlobal('loading.fetchingData')}</div>}>
     <ModerationSection guildId={selectedGuild} pushToast={pushToast} />
   </React.Suspense>;
 
-  const settingsContent = <React.Suspense fallback={<div className="text-muted small p-3">Loading settings…</div>}>
+  const settingsContent = <React.Suspense fallback={<div className="text-muted small p-3">{tGlobal('settings.loadingTitle')}</div>}>
     <SettingsSection guildId={selectedGuild} pushToast={pushToast} />
   </React.Suspense>;
-  const gamesContent = <React.Suspense fallback={<div className="text-muted small p-3">Loading Games & Socials…</div>}>
+  const gamesContent = <React.Suspense fallback={<div className="text-muted small p-3">{tGlobal('loading.fetchingData')}</div>}>
     <GamesSocialsSection guildId={selectedGuild} pushToast={pushToast} />
   </React.Suspense>;
   const sectionMap = { overview: overviewContent, autos: autosContent, commands: commandsContent, personal: personalizationContent, moderation: moderationContent, games: gamesContent, settings: settingsContent };
@@ -1347,13 +1368,13 @@ export default function App(){
         sidebarRef={sidebarRef}
       />
       <main className="dash-main">
-        <React.Suspense fallback={<div className="p-4 text-muted small">Loading section…</div>}>
+  <React.Suspense fallback={<div className="p-4 text-muted small">{tGlobal('loading.pleaseWait')}</div>}>
           {sectionMap[dashSection]}
         </React.Suspense>
       </main>
     </div>
     {/* Floating action button & backdrop for mobile */}
-    {!sidebarOpen && <button type="button" className="fab-toggle d-lg-none" onClick={()=>setSidebarOpen(true)} aria-label="Open menu">
+  {!sidebarOpen && <button type="button" className="fab-toggle d-lg-none" onClick={()=>setSidebarOpen(true)} aria-label={tGlobal('navigation.openMenu')}>
       <span className="fab-ripple"></span>
       <i className="fa-solid fa-bars"></i>
     </button>}
