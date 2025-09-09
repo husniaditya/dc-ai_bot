@@ -808,7 +808,7 @@
             },
             "reactions": "反應",
             "emoji": "表情符號",
-            "emojiPlaceholder": "\u001F3AE 或 :custom_emoji:",
+            "emojiPlaceholder": "\u001f3AE 或 :custom_emoji:",
             "role": "身分組",
             "rolePlaceholder": "選擇身分組…",
             "type": "類型",

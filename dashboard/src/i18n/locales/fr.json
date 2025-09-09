@@ -29,21 +29,21 @@
     "back": "Retour",
     "next": "Suivant",
     "previous": "Précédent",
-  "unsaved": "Non enregistré",
-  "notAvailable": "N/D",
-  "refresh": "Actualiser les analyses",
-  "na": "N/D",
-  "none": "Aucun",
-  "noMatches": "Aucune correspondance",
-  "invalidData": "Données invalides",
-  "unknown": "Inconnu",
-  "update": "Mettre à jour",
-  "editRule": "Modifier la règle",
-  "deleteRule": "Supprimer la règle",
-  "editWord": "Modifier le mot",
-  "deleteWord": "Supprimer le mot",
-  "editPattern": "Modifier le motif",
-  "deletePattern": "Supprimer le motif"
+    "unsaved": "Non enregistré",
+    "notAvailable": "N/D",
+    "refresh": "Actualiser les analyses",
+    "na": "N/D",
+    "none": "Aucun",
+    "noMatches": "Aucune correspondance",
+    "invalidData": "Données invalides",
+    "unknown": "Inconnu",
+    "update": "Mettre à jour",
+    "editRule": "Modifier la règle",
+    "deleteRule": "Supprimer la règle",
+    "editWord": "Modifier le mot",
+    "deleteWord": "Supprimer le mot",
+    "editPattern": "Modifier le motif",
+    "deletePattern": "Supprimer le motif"
   },
   "navigation": {
     "dashboard": "Tableau de bord",
@@ -60,8 +60,8 @@
     "signOut": "Se déconnecter",
     "collapseSidebar": "Réduire la barre latérale",
     "expandSidebar": "Agrandir la barre latérale",
-  "toggleTheme": "Basculer thème clair / sombre",
-  "openMenu": "Ouvrir le menu"
+    "toggleTheme": "Basculer thème clair / sombre",
+    "openMenu": "Ouvrir le menu"
   },
   "settings": {
     "title": "Paramètres du serveur",
@@ -424,16 +424,36 @@
       "unknownUser": "Inconnu"
     },
     "groups": {
-      "core": { "title": "Noyau" },
-      "ai": { "title": "IA & Langage" },
-      "polls": { "title": "Sondages" },
-      "utilities": { "title": "Utilitaires" },
-      "xp": { "title": "XP & Niveaux" },
-      "roles": { "title": "Rôles & Auto-Attribution" },
-      "moderation": { "title": "Modération & Sécurité" },
-      "passive": { "title": "Passif / Automatisation" },
-      "scheduler": { "title": "Planificateur" },
-      "streaming": { "title": "Intégration Streaming" }
+      "core": {
+        "title": "Noyau"
+      },
+      "ai": {
+        "title": "IA & Langage"
+      },
+      "polls": {
+        "title": "Sondages"
+      },
+      "utilities": {
+        "title": "Utilitaires"
+      },
+      "xp": {
+        "title": "XP & Niveaux"
+      },
+      "roles": {
+        "title": "Rôles & Auto-Attribution"
+      },
+      "moderation": {
+        "title": "Modération & Sécurité"
+      },
+      "passive": {
+        "title": "Passif / Automatisation"
+      },
+      "scheduler": {
+        "title": "Planificateur"
+      },
+      "streaming": {
+        "title": "Intégration Streaming"
+      }
     },
     "toasts": {
       "enabled": "Commande \"{{name}}\" activée",
@@ -441,64 +461,202 @@
       "toggleFailed": "Échec de la mise à jour de {{name}}"
     },
     "items": {
-      "ping": { "usage": "/ping", "desc": "Vérification d'état — répond avec Pong." },
-      "uptime": { "usage": "/uptime", "desc": "Affiche le temps d'activité du bot." },
-      "whoami": { "usage": "/whoami", "desc": "Affiche votre tag et identifiant utilisateur." },
-      "echo": { "usage": "/echo <text>", "desc": "Répond avec le même texte." },
-      "help": { "usage": "/help", "desc": "Menu d'aide par catégorie interactif." },
-
-      "ask": { "usage": "/ask prompt:<text>", "desc": "Poser une question à l'IA (en cache 3 min)." },
-      "askfollow": { "usage": "/askfollow prompt:<text>", "desc": "Suivi en utilisant le contexte récent de la conversation." },
-      "explain_image": { "usage": "/explain_image image(1-3) [prompt]", "desc": "Expliquer jusqu'à 3 images avec un prompt optionnel." },
-      "summarize": { "usage": "/summarize [count]", "desc": "Résumer les derniers messages (par défaut 30)." },
-      "translate": { "usage": "/translate text target", "desc": "Traduire du texte vers la langue cible." },
-
-      "poll create": { "usage": "/poll create question options", "desc": "Créer un sondage (jusqu'à 5 options)." },
-      "poll results": { "usage": "/poll results id", "desc": "Afficher les résultats pour un sondage (id)." },
-
-      "math": { "usage": "/math add|sub|mul|div a b", "desc": "Opérations arithmétiques de base." },
-      "user info": { "usage": "/user info [target]", "desc": "Consulter les infos d'un utilisateur Discord." },
-      "remind": { "usage": "/remind minutes text", "desc": "Programmer un rappel par DM ou dans un salon." },
-      "meme": { "usage": "/meme", "desc": "Image de mème aléatoire depuis meme-api.com." },
-
-      "level": { "usage": "/level [user]", "desc": "Vérifier votre niveau ou celui d'un autre utilisateur." },
-      "xp": { "usage": "/xp check|leaderboard [user]", "desc": "Vérifier l'XP ou voir le classement du serveur." },
-      "rank": { "usage": "/rank [user]", "desc": "Vérifier votre rang sur le serveur." },
-      "leaderboard": { "usage": "/leaderboard [limit]", "desc": "Afficher le classement XP du serveur." },
-      "xpadmin": { "usage": "/xpadmin give|remove|set <user> <amount>", "desc": "Gérer l'XP des utilisateurs (nécessite Gérer le serveur)." },
-
-      "role list": { "usage": "/role list", "desc": "Afficher tous les rôles auto-assignables disponibles." },
-      "role menu": { "usage": "/role menu", "desc": "Menu de sélection de rôles interactif (éphémère)." },
-      "role add": { "usage": "/role add <role> [user]", "desc": "Ajouter un rôle auto-assignable à vous-même ou à un autre utilisateur." },
-      "role remove": { "usage": "/role remove <role> [user]", "desc": "Retirer un rôle auto-assignable de vous-même ou d'un autre utilisateur." },
-      "role setup": { "usage": "/role setup <action> <role> [options]", "desc": "Configurer les rôles auto-assignables (nécessite Gérer les rôles)." },
-      "role toggle": { "usage": "/role toggle <command_name>", "desc": "Activer/désactiver une commande de rôle (nécessite Gérer les rôles)." },
-
-      "automod list": { "usage": "/automod list", "desc": "Afficher toutes les règles d'automod configurées." },
-      "automod info": { "usage": "/automod info <id>", "desc": "Voir les informations détaillées d'une règle automod." },
-      "automod toggle": { "usage": "/automod toggle <id> <enabled>", "desc": "Activer/désactiver une règle automod (nécessite Gérer le serveur)." },
-      "antiraid status": { "usage": "/antiraid status", "desc": "Voir l'état actuel de la protection anti-raid." },
-      "antiraid toggle": { "usage": "/antiraid toggle <enabled>", "desc": "Activer/désactiver la protection anti-raid (nécessite Gérer le serveur)." },
-      "audit recent": { "usage": "/audit recent", "desc": "Voir les actions de modération récentes (nécessite Gérer le serveur)." },
-
-      "autoreply": { "usage": "(passive)", "desc": "Réponses automatiques basées sur des modèles configurés." },
-      "welcome preview": { "usage": "/welcome preview", "desc": "Aperçu de la configuration actuelle du message de bienvenue." },
-      "welcome toggle": { "usage": "/welcome toggle <enabled>", "desc": "Activer/désactiver le système de bienvenue (nécessite Gérer le serveur)." },
-      "automod": { "usage": "(passive)", "desc": "Modération automatique pour spam, majuscules, liens et grossièretés." },
-      "audit logs": { "usage": "(passive)", "desc": "Suivre toutes les actions de modération et les changements du serveur." },
-      "anti-raid": { "usage": "(passive)", "desc": "Protection contre les raids et les arrivées massives." },
-
-      "scheduler list": { "usage": "/scheduler list", "desc": "Lister tous les messages planifiés." },
-      "scheduler info": { "usage": "/scheduler info <id>", "desc": "Voir les informations détaillées d'un message planifié." },
-      "scheduler enable": { "usage": "/scheduler enable <id>", "desc": "Activer un message planifié (nécessite Gérer le serveur)." },
-      "scheduler disable": { "usage": "/scheduler disable <id>", "desc": "Désactiver un message planifié (nécessite Gérer le serveur)." },
-      "scheduler run": { "usage": "/scheduler run <id>", "desc": "Déclencher manuellement un message planifié maintenant (nécessite Gérer le serveur)." },
-
-      "ytwatch": { "usage": "/ytwatch action:<enable|disable|addchannel|removechannel|announcechannel|mentionrole|interval|status>", "desc": "Gérer les notifications YouTube (nécessite Gérer le serveur)." },
-      "ytstats": { "usage": "/ytstats", "desc": "Afficher le cache et les statistiques de quota du watcher YouTube." },
-      "ytdebug": { "usage": "/ytdebug", "desc": "Afficher les événements de débogage récents du watcher YouTube (nécessite Gérer le serveur)." },
-      "twitchstats": { "usage": "/twitchstats", "desc": "Afficher le cache et les statistiques API du watcher Twitch." },
-      "twitchdebug": { "usage": "/twitchdebug action:<config|status|test|resolve>", "desc": "Déboguer l'intégration Twitch et tester les notifications." }
+      "ping": {
+        "usage": "/ping",
+        "desc": "Vérification d'état — répond avec Pong."
+      },
+      "uptime": {
+        "usage": "/uptime",
+        "desc": "Affiche le temps d'activité du bot."
+      },
+      "whoami": {
+        "usage": "/whoami",
+        "desc": "Affiche votre tag et identifiant utilisateur."
+      },
+      "echo": {
+        "usage": "/echo <text>",
+        "desc": "Répond avec le même texte."
+      },
+      "help": {
+        "usage": "/help",
+        "desc": "Menu d'aide par catégorie interactif."
+      },
+      "ask": {
+        "usage": "/ask prompt:<text>",
+        "desc": "Poser une question à l'IA (en cache 3 min)."
+      },
+      "askfollow": {
+        "usage": "/askfollow prompt:<text>",
+        "desc": "Suivi en utilisant le contexte récent de la conversation."
+      },
+      "explain_image": {
+        "usage": "/explain_image image(1-3) [prompt]",
+        "desc": "Expliquer jusqu'à 3 images avec un prompt optionnel."
+      },
+      "summarize": {
+        "usage": "/summarize [count]",
+        "desc": "Résumer les derniers messages (par défaut 30)."
+      },
+      "translate": {
+        "usage": "/translate text target",
+        "desc": "Traduire du texte vers la langue cible."
+      },
+      "poll create": {
+        "usage": "/poll create question options",
+        "desc": "Créer un sondage (jusqu'à 5 options)."
+      },
+      "poll results": {
+        "usage": "/poll results id",
+        "desc": "Afficher les résultats pour un sondage (id)."
+      },
+      "math": {
+        "usage": "/math add|sub|mul|div a b",
+        "desc": "Opérations arithmétiques de base."
+      },
+      "user info": {
+        "usage": "/user info [target]",
+        "desc": "Consulter les infos d'un utilisateur Discord."
+      },
+      "remind": {
+        "usage": "/remind minutes text",
+        "desc": "Programmer un rappel par DM ou dans un salon."
+      },
+      "meme": {
+        "usage": "/meme",
+        "desc": "Image de mème aléatoire depuis meme-api.com."
+      },
+      "level": {
+        "usage": "/level [user]",
+        "desc": "Vérifier votre niveau ou celui d'un autre utilisateur."
+      },
+      "xp": {
+        "usage": "/xp check|leaderboard [user]",
+        "desc": "Vérifier l'XP ou voir le classement du serveur."
+      },
+      "rank": {
+        "usage": "/rank [user]",
+        "desc": "Vérifier votre rang sur le serveur."
+      },
+      "leaderboard": {
+        "usage": "/leaderboard [limit]",
+        "desc": "Afficher le classement XP du serveur."
+      },
+      "xpadmin": {
+        "usage": "/xpadmin give|remove|set <user> <amount>",
+        "desc": "Gérer l'XP des utilisateurs (nécessite Gérer le serveur)."
+      },
+      "role list": {
+        "usage": "/role list",
+        "desc": "Afficher tous les rôles auto-assignables disponibles."
+      },
+      "role menu": {
+        "usage": "/role menu",
+        "desc": "Menu de sélection de rôles interactif (éphémère)."
+      },
+      "role add": {
+        "usage": "/role add <role> [user]",
+        "desc": "Ajouter un rôle auto-assignable à vous-même ou à un autre utilisateur."
+      },
+      "role remove": {
+        "usage": "/role remove <role> [user]",
+        "desc": "Retirer un rôle auto-assignable de vous-même ou d'un autre utilisateur."
+      },
+      "role setup": {
+        "usage": "/role setup <action> <role> [options]",
+        "desc": "Configurer les rôles auto-assignables (nécessite Gérer les rôles)."
+      },
+      "role toggle": {
+        "usage": "/role toggle <command_name>",
+        "desc": "Activer/désactiver une commande de rôle (nécessite Gérer les rôles)."
+      },
+      "automod list": {
+        "usage": "/automod list",
+        "desc": "Afficher toutes les règles d'automod configurées."
+      },
+      "automod info": {
+        "usage": "/automod info <id>",
+        "desc": "Voir les informations détaillées d'une règle automod."
+      },
+      "automod toggle": {
+        "usage": "/automod toggle <id> <enabled>",
+        "desc": "Activer/désactiver une règle automod (nécessite Gérer le serveur)."
+      },
+      "antiraid status": {
+        "usage": "/antiraid status",
+        "desc": "Voir l'état actuel de la protection anti-raid."
+      },
+      "antiraid toggle": {
+        "usage": "/antiraid toggle <enabled>",
+        "desc": "Activer/désactiver la protection anti-raid (nécessite Gérer le serveur)."
+      },
+      "audit recent": {
+        "usage": "/audit recent",
+        "desc": "Voir les actions de modération récentes (nécessite Gérer le serveur)."
+      },
+      "autoreply": {
+        "usage": "(passive)",
+        "desc": "Réponses automatiques basées sur des modèles configurés."
+      },
+      "welcome preview": {
+        "usage": "/welcome preview",
+        "desc": "Aperçu de la configuration actuelle du message de bienvenue."
+      },
+      "welcome toggle": {
+        "usage": "/welcome toggle <enabled>",
+        "desc": "Activer/désactiver le système de bienvenue (nécessite Gérer le serveur)."
+      },
+      "automod": {
+        "usage": "(passive)",
+        "desc": "Modération automatique pour spam, majuscules, liens et grossièretés."
+      },
+      "audit logs": {
+        "usage": "(passive)",
+        "desc": "Suivre toutes les actions de modération et les changements du serveur."
+      },
+      "anti-raid": {
+        "usage": "(passive)",
+        "desc": "Protection contre les raids et les arrivées massives."
+      },
+      "scheduler list": {
+        "usage": "/scheduler list",
+        "desc": "Lister tous les messages planifiés."
+      },
+      "scheduler info": {
+        "usage": "/scheduler info <id>",
+        "desc": "Voir les informations détaillées d'un message planifié."
+      },
+      "scheduler enable": {
+        "usage": "/scheduler enable <id>",
+        "desc": "Activer un message planifié (nécessite Gérer le serveur)."
+      },
+      "scheduler disable": {
+        "usage": "/scheduler disable <id>",
+        "desc": "Désactiver un message planifié (nécessite Gérer le serveur)."
+      },
+      "scheduler run": {
+        "usage": "/scheduler run <id>",
+        "desc": "Déclencher manuellement un message planifié maintenant (nécessite Gérer le serveur)."
+      },
+      "ytwatch": {
+        "usage": "/ytwatch action:<enable|disable|addchannel|removechannel|announcechannel|mentionrole|interval|status>",
+        "desc": "Gérer les notifications YouTube (nécessite Gérer le serveur)."
+      },
+      "ytstats": {
+        "usage": "/ytstats",
+        "desc": "Afficher le cache et les statistiques de quota du watcher YouTube."
+      },
+      "ytdebug": {
+        "usage": "/ytdebug",
+        "desc": "Afficher les événements de débogage récents du watcher YouTube (nécessite Gérer le serveur)."
+      },
+      "twitchstats": {
+        "usage": "/twitchstats",
+        "desc": "Afficher le cache et les statistiques API du watcher Twitch."
+      },
+      "twitchdebug": {
+        "usage": "/twitchdebug action:<config|status|test|resolve>",
+        "desc": "Déboguer l'intégration Twitch et tester les notifications."
+      }
     }
   },
   "personalization": {
@@ -750,12 +908,30 @@
             "desc": "Inclure plus de contexte et de métadonnées dans les journaux"
           },
           "channels": {
-            "message": { "label": "Messages", "desc": "Où envoyer les journaux de messages" },
-            "member": { "label": "Membres", "desc": "Où envoyer les journaux des membres" },
-            "channel": { "label": "Salons", "desc": "Où envoyer les journaux des salons" },
-            "role": { "label": "Rôles", "desc": "Où envoyer les journaux des rôles" },
-            "server": { "label": "Serveur", "desc": "Où envoyer les journaux du serveur" },
-            "voice": { "label": "Vocal", "desc": "Où envoyer les journaux vocaux" }
+            "message": {
+              "label": "Messages",
+              "desc": "Où envoyer les journaux de messages"
+            },
+            "member": {
+              "label": "Membres",
+              "desc": "Où envoyer les journaux des membres"
+            },
+            "channel": {
+              "label": "Salons",
+              "desc": "Où envoyer les journaux des salons"
+            },
+            "role": {
+              "label": "Rôles",
+              "desc": "Où envoyer les journaux des rôles"
+            },
+            "server": {
+              "label": "Serveur",
+              "desc": "Où envoyer les journaux du serveur"
+            },
+            "voice": {
+              "label": "Vocal",
+              "desc": "Où envoyer les journaux vocaux"
+            }
           }
         },
         "placeholders": {
@@ -826,15 +1002,43 @@
           "message": "Les actions anti-raid peuvent être strictes. Ajustez les seuils pour éviter d’impacter les membres légitimes lors de périodes chargées."
         },
         "fields": {
-          "joinRate": { "label": "Taux d’adhésions", "desc": "Adhésions max autorisées dans la fenêtre" },
-          "joinWindow": { "label": "Fenêtre (secondes)", "desc": "Intervalle utilisé pour le contrôle du taux" },
-          "accountAge": { "label": "Âge minimal du compte (jours)", "desc": "Bloquer les comptes plus récents que cet âge" },
-          "raidAction": { "label": "En cas de raid détecté", "desc": "Action principale à effectuer lorsqu’un raid est détecté" },
-          "raidActionDuration": { "label": "Durée de l’action (minutes)", "desc": "Durée pour les actions timeout/verrouillage", "notApplicable": "Non applicable pour expulsion/bannissement/alerte" },
-          "alertChannel": { "label": "Salon d’alerte", "desc": "Où envoyer les alertes et résumés anti-raid" },
-          "autoKick": { "label": "Expulsion auto des suspects", "desc": "Expulser automatiquement les comptes qui échouent aux vérifications" },
-          "gracePeriod": { "label": "Période de maintien (minutes)", "desc": "Temps pendant lequel garder la protection élevée après détection" },
-          "whitelistRoles": { "label": "Rôles d’exemption", "desc": "Les membres avec ces rôles contournent les vérifications anti-raid" }
+          "joinRate": {
+            "label": "Taux d’adhésions",
+            "desc": "Adhésions max autorisées dans la fenêtre"
+          },
+          "joinWindow": {
+            "label": "Fenêtre (secondes)",
+            "desc": "Intervalle utilisé pour le contrôle du taux"
+          },
+          "accountAge": {
+            "label": "Âge minimal du compte (jours)",
+            "desc": "Bloquer les comptes plus récents que cet âge"
+          },
+          "raidAction": {
+            "label": "En cas de raid détecté",
+            "desc": "Action principale à effectuer lorsqu’un raid est détecté"
+          },
+          "raidActionDuration": {
+            "label": "Durée de l’action (minutes)",
+            "desc": "Durée pour les actions timeout/verrouillage",
+            "notApplicable": "Non applicable pour expulsion/bannissement/alerte"
+          },
+          "alertChannel": {
+            "label": "Salon d’alerte",
+            "desc": "Où envoyer les alertes et résumés anti-raid"
+          },
+          "autoKick": {
+            "label": "Expulsion auto des suspects",
+            "desc": "Expulser automatiquement les comptes qui échouent aux vérifications"
+          },
+          "gracePeriod": {
+            "label": "Période de maintien (minutes)",
+            "desc": "Temps pendant lequel garder la protection élevée après détection"
+          },
+          "whitelistRoles": {
+            "label": "Rôles d’exemption",
+            "desc": "Les membres avec ces rôles contournent les vérifications anti-raid"
+          }
         },
         "actions": {
           "lockdown": "Verrouillage",
@@ -845,17 +1049,34 @@
         },
         "verification": {
           "label": "Niveau de vérification requis",
-          "levels": { "none": "Aucun", "low": "Faible", "medium": "Moyen", "high": "Élevé", "highest": "Maximal" }
+          "levels": {
+            "none": "Aucun",
+            "low": "Faible",
+            "medium": "Moyen",
+            "high": "Élevé",
+            "highest": "Maximal"
+          }
         },
-        "placeholders": { "noAlerts": "Aucun salon d’alerte" },
+        "placeholders": {
+          "noAlerts": "Aucun salon d’alerte"
+        },
         "roles": {
           "placeholder": "Ajouter des rôles à exclure...",
-          "meta": { "role": "rôle" },
+          "meta": {
+            "role": "rôle"
+          },
           "noMatches": "Aucun rôle ne correspond à votre recherche.",
           "allAdded": "Tous les rôles sont ajoutés"
         },
-        "modal": { "title": "Paramètres Anti-Raid", "saving": "Enregistrement des paramètres anti-raid...", "saved": "Paramètres anti-raid enregistrés" },
-        "toasts": { "saved": "Paramètres anti-raid enregistrés", "saveFailed": "Échec de l’enregistrement des paramètres anti-raid" }
+        "modal": {
+          "title": "Paramètres Anti-Raid",
+          "saving": "Enregistrement des paramètres anti-raid...",
+          "saved": "Paramètres anti-raid enregistrés"
+        },
+        "toasts": {
+          "saved": "Paramètres anti-raid enregistrés",
+          "saveFailed": "Échec de l’enregistrement des paramètres anti-raid"
+        }
       },
       "xp": {
         "header": "Système d'XP et de niveaux",
@@ -974,19 +1195,52 @@
           }
         },
         "triggers": {
-          "spam": { "label": "Détection de spam", "description": "Détecter les messages répétés et les schémas de spam" },
-          "caps": { "label": "Majuscules excessives", "description": "Filtrer les messages avec trop de majuscules" },
-          "links": { "label": "Filtre de liens", "description": "Analyser et bloquer les liens/URL malveillants" },
-          "invite_links": { "label": "Liens d'invitation", "description": "Analyser et bloquer les liens d'invitation Discord malveillants" },
-          "profanity": { "label": "Filtre de grossièretés", "description": "Filtrer le langage inapproprié" },
-          "mention_spam": { "label": "Spam de mentions", "description": "Empêcher les mentions excessives d'utilisateurs/rôles" }
+          "spam": {
+            "label": "Détection de spam",
+            "description": "Détecter les messages répétés et les schémas de spam"
+          },
+          "caps": {
+            "label": "Majuscules excessives",
+            "description": "Filtrer les messages avec trop de majuscules"
+          },
+          "links": {
+            "label": "Filtre de liens",
+            "description": "Analyser et bloquer les liens/URL malveillants"
+          },
+          "invite_links": {
+            "label": "Liens d'invitation",
+            "description": "Analyser et bloquer les liens d'invitation Discord malveillants"
+          },
+          "profanity": {
+            "label": "Filtre de grossièretés",
+            "description": "Filtrer le langage inapproprié"
+          },
+          "mention_spam": {
+            "label": "Spam de mentions",
+            "description": "Empêcher les mentions excessives d'utilisateurs/rôles"
+          }
         },
         "actions": {
-          "warn": { "label": "Avertir l'utilisateur", "description": "Envoyer un avertissement à l'utilisateur" },
-          "delete": { "label": "Supprimer le message", "description": "Supprimer le message en infraction" },
-          "mute": { "label": "Muet temporaire", "description": "Rendre muet l'utilisateur pour une durée spécifiée" },
-          "kick": { "label": "Expulser l'utilisateur", "description": "Expulser l'utilisateur du serveur" },
-          "ban": { "label": "Bannir l'utilisateur", "description": "Bannir définitivement l'utilisateur" }
+          "warn": {
+            "label": "Avertir l'utilisateur",
+            "description": "Envoyer un avertissement à l'utilisateur"
+          },
+          "delete": {
+            "label": "Supprimer le message",
+            "description": "Supprimer le message en infraction"
+          },
+          "mute": {
+            "label": "Muet temporaire",
+            "description": "Rendre muet l'utilisateur pour une durée spécifiée"
+          },
+          "kick": {
+            "label": "Expulser l'utilisateur",
+            "description": "Expulser l'utilisateur du serveur"
+          },
+          "ban": {
+            "label": "Bannir l'utilisateur",
+            "description": "Bannir définitivement l'utilisateur"
+          }
         },
         "messageAction": {
           "keep": "Conserver le message",

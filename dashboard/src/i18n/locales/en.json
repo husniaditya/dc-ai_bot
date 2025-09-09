@@ -3,15 +3,15 @@
     "save": "Save",
     "reset": "Reset",
     "cancel": "Cancel",
-  "create": "Create",
+    "create": "Create",
     "delete": "Delete",
     "edit": "Edit",
     "add": "Add",
     "loading": "Loading...",
     "lastLoad": "Last updated",
     "saving": "Saving...",
-  "creating": "Creating...",
-  "updating": "Updating...",
+    "creating": "Creating...",
+    "updating": "Updating...",
     "success": "Success",
     "error": "Error",
     "warning": "Warning",
@@ -33,28 +33,28 @@
     "next": "Next",
     "previous": "Previous",
     "unsaved": "Unsaved",
-  "unsavedChanges": "Unsaved Changes",
-  "notAvailable": "N/A",
-  "refresh": "Refresh analytics",
-  "na": "N/A",
-  "none": "None",
-  "noMatches": "No matches",
-  "invalidData": "Invalid data",
-  "unknown": "Unknown",
-  "update": "Update",
-  "editRule": "Edit Rule",
-  "deleteRule": "Delete Rule",
-  "editWord": "Edit Word",
-  "deleteWord": "Delete Word",
-  "editPattern": "Edit Pattern",
-  "deletePattern": "Delete Pattern"
+    "unsavedChanges": "Unsaved Changes",
+    "notAvailable": "N/A",
+    "refresh": "Refresh analytics",
+    "na": "N/A",
+    "none": "None",
+    "noMatches": "No matches",
+    "invalidData": "Invalid data",
+    "unknown": "Unknown",
+    "update": "Update",
+    "editRule": "Edit Rule",
+    "deleteRule": "Delete Rule",
+    "editWord": "Edit Word",
+    "deleteWord": "Delete Word",
+    "editPattern": "Edit Pattern",
+    "deletePattern": "Delete Pattern"
   },
   "navigation": {
     "dashboard": "Dashboard",
     "changeServer": "Change server",
     "selectServer": "Select a Server",
     "overview": "Overview",
-    "autos": "Auto Responses", 
+    "autos": "Auto Responses",
     "commands": "Commands",
     "personal": "Bot Personalization",
     "moderation": "Moderation",
@@ -64,8 +64,8 @@
     "signOut": "Sign out",
     "collapseSidebar": "Collapse sidebar",
     "expandSidebar": "Expand sidebar",
-  "toggleTheme": "Toggle light / dark theme",
-  "openMenu": "Open menu"
+    "toggleTheme": "Toggle light / dark theme",
+    "openMenu": "Open menu"
   },
   "settings": {
     "title": "Server Settings",
@@ -83,8 +83,8 @@
       "help": "Default language for bot responses and dashboard interface",
       "changeNote": "Dashboard language will change after saving settings",
       "saved": "Language setting saved successfully",
-  "saveFailed": "Failed to save language setting",
-  "changedTo": "Language changed to {{language}}"
+      "saveFailed": "Failed to save language setting",
+      "changedTo": "Language changed to {{language}}"
     },
     "timezone": {
       "label": "Timezone",
@@ -140,7 +140,7 @@
   },
   "languages": {
     "en": "English",
-    "id": "Indonesian", 
+    "id": "Indonesian",
     "es": "Spanish",
     "fr": "French",
     "de": "German",
@@ -150,7 +150,7 @@
   "overview": {
     "title": "Server Overview",
     "subtitle": "Dashboard overview and server statistics",
-  "activityDashboardTitle": "Activity Dashboard",
+    "activityDashboardTitle": "Activity Dashboard",
     "serverInfo": "Server Information",
     "botStatus": "Bot Status",
     "quickActions": "Quick Actions",
@@ -208,7 +208,7 @@
       },
       "days": {
         "sun": "Sun",
-        "mon": "Mon", 
+        "mon": "Mon",
         "tue": "Tue",
         "wed": "Wed",
         "thu": "Thu",
@@ -252,7 +252,7 @@
     "metrics": {
       "apiResponse": "API Response",
       "excellent": "Excellent",
-      "good": "Good", 
+      "good": "Good",
       "slow": "Slow",
       "commandUsage": "Command Usage",
       "highActivity": "High activity",
@@ -267,20 +267,20 @@
       "cpuUsage": "CPU Usage",
       "improvement": "improvement",
       "normalLoad": "Normal load",
-  "yesterdayChange": "-12ms from yesterday",
-  "newToday": "new today"
+      "yesterdayChange": "-12ms from yesterday",
+      "newToday": "new today"
     },
     "activeUsers": "Active Users",
     "recentActivityStream": "Recent Activity Stream",
     "systemHealth": {
       "botOnline": "Bot Online",
-      "database": "Database", 
+      "database": "Database",
       "aiServices": "AI Services",
       "cacheSystem": "Cache System",
       "systemHealthScore": "System Health Score",
       "status": {
         "active": "Active",
-        "connected": "Connected", 
+        "connected": "Connected",
         "operational": "Operational",
         "warming": "Warming"
       }
@@ -293,7 +293,7 @@
       "filterEffectiveness": "Filter Effectiveness",
       "filters": {
         "spam": "Spam",
-        "links": "Links", 
+        "links": "Links",
         "caps": "Caps",
         "profanity": "Profanity",
         "invites": "Invites",
@@ -302,7 +302,7 @@
       "actionsTaken": "Actions Taken",
       "securityScore": "Security Score",
       "cleanMembers": "Clean Members",
-      "warnedUsers": "Warned Users", 
+      "warnedUsers": "Warned Users",
       "bannedToday": "Banned Today",
       "newMembers": "New Members",
       "joins": "Joins",
@@ -334,7 +334,7 @@
     "sampleActivity": {
       "schedulerUsed": "/scheduler used",
       "autoReplyTriggered": "Auto-reply triggered",
-      "pingExecuted": "/ping executed", 
+      "pingExecuted": "/ping executed",
       "welcomeMessageSent": "Welcome message sent",
       "helpRequested": "/help requested"
     }
@@ -397,9 +397,9 @@
     "toasts": {
       "bulkEnabled": "Enabled selected",
       "bulkDisabled": "Disabled selected",
-  "bulkDeleted": "Deleted selected",
-  "deleted": "Deleted",
-  "saved": "Auto response saved"
+      "bulkDeleted": "Deleted selected",
+      "deleted": "Deleted",
+      "saved": "Auto response saved"
     },
     "modal": {
       "titleAdd": "Add Auto Response",
@@ -439,16 +439,36 @@
       "unknownUser": "Unknown"
     },
     "groups": {
-      "core": { "title": "Core" },
-      "ai": { "title": "AI & Language" },
-      "polls": { "title": "Polls" },
-      "utilities": { "title": "Utilities" },
-      "xp": { "title": "XP & Leveling" },
-      "roles": { "title": "Roles & Self-Assignment" },
-      "moderation": { "title": "Moderation & Security" },
-      "passive": { "title": "Passive / Automation" },
-      "scheduler": { "title": "Scheduler" },
-      "streaming": { "title": "Streaming Integration" }
+      "core": {
+        "title": "Core"
+      },
+      "ai": {
+        "title": "AI & Language"
+      },
+      "polls": {
+        "title": "Polls"
+      },
+      "utilities": {
+        "title": "Utilities"
+      },
+      "xp": {
+        "title": "XP & Leveling"
+      },
+      "roles": {
+        "title": "Roles & Self-Assignment"
+      },
+      "moderation": {
+        "title": "Moderation & Security"
+      },
+      "passive": {
+        "title": "Passive / Automation"
+      },
+      "scheduler": {
+        "title": "Scheduler"
+      },
+      "streaming": {
+        "title": "Streaming Integration"
+      }
     },
     "toasts": {
       "enabled": "Command \"{{name}}\" enabled",
@@ -456,64 +476,202 @@
       "toggleFailed": "Failed to update {{name}}"
     },
     "items": {
-      "ping": { "usage": "/ping", "desc": "Health check – replies with Pong." },
-      "uptime": { "usage": "/uptime", "desc": "Shows bot process uptime." },
-      "whoami": { "usage": "/whoami", "desc": "Shows your user tag & id." },
-      "echo": { "usage": "/echo <text>", "desc": "Replies with the same text." },
-      "help": { "usage": "/help", "desc": "Interactive category help menu." },
-
-      "ask": { "usage": "/ask prompt:<text>", "desc": "Ask AI a question (cached 3 min)." },
-      "askfollow": { "usage": "/askfollow prompt:<text>", "desc": "Follow-up using recent conversation context." },
-      "explain_image": { "usage": "/explain_image image(1-3) [prompt]", "desc": "Explain up to 3 images with optional prompt." },
-      "summarize": { "usage": "/summarize [count]", "desc": "Summarize last messages (default 30)." },
-      "translate": { "usage": "/translate text target", "desc": "Translate text into the target language." },
-
-      "poll create": { "usage": "/poll create question options", "desc": "Create a poll (up to 5 options)." },
-      "poll results": { "usage": "/poll results id", "desc": "Show results for a poll id." },
-
-      "math": { "usage": "/math add|sub|mul|div a b", "desc": "Basic arithmetic operations." },
-      "user info": { "usage": "/user info [target]", "desc": "Lookup Discord user info." },
-      "remind": { "usage": "/remind minutes text", "desc": "Schedule a reminder DM or channel." },
-      "meme": { "usage": "/meme", "desc": "Random meme image from meme-api.com." },
-
-      "level": { "usage": "/level [user]", "desc": "Check your level or someone else's XP level." },
-      "xp": { "usage": "/xp check|leaderboard [user]", "desc": "Check XP or view server leaderboard." },
-      "rank": { "usage": "/rank [user]", "desc": "Check your rank in the server." },
-      "leaderboard": { "usage": "/leaderboard [limit]", "desc": "Show the server XP leaderboard." },
-      "xpadmin": { "usage": "/xpadmin give|remove|set <user> <amount>", "desc": "Manage user XP (requires Manage Server)." },
-
-      "role list": { "usage": "/role list", "desc": "Show all available self-assignable roles." },
-      "role menu": { "usage": "/role menu", "desc": "Interactive role selection menu (ephemeral)." },
-      "role add": { "usage": "/role add <role> [user]", "desc": "Add a self-assignable role to yourself or another user." },
-      "role remove": { "usage": "/role remove <role> [user]", "desc": "Remove a self-assignable role from yourself or another user." },
-      "role setup": { "usage": "/role setup <action> <role> [options]", "desc": "Configure self-assignable roles (requires Manage Roles)." },
-      "role toggle": { "usage": "/role toggle <command_name>", "desc": "Enable/disable a role command (requires Manage Roles)." },
-
-      "automod list": { "usage": "/automod list", "desc": "Show all configured automod rules." },
-      "automod info": { "usage": "/automod info <id>", "desc": "View detailed info for an automod rule." },
-      "automod toggle": { "usage": "/automod toggle <id> <enabled>", "desc": "Enable/disable an automod rule (requires Manage Server)." },
-      "antiraid status": { "usage": "/antiraid status", "desc": "View current anti-raid protection status." },
-      "antiraid toggle": { "usage": "/antiraid toggle <enabled>", "desc": "Enable/disable anti-raid protection (requires Manage Server)." },
-      "audit recent": { "usage": "/audit recent", "desc": "View recent moderation actions (requires Manage Server)." },
-
-      "autoreply": { "usage": "(passive)", "desc": "Automatic replies based on configured patterns." },
-      "welcome preview": { "usage": "/welcome preview", "desc": "Preview current welcome message configuration." },
-      "welcome toggle": { "usage": "/welcome toggle <enabled>", "desc": "Enable/disable welcome system (requires Manage Server)." },
-      "automod": { "usage": "(passive)", "desc": "Automatic moderation for spam, caps, links, and profanity." },
-      "audit logs": { "usage": "(passive)", "desc": "Track all moderation actions and server changes." },
-      "anti-raid": { "usage": "(passive)", "desc": "Protection against raids and mass join attacks." },
-
-      "scheduler list": { "usage": "/scheduler list", "desc": "List all scheduled messages." },
-      "scheduler info": { "usage": "/scheduler info <id>", "desc": "View detailed info for a scheduled message." },
-      "scheduler enable": { "usage": "/scheduler enable <id>", "desc": "Enable a scheduled message (requires Manage Server)." },
-      "scheduler disable": { "usage": "/scheduler disable <id>", "desc": "Disable a scheduled message (requires Manage Server)." },
-      "scheduler run": { "usage": "/scheduler run <id>", "desc": "Manually trigger a scheduled message now (requires Manage Server)." },
-
-      "ytwatch": { "usage": "/ytwatch action:<enable|disable|addchannel|removechannel|announcechannel|mentionrole|interval|status>", "desc": "Manage YouTube notifications (requires Manage Server)." },
-      "ytstats": { "usage": "/ytstats", "desc": "Show YouTube watcher cache & quota stats." },
-      "ytdebug": { "usage": "/ytdebug", "desc": "Show recent YouTube watcher debug events (requires Manage Server)." },
-      "twitchstats": { "usage": "/twitchstats", "desc": "Show Twitch watcher cache & API stats." },
-      "twitchdebug": { "usage": "/twitchdebug action:<config|status|test|resolve>", "desc": "Debug Twitch integration and test notifications." }
+      "ping": {
+        "usage": "/ping",
+        "desc": "Health check – replies with Pong."
+      },
+      "uptime": {
+        "usage": "/uptime",
+        "desc": "Shows bot process uptime."
+      },
+      "whoami": {
+        "usage": "/whoami",
+        "desc": "Shows your user tag & id."
+      },
+      "echo": {
+        "usage": "/echo <text>",
+        "desc": "Replies with the same text."
+      },
+      "help": {
+        "usage": "/help",
+        "desc": "Interactive category help menu."
+      },
+      "ask": {
+        "usage": "/ask prompt:<text>",
+        "desc": "Ask AI a question (cached 3 min)."
+      },
+      "askfollow": {
+        "usage": "/askfollow prompt:<text>",
+        "desc": "Follow-up using recent conversation context."
+      },
+      "explain_image": {
+        "usage": "/explain_image image(1-3) [prompt]",
+        "desc": "Explain up to 3 images with optional prompt."
+      },
+      "summarize": {
+        "usage": "/summarize [count]",
+        "desc": "Summarize last messages (default 30)."
+      },
+      "translate": {
+        "usage": "/translate text target",
+        "desc": "Translate text into the target language."
+      },
+      "poll create": {
+        "usage": "/poll create question options",
+        "desc": "Create a poll (up to 5 options)."
+      },
+      "poll results": {
+        "usage": "/poll results id",
+        "desc": "Show results for a poll id."
+      },
+      "math": {
+        "usage": "/math add|sub|mul|div a b",
+        "desc": "Basic arithmetic operations."
+      },
+      "user info": {
+        "usage": "/user info [target]",
+        "desc": "Lookup Discord user info."
+      },
+      "remind": {
+        "usage": "/remind minutes text",
+        "desc": "Schedule a reminder DM or channel."
+      },
+      "meme": {
+        "usage": "/meme",
+        "desc": "Random meme image from meme-api.com."
+      },
+      "level": {
+        "usage": "/level [user]",
+        "desc": "Check your level or someone else's XP level."
+      },
+      "xp": {
+        "usage": "/xp check|leaderboard [user]",
+        "desc": "Check XP or view server leaderboard."
+      },
+      "rank": {
+        "usage": "/rank [user]",
+        "desc": "Check your rank in the server."
+      },
+      "leaderboard": {
+        "usage": "/leaderboard [limit]",
+        "desc": "Show the server XP leaderboard."
+      },
+      "xpadmin": {
+        "usage": "/xpadmin give|remove|set <user> <amount>",
+        "desc": "Manage user XP (requires Manage Server)."
+      },
+      "role list": {
+        "usage": "/role list",
+        "desc": "Show all available self-assignable roles."
+      },
+      "role menu": {
+        "usage": "/role menu",
+        "desc": "Interactive role selection menu (ephemeral)."
+      },
+      "role add": {
+        "usage": "/role add <role> [user]",
+        "desc": "Add a self-assignable role to yourself or another user."
+      },
+      "role remove": {
+        "usage": "/role remove <role> [user]",
+        "desc": "Remove a self-assignable role from yourself or another user."
+      },
+      "role setup": {
+        "usage": "/role setup <action> <role> [options]",
+        "desc": "Configure self-assignable roles (requires Manage Roles)."
+      },
+      "role toggle": {
+        "usage": "/role toggle <command_name>",
+        "desc": "Enable/disable a role command (requires Manage Roles)."
+      },
+      "automod list": {
+        "usage": "/automod list",
+        "desc": "Show all configured automod rules."
+      },
+      "automod info": {
+        "usage": "/automod info <id>",
+        "desc": "View detailed info for an automod rule."
+      },
+      "automod toggle": {
+        "usage": "/automod toggle <id> <enabled>",
+        "desc": "Enable/disable an automod rule (requires Manage Server)."
+      },
+      "antiraid status": {
+        "usage": "/antiraid status",
+        "desc": "View current anti-raid protection status."
+      },
+      "antiraid toggle": {
+        "usage": "/antiraid toggle <enabled>",
+        "desc": "Enable/disable anti-raid protection (requires Manage Server)."
+      },
+      "audit recent": {
+        "usage": "/audit recent",
+        "desc": "View recent moderation actions (requires Manage Server)."
+      },
+      "autoreply": {
+        "usage": "(passive)",
+        "desc": "Automatic replies based on configured patterns."
+      },
+      "welcome preview": {
+        "usage": "/welcome preview",
+        "desc": "Preview current welcome message configuration."
+      },
+      "welcome toggle": {
+        "usage": "/welcome toggle <enabled>",
+        "desc": "Enable/disable welcome system (requires Manage Server)."
+      },
+      "automod": {
+        "usage": "(passive)",
+        "desc": "Automatic moderation for spam, caps, links, and profanity."
+      },
+      "audit logs": {
+        "usage": "(passive)",
+        "desc": "Track all moderation actions and server changes."
+      },
+      "anti-raid": {
+        "usage": "(passive)",
+        "desc": "Protection against raids and mass join attacks."
+      },
+      "scheduler list": {
+        "usage": "/scheduler list",
+        "desc": "List all scheduled messages."
+      },
+      "scheduler info": {
+        "usage": "/scheduler info <id>",
+        "desc": "View detailed info for a scheduled message."
+      },
+      "scheduler enable": {
+        "usage": "/scheduler enable <id>",
+        "desc": "Enable a scheduled message (requires Manage Server)."
+      },
+      "scheduler disable": {
+        "usage": "/scheduler disable <id>",
+        "desc": "Disable a scheduled message (requires Manage Server)."
+      },
+      "scheduler run": {
+        "usage": "/scheduler run <id>",
+        "desc": "Manually trigger a scheduled message now (requires Manage Server)."
+      },
+      "ytwatch": {
+        "usage": "/ytwatch action:<enable|disable|addchannel|removechannel|announcechannel|mentionrole|interval|status>",
+        "desc": "Manage YouTube notifications (requires Manage Server)."
+      },
+      "ytstats": {
+        "usage": "/ytstats",
+        "desc": "Show YouTube watcher cache & quota stats."
+      },
+      "ytdebug": {
+        "usage": "/ytdebug",
+        "desc": "Show recent YouTube watcher debug events (requires Manage Server)."
+      },
+      "twitchstats": {
+        "usage": "/twitchstats",
+        "desc": "Show Twitch watcher cache & API stats."
+      },
+      "twitchdebug": {
+        "usage": "/twitchdebug action:<config|status|test|resolve>",
+        "desc": "Debug Twitch integration and test notifications."
+      }
     }
   },
   "personalization": {
@@ -804,19 +962,52 @@
           }
         },
         "triggers": {
-          "spam": { "label": "Spam Detection", "description": "Detect repeated messages and spam patterns" },
-          "caps": { "label": "Excessive Caps", "description": "Filter messages with too many capital letters" },
-          "links": { "label": "Link Filter", "description": "Scan and block malicious links and URLs" },
-          "invite_links": { "label": "Invite Links", "description": "Scan and block malicious Discord invite links" },
-          "profanity": { "label": "Profanity Filter", "description": "Filter inappropriate language" },
-          "mention_spam": { "label": "Mention Spam", "description": "Prevent excessive user/role mentions" }
+          "spam": {
+            "label": "Spam Detection",
+            "description": "Detect repeated messages and spam patterns"
+          },
+          "caps": {
+            "label": "Excessive Caps",
+            "description": "Filter messages with too many capital letters"
+          },
+          "links": {
+            "label": "Link Filter",
+            "description": "Scan and block malicious links and URLs"
+          },
+          "invite_links": {
+            "label": "Invite Links",
+            "description": "Scan and block malicious Discord invite links"
+          },
+          "profanity": {
+            "label": "Profanity Filter",
+            "description": "Filter inappropriate language"
+          },
+          "mention_spam": {
+            "label": "Mention Spam",
+            "description": "Prevent excessive user/role mentions"
+          }
         },
         "actions": {
-          "warn": { "label": "Warn User", "description": "Send a warning to the user" },
-          "delete": { "label": "Delete Message", "description": "Remove the violating message" },
-          "mute": { "label": "Temporary Mute", "description": "Mute the user for a specified duration" },
-          "kick": { "label": "Kick User", "description": "Remove the user from the server" },
-          "ban": { "label": "Ban User", "description": "Permanently ban the user" }
+          "warn": {
+            "label": "Warn User",
+            "description": "Send a warning to the user"
+          },
+          "delete": {
+            "label": "Delete Message",
+            "description": "Remove the violating message"
+          },
+          "mute": {
+            "label": "Temporary Mute",
+            "description": "Mute the user for a specified duration"
+          },
+          "kick": {
+            "label": "Kick User",
+            "description": "Remove the user from the server"
+          },
+          "ban": {
+            "label": "Ban User",
+            "description": "Permanently ban the user"
+          }
         },
         "messageAction": {
           "keep": "Keep Message",
@@ -1132,7 +1323,9 @@
         },
         "roles": {
           "placeholder": "Add roles to bypass...",
-          "meta": { "role": "role" },
+          "meta": {
+            "role": "role"
+          },
           "noMatches": "No roles match your search.",
           "allAdded": "All roles are added"
         },
@@ -1251,7 +1444,7 @@
           "multiplierAdded": "Added multiplier {{value}}x for @{{name}}",
           "multiplierRemoved": "Removed multiplier for @{{name}}",
           "invalidMultiplier": "Please select a role and enter a valid multiplier"
-  },
+        },
         "scheduler": {
           "header": "Scheduled Messages System",
           "badge": "Automated Announcements",
@@ -1477,174 +1670,174 @@
     }
   },
   "gamesSocials": {
-    "title": "Games & Sosial",
-    "subtitle": "Konfigurasi fitur gaming dan sosial",
+    "title": "Games & Social",
+    "subtitle": "Gaming and social features configuration",
     "loading": {
-      "title": "Memuat Pengaturan Integrasi",
-      "message": "Mengambil konfigurasi integrasi dan data server Anda..."
+      "title": "Loading Integration Settings",
+      "message": "Fetching your integration configuration and server data..."
     },
     "toasts": {
-      "serviceEnabled": "{{service}} diaktifkan",
-      "serviceDisabled": "{{service}} dinonaktifkan",
-      "toggleFailed": "Gagal memperbarui toggle",
-      "saved": "Pengaturan {{service}} telah disimpan",
-      "saveFailed": "Penyimpanan gagal"
+      "serviceEnabled": "{{service}} enabled",
+      "serviceDisabled": "{{service}} disabled",
+      "toggleFailed": "Failed to update toggle",
+      "saved": "{{service}} settings saved",
+      "saveFailed": "Save failed"
     },
     "services": {
       "youtube": {
         "label": "YouTube",
-        "desc": "Umumkan upload baru dan live stream dari channel yang dipilih"
+        "desc": "Announce new uploads and live streams from selected channels"
       },
       "twitch": {
         "label": "Twitch",
-        "desc": "Umumkan saat streamer favorit Anda mulai live"
+        "desc": "Announce when your favorite streamer goes live"
       },
       "pubg": {
         "label": "PUBG",
-        "desc": "Statistik pemain, ringkasan pertandingan, dan notifikasi (direncanakan)"
+        "desc": "Player stats, match summaries, and notifications (planned)"
       },
       "valorant": {
         "label": "Valorant",
-        "desc": "Pembaruan pertandingan, highlight, dan notifikasi (direncanakan)"
+        "desc": "Match updates, highlights, and notifications (planned)"
       },
       "apex": {
         "label": "Apex Legends",
-        "desc": "Pembaruan pertandingan, highlight, dan notifikasi (direncanakan)"
+        "desc": "Match updates, highlights, and notifications (planned)"
       },
       "mobilelegends": {
         "label": "Mobile Legends",
-        "desc": "Pembaruan tim dan notifikasi pertandingan (direncanakan)"
+        "desc": "Team updates and match notifications (planned)"
       },
       "clashofclans": {
         "label": "Clash of Clans",
-        "desc": "Pembaruan dan progres war clan (direncanakan)"
+        "desc": "Clan war progress and updates (planned)"
       },
       "fortnite": {
         "label": "Fortnite",
-        "desc": "Pembaruan pertandingan dan notifikasi event (direncanakan)"
+        "desc": "Match updates and event notifications (planned)"
       },
       "genshin": {
         "label": "Genshin Impact",
-        "desc": "Pembaruan event dan berita (direncanakan)"
+        "desc": "Event updates and news (planned)"
       }
     },
     "preview": {
       "samples": {
         "twitch": {
-          "streamTitle": "Live Stream yang Luar Biasa",
+          "streamTitle": "Awesome Live Stream",
           "game": "Just Chatting",
-          "startedAtRelative": "baru saja"
+          "startedAtRelative": "just now"
         },
         "youtube": {
-          "channel": "Nama Channel",
-          "videoTitle": "Upload Baru yang Luar Biasa",
-          "publishedAtRelative": "baru saja",
-          "memberOnly": " (Khusus Member)"
+          "channel": "Channel Name",
+          "videoTitle": "Awesome New Upload",
+          "publishedAtRelative": "just now",
+          "memberOnly": " (Members Only)"
         }
       }
     },
     "common": {
-      "announcement": "Pengumuman",
-      "select": "Pilih…",
-      "mentionTargets": "Target Mention",
-      "mentionHelper": "Tekan Enter untuk menambah • Backspace untuk hapus • Urutan tetap",
-      "intervalSec": "Interval (detik)",
+      "announcement": "Announcement",
+      "select": "Select…",
+      "mentionTargets": "Mention Targets",
+      "mentionHelper": "Press Enter to add • Backspace to delete • Order is preserved",
+      "intervalSec": "Interval (seconds)",
       "embeds": "Embed",
-      "plain": "Biasa",
-      "placeholders": "Placeholder",
-      "resolving": "Memproses...",
-      "namePlaceholder": "Nama",
-      "clearOverrides": "Hapus Override",
-      "configuration": "Konfigurasi",
-      "announcementsEnabled": "Pengumuman diaktifkan",
-      "announcementsDisabled": "Pengumuman dinonaktifkan",
-      "integrationNotConfigured": "integrasi belum dikonfigurasi.",
-      "plannedFeatures": "Fitur yang direncanakan",
-      "needSooner": "Kalau Anda butuh ini lebih cepat, beri tahu kami.",
-      "remove": "Hapus",
-      "loadingConfig": "Memuat konfigurasi {{service}}…",
-      "mentionInputPlaceholder": "Tambah @everyone, @here atau role…",
+      "plain": "Plain",
+      "placeholders": "Placeholders",
+      "resolving": "Processing...",
+      "namePlaceholder": "Name",
+      "clearOverrides": "Clear Overrides",
+      "configuration": "Configuration",
+      "announcementsEnabled": "Announcements enabled",
+      "announcementsDisabled": "Announcements disabled",
+      "integrationNotConfigured": "integration not yet configured.",
+      "plannedFeatures": "Planned features",
+      "needSooner": "If you need this sooner, let us know.",
+      "remove": "Remove",
+      "loadingConfig": "Loading {{service}} configuration…",
+      "mentionInputPlaceholder": "Add @everyone, @here, or a role…",
       "meta": {
         "role": "role",
         "meta": "meta"
       },
-      "noTemplate": "Belum ada template.",
-      "preview": "Pratinjau"
+      "noTemplate": "No template yet.",
+      "preview": "Preview"
     },
     "youtube": {
       "fields": {
-        "uploadAnnounceChannel": "Channel Pengumuman Upload",
-        "liveAnnounceChannel": "Channel Pengumuman Live",
+        "uploadAnnounceChannel": "Upload Announcement Channel",
+        "liveAnnounceChannel": "Live Announcement Channel",
         "upload": "Upload",
         "live": "Live"
       },
       "sections": {
-        "regularTemplate": "Template Reguler",
-        "memberTemplate": "Template Member",
-        "memberUpload": "Upload Member",
-        "memberLive": "Live Member",
-        "regularPreview": "Pratinjau Template Reguler",
-        "memberPreview": "Pratinjau Template Member"
+        "regularTemplate": "Regular Template",
+        "memberTemplate": "Member Template",
+        "memberUpload": "Member Upload",
+        "memberLive": "Member Live",
+        "regularPreview": "Regular Template Preview",
+        "memberPreview": "Member Template Preview"
       },
       "channels": {
-        "addLabel": "Tambah Channel (URL)",
+        "addLabel": "Add Channel (URL)",
         "addPlaceholder": "https://youtube.com/@handle",
-        "empty": "Belum ada channel yang ditambahkan.",
-        "editTitle": "Edit template per-channel",
-        "fetchTitle": "Ambil nama channel",
-        "uploadTemplate": "Template Upload",
-        "memberUploadTemplate": "Template Upload Member",
-        "liveTemplate": "Template Live",
-        "memberLiveTemplate": "Template Live Member"
+        "empty": "No channels added yet.",
+        "editTitle": "Edit per-channel template",
+        "fetchTitle": "Fetch channel name",
+        "uploadTemplate": "Upload Template",
+        "memberUploadTemplate": "Member Upload Template",
+        "liveTemplate": "Live Template",
+        "memberLiveTemplate": "Member Live Template"
       },
       "toasts": {
-        "alreadyWatching": "Channel {{id}} sudah dipantau",
-        "extracted": "ID channel yang diambil: {{id}}",
-        "extractedWithName": "Berhasil diambil {{name}} ({{id}})",
-        "added": "Channel {{name}} telah ditambahkan",
-        "addFailed": "Gagal menambah channel"
+        "alreadyWatching": "Channel {{id}} is already being watched",
+        "extracted": "Extracted channel ID: {{id}}",
+        "extractedWithName": "Successfully fetched {{name}} ({{id}})",
+        "added": "Channel {{name}} has been added",
+        "addFailed": "Failed to add channel"
       }
     },
     "twitch": {
       "fields": {
-        "announceChannel": "Channel Pengumuman",
+        "announceChannel": "Announcement Channel",
         "liveStream": "Live Stream"
       },
       "sections": {
-        "globalTemplate": "Template Global",
-        "templatePreview": "Pratinjau Template"
+        "globalTemplate": "Global Template",
+        "templatePreview": "Template Preview"
       },
       "streamers": {
-        "addLabel": "Tambah Streamer (username / URL)",
+        "addLabel": "Add Streamer (username / URL)",
         "addPlaceholder": "username, https://twitch.tv/username",
-        "empty": "Belum ada streamer yang ditambahkan.",
-        "editTitle": "Edit template per-streamer",
-        "fetchTitle": "Ambil nama streamer",
-        "liveTemplate": "Template Live"
+        "empty": "No streamers added yet.",
+        "editTitle": "Edit per-streamer template",
+        "fetchTitle": "Fetch streamer name",
+        "liveTemplate": "Live Template"
       },
       "toasts": {
-        "resolvedTo": "Berhasil diubah menjadi {{username}}",
-        "resolveFailed": "Tidak dapat menghubungkan streamer"
+        "resolvedTo": "Successfully changed to {{username}}",
+        "resolveFailed": "Couldn't connect to the streamer"
       }
     },
     "leveling": "XP & Leveling",
-    "economy": "Sistem Ekonomi",
-    "socialFeatures": "Fitur Sosial",
-    "miniGames": "Permainan Mini"
+    "economy": "Economy System",
+    "socialFeatures": "Social Features",
+    "miniGames": "Mini Games"
   },
   "welcome": {
-    "title": "Sistem Sambutan",
-    "subtitle": "Konfigurasi pesan sambutan dan pengaturan anggota baru",
-    "enabled": "Pesan sambutan diaktifkan",
-    "channel": "Saluran Sambutan",
-    "message": "Pesan Sambutan",
-    "roles": "Peran Otomatis",
+    "title": "Welcome System",
+    "subtitle": "Configure welcome messages and new member settings",
+    "enabled": "Welcome message enabled",
+    "channel": "Welcome Channel",
+    "message": "Welcome Message",
+    "roles": "Auto Roles",
     "toasts": {
-      "saved": "Pengaturan sambutan telah disimpan",
-      "saveFailed": "Gagal menyimpan",
-      "enabled": "Pesan sambutan diaktifkan",
-      "disabled": "Pesan sambutan dinonaktifkan",
-      "toggleFailed": "Gagal memperbarui perubahan"
+      "saved": "Welcome settings saved",
+      "saveFailed": "Saving failed",
+      "enabled": "Welcome message enabled",
+      "disabled": "Welcome message disabled",
+      "toggleFailed": "Couldn't update changes"
     }
   }
 }

@@ -958,7 +958,26 @@ export default function OverviewSection({ analytics, apiStatus, autos, totalEnab
                     chart: { type: 'column', backgroundColor: 'transparent', height: 200 },
                     title: { text: null },
                     xAxis: { 
-                      categories: [t('overview.charts.days.mon'), t('overview.charts.days.tue'), t('overview.charts.days.wed'), t('overview.charts.days.thu'), t('overview.charts.days.fri'), t('overview.charts.days.sat'), t('overview.charts.days.sun')],
+                      // Align labels with the last 7 days data order (6 days ago -> today)
+                      categories: (() => {
+                        const days = [
+                          t('overview.charts.days.sun'),
+                          t('overview.charts.days.mon'),
+                          t('overview.charts.days.tue'),
+                          t('overview.charts.days.wed'),
+                          t('overview.charts.days.thu'),
+                          t('overview.charts.days.fri'),
+                          t('overview.charts.days.sat')
+                        ];
+                        const today = new Date();
+                        const labels = [];
+                        for (let i = 6; i >= 0; i--) {
+                          const date = new Date(today);
+                          date.setDate(date.getDate() - i);
+                          labels.push(days[date.getDay()]);
+                        }
+                        return labels;
+                      })(),
                       labels: { style: { color: '#9ca3af', fontSize: '10px' } }
                     },
                     yAxis: { 
@@ -1002,7 +1021,7 @@ export default function OverviewSection({ analytics, apiStatus, autos, totalEnab
                   <div className="security-score-card mb-3">
                     <div className="text-center">
                       <div className="security-score-circle mb-2">
-                        <div className="score-value">{analytics?.security?.score || 89}</div>
+                        <div className="score-value">{analytics?.security?.score || 0}</div>
                         <div className="score-label">{t('overview.security.securityScore')}</div>
                       </div>
                       <div className="small text-success">
@@ -1016,7 +1035,22 @@ export default function OverviewSection({ analytics, apiStatus, autos, totalEnab
                   <div className="member-safety-metrics">
                     <div className="metric-row d-flex justify-content-between py-2">
                       <span className="small text-muted">{t('overview.security.cleanMembers')}</span>
-                      <span className="badge bg-success">{analytics?.guild?.cleanMembersPercentage || Math.round(((analytics?.totals?.members || 195) - (analytics?.security?.members?.warned || 8) - (analytics?.security?.members?.banned || 2)) / (analytics?.totals?.members || 195) * 100 * 100) / 100 + '%'}</span>
+                      <span className="badge bg-success">{(() => {
+                        // Prefer backend-provided percentage even when it's 0
+                        const backendPct = analytics?.guild?.cleanMembersPercentage;
+                        if (backendPct !== undefined && backendPct !== null) {
+                          const clamped = Math.max(0, Math.min(100, Math.round(backendPct)));
+                          return clamped + '%';
+                        }
+                        // Safe fallback computation with clamping
+                        const members = analytics?.totals?.members ?? 0;
+                        if (!members) return '100%';
+                        const warned = analytics?.security?.members?.warned ?? 0;
+                        const banned = analytics?.security?.members?.banned ?? 0;
+                        const pct = Math.round(((members - warned - banned) / members) * 100);
+                        const clamped = Math.max(0, Math.min(100, pct));
+                        return clamped + '%';
+                      })()}</span>
                     </div>
                     <div className="metric-row d-flex justify-content-between py-2">
                       <span className="small text-muted">{t('overview.security.warnedUsers')}</span>

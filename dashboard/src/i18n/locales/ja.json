@@ -28,22 +28,22 @@
     "close": "閉じる",
     "back": "戻る",
     "next": "次へ",
-  "previous": "前へ",
-  "unsaved": "未保存",
-  "notAvailable": "N/A",
-  "refresh": "分析を更新",
-  "na": "N/A",
-  "none": "なし",
-  "noMatches": "一致なし",
-  "invalidData": "無効なデータ",
-  "unknown": "不明",
-  "update": "更新",
-  "editRule": "ルールを編集",
-  "deleteRule": "ルールを削除",
-  "editWord": "ワードを編集",
-  "deleteWord": "ワードを削除",
-  "editPattern": "パターンを編集",
-  "deletePattern": "パターンを削除"
+    "previous": "前へ",
+    "unsaved": "未保存",
+    "notAvailable": "N/A",
+    "refresh": "分析を更新",
+    "na": "N/A",
+    "none": "なし",
+    "noMatches": "一致なし",
+    "invalidData": "無効なデータ",
+    "unknown": "不明",
+    "update": "更新",
+    "editRule": "ルールを編集",
+    "deleteRule": "ルールを削除",
+    "editWord": "ワードを編集",
+    "deleteWord": "ワードを削除",
+    "editPattern": "パターンを編集",
+    "deletePattern": "パターンを削除"
   },
   "navigation": {
     "dashboard": "ダッシュボード",
@@ -424,16 +424,36 @@
       "unknownUser": "不明"
     },
     "groups": {
-      "core": { "title": "コア" },
-      "ai": { "title": "AI・言語" },
-      "polls": { "title": "投票" },
-      "utilities": { "title": "ユーティリティ" },
-      "xp": { "title": "XP・レベル" },
-      "roles": { "title": "ロール・自動付与" },
-      "moderation": { "title": "モデレーション・セキュリティ" },
-      "passive": { "title": "パッシブ / 自動化" },
-      "scheduler": { "title": "スケジューラー" },
-      "streaming": { "title": "ストリーミング連携" }
+      "core": {
+        "title": "コア"
+      },
+      "ai": {
+        "title": "AI・言語"
+      },
+      "polls": {
+        "title": "投票"
+      },
+      "utilities": {
+        "title": "ユーティリティ"
+      },
+      "xp": {
+        "title": "XP・レベル"
+      },
+      "roles": {
+        "title": "ロール・自動付与"
+      },
+      "moderation": {
+        "title": "モデレーション・セキュリティ"
+      },
+      "passive": {
+        "title": "パッシブ / 自動化"
+      },
+      "scheduler": {
+        "title": "スケジューラー"
+      },
+      "streaming": {
+        "title": "ストリーミング連携"
+      }
     },
     "toasts": {
       "enabled": "コマンド \"{{name}}\" を有効化",
@@ -441,55 +461,202 @@
       "toggleFailed": "{{name}} の更新に失敗しました"
     },
     "items": {
-      "ping": { "usage": "/ping", "desc": "ステータス確認 — Pongで応答。" },
-      "uptime": { "usage": "/uptime", "desc": "ボットの稼働時間を表示。" },
-      "whoami": { "usage": "/whoami", "desc": "あなたのタグとユーザーIDを表示。" },
-      "echo": { "usage": "/echo <text>", "desc": "同じテキストで返信。" },
-      "help": { "usage": "/help", "desc": "カテゴリ別のインタラクティブなヘルプメニュー。" },
-      "ask": { "usage": "/ask prompt:<text>", "desc": "AIに質問（3分キャッシュ）。" },
-      "askfollow": { "usage": "/askfollow prompt:<text>", "desc": "直近の会話コンテキストを使って追加入力。" },
-      "explain_image": { "usage": "/explain_image image(1-3) [prompt]", "desc": "最大3枚の画像を説明（プロンプト任意）。" },
-      "summarize": { "usage": "/summarize [count]", "desc": "直近のメッセージを要約（既定30）。" },
-      "translate": { "usage": "/translate text target", "desc": "テキストを対象言語に翻訳。" },
-      "poll create": { "usage": "/poll create question options", "desc": "投票を作成（最大5択）。" },
-      "poll results": { "usage": "/poll results id", "desc": "投票結果を表示（id）。" },
-      "math": { "usage": "/math add|sub|mul|div a b", "desc": "基本的な計算。" },
-      "user info": { "usage": "/user info [target]", "desc": "Discordユーザー情報を取得。" },
-      "remind": { "usage": "/remind minutes text", "desc": "DMまたはチャンネルでリマインダーを予約。" },
-      "meme": { "usage": "/meme", "desc": "meme-api.comからランダムなミーム画像。" },
-      "level": { "usage": "/level [user]", "desc": "自分または他人のレベルを確認。" },
-      "xp": { "usage": "/xp check|leaderboard [user]", "desc": "XP確認やサーバーランキングを表示。" },
-      "rank": { "usage": "/rank [user]", "desc": "サーバーでのランクを確認。" },
-      "leaderboard": { "usage": "/leaderboard [limit]", "desc": "サーバーのXPランキング。" },
-      "xpadmin": { "usage": "/xpadmin give|remove|set <user> <amount>", "desc": "ユーザーのXPを管理（サーバー管理権限）。" },
-      "role list": { "usage": "/role list", "desc": "利用可能な自動付与ロールを表示。" },
-      "role menu": { "usage": "/role menu", "desc": "インタラクティブなロール選択メニュー（エフェメラル）。" },
-      "role add": { "usage": "/role add <role> [user]", "desc": "自分または他者に自動付与ロールを追加。" },
-      "role remove": { "usage": "/role remove <role> [user]", "desc": "自分または他者から自動付与ロールを削除。" },
-      "role setup": { "usage": "/role setup <action> <role> [options]", "desc": "自動付与ロールを設定（ロール管理権限）。" },
-      "role toggle": { "usage": "/role toggle <command_name>", "desc": "ロールコマンドの有効/無効（ロール管理権限）。" },
-      "automod list": { "usage": "/automod list", "desc": "設定済みのオートモデレーションルール一覧。" },
-      "automod info": { "usage": "/automod info <id>", "desc": "特定のAutomodルールの詳細を表示。" },
-      "automod toggle": { "usage": "/automod toggle <id> <enabled>", "desc": "Automodルールの有効/無効（サーバー管理権限）。" },
-      "antiraid status": { "usage": "/antiraid status", "desc": "現在のアンチレイド状態を表示。" },
-      "antiraid toggle": { "usage": "/antiraid toggle <enabled>", "desc": "アンチレイドの有効/無効（サーバー管理権限）。" },
-      "audit recent": { "usage": "/audit recent", "desc": "最近のモデレーションアクション（サーバー管理権限）。" },
-      "autoreply": { "usage": "(パッシブ)", "desc": "設定したパターンに基づいて自動返信。" },
-      "welcome preview": { "usage": "/welcome preview", "desc": "現在のウェルカム設定をプレビュー。" },
-      "welcome toggle": { "usage": "/welcome toggle <enabled>", "desc": "ウェルカム機能の有効/無効（サーバー管理権限）。" },
-      "automod": { "usage": "(パッシブ)", "desc": "スパム・大文字・リンク・不適切語を自動モデレート。" },
-      "audit logs": { "usage": "(パッシブ)", "desc": "すべてのモデレーション操作とサーバー変更を記録。" },
-      "anti-raid": { "usage": "(パッシブ)", "desc": "レイドや大量参加から保護。" },
-      "scheduler list": { "usage": "/scheduler list", "desc": "すべての予約メッセージを一覧。" },
-      "scheduler info": { "usage": "/scheduler info <id>", "desc": "予約メッセージの詳細を表示。" },
-      "scheduler enable": { "usage": "/scheduler enable <id>", "desc": "予約メッセージを有効化（サーバー管理権限）。" },
-      "scheduler disable": { "usage": "/scheduler disable <id>", "desc": "予約メッセージを無効化（サーバー管理権限）。" },
-      "scheduler run": { "usage": "/scheduler run <id>", "desc": "予約メッセージを今すぐ実行（サーバー管理権限）。" },
-      "ytwatch": { "usage": "/ytwatch action:<enable|disable|addchannel|removechannel|announcechannel|mentionrole|interval|status>", "desc": "YouTube通知を管理（サーバー管理権限）。" },
-      "ytstats": { "usage": "/ytstats", "desc": "YouTubeウォッチャーのキャッシュとクォータ統計。" },
-      "ytdebug": { "usage": "/ytdebug", "desc": "YouTubeウォッチャーの最近のデバッグイベント（サーバー管理権限）。" },
-      "twitchstats": { "usage": "/twitchstats", "desc": "TwitchウォッチャーのキャッシュとAPI統計。" },
-      "twitchdebug": { "usage": "/twitchdebug action:<config|status|test|resolve>", "desc": "Twitch連携のデバッグと通知テスト。" }
+      "ping": {
+        "usage": "/ping",
+        "desc": "ステータス確認 — Pongで応答。"
+      },
+      "uptime": {
+        "usage": "/uptime",
+        "desc": "ボットの稼働時間を表示。"
+      },
+      "whoami": {
+        "usage": "/whoami",
+        "desc": "あなたのタグとユーザーIDを表示。"
+      },
+      "echo": {
+        "usage": "/echo <text>",
+        "desc": "同じテキストで返信。"
+      },
+      "help": {
+        "usage": "/help",
+        "desc": "カテゴリ別のインタラクティブなヘルプメニュー。"
+      },
+      "ask": {
+        "usage": "/ask prompt:<text>",
+        "desc": "AIに質問（3分キャッシュ）。"
+      },
+      "askfollow": {
+        "usage": "/askfollow prompt:<text>",
+        "desc": "直近の会話コンテキストを使って追加入力。"
+      },
+      "explain_image": {
+        "usage": "/explain_image image(1-3) [prompt]",
+        "desc": "最大3枚の画像を説明（プロンプト任意）。"
+      },
+      "summarize": {
+        "usage": "/summarize [count]",
+        "desc": "直近のメッセージを要約（既定30）。"
+      },
+      "translate": {
+        "usage": "/translate text target",
+        "desc": "テキストを対象言語に翻訳。"
+      },
+      "poll create": {
+        "usage": "/poll create question options",
+        "desc": "投票を作成（最大5択）。"
+      },
+      "poll results": {
+        "usage": "/poll results id",
+        "desc": "投票結果を表示（id）。"
+      },
+      "math": {
+        "usage": "/math add|sub|mul|div a b",
+        "desc": "基本的な計算。"
+      },
+      "user info": {
+        "usage": "/user info [target]",
+        "desc": "Discordユーザー情報を取得。"
+      },
+      "remind": {
+        "usage": "/remind minutes text",
+        "desc": "DMまたはチャンネルでリマインダーを予約。"
+      },
+      "meme": {
+        "usage": "/meme",
+        "desc": "meme-api.comからランダムなミーム画像。"
+      },
+      "level": {
+        "usage": "/level [user]",
+        "desc": "自分または他人のレベルを確認。"
+      },
+      "xp": {
+        "usage": "/xp check|leaderboard [user]",
+        "desc": "XP確認やサーバーランキングを表示。"
+      },
+      "rank": {
+        "usage": "/rank [user]",
+        "desc": "サーバーでのランクを確認。"
+      },
+      "leaderboard": {
+        "usage": "/leaderboard [limit]",
+        "desc": "サーバーのXPランキング。"
+      },
+      "xpadmin": {
+        "usage": "/xpadmin give|remove|set <user> <amount>",
+        "desc": "ユーザーのXPを管理（サーバー管理権限）。"
+      },
+      "role list": {
+        "usage": "/role list",
+        "desc": "利用可能な自動付与ロールを表示。"
+      },
+      "role menu": {
+        "usage": "/role menu",
+        "desc": "インタラクティブなロール選択メニュー（エフェメラル）。"
+      },
+      "role add": {
+        "usage": "/role add <role> [user]",
+        "desc": "自分または他者に自動付与ロールを追加。"
+      },
+      "role remove": {
+        "usage": "/role remove <role> [user]",
+        "desc": "自分または他者から自動付与ロールを削除。"
+      },
+      "role setup": {
+        "usage": "/role setup <action> <role> [options]",
+        "desc": "自動付与ロールを設定（ロール管理権限）。"
+      },
+      "role toggle": {
+        "usage": "/role toggle <command_name>",
+        "desc": "ロールコマンドの有効/無効（ロール管理権限）。"
+      },
+      "automod list": {
+        "usage": "/automod list",
+        "desc": "設定済みのオートモデレーションルール一覧。"
+      },
+      "automod info": {
+        "usage": "/automod info <id>",
+        "desc": "特定のAutomodルールの詳細を表示。"
+      },
+      "automod toggle": {
+        "usage": "/automod toggle <id> <enabled>",
+        "desc": "Automodルールの有効/無効（サーバー管理権限）。"
+      },
+      "antiraid status": {
+        "usage": "/antiraid status",
+        "desc": "現在のアンチレイド状態を表示。"
+      },
+      "antiraid toggle": {
+        "usage": "/antiraid toggle <enabled>",
+        "desc": "アンチレイドの有効/無効（サーバー管理権限）。"
+      },
+      "audit recent": {
+        "usage": "/audit recent",
+        "desc": "最近のモデレーションアクション（サーバー管理権限）。"
+      },
+      "autoreply": {
+        "usage": "(パッシブ)",
+        "desc": "設定したパターンに基づいて自動返信。"
+      },
+      "welcome preview": {
+        "usage": "/welcome preview",
+        "desc": "現在のウェルカム設定をプレビュー。"
+      },
+      "welcome toggle": {
+        "usage": "/welcome toggle <enabled>",
+        "desc": "ウェルカム機能の有効/無効（サーバー管理権限）。"
+      },
+      "automod": {
+        "usage": "(パッシブ)",
+        "desc": "スパム・大文字・リンク・不適切語を自動モデレート。"
+      },
+      "audit logs": {
+        "usage": "(パッシブ)",
+        "desc": "すべてのモデレーション操作とサーバー変更を記録。"
+      },
+      "anti-raid": {
+        "usage": "(パッシブ)",
+        "desc": "レイドや大量参加から保護。"
+      },
+      "scheduler list": {
+        "usage": "/scheduler list",
+        "desc": "すべての予約メッセージを一覧。"
+      },
+      "scheduler info": {
+        "usage": "/scheduler info <id>",
+        "desc": "予約メッセージの詳細を表示。"
+      },
+      "scheduler enable": {
+        "usage": "/scheduler enable <id>",
+        "desc": "予約メッセージを有効化（サーバー管理権限）。"
+      },
+      "scheduler disable": {
+        "usage": "/scheduler disable <id>",
+        "desc": "予約メッセージを無効化（サーバー管理権限）。"
+      },
+      "scheduler run": {
+        "usage": "/scheduler run <id>",
+        "desc": "予約メッセージを今すぐ実行（サーバー管理権限）。"
+      },
+      "ytwatch": {
+        "usage": "/ytwatch action:<enable|disable|addchannel|removechannel|announcechannel|mentionrole|interval|status>",
+        "desc": "YouTube通知を管理（サーバー管理権限）。"
+      },
+      "ytstats": {
+        "usage": "/ytstats",
+        "desc": "YouTubeウォッチャーのキャッシュとクォータ統計。"
+      },
+      "ytdebug": {
+        "usage": "/ytdebug",
+        "desc": "YouTubeウォッチャーの最近のデバッグイベント（サーバー管理権限）。"
+      },
+      "twitchstats": {
+        "usage": "/twitchstats",
+        "desc": "TwitchウォッチャーのキャッシュとAPI統計。"
+      },
+      "twitchdebug": {
+        "usage": "/twitchdebug action:<config|status|test|resolve>",
+        "desc": "Twitch連携のデバッグと通知テスト。"
+      }
     }
   },
   "personalization": {
@@ -741,12 +908,30 @@
             "desc": "ログに追加のコンテキストとメタデータを含めます"
           },
           "channels": {
-            "message": { "label": "メッセージ", "desc": "メッセージ関連のログを送る場所" },
-            "member": { "label": "メンバー", "desc": "メンバー関連のログを送る場所" },
-            "channel": { "label": "チャンネル", "desc": "チャンネル関連のログを送る場所" },
-            "role": { "label": "ロール", "desc": "ロール関連のログを送る場所" },
-            "server": { "label": "サーバー", "desc": "サーバー関連のログを送る場所" },
-            "voice": { "label": "ボイス", "desc": "ボイス関連のログを送る場所" }
+            "message": {
+              "label": "メッセージ",
+              "desc": "メッセージ関連のログを送る場所"
+            },
+            "member": {
+              "label": "メンバー",
+              "desc": "メンバー関連のログを送る場所"
+            },
+            "channel": {
+              "label": "チャンネル",
+              "desc": "チャンネル関連のログを送る場所"
+            },
+            "role": {
+              "label": "ロール",
+              "desc": "ロール関連のログを送る場所"
+            },
+            "server": {
+              "label": "サーバー",
+              "desc": "サーバー関連のログを送る場所"
+            },
+            "voice": {
+              "label": "ボイス",
+              "desc": "ボイス関連のログを送る場所"
+            }
           }
         },
         "placeholders": {
@@ -775,31 +960,123 @@
       "antiraid": {
         "header": "アンチレイド保護",
         "badge": "セキュリティ",
-        "info": { "description": "参加レート制限、アカウント年齢チェック、自動応答、コンテンツ保護でレイドを検知・防止します。" },
+        "info": {
+          "description": "参加レート制限、アカウント年齢チェック、自動応答、コンテンツ保護でレイドを検知・防止します。"
+        },
         "features": {
-          "joinRate": { "title": "参加レート監視", "items": { "trackPatterns": "急増や不審な参加パターンを追跡", "detectAttacks": "レイド試行をリアルタイム検知", "thresholds": "保護を発動するしきい値を設定可能" } },
-          "accountAnalysis": { "title": "アカウント分析", "items": { "age": "最小アカウント年齢の要件", "patterns": "Bot的なパターンを検出", "avatarUsername": "アバター/ユーザー名の特徴を考慮" } },
-          "automatedResponse": { "title": "自動対応", "items": { "lockdown": "チャンネルのロックダウン/スローモード", "verification": "高い認証レベルを要求", "removal": "不審なアカウントのキック/バン/タイムアウト" } },
-          "contentFiltering": { "title": "コンテンツ保護", "items": { "inviteSpam": "新規アカウントによる招待スパムを低減", "massMention": "大量メンションスパムの抑制", "newMember": "新規メンバー向けの追加フィルター" } }
+          "joinRate": {
+            "title": "参加レート監視",
+            "items": {
+              "trackPatterns": "急増や不審な参加パターンを追跡",
+              "detectAttacks": "レイド試行をリアルタイム検知",
+              "thresholds": "保護を発動するしきい値を設定可能"
+            }
+          },
+          "accountAnalysis": {
+            "title": "アカウント分析",
+            "items": {
+              "age": "最小アカウント年齢の要件",
+              "patterns": "Bot的なパターンを検出",
+              "avatarUsername": "アバター/ユーザー名の特徴を考慮"
+            }
+          },
+          "automatedResponse": {
+            "title": "自動対応",
+            "items": {
+              "lockdown": "チャンネルのロックダウン/スローモード",
+              "verification": "高い認証レベルを要求",
+              "removal": "不審なアカウントのキック/バン/タイムアウト"
+            }
+          },
+          "contentFiltering": {
+            "title": "コンテンツ保護",
+            "items": {
+              "inviteSpam": "新規アカウントによる招待スパムを低減",
+              "massMention": "大量メンションスパムの抑制",
+              "newMember": "新規メンバー向けの追加フィルター"
+            }
+          }
         },
-        "warning": { "title": "注意:", "message": "アンチレイドの動作は厳格になる場合があります。混雑時に正当なメンバーへ影響しないよう、しきい値を調整してください。" },
+        "warning": {
+          "title": "注意:",
+          "message": "アンチレイドの動作は厳格になる場合があります。混雑時に正当なメンバーへ影響しないよう、しきい値を調整してください。"
+        },
         "fields": {
-          "joinRate": { "label": "参加レート", "desc": "時間窓内で許可する最大参加数" },
-          "joinWindow": { "label": "時間窓(秒)", "desc": "参加レート判定に使用する間隔" },
-          "accountAge": { "label": "最小アカウント年齢(日)", "desc": "この日数より新しいアカウントをブロック" },
-          "raidAction": { "label": "レイド検知時の対応", "desc": "レイド検知時に実行する主なアクション" },
-          "raidActionDuration": { "label": "アクション時間(分)", "desc": "タイムアウト/ロックダウンの時間", "notApplicable": "Kick/Ban/Alert には該当なし" },
-          "alertChannel": { "label": "アラートチャンネル", "desc": "アンチレイドのアラートやサマリーの送信先" },
-          "autoKick": { "label": "不審アカウントの自動キック", "desc": "チェックに失敗したアカウントを自動でキック" },
-          "gracePeriod": { "label": "延長期間(分)", "desc": "検知後も強化保護を維持する時間" },
-          "whitelistRoles": { "label": "例外ロール", "desc": "これらのロールを持つメンバーはアンチレイドを免除" }
+          "joinRate": {
+            "label": "参加レート",
+            "desc": "時間窓内で許可する最大参加数"
+          },
+          "joinWindow": {
+            "label": "時間窓(秒)",
+            "desc": "参加レート判定に使用する間隔"
+          },
+          "accountAge": {
+            "label": "最小アカウント年齢(日)",
+            "desc": "この日数より新しいアカウントをブロック"
+          },
+          "raidAction": {
+            "label": "レイド検知時の対応",
+            "desc": "レイド検知時に実行する主なアクション"
+          },
+          "raidActionDuration": {
+            "label": "アクション時間(分)",
+            "desc": "タイムアウト/ロックダウンの時間",
+            "notApplicable": "Kick/Ban/Alert には該当なし"
+          },
+          "alertChannel": {
+            "label": "アラートチャンネル",
+            "desc": "アンチレイドのアラートやサマリーの送信先"
+          },
+          "autoKick": {
+            "label": "不審アカウントの自動キック",
+            "desc": "チェックに失敗したアカウントを自動でキック"
+          },
+          "gracePeriod": {
+            "label": "延長期間(分)",
+            "desc": "検知後も強化保護を維持する時間"
+          },
+          "whitelistRoles": {
+            "label": "例外ロール",
+            "desc": "これらのロールを持つメンバーはアンチレイドを免除"
+          }
         },
-        "actions": { "lockdown": "ロックダウン", "kick": "キック", "ban": "BAN", "timeout": "タイムアウト", "alert": "アラートのみ" },
-        "verification": { "label": "必要な認証レベル", "levels": { "none": "なし", "low": "低", "medium": "中", "high": "高", "highest": "最高" } },
-        "placeholders": { "noAlerts": "アラートチャンネルなし" },
-        "roles": { "placeholder": "免除ロールを追加...", "meta": { "role": "ロール" }, "noMatches": "一致するロールはありません。", "allAdded": "すべてのロールが追加されています" },
-        "modal": { "title": "アンチレイド設定", "saving": "アンチレイド設定を保存中...", "saved": "アンチレイド設定を保存しました" },
-        "toasts": { "saved": "アンチレイド設定を保存しました", "saveFailed": "アンチレイド設定の保存に失敗しました" }
+        "actions": {
+          "lockdown": "ロックダウン",
+          "kick": "キック",
+          "ban": "BAN",
+          "timeout": "タイムアウト",
+          "alert": "アラートのみ"
+        },
+        "verification": {
+          "label": "必要な認証レベル",
+          "levels": {
+            "none": "なし",
+            "low": "低",
+            "medium": "中",
+            "high": "高",
+            "highest": "最高"
+          }
+        },
+        "placeholders": {
+          "noAlerts": "アラートチャンネルなし"
+        },
+        "roles": {
+          "placeholder": "免除ロールを追加...",
+          "meta": {
+            "role": "ロール"
+          },
+          "noMatches": "一致するロールはありません。",
+          "allAdded": "すべてのロールが追加されています"
+        },
+        "modal": {
+          "title": "アンチレイド設定",
+          "saving": "アンチレイド設定を保存中...",
+          "saved": "アンチレイド設定を保存しました"
+        },
+        "toasts": {
+          "saved": "アンチレイド設定を保存しました",
+          "saveFailed": "アンチレイド設定の保存に失敗しました"
+        }
       },
       "xp": {
         "header": "XP・レベルの設定",
@@ -814,14 +1091,34 @@
           "selectRole": "ロールを選択...",
           "multiplier": "例: 1.5"
         },
-        "aria": { "removeItem": "{{name}} を削除" },
+        "aria": {
+          "removeItem": "{{name}} を削除"
+        },
         "fields": {
-          "xpPerMessage": { "label": "メッセージ毎のXP", "desc": "メッセージ1件あたりのXP" },
-          "cooldownSeconds": { "label": "XPクールダウン（秒）", "desc": "XP獲得の間に待機する時間" },
-          "levelUpChannel": { "label": "レベルアップ通知チャンネル", "desc": "レベルアップメッセージの送信先（同一チャンネルは空欄）" },
-          "excludedChannels": { "label": "除外チャンネル", "desc": "XPを獲得しないチャンネル" },
-          "excludedRoles": { "label": "除外ロール", "desc": "XPを獲得しないロール" },
-          "levelUpMessages": { "label": "レベルアップメッセージ", "desc": "ユーザーがレベルアップした時にメッセージを送信" }
+          "xpPerMessage": {
+            "label": "メッセージ毎のXP",
+            "desc": "メッセージ1件あたりのXP"
+          },
+          "cooldownSeconds": {
+            "label": "XPクールダウン（秒）",
+            "desc": "XP獲得の間に待機する時間"
+          },
+          "levelUpChannel": {
+            "label": "レベルアップ通知チャンネル",
+            "desc": "レベルアップメッセージの送信先（同一チャンネルは空欄）"
+          },
+          "excludedChannels": {
+            "label": "除外チャンネル",
+            "desc": "XPを獲得しないチャンネル"
+          },
+          "excludedRoles": {
+            "label": "除外ロール",
+            "desc": "XPを獲得しないロール"
+          },
+          "levelUpMessages": {
+            "label": "レベルアップメッセージ",
+            "desc": "ユーザーがレベルアップした時にメッセージを送信"
+          }
         },
         "multipliers": {
           "label": "XP倍率ロール",
@@ -898,19 +1195,52 @@
           }
         },
         "triggers": {
-          "spam": { "label": "スパム検出", "description": "繰り返しメッセージやスパムのパターンを検出" },
-          "caps": { "label": "大文字の過剰使用", "description": "大文字が多すぎるメッセージをフィルタ" },
-          "links": { "label": "リンクフィルター", "description": "悪意のあるリンク/URLをスキャンしてブロック" },
-          "invite_links": { "label": "招待リンク", "description": "悪意のあるDiscord招待リンクをスキャンしてブロック" },
-          "profanity": { "label": "不適切語フィルター", "description": "不適切な言葉をフィルタリング" },
-          "mention_spam": { "label": "メンションスパム", "description": "ユーザー/ロールの過剰メンションを防止" }
+          "spam": {
+            "label": "スパム検出",
+            "description": "繰り返しメッセージやスパムのパターンを検出"
+          },
+          "caps": {
+            "label": "大文字の過剰使用",
+            "description": "大文字が多すぎるメッセージをフィルタ"
+          },
+          "links": {
+            "label": "リンクフィルター",
+            "description": "悪意のあるリンク/URLをスキャンしてブロック"
+          },
+          "invite_links": {
+            "label": "招待リンク",
+            "description": "悪意のあるDiscord招待リンクをスキャンしてブロック"
+          },
+          "profanity": {
+            "label": "不適切語フィルター",
+            "description": "不適切な言葉をフィルタリング"
+          },
+          "mention_spam": {
+            "label": "メンションスパム",
+            "description": "ユーザー/ロールの過剰メンションを防止"
+          }
         },
         "actions": {
-          "warn": { "label": "ユーザーに警告", "description": "ユーザーに警告を送信" },
-          "delete": { "label": "メッセージを削除", "description": "違反メッセージを削除" },
-          "mute": { "label": "一時ミュート", "description": "指定時間ユーザーをミュート" },
-          "kick": { "label": "ユーザーをキック", "description": "ユーザーをサーバーから退出させる" },
-          "ban": { "label": "ユーザーをBAN", "description": "ユーザーを永久BAN" }
+          "warn": {
+            "label": "ユーザーに警告",
+            "description": "ユーザーに警告を送信"
+          },
+          "delete": {
+            "label": "メッセージを削除",
+            "description": "違反メッセージを削除"
+          },
+          "mute": {
+            "label": "一時ミュート",
+            "description": "指定時間ユーザーをミュート"
+          },
+          "kick": {
+            "label": "ユーザーをキック",
+            "description": "ユーザーをサーバーから退出させる"
+          },
+          "ban": {
+            "label": "ユーザーをBAN",
+            "description": "ユーザーを永久BAN"
+          }
         },
         "messageAction": {
           "keep": "メッセージを保持",
