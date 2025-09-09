@@ -728,6 +728,58 @@
           }
         }
       },
+      "logging": {
+        "header": "Audit-Logging",
+        "badge": "Protokollierung",
+        "info": {
+          "description": "Konfigurieren Sie die Kanäle, in die Moderations- und Serveränderungs-Logs gesendet werden."
+        },
+        "fields": {
+          "globalChannel": {
+            "label": "Globaler Log-Kanal",
+            "desc": "Standardkanal für Logs, wenn eine Kategorie keinen Kanal festlegt",
+            "placeholder": "Log-Kanal auswählen (optional)"
+          },
+          "includeBots": {
+            "label": "Bots einschließen",
+            "desc": "Von Bots ausgeführte Aktionen protokollieren"
+          },
+          "enhancedDetails": {
+            "label": "Erweiterte Details",
+            "desc": "Mehr Kontext und Metadaten in Logs einschließen"
+          },
+          "channels": {
+            "message": { "label": "Nachrichten", "desc": "Wohin Nachrichten-Logs gesendet werden" },
+            "member": { "label": "Mitglieder", "desc": "Wohin Mitglieder-Logs gesendet werden" },
+            "channel": { "label": "Kanäle", "desc": "Wohin Kanal-Logs gesendet werden" },
+            "role": { "label": "Rollen", "desc": "Wohin Rollen-Logs gesendet werden" },
+            "server": { "label": "Server", "desc": "Wohin Server-Logs gesendet werden" },
+            "voice": { "label": "Voice", "desc": "Wohin Voice-Logs gesendet werden" }
+          }
+        },
+        "placeholders": {
+          "noLogging": "Kein Logging",
+          "selectChannel": "Kanal auswählen"
+        },
+        "buttons": {
+          "applyGlobal": "Global anwenden",
+          "reset": "Zurücksetzen",
+          "save": "Speichern",
+          "cancel": "Abbrechen"
+        },
+        "modal": {
+          "title": "Audit-Logging-Einstellungen",
+          "saving": "Änderungen werden gespeichert...",
+          "saved": "Einstellungen gespeichert"
+        },
+        "toasts": {
+          "saved": "Audit-Logging-Einstellungen gespeichert",
+          "saveFailed": "Speichern der Audit-Logging-Einstellungen fehlgeschlagen",
+          "updatedGlobal": "Globaler Log-Kanal aktualisiert",
+          "copiedToEmpty": "Globaler Kanal auf leere Kategorien angewendet",
+          "validationRequired": "Mindestens einen Kanal auswählen oder einen globalen Kanal festlegen"
+        }
+      },
       "xp": {
         "header": "XP- & Level-System",
         "badge": "Mitglieder-Engagement",

@@ -728,6 +728,58 @@
           }
         }
       },
+      "logging": {
+        "header": "監査ログ",
+        "badge": "ロギング",
+        "info": {
+          "description": "モデレーションやサーバー変更のログを送信するチャンネルを設定します。"
+        },
+        "fields": {
+          "globalChannel": {
+            "label": "グローバルログチャンネル",
+            "desc": "各カテゴリでチャンネルが未設定の場合に使われるデフォルトのチャンネル",
+            "placeholder": "ログ用チャンネルを選択（任意）"
+          },
+          "includeBots": {
+            "label": "ボットを含める",
+            "desc": "ボットによるアクションも記録します"
+          },
+          "enhancedDetails": {
+            "label": "詳細情報を拡張",
+            "desc": "ログに追加のコンテキストとメタデータを含めます"
+          },
+          "channels": {
+            "message": { "label": "メッセージ", "desc": "メッセージ関連のログを送る場所" },
+            "member": { "label": "メンバー", "desc": "メンバー関連のログを送る場所" },
+            "channel": { "label": "チャンネル", "desc": "チャンネル関連のログを送る場所" },
+            "role": { "label": "ロール", "desc": "ロール関連のログを送る場所" },
+            "server": { "label": "サーバー", "desc": "サーバー関連のログを送る場所" },
+            "voice": { "label": "ボイス", "desc": "ボイス関連のログを送る場所" }
+          }
+        },
+        "placeholders": {
+          "noLogging": "ロギングなし",
+          "selectChannel": "チャンネルを選択"
+        },
+        "buttons": {
+          "applyGlobal": "グローバルに適用",
+          "reset": "リセット",
+          "save": "保存",
+          "cancel": "キャンセル"
+        },
+        "modal": {
+          "title": "監査ログの設定",
+          "saving": "変更を保存中...",
+          "saved": "設定を保存しました"
+        },
+        "toasts": {
+          "saved": "監査ログの設定を保存しました",
+          "saveFailed": "監査ログの設定の保存に失敗しました",
+          "updatedGlobal": "グローバルログチャンネルを更新しました",
+          "copiedToEmpty": "空のカテゴリにグローバルチャンネルを適用しました",
+          "validationRequired": "少なくとも1つのチャンネルを選択するか、グローバルチャンネルを設定してください"
+        }
+      },
       "xp": {
         "header": "XP・レベルの設定",
         "badge": "メンバーエンゲージメント",

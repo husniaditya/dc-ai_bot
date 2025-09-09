@@ -737,6 +737,58 @@
           }
         }
       },
+      "logging": {
+        "header": "Journal d'audit",
+        "badge": "Journalisation",
+        "info": {
+          "description": "Configurez les salons où envoyer les journaux des actions et changements du serveur."
+        },
+        "fields": {
+          "globalChannel": {
+            "label": "Salon de log global",
+            "desc": "Salon par défaut pour envoyer les journaux quand une catégorie ne spécifie pas de salon",
+            "placeholder": "Sélectionner un salon de log (optionnel)"
+          },
+          "includeBots": {
+            "label": "Inclure les bots",
+            "desc": "Inclure les actions effectuées par les bots"
+          },
+          "enhancedDetails": {
+            "label": "Détails enrichis",
+            "desc": "Inclure plus de contexte et de métadonnées dans les journaux"
+          },
+          "channels": {
+            "message": { "label": "Messages", "desc": "Où envoyer les journaux de messages" },
+            "member": { "label": "Membres", "desc": "Où envoyer les journaux des membres" },
+            "channel": { "label": "Salons", "desc": "Où envoyer les journaux des salons" },
+            "role": { "label": "Rôles", "desc": "Où envoyer les journaux des rôles" },
+            "server": { "label": "Serveur", "desc": "Où envoyer les journaux du serveur" },
+            "voice": { "label": "Vocal", "desc": "Où envoyer les journaux vocaux" }
+          }
+        },
+        "placeholders": {
+          "noLogging": "Aucun journal",
+          "selectChannel": "Sélectionner un salon"
+        },
+        "buttons": {
+          "applyGlobal": "Appliquer global",
+          "reset": "Réinitialiser",
+          "save": "Enregistrer",
+          "cancel": "Annuler"
+        },
+        "modal": {
+          "title": "Paramètres du journal d'audit",
+          "saving": "Enregistrement des modifications...",
+          "saved": "Paramètres enregistrés"
+        },
+        "toasts": {
+          "saved": "Paramètres du journal d'audit enregistrés",
+          "saveFailed": "Échec de l'enregistrement des paramètres du journal d'audit",
+          "updatedGlobal": "Salon de log global mis à jour",
+          "copiedToEmpty": "Salon global copié vers les catégories vides",
+          "validationRequired": "Sélectionnez au moins un salon ou définissez un salon global"
+        }
+      },
       "xp": {
         "header": "Système d'XP et de niveaux",
         "badge": "Engagement des membres",

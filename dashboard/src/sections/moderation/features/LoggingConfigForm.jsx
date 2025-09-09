@@ -1,57 +1,67 @@
 import React, { forwardRef, useImperativeHandle } from 'react';
 import { ChannelSelector, FormField, SwitchToggle } from '../components/SharedComponents';
+import { useI18n } from '../../../i18n';
 
 // Audit Logging Configuration
-const LoggingConfigForm = forwardRef(({ config, updateConfig, channels }, ref) => {
+const LoggingConfigForm = forwardRef(({ config, updateConfig, channels, showToast }, ref) => {
+  const { t } = useI18n();
+
   const logTypes = [
     {
       key: 'messageChannel',
-      label: 'Message Logs',
-      description: 'Log message edits, deletions, and bulk deletions',
+      label: t('moderation.features.logging.fields.channels.message.label'),
+      description: t('moderation.features.logging.fields.channels.message.desc'),
       icon: 'fa-comment'
     },
     {
       key: 'memberChannel',
-      label: 'Member Logs',
-      description: 'Log member joins, leaves, kicks, and bans',
+      label: t('moderation.features.logging.fields.channels.member.label'),
+      description: t('moderation.features.logging.fields.channels.member.desc'),
       icon: 'fa-user'
     },
     {
       key: 'channelChannel',
-      label: 'Channel Logs',
-      description: 'Log channel creation, deletion, and modifications',
+      label: t('moderation.features.logging.fields.channels.channel.label'),
+      description: t('moderation.features.logging.fields.channels.channel.desc'),
       icon: 'fa-hashtag'
     },
     {
       key: 'roleChannel',
-      label: 'Role Logs',
-      description: 'Log role creation, deletion, and permission changes',
+      label: t('moderation.features.logging.fields.channels.role.label'),
+      description: t('moderation.features.logging.fields.channels.role.desc'),
       icon: 'fa-shield'
     },
     {
       key: 'serverChannel',
-      label: 'Server Logs',
-      description: 'Log server settings changes and emoji updates',
+      label: t('moderation.features.logging.fields.channels.server.label'),
+      description: t('moderation.features.logging.fields.channels.server.desc'),
       icon: 'fa-server'
     },
     {
       key: 'voiceChannel',
-      label: 'Voice Logs',
-      description: 'Log voice channel joins, leaves, and moves',
+      label: t('moderation.features.logging.fields.channels.voice.label'),
+      description: t('moderation.features.logging.fields.channels.voice.desc'),
       icon: 'fa-microphone'
     }
   ];
 
   const handleGlobalChannelChange = (value) => {
     updateConfig('globalChannel', value);
-    
-    // If global channel is set, copy it to all log types that don't have a channel
     if (value) {
+      let copied = 0;
       logTypes.forEach(logType => {
         if (!config[logType.key]) {
           updateConfig(logType.key, value);
+          copied += 1;
         }
       });
+      if (copied > 0) {
+        showToast?.('success', t('moderation.features.logging.toasts.copiedToEmpty'));
+      } else {
+        showToast?.('success', t('moderation.features.logging.toasts.updatedGlobal'));
+      }
+    } else {
+      showToast?.('success', t('moderation.features.logging.toasts.updatedGlobal'));
     }
   };
 
@@ -76,89 +86,52 @@ const LoggingConfigForm = forwardRef(({ config, updateConfig, channels }, ref) =
       {/* Information Section */}
       <div className="mb-4">
         <div className="d-flex align-items-center gap-3 mb-3">
-          <h6 className="mb-0 fw-bold">Audit Logging System</h6>
+          <h6 className="mb-0 fw-bold">{t('moderation.features.logging.header')}</h6>
           <span className="badge badge-soft">
             <i className="fa-solid fa-clipboard-list me-1"></i>
-            Complete Server Monitoring
+            {t('moderation.features.logging.badge')}
           </span>
         </div>
         <p className="text-muted small mb-0" style={{ fontSize: '0.85rem', lineHeight: 1.4 }}>
-          Track all server activities including messages, member changes, channel modifications, role updates, and more. 
-          Configure separate channels for different log types or use a single channel for comprehensive monitoring.
+          {t('moderation.features.logging.info.description')}
         </p>
       </div>
 
       <div className="mt-4 p-3 bg-dark border rounded">
         <h6 className="mb-2">
           <i className="fa-solid fa-info-circle text-info me-2" />
-          Logging Features
+          {t('moderation.cards.common.features')}
         </h6>
         <div className="row small text-muted">
           <div className="col-md-6">
-            <div className="mb-2">
-              <strong>Message Logs:</strong>
-              <ul className="mb-0 mt-1">
-                <li>Message edits and deletions</li>
-                <li>Bulk message deletions</li>
-                <li>Attachment tracking</li>
-              </ul>
-            </div>
-            <div className="mb-2">
-              <strong>Member Logs:</strong>
-              <ul className="mb-0 mt-1">
-                <li>Member joins and leaves</li>
-                <li>Kicks and bans</li>
-                <li>Nickname changes</li>
-              </ul>
-            </div>
-            <div className="mb-2">
-              <strong>Channel Logs:</strong>
-              <ul className="mb-0 mt-1">
-                <li>Channel creation/deletion</li>
-                <li>Permission changes</li>
-                <li>Topic and name updates</li>
-              </ul>
-            </div>
+            {[logTypes[0], logTypes[1], logTypes[2]].map((lt) => (
+              <div key={lt.key} className="mb-2">
+                <strong>{lt.label}:</strong>
+                <div className="mb-0 mt-1">{lt.description}</div>
+              </div>
+            ))}
           </div>
           <div className="col-md-6">
-            <div className="mb-2">
-              <strong>Role Logs:</strong>
-              <ul className="mb-0 mt-1">
-                <li>Role creation/deletion</li>
-                <li>Permission modifications</li>
-                <li>Role assignments</li>
-              </ul>
-            </div>
-            <div className="mb-2">
-              <strong>Server Logs:</strong>
-              <ul className="mb-0 mt-1">
-                <li>Server settings changes</li>
-                <li>Emoji and sticker updates</li>
-                <li>Integration changes</li>
-              </ul>
-            </div>
-            <div className="mb-2">
-              <strong>Voice Logs:</strong>
-              <ul className="mb-0 mt-1">
-                <li>Voice channel activity</li>
-                <li>Member moves</li>
-                <li>Mute/deafen status</li>
-              </ul>
-            </div>
+            {[logTypes[3], logTypes[4], logTypes[5]].map((lt) => (
+              <div key={lt.key} className="mb-2">
+                <strong>{lt.label}:</strong>
+                <div className="mb-0 mt-1">{lt.description}</div>
+              </div>
+            ))}
           </div>
         </div>
       </div>
       <hr />
 
       <FormField 
-        label="Global Log Channel (Optional)"
-        description="Set all empty channels to this channel"
+        label={t('moderation.features.logging.fields.globalChannel.label')}
+        description={t('moderation.features.logging.fields.globalChannel.desc')}
       >
         <ChannelSelector
           value={config.globalChannel}
           onChange={handleGlobalChannelChange}
           channels={channels}
-          placeholder="Set all empty channels to this"
+          placeholder={t('moderation.features.logging.fields.globalChannel.placeholder')}
         />
       </FormField>
       
@@ -166,19 +139,19 @@ const LoggingConfigForm = forwardRef(({ config, updateConfig, channels }, ref) =
         <div className="col-md-6">
           <SwitchToggle
             id="logging-include-bots"
-            label="Include Bot Actions"
+            label={t('moderation.features.logging.fields.includeBots.label')}
             checked={config.includeBots !== false}
             onChange={(checked) => updateConfig('includeBots', checked)}
-            description="Log actions performed by bots and integrations"
+            description={t('moderation.features.logging.fields.includeBots.desc')}
           />
         </div>
         <div className="col-md-6">
           <SwitchToggle
             id="logging-enhanced-details"
-            label="Enhanced Details"
+            label={t('moderation.features.logging.fields.enhancedDetails.label')}
             checked={config.enhancedDetails !== false}
             onChange={(checked) => updateConfig('enhancedDetails', checked)}
-            description="Include additional context and metadata in logs"
+            description={t('moderation.features.logging.fields.enhancedDetails.desc')}
           />
         </div>
       </div>
@@ -198,7 +171,7 @@ const LoggingConfigForm = forwardRef(({ config, updateConfig, channels }, ref) =
                 value={config[logType.key]}
                 onChange={(value) => updateConfig(logType.key, value)}
                 channels={channels}
-                placeholder="No logging"
+                placeholder={t('moderation.features.logging.placeholders.noLogging')}
               />
             </div>
           </div>

@@ -956,6 +956,76 @@
           "invalidRegex": "Invalid regex pattern: {{error}}"
         }
       },
+      "logging": {
+        "header": "Audit Logging",
+        "badge": "Monitoring",
+        "info": {
+          "description": "Track message edits/deletions, member updates, channel and role changes, and server events. Configure a global channel or separate channels per category."
+        },
+        "fields": {
+          "globalChannel": {
+            "label": "Global Log Channel (Optional)",
+            "desc": "Set all empty channels to this channel",
+            "placeholder": "Set all empty channels to this"
+          },
+          "includeBots": {
+            "label": "Include Bot Actions",
+            "desc": "Log actions performed by bots and integrations"
+          },
+          "enhancedDetails": {
+            "label": "Enhanced Details",
+            "desc": "Include additional context and metadata in logs"
+          },
+          "channels": {
+            "message": {
+              "label": "Message Logs",
+              "desc": "Log message edits, deletions, and bulk deletions"
+            },
+            "member": {
+              "label": "Member Logs",
+              "desc": "Log member joins, leaves, kicks, and bans"
+            },
+            "channel": {
+              "label": "Channel Logs",
+              "desc": "Log channel creation, deletion, and modifications"
+            },
+            "role": {
+              "label": "Role Logs",
+              "desc": "Log role creation, deletion, and permission changes"
+            },
+            "server": {
+              "label": "Server Logs",
+              "desc": "Log server settings changes and emoji updates"
+            },
+            "voice": {
+              "label": "Voice Logs",
+              "desc": "Log voice channel joins, leaves, and moves"
+            }
+          }
+        },
+        "placeholders": {
+          "noLogging": "No logging",
+          "selectChannel": "Select a channel"
+        },
+        "buttons": {
+          "applyGlobal": "Apply Global",
+          "reset": "Reset",
+          "save": "Save Changes",
+          "cancel": "Cancel"
+        },
+        "modal": {
+          "title": "Audit Logging Settings",
+          "saving": "Saving logging settings...",
+          "saved": "Logging settings saved"
+        },
+        "toasts": {
+          "saved": "Audit logging settings saved",
+          "saveFailed": "Failed to save audit logging settings",
+          "updatedGlobal": "Global log channel updated",
+          "copiedToEmpty": "Copied global channel to empty categories",
+          "validationRequired": "Please select at least one log channel or set a global channel"
+        }
+      },
       "welcome": {
         "header": "Welcome Messages",
         "badge": "New members",

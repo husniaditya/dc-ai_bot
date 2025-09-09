@@ -724,6 +724,58 @@
           }
         }
       },
+      "logging": {
+        "header": "Log Audit",
+        "badge": "Logging",
+        "info": {
+          "description": "Atur channel tujuan untuk mengirim log tindakan dan perubahan server."
+        },
+        "fields": {
+          "globalChannel": {
+            "label": "Channel log global",
+            "desc": "Channel default untuk mengirim log saat kategori tidak menentukan channel",
+            "placeholder": "Pilih channel log (opsional)"
+          },
+          "includeBots": {
+            "label": "Sertakan bot",
+            "desc": "Sertakan aksi yang dilakukan oleh bot"
+          },
+          "enhancedDetails": {
+            "label": "Detail lanjutan",
+            "desc": "Sertakan konteks dan metadata tambahan di log"
+          },
+          "channels": {
+            "message": { "label": "Pesan", "desc": "Ke mana mengirim log pesan" },
+            "member": { "label": "Anggota", "desc": "Ke mana mengirim log anggota" },
+            "channel": { "label": "Channel", "desc": "Ke mana mengirim log channel" },
+            "role": { "label": "Peran", "desc": "Ke mana mengirim log peran" },
+            "server": { "label": "Server", "desc": "Ke mana mengirim log server" },
+            "voice": { "label": "Suara", "desc": "Ke mana mengirim log voice" }
+          }
+        },
+        "placeholders": {
+          "noLogging": "Tidak ada logging",
+          "selectChannel": "Pilih channel"
+        },
+        "buttons": {
+          "applyGlobal": "Terapkan global",
+          "reset": "Reset",
+          "save": "Simpan",
+          "cancel": "Batal"
+        },
+        "modal": {
+          "title": "Pengaturan Log Audit",
+          "saving": "Menyimpan perubahan...",
+          "saved": "Pengaturan tersimpan"
+        },
+        "toasts": {
+          "saved": "Pengaturan log audit tersimpan",
+          "saveFailed": "Gagal menyimpan pengaturan log audit",
+          "updatedGlobal": "Channel log global diperbarui",
+          "copiedToEmpty": "Channel global disalin ke kategori yang kosong",
+          "validationRequired": "Pilih minimal satu channel atau atur channel global"
+        }
+      },
       "automod": {
         "header": "Moderasi Otomatis",
         "badge": "Perlindungan",

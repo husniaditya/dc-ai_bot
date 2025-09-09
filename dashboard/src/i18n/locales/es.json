@@ -1121,6 +1121,59 @@
           "validationRequired": "Completa todos los campos obligatorios"
         }
       }
+      ,
+      "logging": {
+        "header": "Registro de auditoría",
+        "badge": "Monitoreo",
+        "info": {
+          "description": "Configura los canales a los que se enviarán los registros de moderación y cambios del servidor."
+        },
+        "fields": {
+          "globalChannel": {
+            "label": "Canal de registro global",
+            "desc": "Canal predeterminado cuando una categoría no define un canal",
+            "placeholder": "Establecer canales vacíos a este"
+          },
+          "includeBots": {
+            "label": "Incluir acciones de bots",
+            "desc": "Registrar acciones realizadas por bots e integraciones"
+          },
+          "enhancedDetails": {
+            "label": "Detalles ampliados",
+            "desc": "Incluir contexto adicional y metadatos en los registros"
+          },
+          "channels": {
+            "message": { "label": "Mensajes", "desc": "Dónde enviar los registros de mensajes" },
+            "member": { "label": "Miembros", "desc": "Dónde enviar los registros de miembros" },
+            "channel": { "label": "Canales", "desc": "Dónde enviar los registros de canales" },
+            "role": { "label": "Roles", "desc": "Dónde enviar los registros de roles" },
+            "server": { "label": "Servidor", "desc": "Dónde enviar los registros del servidor" },
+            "voice": { "label": "Voz", "desc": "Dónde enviar los registros de voz" }
+          }
+        },
+        "placeholders": {
+          "noLogging": "Sin registro",
+          "selectChannel": "Selecciona un canal"
+        },
+        "buttons": {
+          "applyGlobal": "Aplicar global",
+          "reset": "Restablecer",
+          "save": "Guardar cambios",
+          "cancel": "Cancelar"
+        },
+        "modal": {
+          "title": "Ajustes de registro de auditoría",
+          "saving": "Guardando ajustes de registro...",
+          "saved": "Ajustes guardados"
+        },
+        "toasts": {
+          "saved": "Ajustes de registro de auditoría guardados",
+          "saveFailed": "Error al guardar los ajustes de registro de auditoría",
+          "updatedGlobal": "Canal de registro global actualizado",
+          "copiedToEmpty": "Canal global copiado a categorías vacías",
+          "validationRequired": "Selecciona al menos un canal de registro o establece un canal global"
+        }
+      }
     },
     "cards": {
       "common": {

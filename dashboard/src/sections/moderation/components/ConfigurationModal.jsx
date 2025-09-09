@@ -20,6 +20,7 @@ export default function ConfigurationModal({
   showToast 
 }) {
   const { t } = useI18n();
+  const isLogging = feature?.key === 'logging';
   // Use localized label if available
   const localizedFeatureLabel = feature?.labelKey ? t(feature.labelKey) : feature?.label;
   const [config, setConfig] = useState(feature.config || {});
@@ -241,11 +242,19 @@ export default function ConfigurationModal({
       } else {
         await onSave(config);
       }
-      
-  showToast('success', t('moderation.common.saveSuccess', { feature: localizedFeatureLabel }));
+      // Success toast (feature-specific override)
+      if (isLogging) {
+        showToast('success', t('moderation.features.logging.toasts.saved'));
+      } else {
+        showToast('success', t('moderation.common.saveSuccess', { feature: localizedFeatureLabel }));
+      }
     } catch (error) {
       console.error('Save failed:', error);
-  showToast('error', t('moderation.common.saveFailed', { feature: localizedFeatureLabel }));
+      if (isLogging) {
+        showToast('error', t('moderation.features.logging.toasts.saveFailed'));
+      } else {
+        showToast('error', t('moderation.common.saveFailed', { feature: localizedFeatureLabel }));
+      }
     } finally {
       setSaving(false);
     }
@@ -358,7 +367,7 @@ export default function ConfigurationModal({
                 <div className="spinner-border spinner-border-lg mb-3" role="status">
                   <span className="visually-hidden">{t('common.loading')}</span>
                 </div>
-                <div className="h6 mb-0">{t('moderation.modal.saving')}</div>
+                <div className="h6 mb-0">{isLogging ? t('moderation.features.logging.modal.saving') : t('moderation.modal.saving')}</div>
                 <div className="small text-muted">{t('moderation.modal.savingHelp')}</div>
               </div>
             </div>
@@ -367,7 +376,7 @@ export default function ConfigurationModal({
           <div className="modal-header border-secondary">
             <h5 className="modal-title d-flex align-items-center gap-2">
               <i className={`fa-solid ${feature.icon}`} style={{ color: feature.color }} />
-              {t('moderation.modal.title', { feature: localizedFeatureLabel })}
+              {isLogging ? t('moderation.features.logging.modal.title') : t('moderation.modal.title', { feature: localizedFeatureLabel })}
               {isDirty() && <span className="dirty-badge">{t('common.unsaved')}</span>}
             </h5>
             <button type="button" className="btn-close btn-close-white" onClick={handleClose} />
