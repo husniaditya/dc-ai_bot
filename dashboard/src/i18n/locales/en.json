@@ -3,12 +3,15 @@
     "save": "Save",
     "reset": "Reset",
     "cancel": "Cancel",
+  "create": "Create",
     "delete": "Delete",
     "edit": "Edit",
     "add": "Add",
     "loading": "Loading...",
-    "lastLoad": "Last Refreshed",
+    "lastLoad": "Last updated",
     "saving": "Saving...",
+  "creating": "Creating...",
+  "updating": "Updating...",
     "success": "Success",
     "error": "Error",
     "warning": "Warning",
@@ -30,8 +33,21 @@
     "next": "Next",
     "previous": "Previous",
     "unsaved": "Unsaved",
+  "unsavedChanges": "Unsaved Changes",
   "notAvailable": "N/A",
-  "refresh": "Refresh analytics"
+  "refresh": "Refresh analytics",
+  "na": "N/A",
+  "none": "None",
+  "noMatches": "No matches",
+  "invalidData": "Invalid data",
+  "unknown": "Unknown",
+  "update": "Update",
+  "editRule": "Edit Rule",
+  "deleteRule": "Delete Rule",
+  "editWord": "Edit Word",
+  "deleteWord": "Delete Word",
+  "editPattern": "Edit Pattern",
+  "deletePattern": "Delete Pattern"
   },
   "navigation": {
     "dashboard": "Dashboard",
@@ -547,7 +563,523 @@
     "automod": "Auto Moderation",
     "warnings": "Warning System",
     "roles": "Role Management",
-    "logging": "Audit Logging"
+    "logging": "Audit Logging",
+    "loading": {
+      "title": "Loading Moderation",
+      "message": "Fetching moderation features and configuration..."
+    },
+    "badge": {
+      "enabledOfTotal": "{{enabled}} of {{total}} enabled"
+    },
+    "overview": {
+      "title": "Moderation Overview",
+      "desc": "Toggle protection features and configure settings for your community. Stronger protection may require more configuration.",
+      "protectionLevel": "Protection Level",
+      "complete": "complete"
+    },
+    "common": {
+      "enabled": "{{feature}} enabled",
+      "disabled": "{{feature}} disabled",
+      "enableFailed": "Failed to enable feature",
+      "disableFailed": "Failed to disable feature",
+      "loadFailedGeneric": "Failed to load moderation data",
+      "loadFailed": "Failed to load {{feature}} settings",
+      "saveSuccess": "{{feature}} settings saved",
+      "saveFailed": "Failed to save {{feature}} settings"
+    },
+    "modal": {
+      "title": "{{feature}} Settings",
+      "loading": "Loading configuration...",
+      "loadingHelp": "Fetching current settings for this feature",
+      "saving": "Saving changes...",
+      "savingHelp": "Applying changes and updating server configuration",
+      "savingShort": "Saving...",
+      "saveChanges": "Save Changes"
+    },
+    "features": {
+      "roles": {
+        "header": "Role Management",
+        "badge": "Self-assign",
+        "tabs": {
+          "reaction": "Reaction Roles",
+          "slash": "Slash Commands"
+        },
+        "table": {
+          "status": "Status",
+          "title": "Title",
+          "channel": "Channel",
+          "message": "Message",
+          "reactions": "Reactions",
+          "roles": "Roles",
+          "actions": "Actions"
+        },
+        "reaction": {
+          "header": "Reaction Role Configurations",
+          "loading": "Loading reaction roles...",
+          "empty": "No reaction roles configured.",
+          "labels": {
+            "botMessage": "Bot Message",
+            "userMessage": "User Message"
+          },
+          "info": {
+            "title": "How It Works",
+            "description": "Reaction roles allow users to self-assign roles by reacting to messages. Users can react to the configured emojis to add or remove the associated roles.",
+            "types": {
+              "title": "Reaction Types:",
+              "toggle": "Toggle - Users can add or remove the role by reacting",
+              "addOnly": "Add Only - Users can only add the role, removing the reaction doesn't remove the role",
+              "removeOnly": "Remove Only - Users can only remove the role by reacting"
+            }
+          },
+          "form": {
+            "status": "Enable Reaction Role",
+            "title": "Title",
+            "titlePlaceholder": "Enter a title for this reaction role",
+            "titleHelp": "A descriptive title to help identify this reaction role",
+            "channel": "Channel",
+            "channelPlaceholder": "Select a channel...",
+            "messageId": "Message ID",
+            "messageIdReadOnly": "Message ID is read-only when editing",
+            "messageIdTooltip": "Message ID cannot be changed when editing",
+            "customMessage": "Custom Message",
+            "customMessagePlaceholder": "React to get your roles!",
+            "customMessageHelp": {
+              "editing": "The message content for this reaction role",
+              "creating": "The message content that will be posted by the bot"
+            },
+            "reactions": "Reactions",
+            "emoji": "Emoji",
+            "emojiPlaceholder": "🎮 or :custom_emoji:",
+            "role": "Role",
+            "rolePlaceholder": "Select role...",
+            "type": "Type",
+            "typeOptions": {
+              "toggle": "Toggle",
+              "add_only": "Add Only",
+              "remove_only": "Remove Only"
+            },
+            "previewSelectRole": "Select a role"
+          },
+          "buttons": {
+            "add": "Add Reaction Role",
+            "addReaction": "Add Reaction",
+            "removeReaction": "Remove reaction",
+            "removeReactionDisabled": "Cannot remove the last reaction"
+          },
+          "emojiPicker": {
+            "title": "Select Emoji",
+            "serverEmojis": "Server Emojis",
+            "commonEmojis": "Common Emojis"
+          },
+          "delete": {
+            "title": "Delete Reaction Role Message",
+            "message": "Are you sure you want to delete the reaction role message \"{{title}}\"?",
+            "warning": "This will remove all associated reactions and cannot be undone.",
+            "confirm": "Delete Message"
+          },
+          "toasts": {
+            "created": "Reaction role \"{{title}}\" created successfully!",
+            "updated": "Reaction role \"{{title}}\" updated successfully!",
+            "deleteSuccess": "Reaction role message deleted successfully",
+            "deleteFailed": "Failed to delete reaction role message",
+            "statusEnabled": "Reaction role enabled",
+            "statusDisabled": "Reaction role disabled",
+            "statusFailed": "Failed to update reaction role status",
+            "loadFailed": "Failed to load reaction roles"
+          }
+        },
+        "slash": {
+          "header": "Slash Command Roles",
+          "subtitle": "Configure custom slash commands for role management",
+          "loading": "Loading slash command roles...",
+          "empty": "No slash command roles configured.",
+          "anyChannel": "Any Channel",
+          "info": {
+            "title": "How It Works",
+            "description": "Users can use these custom slash commands to manage their roles. Each command can be configured with specific roles and behavior.",
+            "types": {
+              "title": "Command Types:",
+              "toggle": "Toggle - Users can add or remove the role",
+              "add": "Add Only - Users can only add the role",
+              "remove": "Remove Only - Users can only remove the role"
+            }
+          },
+          "buttons": {
+            "add": "Add Slash Command",
+            "addRole": "Add Role"
+          },
+          "form": {
+            "addTitle": "Add New Slash Command",
+            "editTitle": "Edit Slash Command",
+            "title": "Title",
+            "titlePlaceholder": "e.g. assign-role",
+            "description": "Description",
+            "descriptionPlaceholder": "Command description",
+            "channel": "Channel (Optional)",
+            "channelPlaceholder": "Any Channel",
+            "roles": "Roles",
+            "selectRole": "Select a role...",
+            "type": "Type",
+            "typeOptions": {
+              "toggle": "Toggle",
+              "add": "Add Only",
+              "remove": "Remove Only"
+            },
+            "requirePermission": "Require Permission",
+            "updateCommand": "Update Command",
+            "createCommand": "Create Command"
+          },
+          "delete": {
+            "title": "Delete Slash Command",
+            "message": "Are you sure you want to delete the slash command \"{{name}}\"?",
+            "warning": "This will permanently remove the command and all its configurations. Users will no longer be able to use this command.",
+            "confirm": "Delete Command"
+          },
+          "toasts": {
+            "created": "Slash command role created successfully!",
+            "updated": "Slash command role updated successfully!",
+            "statusEnabled": "Slash command enabled",
+            "statusDisabled": "Slash command disabled",
+            "deleteSuccess": "Slash command deleted successfully",
+            "deleteFailed": "Failed to delete command",
+            "fetchFailed": "Failed to fetch slash command roles",
+            "toggleFailed": "Failed to toggle command status"
+          }
+        }
+      },
+      "automod": {
+        "header": "Auto Moderation",
+        "badge": "Protection",
+        "info": {
+          "pre": "Global spam, link, and malicious URL detection integrates with third-party reputation sources like"
+        },
+        "globalLog": {
+          "label": "Global Log Channel",
+          "desc": "Default channel to send AutoMod logs when a rule doesn't specify a channel",
+          "placeholder": "Select a log channel (optional)"
+        },
+        "placeholders": {
+          "addChannels": "Add channels",
+          "addRoles": "Add roles"
+        },
+        "meta": {
+          "channel": "channel",
+          "role": "role"
+        },
+        "rules": {
+          "header": "Rules",
+          "subheader": "Create rules to detect spam, caps, links, profanity, and more.",
+          "add": "Add Rule",
+          "loading": "Loading rules...",
+          "empty": "No rules yet",
+          "emptyCta": "Click Add Rule to create your first rule.",
+          "editTitle": "Edit Auto Moderation Rule",
+          "createTitle": "Create New Auto Moderation Rule",
+          "creating": "Creating rule...",
+          "updating": "Updating rule...",
+          "creatingShort": "Creating...",
+          "updatingShort": "Updating...",
+          "createBtn": "Create Rule",
+          "updateBtn": "Update Rule",
+          "form": {
+            "name": "Rule Name",
+            "namePlaceholder": "e.g., Spam Protection",
+            "trigger": "Trigger Type",
+            "action": "Action Type",
+            "threshold": "Warning Threshold Value",
+            "thresholdPlaceholder": "5",
+            "thresholdHelp": "Number of violations before action is taken (Warn to user)",
+            "duration": "Duration (minutes)",
+            "durationPlaceholder": "10",
+            "durationHelp": "Duration for mute/ban actions (leave empty for permanent)",
+            "logChannel": "Log Channel",
+            "logChannelPlaceholder": "Use global log channel",
+            "messageAction": "Message Action",
+            "messageActionHelp": "Action to take on violating messages",
+            "whitelistChannels": "Whitelist Channels",
+            "whitelistChannelsHelp": "Channels where this rule won't apply",
+            "whitelistRoles": "Whitelist Roles",
+            "whitelistRolesHelp": "Roles that bypass this specific rule"
+          }
+        },
+        "triggers": {
+          "spam": { "label": "Spam Detection", "description": "Detect repeated messages and spam patterns" },
+          "caps": { "label": "Excessive Caps", "description": "Filter messages with too many capital letters" },
+          "links": { "label": "Link Filter", "description": "Scan and block malicious links and URLs" },
+          "invite_links": { "label": "Invite Links", "description": "Scan and block malicious Discord invite links" },
+          "profanity": { "label": "Profanity Filter", "description": "Filter inappropriate language" },
+          "mention_spam": { "label": "Mention Spam", "description": "Prevent excessive user/role mentions" }
+        },
+        "actions": {
+          "warn": { "label": "Warn User", "description": "Send a warning to the user" },
+          "delete": { "label": "Delete Message", "description": "Remove the violating message" },
+          "mute": { "label": "Temporary Mute", "description": "Mute the user for a specified duration" },
+          "kick": { "label": "Kick User", "description": "Remove the user from the server" },
+          "ban": { "label": "Ban User", "description": "Permanently ban the user" }
+        },
+        "messageAction": {
+          "keep": "Keep Message",
+          "delete": "Delete Message"
+        },
+        "table": {
+          "status": "On",
+          "name": "Name",
+          "trigger": "Trigger",
+          "action": "Action",
+          "threshold": "Threshold",
+          "channelWhitelist": "Channel Whitelist",
+          "roleWhitelist": "Role Whitelist",
+          "actions": "Actions",
+          "logsTo": "logs to {{channel}}",
+          "minutes": "{{count}} min"
+        },
+        "tip": "Tip:",
+        "profanity": {
+          "manageTip": "Manage your profanity words and patterns in the \"Profanity Management\" section above to customize what content gets filtered.",
+          "header": "Profanity Management",
+          "subheader": "Define words and regex patterns to detect inappropriate language.",
+          "loading": "Loading profanity data...",
+          "words": {
+            "header": "Words",
+            "add": "Add Word",
+            "searchPlaceholder": "Search words",
+            "noMatches": "No words match your search.",
+            "empty": "No profanity words configured yet.",
+            "emptyCta": "Click Add Word to create your first entry.",
+            "tryDifferent": "Try a different search.",
+            "table": {
+              "word": "Word",
+              "severity": "Severity",
+              "status": "Status",
+              "actions": "Actions"
+            },
+            "wholeWord": "whole word",
+            "partial": "partial",
+            "caseSensitive": "case-sensitive",
+            "caseInsensitive": "case-insensitive",
+            "modal": {
+              "editTitle": "Edit Profanity Word",
+              "addTitle": "Add Profanity Word",
+              "wordLabel": "Word",
+              "wordPlaceholder": "Type a word to block",
+              "caseSensitive": "Case sensitive",
+              "wholeWordOnly": "Whole word only"
+            },
+            "delete": {
+              "title": "Confirm Word Deletion",
+              "message": "Are you sure you want to delete this profanity word?",
+              "warning": "This action cannot be undone.",
+              "confirm": "Delete Word"
+            }
+          },
+          "patterns": {
+            "header": "Patterns",
+            "add": "Add Pattern",
+            "searchPlaceholder": "Search patterns",
+            "noMatches": "No patterns match your search.",
+            "empty": "No profanity patterns configured yet.",
+            "emptyCta": "Click Add Pattern to create your first entry.",
+            "tryDifferent": "Try a different search.",
+            "table": {
+              "pattern": "Pattern",
+              "severity": "Severity",
+              "status": "Status",
+              "actions": "Actions"
+            },
+            "modal": {
+              "editTitle": "Edit Profanity Pattern",
+              "addTitle": "Add Profanity Pattern",
+              "patternLabel": "Regex Pattern",
+              "patternPlaceholder": "b+a+d+w+o+r+d+",
+              "flagsLabel": "Flags",
+              "flagsPlaceholder": "gi",
+              "testHeader": "Pattern Test",
+              "preview": "Preview",
+              "status": "Status",
+              "valid": "Valid",
+              "invalid": "Invalid",
+              "descriptionPlaceholder": "Short description (optional)"
+            },
+            "delete": {
+              "title": "Confirm Pattern Deletion",
+              "message": "Are you sure you want to delete this profanity pattern?",
+              "warning": "This action cannot be undone.",
+              "confirm": "Delete Pattern"
+            }
+          }
+        },
+        "common": {
+          "severity": "Severity",
+          "language": "Language",
+          "description": "Description",
+          "word": "Word",
+          "pattern": "Pattern"
+        },
+        "severity": {
+          "low": "Low",
+          "medium": "Medium",
+          "high": "High",
+          "extreme": "Extreme"
+        },
+        "deleteRule": {
+          "title": "Confirm Deletion",
+          "message": "Are you sure you want to delete the automod rule?",
+          "warning": "This action cannot be undone.",
+          "confirm": "Delete Rule"
+        },
+        "toasts": {
+          "ruleCreated": "Automod rule \"{{name}}\" created successfully!",
+          "ruleUpdated": "Automod rule \"{{name}}\" updated successfully!",
+          "ruleDeleted": "Automod rule \"{{name}}\" deleted successfully!",
+          "ruleCreateFailed": "Failed to create automod rule \"{{name}}\". Please try again.",
+          "ruleUpdateFailed": "Failed to update automod rule \"{{name}}\". Please try again.",
+          "ruleDeleteFailed": "Failed to delete automod rule \"{{name}}\". Please try again.",
+          "ruleEnabled": "Automod rule \"{{name}}\" enabled successfully!",
+          "ruleDisabled": "Automod rule \"{{name}}\" disabled successfully!",
+          "ruleToggleFailed": "Failed to {{action}} automod rule \"{{name}}\". Please try again.",
+          "wordAdded": "Profanity word \"{{word}}\" added successfully!",
+          "wordUpdated": "Profanity word \"{{word}}\" updated successfully!",
+          "wordDeleted": "Profanity word \"{{word}}\" deleted successfully!",
+          "wordSaveFailed": "Failed to save profanity word. {{error}}",
+          "wordDeleteFailed": "Failed to delete profanity word. {{error}}",
+          "wordToggleEnabled": "Profanity word enabled successfully!",
+          "wordToggleDisabled": "Profanity word disabled successfully!",
+          "wordToggleFailed": "Failed to toggle profanity word status. {{error}}",
+          "patternAdded": "Profanity pattern added successfully!",
+          "patternUpdated": "Profanity pattern updated successfully!",
+          "patternDeleted": "Profanity pattern {{description}} deleted successfully!",
+          "patternSaveFailed": "Failed to save profanity pattern. {{error}}",
+          "patternDeleteFailed": "Failed to delete profanity pattern. {{error}}",
+          "patternToggleEnabled": "Profanity pattern enabled successfully!",
+          "patternToggleDisabled": "Profanity pattern disabled successfully!",
+          "patternToggleFailed": "Failed to toggle profanity pattern status. {{error}}",
+          "invalidRegex": "Invalid regex pattern: {{error}}"
+        }
+      },
+      "welcome": {
+        "header": "Welcome Messages",
+        "badge": "New members",
+        "info": "Configure welcome messages for new members. Use placeholders like {user} and {server}. Set a channel and optionally send a DM and auto-assign a role.",
+        "defaults": {
+          "messageText": "Welcome to {server}, {user}!",
+          "dmMessage": "Welcome to {server}! Thanks for joining us."
+        },
+        "fields": {
+          "channel": {
+            "label": "Welcome Channel",
+            "desc": "Select the channel to send welcome messages",
+            "placeholder": "Select a channel"
+          },
+          "type": {
+            "label": "Message Type",
+            "options": {
+              "text": "Text",
+              "embed": "Embed"
+            }
+          },
+          "message": {
+            "label": "Welcome Message",
+            "desc": "Supports placeholders: {user}, {server}",
+            "placeholder": "Type a welcome message (supports {user}, {server})"
+          },
+          "card": {
+            "label": "Include Welcome Card",
+            "desc": "Attach a simple image card with the message"
+          },
+          "role": {
+            "label": "Auto-Assign Role",
+            "desc": "Optionally assign a role to new members",
+            "placeholder": "Select a role"
+          },
+          "dm": {
+            "label": "Send a DM",
+            "desc": "Also send a private welcome message to the user"
+          },
+          "dmMessage": {
+            "label": "DM Message",
+            "desc": "Sent as a private message when enabled",
+            "placeholder": "Type a DM message"
+          }
+        }
+      }
+    },
+    "cards": {
+      "common": {
+        "features": "Features:",
+        "configure": "Configure",
+        "updating": "Updating..."
+      },
+      "welcome": {
+        "label": "Welcome Messages",
+        "desc": "Greet new members with customizable welcome messages and cards.",
+        "features": {
+          "customMessages": "Custom Messages",
+          "welcomeCards": "Welcome Cards",
+          "roleAssignment": "Role Assignment",
+          "channelSelection": "Channel Selection"
+        }
+      },
+      "automod": {
+        "label": "Auto Moderation",
+        "desc": "Automatically detect and handle spam, excessive caps, and inappropriate content.",
+        "features": {
+          "spamDetection": "Spam Detection",
+          "capsLockFilter": "Caps Lock Filter",
+          "linkFiltering": "Link Filtering",
+          "profanityFilter": "Profanity Filter"
+        }
+      },
+      "roles": {
+        "label": "Role Management",
+        "desc": "Manage roles with reaction roles and role menus.",
+        "features": {
+          "reactionRoles": "Reaction Roles",
+          "roleMenus": "Role Menus",
+          "permissionSync": "Permission Sync",
+          "customMessages": "Custom Messages"
+        }
+      },
+      "xp": {
+        "label": "XP & Leveling",
+        "desc": "Reward active members with XP points and level progression.",
+        "features": {
+          "xpTracking": "XP Tracking",
+          "levelRewards": "Level Rewards",
+          "leaderboards": "Leaderboards",
+          "customMultipliers": "Custom Multipliers"
+        }
+      },
+      "scheduler": {
+        "label": "Scheduled Messages",
+        "desc": "Schedule announcements and recurring messages for your server.",
+        "features": {
+          "scheduledPosts": "Scheduled Posts",
+          "recurringMessages": "Recurring Messages",
+          "eventReminders": "Event Reminders",
+          "autoAnnouncements": "Auto Announcements"
+        }
+      },
+      "logging": {
+        "label": "Audit Logging",
+        "desc": "Track all moderation actions and server changes.",
+        "features": {
+          "messageLogs": "Message Logs",
+          "memberLogs": "Member Logs",
+          "channelLogs": "Channel Logs",
+          "roleLogs": "Role Logs"
+        }
+      },
+      "antiraid": {
+        "label": "Anti-Raid Protection",
+        "desc": "Protect your server from raids and mass join attacks.",
+        "features": {
+          "joinRateLimiting": "Join Rate Limiting",
+          "accountAgeFilter": "Account Age Filter",
+          "autoLockdown": "Auto Lockdown",
+          "verificationSystem": "Verification System"
+        }
+      }
+    }
   },
   "gamesSocials": {
     "title": "Games & Socials", 

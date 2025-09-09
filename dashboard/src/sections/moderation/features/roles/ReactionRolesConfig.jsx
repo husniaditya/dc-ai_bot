@@ -3,6 +3,7 @@ import { getGuildEmojis } from '../../../../api';
 import { ChannelSelector, FormField, SwitchToggle } from '../../components/SharedComponents';
 import DeleteConfirmationModal from '../../components/DeleteConfirmationModal';
 import useResponsiveTable from '../../../../hooks/useResponsiveTable';
+import { useI18n } from '../../../../i18n';
 
 // Reaction Roles Configuration Component
 export default function ReactionRolesConfig({ config, updateConfig, channels, roles, guildId, showToast }) {
@@ -36,6 +37,7 @@ export default function ReactionRolesConfig({ config, updateConfig, channels, ro
   const [currentEmojiIndex, setCurrentEmojiIndex] = useState(null);
   const [updatingStatus, setUpdatingStatus] = useState({});
   const emojiPickerRef = useRef(null);
+  const { t } = useI18n();
 
   // Close emoji picker when clicking outside
   useEffect(() => {
@@ -81,7 +83,7 @@ export default function ReactionRolesConfig({ config, updateConfig, channels, ro
       }
     } catch (error) {
       console.error('Failed to fetch reaction roles:', error);
-      showToast('error', 'Failed to load reaction roles');
+  showToast('error', t('moderation.features.roles.reaction.toasts.loadFailed'));
     } finally {
       setLoading(false);
     }
@@ -111,14 +113,14 @@ export default function ReactionRolesConfig({ config, updateConfig, channels, ro
         await fetchReactionRoles();
         setShowAddForm(false);
         resetForm();
-        showToast('success', `Reaction role "${formData.title}" created successfully!`);
+        showToast('success', t('moderation.features.roles.reaction.toasts.created', { title: formData.title || t('common.unknown') }));
       } else {
         const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
         throw new Error(errorData.error || 'Failed to create reaction role');
       }
     } catch (error) {
       console.error('Error adding reaction role:', error);
-      showToast('error', `Failed to create reaction role: ${error.message}`);
+      showToast('error', `${t('common.error')}: ${error.message}`);
     } finally {
       setSaving(false);
     }
@@ -148,14 +150,14 @@ export default function ReactionRolesConfig({ config, updateConfig, channels, ro
         await fetchReactionRoles();
         setEditingRole(null);
         resetForm();
-        showToast('success', `Reaction role "${formData.title}" updated successfully!`);
+        showToast('success', t('moderation.features.roles.reaction.toasts.updated', { title: formData.title || t('common.unknown') }));
       } else {
         const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
         throw new Error(errorData.error || 'Failed to update reaction role');
       }
     } catch (error) {
       console.error('Error updating reaction role:', error);
-      showToast('error', `Failed to update reaction role: ${error.message}`);
+      showToast('error', `${t('common.error')}: ${error.message}`);
     } finally {
       setSaving(false);
     }
@@ -173,14 +175,14 @@ export default function ReactionRolesConfig({ config, updateConfig, channels, ro
       });
 
       if (response.ok) {
-        showToast('success', 'Reaction role message deleted successfully');
+        showToast('success', t('moderation.features.roles.reaction.toasts.deleteSuccess'));
         fetchReactionRoles();
       } else {
-        showToast('error', 'Failed to delete reaction role message');
+        showToast('error', t('moderation.features.roles.reaction.toasts.deleteFailed'));
       }
     } catch (error) {
       console.error('Failed to delete reaction role:', error);
-      showToast('error', 'Failed to delete reaction role message');
+      showToast('error', t('moderation.features.roles.reaction.toasts.deleteFailed'));
     } finally {
       setDeleting(false);
       setShowDeleteConfirm(false);
@@ -213,13 +215,15 @@ export default function ReactionRolesConfig({ config, updateConfig, channels, ro
             ? { ...role, status: !currentStatus }
             : role
         ));
-        showToast('success', `Reaction role ${!currentStatus ? 'enabled' : 'disabled'}`);
+        showToast('success', !currentStatus 
+          ? t('moderation.features.roles.reaction.toasts.statusEnabled') 
+          : t('moderation.features.roles.reaction.toasts.statusDisabled'));
       } else {
-        showToast('error', 'Failed to update reaction role status');
+        showToast('error', t('moderation.features.roles.reaction.toasts.statusFailed'));
       }
     } catch (error) {
       console.error('Failed to toggle status:', error);
-      showToast('error', 'Failed to update reaction role status');
+      showToast('error', t('moderation.features.roles.reaction.toasts.statusFailed'));
     } finally {
       setUpdatingStatus(prev => ({ ...prev, [roleId]: false }));
     }
@@ -294,12 +298,12 @@ export default function ReactionRolesConfig({ config, updateConfig, channels, ro
 
   const getChannelName = (channelId) => {
     const channel = channels.find(c => c.id === channelId);
-    return channel ? `#${channel.name}` : 'Unknown Channel';
+  return channel ? `#${channel.name}` : t('common.unknown');
   };
 
   const getRoleName = (roleId) => {
     const role = roles.find(r => r.id === roleId);
-    return role ? role.name : 'Unknown Role';
+  return role ? role.name : t('common.unknown');
   };
 
   // Utility function to display emoji properly
@@ -353,9 +357,9 @@ export default function ReactionRolesConfig({ config, updateConfig, channels, ro
     return (
       <div className="text-center py-4">
         <div className="spinner-border mb-3" role="status">
-          <span className="visually-hidden">Loading...</span>
+          <span className="visually-hidden">{t('common.loading')}</span>
         </div>
-        <div>Loading reaction roles...</div>
+        <div>{t('moderation.features.roles.reaction.loading')}</div>
       </div>
     );
   }
@@ -364,7 +368,7 @@ export default function ReactionRolesConfig({ config, updateConfig, channels, ro
     <div className="moderation-config-form space-y-4">
       <div className="mb-3">
         <div className="d-flex justify-content-between align-items-center mb-2">
-          <label className="form-label small fw-semibold mb-0">Reaction Role Configurations</label>
+          <label className="form-label small fw-semibold mb-0">{t('moderation.features.roles.reaction.header')}</label>
           <button 
             type="button" 
             className="btn btn-primary btn-sm"
@@ -384,7 +388,7 @@ export default function ReactionRolesConfig({ config, updateConfig, channels, ro
             }}
           >
             <i className="fa-solid fa-plus me-1"></i>
-            Add Reaction Role
+            {t('moderation.features.roles.reaction.buttons.add')}
           </button>
         </div>
 
@@ -393,20 +397,17 @@ export default function ReactionRolesConfig({ config, updateConfig, channels, ro
           <div className="mb-4 p-3 bg-dark border rounded">
             <h6 className="mb-2">
               <i className="fa-solid fa-info-circle text-info me-2" />
-              How It Works
+              {t('moderation.features.roles.reaction.info.title')}
             </h6>
             <div className="small text-muted">
-              <p className="mb-2">
-                Reaction roles allow users to self-assign roles by reacting to messages. 
-                Users can react to the configured emojis to add or remove the associated roles.
-              </p>
+              <p className="mb-2">{t('moderation.features.roles.reaction.info.description')}</p>
               <div className="mb-2">
-                <strong>Reaction Types:</strong>
+                <strong>{t('moderation.features.roles.reaction.info.types.title')}</strong>
               </div>
               <ul className="mb-0">
-                <li><code>Toggle</code> - Users can add or remove the role by reacting</li>
-                <li><code>Add Only</code> - Users can only add the role, removing the reaction doesn't remove the role</li>
-                <li><code>Remove Only</code> - Users can only remove the role by reacting</li>
+                <li>{t('moderation.features.roles.reaction.info.types.toggle')}</li>
+                <li>{t('moderation.features.roles.reaction.info.types.addOnly')}</li>
+                <li>{t('moderation.features.roles.reaction.info.types.removeOnly')}</li>
               </ul>
             </div>
           </div>
@@ -416,19 +417,19 @@ export default function ReactionRolesConfig({ config, updateConfig, channels, ro
         {loading ? (
           <div className="text-center py-3">
             <i className="fa-solid fa-spinner fa-spin me-2"></i>
-            Loading reaction roles...
+            {t('moderation.features.roles.reaction.loading')}
           </div>
         ) : reactionRoles.length > 0 ? (
           <div ref={tableRef} className="table-responsive-scroll">
             <table className="table table-sm">
               <thead>
                 <tr>
-                  <th>Status</th>
-                  <th>Title</th>
-                  <th>Channel</th>
-                  <th>Message</th>
-                  <th>Reactions</th>
-                  <th>Actions</th>
+                  <th>{t('moderation.features.roles.table.status')}</th>
+                  <th>{t('moderation.features.roles.table.title')}</th>
+                  <th>{t('moderation.features.roles.table.channel')}</th>
+                  <th>{t('moderation.features.roles.table.message')}</th>
+                  <th>{t('moderation.features.roles.table.reactions')}</th>
+                  <th>{t('moderation.features.roles.table.actions')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -448,7 +449,7 @@ export default function ReactionRolesConfig({ config, updateConfig, channels, ro
                     </td>
                     <td>
                       <div className="fw-semibold text-primary mobile-truncate" style={{ fontSize: '0.85rem' }}>
-                        {group.title || 'Untitled'}
+                        {group.title || t('common.unknown')}
                       </div>
                     </td>
                     <td>
@@ -457,7 +458,7 @@ export default function ReactionRolesConfig({ config, updateConfig, channels, ro
                     <td>
                       {group.customMessage ? (
                         <div>
-                          <span className="badge badge-success mb-1">Bot Message</span>
+                          <span className="badge badge-success mb-1">{t('moderation.features.roles.reaction.labels.botMessage')}</span>
                           <div className="small tablet-truncate" style={{maxWidth: '150px'}} title={group.customMessage}>
                             {group.customMessage && group.customMessage.length > 30 
                               ? `${group.customMessage.substring(0, 20)}...` 
@@ -466,7 +467,7 @@ export default function ReactionRolesConfig({ config, updateConfig, channels, ro
                         </div>
                       ) : (
                         <div>
-                          <span className="badge badge-secondary mb-1">User Message</span>
+                          <span className="badge badge-secondary mb-1">{t('moderation.features.roles.reaction.labels.userMessage')}</span>
                           <div className="font-monospace small mobile-truncate">{group.messageId}</div>
                         </div>
                       )}
@@ -479,7 +480,7 @@ export default function ReactionRolesConfig({ config, updateConfig, channels, ro
                             className="badge bg-secondary small"
                             style={{ fontSize: '0.7rem' }}
                           >
-                            {getRoleName(reaction.roleId)} ({(reaction.type || 'toggle').replace('_', ' ')})
+                            {getRoleName(reaction.roleId)} ({t(`moderation.features.roles.reaction.form.typeOptions.${reaction.type || 'toggle'}`)})
                           </span>
                         ))}
                       </div>
@@ -501,6 +502,7 @@ export default function ReactionRolesConfig({ config, updateConfig, channels, ro
                           };
                           startEdit(editRole);
                         }}
+                        title={t('common.edit')}
                       >
                         <i className="fa-solid fa-edit"></i>
                       </button>
@@ -508,6 +510,7 @@ export default function ReactionRolesConfig({ config, updateConfig, channels, ro
                         type="button" 
                         className="btn btn-outline-danger btn-sm"
                         onClick={() => confirmDelete(group)}
+                        title={t('common.delete')}
                       >
                         <i className="fa-solid fa-trash"></i>
                       </button>
@@ -519,7 +522,7 @@ export default function ReactionRolesConfig({ config, updateConfig, channels, ro
           </div>
         ) : (
           <div className="text-center py-3 text-muted">
-            No reaction roles configured. Click "Add Reaction Role" to get started.
+            {t('moderation.features.roles.reaction.empty')}
           </div>
         )}
 
@@ -568,33 +571,33 @@ export default function ReactionRolesConfig({ config, updateConfig, channels, ro
                   onChange={(e) => setFormData({...formData, status: e.target.checked})}
                 />
                 <label htmlFor="reaction-role-status" className="form-check-label small fw-semibold">
-                  Enable Reaction Role
+                  {t('moderation.features.roles.reaction.form.status')}
                 </label>
               </div>
             </div>
             
             {/* Title Field */}
             <div className="mb-3">
-              <label className="form-label small fw-semibold">Title</label>
+              <label className="form-label small fw-semibold">{t('moderation.features.roles.reaction.form.title')}</label>
               <input 
                 type="text" 
                 className="form-control form-control-sm"
                 value={formData.title}
                 onChange={(e) => setFormData({...formData, title: e.target.value})}
-                placeholder="Enter a title for this reaction role"
+                placeholder={t('moderation.features.roles.reaction.form.titlePlaceholder')}
               />
-              <small className="text-muted">A descriptive title to help identify this reaction role</small>
+              <small className="text-muted">{t('moderation.features.roles.reaction.form.titleHelp')}</small>
             </div>
 
             <div className="row">
               <div className="col-md-6 mb-3">
-                <label className="form-label small">Channel</label>
+                <label className="form-label small">{t('moderation.features.roles.reaction.form.channel')}</label>
                 <select 
                   className="form-select form-select-sm custom-dropdown"
                   value={formData.channelId}
                   onChange={(e) => setFormData({...formData, channelId: e.target.value})}
                 >
-                  <option value="">Select a channel...</option>
+                  <option value="">{t('moderation.features.roles.reaction.form.channelPlaceholder')}</option>
                   {channels.filter(ch => ch.type === 0).map(channel => (
                     <option key={channel.id} value={channel.id}>#{channel.name}</option>
                   ))}
@@ -602,7 +605,7 @@ export default function ReactionRolesConfig({ config, updateConfig, channels, ro
               </div>
               {editingRole && (
                 <div className="col-md-6 mb-3">
-                  <label className="form-label small">Message ID</label>
+                  <label className="form-label small">{t('moderation.features.roles.reaction.form.messageId')}</label>
                   <input 
                     type="text" 
                     className="form-control form-control-sm"
@@ -612,41 +615,41 @@ export default function ReactionRolesConfig({ config, updateConfig, channels, ro
                       backgroundColor: 'rgba(255,255,255,0.05)',
                       cursor: 'not-allowed'
                     }}
-                    title="Message ID cannot be changed when editing"
+                    title={t('moderation.features.roles.reaction.form.messageIdTooltip')}
                   />
-                  <small className="text-muted">Message ID is read-only when editing</small>
+                  <small className="text-muted">{t('moderation.features.roles.reaction.form.messageIdReadOnly')}</small>
                 </div>
               )}
             </div>
 
             {/* Custom Message - Always show for both add and edit */}
             <div className="mb-3">
-              <label className="form-label small fw-semibold">Custom Message</label>
+              <label className="form-label small fw-semibold">{t('moderation.features.roles.reaction.form.customMessage')}</label>
               <textarea 
                 className="form-control form-control-sm"
                 rows={6}
                 value={customMessage}
                 onChange={(e) => setCustomMessage(e.target.value)}
-                placeholder="React to get your roles!"
+                placeholder={t('moderation.features.roles.reaction.form.customMessagePlaceholder')}
               />
               <small className="text-muted">
                 {editingRole 
-                  ? 'The message content for this reaction role'
-                  : 'The message content that will be posted by the bot'
+                  ? t('moderation.features.roles.reaction.form.customMessageHelp.editing')
+                  : t('moderation.features.roles.reaction.form.customMessageHelp.creating')
                 }
               </small>
 
             {/* Reactions Section */}
             <div className="mb-3">
               <label className="form-label small fw-semibold d-flex align-items-center gap-2">
-                Reactions
+                {t('moderation.features.roles.reaction.form.reactions')}
                 <span className="badge badge-soft">{formData.reactions.length}</span>
               </label>
               
               {formData.reactions.map((reaction, index) => (
                 <div key={index} className="reaction-row d-flex align-items-center gap-2 mb-2 p-2 rounded border">
                   <div className="flex-grow-1">
-                    <label className="small text-muted">Emoji</label>
+                    <label className="small text-muted">{t('moderation.features.roles.reaction.form.emoji')}</label>
                     <div className="input-group">
                       <span className="input-group-text bg-dark border-secondary p-1" style={{ minWidth: '40px', justifyContent: 'center' }}>
                         <span 
@@ -657,7 +660,7 @@ export default function ReactionRolesConfig({ config, updateConfig, channels, ro
                       <input 
                         type="text"
                         className="form-control form-control-sm"
-                        placeholder="🎮 or :custom_emoji:"
+                        placeholder={t('moderation.features.roles.reaction.form.emojiPlaceholder')}
                         value={reaction.emoji}
                         onChange={(e) => updateReaction(index, 'emoji', e.target.value)}
                       />
@@ -668,35 +671,35 @@ export default function ReactionRolesConfig({ config, updateConfig, channels, ro
                           setCurrentEmojiIndex(index);
                           setShowEmojiPicker(true);
                         }}
-                        title="Pick emoji"
+                        title={t('moderation.features.roles.reaction.emojiPicker.title')}
                       >
                         <i className="fa-solid fa-smile"></i>
                       </button>
                     </div>
                   </div>
                   <div className="flex-grow-1">
-                    <label className="small text-muted">Role</label>
+                    <label className="small text-muted">{t('moderation.features.roles.reaction.form.role')}</label>
                     <select 
                       className="form-select form-select-sm"
                       value={reaction.roleId}
                       onChange={(e) => updateReaction(index, 'roleId', e.target.value)}
                     >
-                      <option value="">Select role...</option>
+                      <option value="">{t('moderation.features.roles.reaction.form.rolePlaceholder')}</option>
                       {roles.filter(role => !role.managed && role.name !== '@everyone').map(role => (
                         <option key={role.id} value={role.id}>{role.name}</option>
                       ))}
                     </select>
                   </div>
                   <div>
-                    <label className="small text-muted">Type</label>
+                    <label className="small text-muted">{t('moderation.features.roles.reaction.form.type')}</label>
                     <select 
                       className="form-select form-select-sm"
                       value={reaction.type || 'toggle'}
                       onChange={(e) => updateReaction(index, 'type', e.target.value)}
                     >
-                      <option value="toggle">Toggle</option>
-                      <option value="add_only">Add Only</option>
-                      <option value="remove_only">Remove Only</option>
+                      <option value="toggle">{t('moderation.features.roles.reaction.form.typeOptions.toggle')}</option>
+                      <option value="add_only">{t('moderation.features.roles.reaction.form.typeOptions.add_only')}</option>
+                      <option value="remove_only">{t('moderation.features.roles.reaction.form.typeOptions.remove_only')}</option>
                     </select>
                   </div>
                   <div className="pt-3">
@@ -705,7 +708,7 @@ export default function ReactionRolesConfig({ config, updateConfig, channels, ro
                       className="btn btn-outline-danger btn-sm"
                       onClick={() => removeReaction(index)}
                       disabled={formData.reactions.length === 1}
-                      title={formData.reactions.length === 1 ? 'Cannot remove the last reaction' : 'Remove reaction'}
+                      title={formData.reactions.length === 1 ? t('moderation.features.roles.reaction.buttons.removeReactionDisabled') : t('moderation.features.roles.reaction.buttons.removeReaction')}
                     >
                       <i className="fa-solid fa-trash"></i>
                     </button>
@@ -719,16 +722,16 @@ export default function ReactionRolesConfig({ config, updateConfig, channels, ro
                 onClick={addReaction}
               >
                 <i className="fa-solid fa-plus me-2"></i>
-                Add Reaction
+                {t('moderation.features.roles.reaction.buttons.addReaction')}
               </button>
             </div>
 
             {/* Message Preview with Multiple Reactions */}
-              <div className="preview-label">Preview</div>
+              <div className="preview-label">{t('settings.preview.title')}</div>
               <div className="template-preview mt-2">
                 <div className="preview-body">
                   <div style={{ marginBottom: '8px' }}>
-                    {customMessage || 'React to get your roles!'}
+                    {customMessage || t('moderation.features.roles.reaction.form.customMessagePlaceholder')}
                   </div>
                   {formData.reactions.map((reaction, index) => (
                     <div key={index} className="d-flex align-items-center gap-2 mb-1">
@@ -738,7 +741,7 @@ export default function ReactionRolesConfig({ config, updateConfig, channels, ro
                       />
                       <span>→</span>
                       <span className="text-muted" style={{ fontSize: '0.8rem' }}>
-                        {reaction.roleId ? getRoleName(reaction.roleId) : 'Select a role'}
+                        {reaction.roleId ? getRoleName(reaction.roleId) : t('moderation.features.roles.reaction.form.previewSelectRole')}
                       </span>
                     </div>
                   ))}
@@ -756,7 +759,7 @@ export default function ReactionRolesConfig({ config, updateConfig, channels, ro
                   disabled={saving}
                 >
                   <i className="fa-solid fa-rotate-left me-1"></i>
-                  Reset
+                  {t('common.reset')}
                 </button>
               )}
               
@@ -771,7 +774,7 @@ export default function ReactionRolesConfig({ config, updateConfig, channels, ro
                 disabled={saving}
               >
                 <i className="fa-solid fa-times me-1"></i>
-                Cancel
+                {t('common.cancel')}
               </button>
 
               <button 
@@ -783,14 +786,14 @@ export default function ReactionRolesConfig({ config, updateConfig, channels, ro
                 {saving ? (
                   <>
                     <div className="spinner-border spinner-border-sm me-1" role="status">
-                      <span className="visually-hidden">Loading...</span>
+                      <span className="visually-hidden">{t('common.loading')}</span>
                     </div>
-                    {editingRole ? 'Updating...' : 'Creating...'}
+                    {editingRole ? t('common.updating') : t('common.creating')}
                   </>
                 ) : (
                   <>
                     <i className={`fa-solid ${editingRole ? 'fa-save' : 'fa-plus'} me-1`}></i>
-                    {editingRole ? 'Update' : 'Create'}
+                    {editingRole ? t('common.update') : t('common.create')}
                   </>
                 )}
               </button>
@@ -807,7 +810,7 @@ export default function ReactionRolesConfig({ config, updateConfig, channels, ro
               <div className="modal-header">
                 <h5 className="modal-title">
                   <i className="fa-solid fa-smile me-2"></i>
-                  Select Emoji
+                  {t('moderation.features.roles.reaction.emojiPicker.title')}
                 </h5>
                 <button 
                   type="button" 
@@ -823,7 +826,7 @@ export default function ReactionRolesConfig({ config, updateConfig, channels, ro
                   <>
                     <h6 className="mb-3">
                       <i className="fa-solid fa-server me-2"></i>
-                      Server Emojis
+                      {t('moderation.features.roles.reaction.emojiPicker.serverEmojis')}
                     </h6>
                     <div className="row g-2 mb-4">
                       {guildEmojis.map(emoji => (
@@ -855,7 +858,7 @@ export default function ReactionRolesConfig({ config, updateConfig, channels, ro
 
                 <h6 className="mb-3">
                   <i className="fa-solid fa-globe me-2"></i>
-                  Common Emojis
+                  {t('moderation.features.roles.reaction.emojiPicker.commonEmojis')}
                 </h6>
                 <div className="row g-2">
                   {['👍', '👎', '❤️', '🎉', '😊', '😢', '😡', '🔥', '💯', '✅', '❌', '⭐', '🎮', '🎵', '📚', '💰', '🏆', '🎯', '🚀', '💎'].map(emoji => (
@@ -887,7 +890,7 @@ export default function ReactionRolesConfig({ config, updateConfig, channels, ro
                     setCurrentEmojiIndex(null);
                   }}
                 >
-                  Cancel
+                  {t('common.cancel')}
                 </button>
               </div>
             </div>
@@ -904,31 +907,31 @@ export default function ReactionRolesConfig({ config, updateConfig, channels, ro
         }}
         onConfirm={() => handleDeleteReactionRole(deleteTarget?.messageId)}
         isDeleting={deleting}
-        title="Delete Reaction Role Message"
-        message={`Are you sure you want to delete the reaction role message "${deleteTarget?.title || 'Untitled'}"?`}
-        warningMessage="This will remove all associated reactions and cannot be undone."
+    title={t('moderation.features.roles.reaction.delete.title')}
+    message={t('moderation.features.roles.reaction.delete.message', { title: deleteTarget?.title || t('common.unknown') })}
+    warningMessage={t('moderation.features.roles.reaction.delete.warning')}
         itemDetails={deleteTarget && (
           <div>
             <div className="d-flex justify-content-between align-items-center mb-2">
-              <span className="text-muted">Title:</span>
-              <span className="fw-semibold">{deleteTarget.title || 'Untitled'}</span>
+      <span className="text-muted">{t('moderation.features.roles.table.title')}:</span>
+      <span className="fw-semibold">{deleteTarget.title || t('common.unknown')}</span>
             </div>
             <div className="d-flex justify-content-between align-items-center mb-2">
-              <span className="text-muted">Channel:</span>
+      <span className="text-muted">{t('moderation.features.roles.table.channel')}:</span>
               <span>{getChannelName(deleteTarget.channelId)}</span>
             </div>
             <div className="d-flex justify-content-between align-items-center mb-2">
-              <span className="text-muted">Reactions:</span>
+      <span className="text-muted">{t('moderation.features.roles.table.reactions')}:</span>
               <span className="badge bg-info">{deleteTarget.reactions?.length || 0}</span>
             </div>
             <div className="d-flex justify-content-between align-items-center">
-              <span className="text-muted">Message ID:</span>
+      <span className="text-muted">{t('moderation.features.roles.reaction.form.messageId')}:</span>
               <code className="small">{deleteTarget.messageId}</code>
             </div>
           </div>
         )}
-        confirmButtonText="Delete Message"
-        cancelButtonText="Cancel"
+    confirmButtonText={t('moderation.features.roles.reaction.delete.confirm')}
+    cancelButtonText={t('common.cancel')}
       />
     </div>
   );

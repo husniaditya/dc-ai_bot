@@ -1318,14 +1318,14 @@ export default function App(){
 
   // saveWelcome redefined above with dirty tracking
   // Channel selection placeholder (requires channel list API future). For now free text.
-  const moderationContent = <React.Suspense fallback={<div className="text-muted small p-3">{tGlobal('loading.fetchingData')}</div>}>
+  const moderationContent = <React.Suspense>
     <ModerationSection guildId={selectedGuild} pushToast={pushToast} />
   </React.Suspense>;
 
   const settingsContent = <React.Suspense fallback={<div className="text-muted small p-3">{tGlobal('settings.loadingTitle')}</div>}>
     <SettingsSection guildId={selectedGuild} pushToast={pushToast} />
   </React.Suspense>;
-  const gamesContent = <React.Suspense fallback={<div className="text-muted small p-3">{tGlobal('loading.fetchingData')}</div>}>
+  const gamesContent = <React.Suspense >
     <GamesSocialsSection guildId={selectedGuild} pushToast={pushToast} />
   </React.Suspense>;
   const sectionMap = { overview: overviewContent, autos: autosContent, commands: commandsContent, personal: personalizationContent, moderation: moderationContent, games: gamesContent, settings: settingsContent };

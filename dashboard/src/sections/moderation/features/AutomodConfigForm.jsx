@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useI18n } from '../../../i18n';
 import { ChannelSelector, FormField, SwitchToggle, RoleSelector } from '../components/SharedComponents';
 import DeleteConfirmationModal from '../components/DeleteConfirmationModal';
 import { getProfanityWords, addProfanityWord, updateProfanityWord, deleteProfanityWord, 
@@ -6,6 +7,7 @@ import { getProfanityWords, addProfanityWord, updateProfanityWord, deleteProfani
 
 // Custom Channel Picker Component
 function ChannelPicker({ value, onChange, channels }) {
+  const { t } = useI18n();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
   const boxRef = useRef(null);
@@ -94,7 +96,7 @@ function ChannelPicker({ value, onChange, channels }) {
         <input 
           ref={inputRef} 
           value={query} 
-          placeholder={list.length ? '' : 'Add channels…'} 
+          placeholder={list.length ? '' : t('moderation.features.automod.placeholders.addChannels')}
           onFocus={() => setOpen(true)} 
           onChange={e => { 
             setQuery(e.target.value); 
@@ -115,7 +117,7 @@ function ChannelPicker({ value, onChange, channels }) {
               onClick={() => add(o.id)}
             >
               {o.label}
-              <span className="meta">channel</span>
+              <span className="meta">{t('moderation.features.automod.meta.channel')}</span>
             </button>
           ))}
         </div>
@@ -124,7 +126,7 @@ function ChannelPicker({ value, onChange, channels }) {
       {open && filtered.length === 0 && (
         <div className="mention-targets-suggestions">
           <div className="text-muted small p-2" style={{fontSize: '.55rem'}}>
-            No matches
+            {t('common.noMatches')}
           </div>
         </div>
       )}
@@ -134,6 +136,7 @@ function ChannelPicker({ value, onChange, channels }) {
 
 // Custom Role Picker Component
 function RolePicker({ value, onChange, roles }) {
+  const { t } = useI18n();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
   const boxRef = useRef(null);
@@ -225,7 +228,7 @@ function RolePicker({ value, onChange, roles }) {
         <input 
           ref={inputRef} 
           value={query} 
-          placeholder={list.length ? '' : 'Add roles…'} 
+          placeholder={list.length ? '' : t('moderation.features.automod.placeholders.addRoles')}
           onFocus={() => setOpen(true)} 
           onChange={e => { 
             setQuery(e.target.value); 
@@ -247,7 +250,7 @@ function RolePicker({ value, onChange, roles }) {
               style={o.color ? { color: `#${o.color.toString(16).padStart(6, '0')}` } : {}}
             >
               {o.label}
-              <span className="meta">role</span>
+              <span className="meta">{t('moderation.features.automod.meta.role')}</span>
             </button>
           ))}
         </div>
@@ -256,7 +259,7 @@ function RolePicker({ value, onChange, roles }) {
       {open && filtered.length === 0 && (
         <div className="mention-targets-suggestions">
           <div className="text-muted small p-2" style={{fontSize: '.55rem'}}>
-            No matches
+            {t('common.noMatches')}
           </div>
         </div>
       )}
@@ -266,6 +269,7 @@ function RolePicker({ value, onChange, roles }) {
 
 // Auto Moderation Configuration
 export default function AutomodConfigForm({ config, updateConfig, channels, roles, guildId, showToast }) {
+  const { t } = useI18n();
   const [automodRules, setAutomodRules] = useState([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -374,19 +378,20 @@ export default function AutomodConfigForm({ config, updateConfig, channels, role
   };
 
   const triggerTypes = [
-    { value: 'spam', label: 'Spam Detection', description: 'Detect repeated messages and spam patterns' },
-    { value: 'caps', label: 'Excessive Caps', description: 'Filter messages with too many capital letters' },
-    { value: 'links', label: 'Link Filter', description: 'Scans, Block malicious links and URLs' },
-    { value: 'invite_links', label: 'Invite Links', description: 'Scans, Block malicious Discord server invites' },
-    { value: 'profanity', label: 'Profanity Filter', description: 'Filter inappropriate language' },
-    { value: 'mention_spam', label: 'Mention Spam', description: 'Prevent excessive user/role mentions' }
+    { value: 'spam', label: t('moderation.features.automod.triggers.spam.label'), description: t('moderation.features.automod.triggers.spam.description') },
+    { value: 'caps', label: t('moderation.features.automod.triggers.caps.label'), description: t('moderation.features.automod.triggers.caps.description') },
+    { value: 'links', label: t('moderation.features.automod.triggers.links.label'), description: t('moderation.features.automod.triggers.links.description') },
+    { value: 'invite_links', label: t('moderation.features.automod.triggers.invite_links.label'), description: t('moderation.features.automod.triggers.invite_links.description') },
+    { value: 'profanity', label: t('moderation.features.automod.triggers.profanity.label'), description: t('moderation.features.automod.triggers.profanity.description') },
+    { value: 'mention_spam', label: t('moderation.features.automod.triggers.mention_spam.label'), description: t('moderation.features.automod.triggers.mention_spam.description') }
   ];
 
   const actionTypes = [
-    { value: 'delete', label: 'Delete Message', description: 'Remove the violating message' },
-    { value: 'mute', label: 'Temporary Mute', description: 'Mute the user for a specified duration' },
-    { value: 'kick', label: 'Kick User', description: 'Remove the user from the server' },
-    { value: 'ban', label: 'Ban User', description: 'Permanently ban the user' }
+    { value: 'warn', label: t('moderation.features.automod.actions.warn.label'), description: t('moderation.features.automod.actions.warn.description') },
+    { value: 'delete', label: t('moderation.features.automod.actions.delete.label'), description: t('moderation.features.automod.actions.delete.description') },
+    { value: 'mute', label: t('moderation.features.automod.actions.mute.label'), description: t('moderation.features.automod.actions.mute.description') },
+    { value: 'kick', label: t('moderation.features.automod.actions.kick.label'), description: t('moderation.features.automod.actions.kick.description') },
+    { value: 'ban', label: t('moderation.features.automod.actions.ban.label'), description: t('moderation.features.automod.actions.ban.description') }
   ];
 
   // Scroll helper function
@@ -502,17 +507,17 @@ export default function AutomodConfigForm({ config, updateConfig, channels, role
     try {
       if (editingWord) {
         await updateProfanityWord(editingWord.id, wordForm, guildId);
-        showToast?.('success', `Profanity word "${wordForm.word}" updated successfully!`);
+        showToast?.('success', t('moderation.features.automod.toasts.wordUpdated', { word: wordForm.word }));
       } else {
         await addProfanityWord(wordForm, guildId);
-        showToast?.('success', `Profanity word "${wordForm.word}" added successfully!`);
+        showToast?.('success', t('moderation.features.automod.toasts.wordAdded', { word: wordForm.word }));
       }
       
       await loadProfanityData();
       closeWordForm();
     } catch (error) {
       console.error('Failed to save profanity word:', error);
-      showToast?.('error', `Failed to save profanity word. ${error.message || 'Please try again.'}`);
+      showToast?.('error', t('moderation.features.automod.toasts.wordSaveFailed', { error: error.message || t('errors.general') }));
     }
   };
 
@@ -534,12 +539,12 @@ export default function AutomodConfigForm({ config, updateConfig, channels, role
     try {
       await deleteProfanityWord(wordToDelete.id, guildId);
       await loadProfanityData();
-      showToast?.('success', `Profanity word "${wordToDelete.word}" deleted successfully!`);
+  showToast?.('success', t('moderation.features.automod.toasts.wordDeleted', { word: wordToDelete.word }));
       setShowDeleteWordModal(false);
       setWordToDelete(null);
     } catch (error) {
       console.error('Failed to delete profanity word:', error);
-      showToast?.('error', `Failed to delete profanity word. ${error.message || 'Please try again.'}`);
+  showToast?.('error', t('moderation.features.automod.toasts.wordDeleteFailed', { error: error.message || t('errors.general') }));
     } finally {
       setDeletingWord(false);
     }
@@ -549,10 +554,10 @@ export default function AutomodConfigForm({ config, updateConfig, channels, role
     try {
       await deleteProfanityWord(wordId, guildId);
       await loadProfanityData();
-      showToast?.('success', `Profanity word "${word}" deleted successfully!`);
+  showToast?.('success', t('moderation.features.automod.toasts.wordDeleted', { word }));
     } catch (error) {
       console.error('Failed to delete profanity word:', error);
-      showToast?.('error', `Failed to delete profanity word. ${error.message || 'Please try again.'}`);
+  showToast?.('error', t('moderation.features.automod.toasts.wordDeleteFailed', { error: error.message || t('errors.general') }));
     }
   };
 
@@ -571,10 +576,13 @@ export default function AutomodConfigForm({ config, updateConfig, channels, role
         )
       );
       
-      showToast?.('success', `Profanity word ${updatedWord.enabled ? 'enabled' : 'disabled'} successfully!`);
+      showToast?.('success', updatedWord.enabled
+        ? t('moderation.features.automod.toasts.wordToggleEnabled')
+        : t('moderation.features.automod.toasts.wordToggleDisabled')
+      );
     } catch (error) {
       console.error('Failed to toggle profanity word status:', error);
-      showToast?.('error', `Failed to toggle profanity word status. ${error.message || 'Please try again.'}`);
+      showToast?.('error', t('moderation.features.automod.toasts.wordToggleFailed', { error: error.message || t('errors.general') }));
     }
   };
 
@@ -614,23 +622,23 @@ export default function AutomodConfigForm({ config, updateConfig, channels, role
       try {
         new RegExp(patternForm.pattern, patternForm.flags);
       } catch (regexError) {
-        showToast?.('error', `Invalid regex pattern: ${regexError.message}`);
+        showToast?.('error', t('moderation.features.automod.toasts.invalidRegex', { error: regexError.message }));
         return;
       }
 
       if (editingPattern) {
         await updateProfanityPattern(editingPattern.id, patternForm, guildId);
-        showToast?.('success', `Profanity pattern updated successfully!`);
+        showToast?.('success', t('moderation.features.automod.toasts.patternUpdated'));
       } else {
         await addProfanityPattern(patternForm, guildId);
-        showToast?.('success', `Profanity pattern added successfully!`);
+        showToast?.('success', t('moderation.features.automod.toasts.patternAdded'));
       }
       
       await loadProfanityData();
       closePatternForm();
     } catch (error) {
       console.error('Failed to save profanity pattern:', error);
-      showToast?.('error', `Failed to save profanity pattern. ${error.message || 'Please try again.'}`);
+      showToast?.('error', t('moderation.features.automod.toasts.patternSaveFailed', { error: error.message || t('errors.general') }));
     }
   };
 
@@ -652,12 +660,12 @@ export default function AutomodConfigForm({ config, updateConfig, channels, role
     try {
       await deleteProfanityPattern(patternToDelete.id, guildId);
       await loadProfanityData();
-      showToast?.('success', `Profanity pattern ${patternToDelete.description ? `"${patternToDelete.description}"` : ''} deleted successfully!`);
+  showToast?.('success', t('moderation.features.automod.toasts.patternDeleted', { description: patternToDelete.description ? `"${patternToDelete.description}"` : '' }));
       setShowDeletePatternModal(false);
       setPatternToDelete(null);
     } catch (error) {
       console.error('Failed to delete profanity pattern:', error);
-      showToast?.('error', `Failed to delete profanity pattern. ${error.message || 'Please try again.'}`);
+  showToast?.('error', t('moderation.features.automod.toasts.patternDeleteFailed', { error: error.message || t('errors.general') }));
     } finally {
       setDeletingPattern(false);
     }
@@ -667,10 +675,10 @@ export default function AutomodConfigForm({ config, updateConfig, channels, role
     try {
       await deleteProfanityPattern(patternId, guildId);
       await loadProfanityData();
-      showToast?.('success', `Profanity pattern ${description ? `"${description}"` : ''} deleted successfully!`);
+  showToast?.('success', t('moderation.features.automod.toasts.patternDeleted', { description: description ? `"${description}"` : '' }));
     } catch (error) {
       console.error('Failed to delete profanity pattern:', error);
-      showToast?.('error', `Failed to delete profanity pattern. ${error.message || 'Please try again.'}`);
+  showToast?.('error', t('moderation.features.automod.toasts.patternDeleteFailed', { error: error.message || t('errors.general') }));
     }
   };
 
@@ -689,10 +697,13 @@ export default function AutomodConfigForm({ config, updateConfig, channels, role
         )
       );
       
-      showToast?.('success', `Profanity pattern ${updatedPattern.enabled ? 'enabled' : 'disabled'} successfully!`);
+      showToast?.('success', updatedPattern.enabled
+        ? t('moderation.features.automod.toasts.patternToggleEnabled')
+        : t('moderation.features.automod.toasts.patternToggleDisabled')
+      );
     } catch (error) {
       console.error('Failed to toggle profanity pattern status:', error);
-      showToast?.('error', `Failed to toggle profanity pattern status. ${error.message || 'Please try again.'}`);
+      showToast?.('error', t('moderation.features.automod.toasts.patternToggleFailed', { error: error.message || t('errors.general') }));
     }
   };
 
@@ -727,8 +738,8 @@ export default function AutomodConfigForm({ config, updateConfig, channels, role
         // Show success toast
         if (showToast) {
           showToast('success', editingRule 
-            ? `Automod rule "${ruleForm.name}" updated successfully!` 
-            : `Automod rule "${ruleForm.name}" created successfully!`
+            ? t('moderation.features.automod.toasts.ruleUpdated', { name: ruleForm.name })
+            : t('moderation.features.automod.toasts.ruleCreated', { name: ruleForm.name })
           );
         }
       } else {
@@ -740,8 +751,8 @@ export default function AutomodConfigForm({ config, updateConfig, channels, role
       // Show error toast
       if (showToast) {
         showToast('error', editingRule 
-          ? `Failed to update automod rule "${ruleForm.name}". Please try again.`
-          : `Failed to create automod rule "${ruleForm.name}". Please try again.`
+          ? t('moderation.features.automod.toasts.ruleUpdateFailed', { name: ruleForm.name })
+          : t('moderation.features.automod.toasts.ruleCreateFailed', { name: ruleForm.name })
         );
       }
     }
@@ -775,7 +786,7 @@ export default function AutomodConfigForm({ config, updateConfig, channels, role
         
         // Show success toast
         if (showToast) {
-          showToast('success', `Automod rule "${ruleToDelete.name}" deleted successfully!`);
+          showToast('success', t('moderation.features.automod.toasts.ruleDeleted', { name: ruleToDelete.name }));
         }
       } else {
         throw new Error('Failed to delete rule');
@@ -785,7 +796,7 @@ export default function AutomodConfigForm({ config, updateConfig, channels, role
       
       // Show error toast
       if (showToast) {
-        showToast('error', `Failed to delete automod rule "${ruleToDelete.name}". Please try again.`);
+        showToast('error', t('moderation.features.automod.toasts.ruleDeleteFailed', { name: ruleToDelete.name }));
       }
     }
     setDeleting(false);
@@ -822,7 +833,10 @@ export default function AutomodConfigForm({ config, updateConfig, channels, role
         
         // Show success toast
         if (showToast) {
-          showToast('success', `Automod rule "${ruleName}" ${enabled ? 'enabled' : 'disabled'} successfully!`);
+          showToast('success', enabled
+            ? t('moderation.features.automod.toasts.ruleEnabled', { name: ruleName })
+            : t('moderation.features.automod.toasts.ruleDisabled', { name: ruleName })
+          );
         }
       } else {
         throw new Error('Failed to toggle rule');
@@ -832,7 +846,7 @@ export default function AutomodConfigForm({ config, updateConfig, channels, role
       
       // Show error toast
       if (showToast) {
-        showToast('error', `Failed to ${enabled ? 'enable' : 'disable'} automod rule "${ruleName}". Please try again.`);
+        showToast('error', t('moderation.features.automod.toasts.ruleToggleFailed', { name: ruleName, action: enabled ? 'enable' : 'disable' }));
       }
     }
   };
@@ -842,15 +856,18 @@ export default function AutomodConfigForm({ config, updateConfig, channels, role
       {/* Information Section */}
       <div className="mb-4">
         <div className="d-flex align-items-center gap-3 mb-3">
-          <h6 className="mb-0 fw-bold">Auto Moderation System</h6>
+          <h6 className="mb-0 fw-bold">{t('moderation.features.automod.header')}</h6>
           <span className="badge badge-soft">
             <i className="fa-solid fa-shield-halved me-1"></i>
-            Automated Content Filtering
+            {t('moderation.features.automod.badge')}
           </span>
         </div>
         <p className="text-muted small mb-0" style={{ fontSize: '0.85rem', lineHeight: 1.4 }}>
-          Create custom auto moderation rules to automatically detect and handle unwanted content including spam, 
-          excessive caps, unauthorized links, and inappropriate language. Configure actions, thresholds, and bypass settings. URL Link scanning are powered by <a href="https://www.virustotal.com" target="_blank" rel="noreferrer" className="text-decoration-underline">VirusTotal</a>, <a href="https://safebrowsing.googleapis.com" target="_blank" rel="noreferrer" className="text-decoration-underline">Google Safe Browsing</a> . 
+          {t('moderation.features.automod.info.pre')}
+          {' '}
+          <a href="https://www.virustotal.com" target="_blank" rel="noreferrer" className="text-decoration-underline">VirusTotal</a>,
+          {' '}
+          <a href="https://safebrowsing.googleapis.com" target="_blank" rel="noreferrer" className="text-decoration-underline">Google Safe Browsing</a>.
         </p>
       </div>
       <hr />
@@ -859,14 +876,14 @@ export default function AutomodConfigForm({ config, updateConfig, channels, role
       <div className="row mb-4">
         <div className="col-md-12">
           <FormField 
-            label="Global Log Channel"
-            description="Default channel for all auto moderation logs"
+            label={t('moderation.features.automod.globalLog.label')}
+            description={t('moderation.features.automod.globalLog.desc')}
           >
             <ChannelSelector
               value={config.logChannelId || ''}
               onChange={(value) => updateConfig('logChannelId', value || null)}
               channels={channels}
-              placeholder="No global logging"
+              placeholder={t('moderation.features.automod.globalLog.placeholder')}
             />
           </FormField>
         </div>
@@ -876,10 +893,8 @@ export default function AutomodConfigForm({ config, updateConfig, channels, role
       <div className="mb-4">
         <div className="d-flex align-items-center justify-content-between mb-3">
           <div>
-            <h6 className="mb-1 fw-bold">Auto Moderation Rules</h6>
-            <p className="text-muted small mb-0">
-              Create and manage custom rules for different types of content filtering
-            </p>
+            <h6 className="mb-1 fw-bold">{t('moderation.features.automod.rules.header')}</h6>
+            <p className="text-muted small mb-0">{t('moderation.features.automod.rules.subheader')}</p>
           </div>
           <button
             type="button"
@@ -887,23 +902,23 @@ export default function AutomodConfigForm({ config, updateConfig, channels, role
             onClick={() => openRuleForm()}
           >
             <i className="fa-solid fa-plus me-2"></i>
-            Add Rule
+            {t('moderation.features.automod.rules.add')}
           </button>
         </div>
 
         {loading ? (
           <div className="text-center py-4">
             <div className="spinner-border spinner-border-sm me-2" role="status">
-              <span className="visually-hidden">Loading...</span>
+              <span className="visually-hidden">{t('common.loading')}</span>
             </div>
-            Loading rules...
+            {t('moderation.features.automod.rules.loading')}
           </div>
         ) : automodRules.length === 0 ? (
           <div className="text-center py-4">
             <div className="text-muted">
               <i className="fa-solid fa-robot fs-1 mb-3 opacity-50"></i>
-              <p className="mb-0">No auto moderation rules configured</p>
-              <small>Click "Add Rule" to create your first rule</small>
+              <p className="mb-0">{t('moderation.features.automod.rules.empty')}</p>
+              <small>{t('moderation.features.automod.rules.emptyCta')}</small>
             </div>
           </div>
         ) : (
@@ -911,14 +926,14 @@ export default function AutomodConfigForm({ config, updateConfig, channels, role
             <table className="table table-sm">
               <thead>
                 <tr>
-                  <th>Status</th>
-                  <th>Rule Name</th>
-                  <th>Trigger</th>
-                  <th>Action</th>
-                  <th>Threshold</th>
-                  <th>Channel Whitelist</th>
-                  <th>Role Whitelist</th>
-                  <th>Actions</th>
+                  <th>{t('moderation.features.automod.table.status')}</th>
+                  <th>{t('moderation.features.automod.table.name')}</th>
+                  <th>{t('moderation.features.automod.table.trigger')}</th>
+                  <th>{t('moderation.features.automod.table.action')}</th>
+                  <th>{t('moderation.features.automod.table.threshold')}</th>
+                  <th>{t('moderation.features.automod.table.channelWhitelist')}</th>
+                  <th>{t('moderation.features.automod.table.roleWhitelist')}</th>
+                  <th>{t('moderation.features.automod.table.actions')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -938,10 +953,10 @@ export default function AutomodConfigForm({ config, updateConfig, channels, role
                       <div className="fw-semibold text-primary" style={{ fontSize: '0.85rem' }}>
                         {rule.name}
                       </div>
-                      {rule.logChannelId && (
+            {rule.logChannelId && (
                         <div className="small text-muted">
-                          <i className="fa-solid fa-list me-1"></i>
-                          Logs to #{channels.find(c => c.id === rule.logChannelId)?.name || 'Unknown'}
+              <i className="fa-solid fa-list me-1"></i>
+              {t('moderation.features.automod.table.logsTo', { channel: `#${channels.find(c => c.id === rule.logChannelId)?.name || t('common.unknown')}` })}
                         </div>
                       )}
                     </td>
@@ -959,14 +974,14 @@ export default function AutomodConfigForm({ config, updateConfig, channels, role
                       }`}>
                         {actionTypes.find(a => a.value === rule.actionType)?.label || rule.actionType}
                       </span>
-                      {rule.duration && (
+            {rule.duration && (
                         <div className="small text-muted">
-                          {rule.duration} minutes
+              {t('moderation.features.automod.table.minutes', { count: rule.duration })}
                         </div>
                       )}
                     </td>
                     <td>
-                      <span className="text-warning fw-semibold">{rule.thresholdValue || 'N/A'}</span>
+                      <span className="text-warning fw-semibold">{rule.thresholdValue || t('common.na')}</span>
                     </td>
                     <td>
                       {rule.whitelistChannels && typeof rule.whitelistChannels === 'string' && rule.whitelistChannels !== '[]' && rule.whitelistChannels !== '' ? (
@@ -985,9 +1000,9 @@ export default function AutomodConfigForm({ config, updateConfig, channels, role
                                   );
                                 });
                               }
-                              return <span className="text-muted small">None</span>;
+                              return <span className="text-muted small">{t('common.none')}</span>;
                             } catch (e) {
-                              return <span className="text-danger small">Invalid data</span>;
+                              return <span className="text-danger small">{t('common.invalidData')}</span>;
                             }
                           })()}
                         </div>
@@ -1004,7 +1019,7 @@ export default function AutomodConfigForm({ config, updateConfig, channels, role
                           })}
                         </div>
                       ) : (
-                        <span className="text-muted small">None</span>
+                        <span className="text-muted small">{t('common.none')}</span>
                       )}
                     </td>
                     <td>
@@ -1028,9 +1043,9 @@ export default function AutomodConfigForm({ config, updateConfig, channels, role
                                   );
                                 });
                               }
-                              return <span className="text-muted small">None</span>;
+                              return <span className="text-muted small">{t('common.none')}</span>;
                             } catch (e) {
-                              return <span className="text-danger small">Invalid data</span>;
+                              return <span className="text-danger small">{t('common.invalidData')}</span>;
                             }
                           })()}
                         </div>
@@ -1051,7 +1066,7 @@ export default function AutomodConfigForm({ config, updateConfig, channels, role
                           })}
                         </div>
                       ) : (
-                        <span className="text-muted small">None</span>
+                        <span className="text-muted small">{t('common.none')}</span>
                       )}
                     </td>
                     <td>
@@ -1060,7 +1075,7 @@ export default function AutomodConfigForm({ config, updateConfig, channels, role
                           type="button"
                           className="btn btn-outline-info btn-sm"
                           onClick={() => openRuleForm(rule)}
-                          title="Edit Rule"
+                          title={t('common.editRule')}
                         >
                           <i className="fa-solid fa-edit"></i>
                         </button>
@@ -1068,7 +1083,7 @@ export default function AutomodConfigForm({ config, updateConfig, channels, role
                           type="button"
                           className="btn btn-outline-danger btn-sm"
                           onClick={() => deleteRule(rule.id)}
-                          title="Delete Rule"
+                          title={t('common.deleteRule')}
                         >
                           <i className="fa-solid fa-trash"></i>
                         </button>
@@ -1088,10 +1103,10 @@ export default function AutomodConfigForm({ config, updateConfig, channels, role
           <div>
             <h6 className="mb-1 fw-bold">
               <i className="fa-solid fa-comment-slash me-2 text-danger"></i>
-              Profanity Management
+              {t('moderation.features.automod.profanity.header')}
             </h6>
             <p className="text-muted small mb-0">
-              Manage custom profanity words and patterns for enhanced content filtering
+              {t('moderation.features.automod.profanity.subheader')}
             </p>
           </div>
         </div>
@@ -1099,9 +1114,9 @@ export default function AutomodConfigForm({ config, updateConfig, channels, role
         {loadingProfanity ? (
           <div className="text-center py-4">
             <div className="spinner-border spinner-border-sm me-2" role="status">
-              <span className="visually-hidden">Loading...</span>
+              <span className="visually-hidden">{t('common.loading')}</span>
             </div>
-            Loading profanity data...
+            {t('moderation.features.automod.profanity.loading')}
           </div>
         ) : (
           <div className="row">
@@ -1111,7 +1126,7 @@ export default function AutomodConfigForm({ config, updateConfig, channels, role
                 <div className="card-header profanity-table-header d-flex align-items-center justify-content-between py-2">
                   <h6 className="mb-0 fw-semibold">
                     <i className="fa-solid fa-list me-2"></i>
-                    Profanity Words ({profanityWords.filter(word => 
+                    {t('moderation.features.automod.profanity.words.header')} ({profanityWords.filter(word => 
                       word.word.toLowerCase().includes(wordSearchFilter.toLowerCase())
                     ).length})
                   </h6>
@@ -1122,7 +1137,7 @@ export default function AutomodConfigForm({ config, updateConfig, channels, role
                     onClick={() => openWordForm()}
                   >
                     <i className="fa-solid fa-plus me-1"></i>
-                    Add Word
+                    {t('moderation.features.automod.profanity.words.add')}
                   </button>
                 </div>
                 <div className="card-body p-0">
@@ -1135,7 +1150,7 @@ export default function AutomodConfigForm({ config, updateConfig, channels, role
                       <input
                         type="text"
                         className="form-control profanity-search-input"
-                        placeholder="Search words..."
+                        placeholder={t('moderation.features.automod.profanity.words.searchPlaceholder')}
                         value={wordSearchFilter}
                         onChange={(e) => setWordSearchFilter(e.target.value)}
                       />
@@ -1158,10 +1173,10 @@ export default function AutomodConfigForm({ config, updateConfig, channels, role
                       <div className="text-muted">
                         <i className="fa-solid fa-comment-dots fs-1 mb-3 opacity-50"></i>
                         <p className="mb-0">
-                          {wordSearchFilter ? 'No words match your search' : 'No profanity words configured'}
+                          {wordSearchFilter ? t('moderation.features.automod.profanity.words.noMatches') : t('moderation.features.automod.profanity.words.empty')}
                         </p>
                         <small>
-                          {wordSearchFilter ? 'Try a different search term' : 'Click "Add Word" to create your first word filter'}
+                          {wordSearchFilter ? t('moderation.features.automod.profanity.words.tryDifferent') : t('moderation.features.automod.profanity.words.emptyCta')}
                         </small>
                       </div>
                     </div>
@@ -1170,10 +1185,10 @@ export default function AutomodConfigForm({ config, updateConfig, channels, role
                       <table className="table table-sm table-hover mb-0">
                         <thead className="table-dark sticky-top">
                           <tr>
-                            <th style={{ fontSize: '0.75rem' }}>Word</th>
-                            <th style={{ fontSize: '0.75rem' }}>Severity</th>
-                            <th style={{ fontSize: '0.75rem' }}>Status</th>
-                            <th style={{ fontSize: '0.75rem' }}>Actions</th>
+                            <th style={{ fontSize: '0.75rem' }}>{t('moderation.features.automod.profanity.words.table.word')}</th>
+                            <th style={{ fontSize: '0.75rem' }}>{t('moderation.features.automod.profanity.words.table.severity')}</th>
+                            <th style={{ fontSize: '0.75rem' }}>{t('moderation.features.automod.profanity.words.table.status')}</th>
+                            <th style={{ fontSize: '0.75rem' }}>{t('moderation.features.automod.profanity.words.table.actions')}</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -1186,7 +1201,7 @@ export default function AutomodConfigForm({ config, updateConfig, channels, role
                                   {word.word}
                                 </code>
                                 <div style={{ fontSize: '0.65rem' }} className="text-muted">
-                                  {word.language} • {word.wholeWordOnly ? 'Whole word' : 'Partial'} • {word.caseSensitive ? 'Case sensitive' : 'Case insensitive'}
+                                  {word.language} • {word.wholeWordOnly ? t('moderation.features.automod.profanity.words.wholeWord') : t('moderation.features.automod.profanity.words.partial')} • {word.caseSensitive ? t('moderation.features.automod.profanity.words.caseSensitive') : t('moderation.features.automod.profanity.words.caseInsensitive')}
                                 </div>
                               </td>
                               <td>
@@ -1220,7 +1235,7 @@ export default function AutomodConfigForm({ config, updateConfig, channels, role
                                     className="btn btn-outline-info btn-sm"
                                     style={{ fontSize: '0.65rem', padding: '0.125rem 0.25rem' }}
                                     onClick={() => openWordForm(word)}
-                                    title="Edit Word"
+                                    title={t('common.editWord')}
                                   >
                                     <i className="fa-solid fa-edit"></i>
                                   </button>
@@ -1229,7 +1244,7 @@ export default function AutomodConfigForm({ config, updateConfig, channels, role
                                     className="btn btn-outline-danger btn-sm"
                                     style={{ fontSize: '0.65rem', padding: '0.125rem 0.25rem' }}
                                     onClick={() => requestDeleteWord(word.id, word.word)}
-                                    title="Delete Word"
+                                    title={t('common.deleteWord')}
                                   >
                                     <i className="fa-solid fa-trash"></i>
                                   </button>
@@ -1251,7 +1266,7 @@ export default function AutomodConfigForm({ config, updateConfig, channels, role
                 <div className="card-header profanity-table-header d-flex align-items-center justify-content-between py-2">
                   <h6 className="mb-0 fw-semibold">
                     <i className="fa-solid fa-code me-2"></i>
-                    Regex Patterns ({profanityPatterns.filter(pattern => 
+                    {t('moderation.features.automod.profanity.patterns.header')} ({profanityPatterns.filter(pattern => 
                       pattern.pattern.toLowerCase().includes(patternSearchFilter.toLowerCase()) ||
                       (pattern.description && pattern.description.toLowerCase().includes(patternSearchFilter.toLowerCase()))
                     ).length})
@@ -1263,7 +1278,7 @@ export default function AutomodConfigForm({ config, updateConfig, channels, role
                     onClick={() => openPatternForm()}
                   >
                     <i className="fa-solid fa-plus me-1"></i>
-                    Add Pattern
+                    {t('moderation.features.automod.profanity.patterns.add')}
                   </button>
                 </div>
                 <div className="card-body p-0">
@@ -1276,7 +1291,7 @@ export default function AutomodConfigForm({ config, updateConfig, channels, role
                       <input
                         type="text"
                         className="form-control profanity-search-input"
-                        placeholder="Search patterns..."
+                        placeholder={t('moderation.features.automod.profanity.patterns.searchPlaceholder')}
                         value={patternSearchFilter}
                         onChange={(e) => setPatternSearchFilter(e.target.value)}
                       />
@@ -1300,10 +1315,10 @@ export default function AutomodConfigForm({ config, updateConfig, channels, role
                       <div className="text-muted">
                         <i className="fa-solid fa-code fs-1 mb-3 opacity-50"></i>
                         <p className="mb-0">
-                          {patternSearchFilter ? 'No patterns match your search' : 'No regex patterns configured'}
+                          {patternSearchFilter ? t('moderation.features.automod.profanity.patterns.noMatches') : t('moderation.features.automod.profanity.patterns.empty')}
                         </p>
                         <small>
-                          {patternSearchFilter ? 'Try a different search term' : 'Click "Add Pattern" to create advanced filters'}
+                          {patternSearchFilter ? t('moderation.features.automod.profanity.patterns.tryDifferent') : t('moderation.features.automod.profanity.patterns.emptyCta')}
                         </small>
                       </div>
                     </div>
@@ -1312,10 +1327,10 @@ export default function AutomodConfigForm({ config, updateConfig, channels, role
                       <table className="table table-sm table-hover mb-0">
                         <thead className="table-dark sticky-top">
                           <tr>
-                            <th style={{ fontSize: '0.75rem' }}>Pattern</th>
-                            <th style={{ fontSize: '0.75rem' }}>Severity</th>
-                            <th style={{ fontSize: '0.75rem' }}>Status</th>
-                            <th style={{ fontSize: '0.75rem' }}>Actions</th>
+                            <th style={{ fontSize: '0.75rem' }}>{t('moderation.features.automod.profanity.patterns.table.pattern')}</th>
+                            <th style={{ fontSize: '0.75rem' }}>{t('moderation.features.automod.profanity.patterns.table.severity')}</th>
+                            <th style={{ fontSize: '0.75rem' }}>{t('moderation.features.automod.profanity.patterns.table.status')}</th>
+                            <th style={{ fontSize: '0.75rem' }}>{t('moderation.features.automod.profanity.patterns.table.actions')}</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -1365,7 +1380,7 @@ export default function AutomodConfigForm({ config, updateConfig, channels, role
                                     className="btn btn-outline-info btn-sm"
                                     style={{ fontSize: '0.65rem', padding: '0.125rem 0.25rem' }}
                                     onClick={() => openPatternForm(pattern)}
-                                    title="Edit Pattern"
+                                    title={t('common.editPattern')}
                                   >
                                     <i className="fa-solid fa-edit"></i>
                                   </button>
@@ -1374,7 +1389,7 @@ export default function AutomodConfigForm({ config, updateConfig, channels, role
                                     className="btn btn-outline-danger btn-sm"
                                     style={{ fontSize: '0.65rem', padding: '0.125rem 0.25rem' }}
                                     onClick={() => requestDeletePattern(pattern.id, pattern.description)}
-                                    title="Delete Pattern"
+                                    title={t('common.deletePattern')}
                                   >
                                     <i className="fa-solid fa-trash"></i>
                                   </button>
@@ -1400,48 +1415,48 @@ export default function AutomodConfigForm({ config, updateConfig, channels, role
             <div className="modal-content">
               <div className="modal-header">
                 <h6 className="modal-title">
-                  {editingWord ? 'Edit Profanity Word' : 'Add Profanity Word'}
+                  {editingWord ? t('moderation.features.automod.profanity.words.modal.editTitle') : t('moderation.features.automod.profanity.words.modal.addTitle')}
                 </h6>
                 <button type="button" className="btn-close" onClick={closeWordForm}></button>
               </div>
               <div className="modal-body">
                 <div className="mb-3">
-                  <label className="form-label small fw-semibold">Word *</label>
+                  <label className="form-label small fw-semibold">{t('moderation.features.automod.profanity.words.modal.wordLabel')} *</label>
                   <input
                     type="text"
                     className="form-control form-control-sm"
                     value={wordForm.word}
                     onChange={(e) => setWordForm(prev => ({ ...prev, word: e.target.value }))}
-                    placeholder="Enter profanity word"
+                    placeholder={t('moderation.features.automod.profanity.words.modal.wordPlaceholder')}
                   />
                 </div>
                 
                 <div className="row">
                   <div className="col-md-6 mb-3">
-                    <label className="form-label small fw-semibold">Severity</label>
+                    <label className="form-label small fw-semibold">{t('moderation.features.automod.common.severity')}</label>
                     <select
                       className="form-select form-select-sm"
                       value={wordForm.severity}
                       onChange={(e) => setWordForm(prev => ({ ...prev, severity: e.target.value }))}
                     >
-                      <option value="low">Low</option>
-                      <option value="medium">Medium</option>
-                      <option value="high">High</option>
-                      <option value="extreme">Extreme</option>
+                      <option value="low">{t('moderation.features.automod.severity.low')}</option>
+                      <option value="medium">{t('moderation.features.automod.severity.medium')}</option>
+                      <option value="high">{t('moderation.features.automod.severity.high')}</option>
+                      <option value="extreme">{t('moderation.features.automod.severity.extreme')}</option>
                     </select>
                   </div>
                   <div className="col-md-6 mb-3">
-                    <label className="form-label small fw-semibold">Language</label>
+                    <label className="form-label small fw-semibold">{t('moderation.features.automod.common.language')}</label>
                     <select
                       className="form-select form-select-sm"
                       value={wordForm.language}
                       onChange={(e) => setWordForm(prev => ({ ...prev, language: e.target.value }))}
                     >
-                      <option value="en">English</option>
-                      <option value="id">Indonesian</option>
-                      <option value="es">Spanish</option>
-                      <option value="fr">French</option>
-                      <option value="de">German</option>
+                      <option value="en">{t('languages.en')}</option>
+                      <option value="id">{t('languages.id')}</option>
+                      <option value="es">{t('languages.es')}</option>
+                      <option value="fr">{t('languages.fr')}</option>
+                      <option value="de">{t('languages.de')}</option>
                     </select>
                   </div>
                 </div>
@@ -1456,7 +1471,7 @@ export default function AutomodConfigForm({ config, updateConfig, channels, role
                         onChange={(e) => setWordForm(prev => ({ ...prev, caseSensitive: e.target.checked }))}
                       />
                       <label className="form-check-label small">
-                        Case Sensitive
+                        {t('moderation.features.automod.profanity.words.modal.caseSensitive')}
                       </label>
                     </div>
                   </div>
@@ -1469,7 +1484,7 @@ export default function AutomodConfigForm({ config, updateConfig, channels, role
                         onChange={(e) => setWordForm(prev => ({ ...prev, wholeWordOnly: e.target.checked }))}
                       />
                       <label className="form-check-label small">
-                        Whole Word Only
+                        {t('moderation.features.automod.profanity.words.modal.wholeWordOnly')}
                       </label>
                     </div>
                   </div>
@@ -1484,7 +1499,7 @@ export default function AutomodConfigForm({ config, updateConfig, channels, role
                       onChange={(e) => setWordForm(prev => ({ ...prev, enabled: e.target.checked }))}
                     />
                     <label className="form-check-label small">
-                      Enabled
+                      {t('common.enabled')}
                     </label>
                   </div>
                 </div>
@@ -1492,7 +1507,7 @@ export default function AutomodConfigForm({ config, updateConfig, channels, role
               <div className="modal-footer">
                 <button type="button" className="btn btn-secondary btn-sm modal-action-btn" onClick={closeWordForm}>
                   <i className="fa-solid fa-times"></i>
-                  Cancel
+                  {t('common.cancel')}
                 </button>
                 <button 
                   type="button" 
@@ -1501,7 +1516,7 @@ export default function AutomodConfigForm({ config, updateConfig, channels, role
                   disabled={!wordForm.word.trim()}
                 >
                   <i className={`fa-solid fa-${editingWord ? 'edit' : 'plus'}`}></i>
-                  {editingWord ? 'Update' : 'Add'} Word
+                  {editingWord ? t('common.update') : t('common.add')} {t('moderation.features.automod.common.word')}
                 </button>
               </div>
             </div>
@@ -1516,19 +1531,19 @@ export default function AutomodConfigForm({ config, updateConfig, channels, role
             <div className="modal-content">
               <div className="modal-header">
                 <h6 className="modal-title">
-                  {editingPattern ? 'Edit Profanity Pattern' : 'Add Profanity Pattern'}
+                  {editingPattern ? t('moderation.features.automod.profanity.patterns.modal.editTitle') : t('moderation.features.automod.profanity.patterns.modal.addTitle')}
                 </h6>
                 <button type="button" className="btn-close" onClick={closePatternForm}></button>
               </div>
               <div className="modal-body">
                 <div className="mb-3">
-                  <label className="form-label small fw-semibold">Regex Pattern *</label>
+                  <label className="form-label small fw-semibold">{t('moderation.features.automod.profanity.patterns.modal.patternLabel')} *</label>
                   <input
                     type="text"
                     className="form-control form-control-sm font-monospace"
                     value={patternForm.pattern}
                     onChange={(e) => setPatternForm(prev => ({ ...prev, pattern: e.target.value }))}
-                    placeholder="Enter regex pattern (without delimiters)"
+                    placeholder={t('moderation.features.automod.profanity.patterns.modal.patternPlaceholder')}
                   />
                   <small className="text-muted">
                     Example: <code>b+a+d+w+o+r+d+</code> to detect "badword" with repeated characters
@@ -1536,38 +1551,38 @@ export default function AutomodConfigForm({ config, updateConfig, channels, role
                 </div>
                 
                 <div className="mb-3">
-                  <label className="form-label small fw-semibold">Description</label>
+                  <label className="form-label small fw-semibold">{t('moderation.features.automod.common.description')}</label>
                   <input
                     type="text"
                     className="form-control form-control-sm"
                     value={patternForm.description}
                     onChange={(e) => setPatternForm(prev => ({ ...prev, description: e.target.value }))}
-                    placeholder="Brief description of what this pattern detects"
+                    placeholder={t('moderation.features.automod.profanity.patterns.modal.descriptionPlaceholder')}
                   />
                 </div>
 
                 <div className="row">
                   <div className="col-md-6 mb-3">
-                    <label className="form-label small fw-semibold">Severity</label>
+                    <label className="form-label small fw-semibold">{t('moderation.features.automod.common.severity')}</label>
                     <select
                       className="form-select form-select-sm"
                       value={patternForm.severity}
                       onChange={(e) => setPatternForm(prev => ({ ...prev, severity: e.target.value }))}
                     >
-                      <option value="low">Low</option>
-                      <option value="medium">Medium</option>
-                      <option value="high">High</option>
-                      <option value="extreme">Extreme</option>
+                      <option value="low">{t('moderation.features.automod.severity.low')}</option>
+                      <option value="medium">{t('moderation.features.automod.severity.medium')}</option>
+                      <option value="high">{t('moderation.features.automod.severity.high')}</option>
+                      <option value="extreme">{t('moderation.features.automod.severity.extreme')}</option>
                     </select>
                   </div>
                   <div className="col-md-6 mb-3">
-                    <label className="form-label small fw-semibold">Regex Flags</label>
+                    <label className="form-label small fw-semibold">{t('moderation.features.automod.profanity.patterns.modal.flagsLabel')}</label>
                     <input
                       type="text"
                       className="form-control form-control-sm font-monospace"
                       value={patternForm.flags}
                       onChange={(e) => setPatternForm(prev => ({ ...prev, flags: e.target.value }))}
-                      placeholder="gi"
+                      placeholder={t('moderation.features.automod.profanity.patterns.modal.flagsPlaceholder')}
                     />
                     <small className="text-muted">
                       Common: <code>gi</code> (global, case-insensitive), <code>g</code> (global), <code>i</code> (case-insensitive)
@@ -1584,7 +1599,7 @@ export default function AutomodConfigForm({ config, updateConfig, channels, role
                       onChange={(e) => setPatternForm(prev => ({ ...prev, enabled: e.target.checked }))}
                     />
                     <label className="form-check-label small">
-                      Enabled
+                      {t('common.enabled')}
                     </label>
                   </div>
                 </div>
@@ -1593,20 +1608,20 @@ export default function AutomodConfigForm({ config, updateConfig, channels, role
                 <div className="pattern-preview-container">
                   <h6 className="small fw-semibold mb-2">
                     <i className="fa-solid fa-vial me-1"></i>
-                    Test Pattern
+                    {t('moderation.features.automod.profanity.patterns.modal.testHeader')}
                   </h6>
                   <p className="small text-muted mb-2">
-                    Preview: <code>/{patternForm.pattern}/{patternForm.flags}</code>
+                    {t('moderation.features.automod.profanity.patterns.modal.preview')}: <code>/{patternForm.pattern}/{patternForm.flags}</code>
                   </p>
                   {patternForm.pattern && (
                     <div className="small">
-                      <strong>Pattern Status:</strong> 
+                      <strong>{t('moderation.features.automod.profanity.patterns.modal.status')}:</strong> 
                       {(() => {
                         try {
                           new RegExp(patternForm.pattern, patternForm.flags);
-                          return <span className="text-success ms-1">✓ Valid</span>;
+                          return <span className="text-success ms-1">✓ {t('moderation.features.automod.profanity.patterns.modal.valid')}</span>;
                         } catch (e) {
-                          return <span className="text-danger ms-1">✗ Invalid: {e.message}</span>;
+                          return <span className="text-danger ms-1">✗ {t('moderation.features.automod.profanity.patterns.modal.invalid')}: {e.message}</span>;
                         }
                       })()}
                     </div>
@@ -1616,7 +1631,7 @@ export default function AutomodConfigForm({ config, updateConfig, channels, role
               <div className="modal-footer">
                 <button type="button" className="btn btn-secondary btn-sm modal-action-btn" onClick={closePatternForm}>
                   <i className="fa-solid fa-times"></i>
-                  Cancel
+                  {t('common.cancel')}
                 </button>
                 <button 
                   type="button" 
@@ -1625,7 +1640,7 @@ export default function AutomodConfigForm({ config, updateConfig, channels, role
                   disabled={!patternForm.pattern.trim()}
                 >
                   <i className={`fa-solid fa-${editingPattern ? 'edit' : 'plus'}`}></i>
-                  {editingPattern ? 'Update' : 'Add'} Pattern
+                  {editingPattern ? t('common.update') : t('common.add')} {t('moderation.features.automod.common.pattern')}
                 </button>
               </div>
             </div>
@@ -1648,10 +1663,10 @@ export default function AutomodConfigForm({ config, updateConfig, channels, role
             >
               <div className="text-center text-light">
                 <div className="spinner-border spinner-border-sm mb-2" role="status">
-                  <span className="visually-hidden">Loading...</span>
+                  <span className="visually-hidden">{t('common.loading')}</span>
                 </div>
                 <div className="small">
-                  {editingRule ? 'Updating rule...' : 'Creating rule...'}
+                  {editingRule ? t('moderation.features.automod.rules.updating') : t('moderation.features.automod.rules.creating')}
                 </div>
               </div>
             </div>
@@ -1659,7 +1674,7 @@ export default function AutomodConfigForm({ config, updateConfig, channels, role
 
           <div className="card-header d-flex align-items-center justify-content-between">
             <h6 className="mb-0">
-              {editingRule ? 'Edit Auto Moderation Rule' : 'Create New Auto Moderation Rule'}
+              {editingRule ? t('moderation.features.automod.rules.editTitle') : t('moderation.features.automod.rules.createTitle')}
             </h6>
             <button
               type="button"
@@ -1670,17 +1685,17 @@ export default function AutomodConfigForm({ config, updateConfig, channels, role
           <div className="card-body">
             <div className="row">
               <div className="col-md-6 mb-3">
-                <label className="form-label small fw-semibold">Rule Name *</label>
+                <label className="form-label small fw-semibold">{t('moderation.features.automod.rules.form.name')} *</label>
                 <input
                   type="text"
                   className="form-control form-control-sm"
                   value={ruleForm.name}
                   onChange={(e) => updateRuleForm('name', e.target.value)}
-                  placeholder="e.g., Spam Protection"
+                  placeholder={t('moderation.features.automod.rules.form.namePlaceholder')}
                 />
               </div>
               <div className="col-md-6 mb-3">
-                <label className="form-label small fw-semibold">Trigger Type *</label>
+                <label className="form-label small fw-semibold">{t('moderation.features.automod.rules.form.trigger')} *</label>
                 <select
                   className="form-select form-select-sm"
                   value={ruleForm.triggerType}
@@ -1695,10 +1710,10 @@ export default function AutomodConfigForm({ config, updateConfig, channels, role
                 <small className="text-muted">
                   {triggerTypes.find(t => t.value === ruleForm.triggerType)?.description}
                 </small>
-                {ruleForm.triggerType === 'profanity' && (
+        {ruleForm.triggerType === 'profanity' && (
                   <div className="alert alert-info alert-sm mt-2" style={{ fontSize: '0.75rem', padding: '0.5rem' }}>
-                    <i className="fa-solid fa-info-circle me-1"></i>
-                    <strong>Tip:</strong> Manage your profanity words and patterns in the "Profanity Management" section above to customize what content gets filtered.
+          <i className="fa-solid fa-info-circle me-1"></i>
+          <strong>{t('moderation.features.automod.tip')}</strong> {t('moderation.features.automod.profanity.manageTip')}
                   </div>
                 )}
               </div>
@@ -1706,7 +1721,7 @@ export default function AutomodConfigForm({ config, updateConfig, channels, role
 
             <div className="row">
               <div className="col-md-6 mb-3">
-                <label className="form-label small fw-semibold">Action Type *</label>
+                <label className="form-label small fw-semibold">{t('moderation.features.automod.rules.form.action')} *</label>
                 <select
                   className="form-select form-select-sm"
                   value={ruleForm.actionType}
@@ -1723,70 +1738,64 @@ export default function AutomodConfigForm({ config, updateConfig, channels, role
                 </small>
               </div>
               <div className="col-md-6 mb-3">
-                <label className="form-label small fw-semibold">Warning Threshold Value</label>
+                <label className="form-label small fw-semibold">{t('moderation.features.automod.rules.form.threshold')}</label>
                 <input
                   type="number"
                   className="form-control form-control-sm"
                   value={ruleForm.thresholdValue || ''}
                   onChange={(e) => updateRuleForm('thresholdValue', parseInt(e.target.value) || 0)}
-                  placeholder="5"
+                  placeholder={t('moderation.features.automod.rules.form.thresholdPlaceholder')}
                   min="1"
                   max="100"
                 />
-                <small className="text-muted">
-                  Number of violations before action is taken (Warn to user)
-                </small>
+                <small className="text-muted">{t('moderation.features.automod.rules.form.thresholdHelp')}</small>
               </div>
             </div>
 
             <div className="row">
               <div className="col-md-6 mb-3">
-                <label className="form-label small fw-semibold">Duration (minutes)</label>
+                <label className="form-label small fw-semibold">{t('moderation.features.automod.rules.form.duration')}</label>
                 <input
                   type="number"
                   className="form-control form-control-sm"
                   value={ruleForm.duration || ''}
                   onChange={(e) => updateRuleForm('duration', parseInt(e.target.value) || null)}
-                  placeholder="10"
+                  placeholder={t('moderation.features.automod.rules.form.durationPlaceholder')}
                   min="1"
                   max="43200"
                 />
-                <small className="text-muted">
-                  Duration for mute/ban actions (leave empty for permanent)
-                </small>
+                <small className="text-muted">{t('moderation.features.automod.rules.form.durationHelp')}</small>
               </div>
             </div>
 
             <div className="row">
               
               <div className="col-md-6 mb-3">
-                <label className="form-label small fw-semibold">Log Channel</label>
+                <label className="form-label small fw-semibold">{t('moderation.features.automod.rules.form.logChannel')}</label>
                 <ChannelSelector
                   value={ruleForm.logChannelId || ''}
                   onChange={(value) => updateRuleForm('logChannelId', value || null)}
                   channels={channels}
-                  placeholder="Use global log channel"
+                  placeholder={t('moderation.features.automod.rules.form.logChannelPlaceholder')}
                 />
               </div>
               <div className="col-md-6 mb-3">
-                <label className="form-label small fw-semibold">Message Action</label>
+                <label className="form-label small fw-semibold">{t('moderation.features.automod.rules.form.messageAction')}</label>
                 <select
                   className="form-select form-select-sm"
                   value={ruleForm.messageAction}
                   onChange={(e) => updateRuleForm('messageAction', e.target.value)}
                 >
-                  <option value="keep">Keep Message</option>
-                  <option value="delete">Delete Message</option>
+                  <option value="keep">{t('moderation.features.automod.messageAction.keep')}</option>
+                  <option value="delete">{t('moderation.features.automod.messageAction.delete')}</option>
                 </select>
-                <small className="text-muted">
-                  Action to take on violating messages
-                </small>
+                <small className="text-muted">{t('moderation.features.automod.rules.form.messageActionHelp')}</small>
               </div>
             </div>
 
             <div className="row">
               <div className="col-md-6 mb-3">
-                <label className="form-label small fw-semibold">Whitelist Channels</label>
+                <label className="form-label small fw-semibold">{t('moderation.features.automod.rules.form.whitelistChannels')}</label>
                 <ChannelPicker
                   value={ruleForm.whitelistChannels}
                   onChange={(value) => updateRuleForm('whitelistChannels', value)}
@@ -1794,11 +1803,11 @@ export default function AutomodConfigForm({ config, updateConfig, channels, role
                 />
                 <small className="text-muted">
                   <i className="fa-solid fa-info-circle me-1"></i>
-                  Channels where this rule won't apply
+                  {t('moderation.features.automod.rules.form.whitelistChannelsHelp')}
                 </small>
               </div>
               <div className="col-md-6 mb-3">
-                <label className="form-label small fw-semibold">Whitelist Roles</label>
+                <label className="form-label small fw-semibold">{t('moderation.features.automod.rules.form.whitelistRoles')}</label>
                 <RolePicker
                   value={ruleForm.whitelistRoles}
                   onChange={(value) => updateRuleForm('whitelistRoles', value)}
@@ -1806,7 +1815,7 @@ export default function AutomodConfigForm({ config, updateConfig, channels, role
                 />
                 <small className="text-muted">
                   <i className="fa-solid fa-info-circle me-1"></i>
-                  Roles that bypass this specific rule
+                  {t('moderation.features.automod.rules.form.whitelistRolesHelp')}
                 </small>
               </div>
             </div>
@@ -1818,7 +1827,7 @@ export default function AutomodConfigForm({ config, updateConfig, channels, role
                 onClick={closeRuleForm}
               >
                 <i className="fa-solid fa-times me-1"></i>
-                Cancel
+                {t('common.cancel')}
               </button>
               <button
                 type="button"
@@ -1829,14 +1838,14 @@ export default function AutomodConfigForm({ config, updateConfig, channels, role
                 {saving ? (
                   <>
                     <div className="spinner-border spinner-border-sm me-2" role="status">
-                      <span className="visually-hidden">Loading...</span>
+                      <span className="visually-hidden">{t('common.loading')}</span>
                     </div>
-                    {editingRule ? 'Updating...' : 'Creating...'}
+                    {editingRule ? t('moderation.features.automod.rules.updatingShort') : t('moderation.features.automod.rules.creatingShort')}
                   </>
                 ) : (
                   <>
                     <i className="fa-solid fa-save me-1"></i>
-                    {editingRule ? 'Update Rule' : 'Create Rule'}
+                    {editingRule ? t('moderation.features.automod.rules.updateBtn') : t('moderation.features.automod.rules.createBtn')}
                   </>
                 )}
               </button>
@@ -1851,10 +1860,10 @@ export default function AutomodConfigForm({ config, updateConfig, channels, role
         onClose={cancelDeleteRule}
         onConfirm={confirmDeleteRule}
         isDeleting={deleting}
-        title="Confirm Deletion"
-        message="Are you sure you want to delete the automod rule?"
-        warningMessage="This action cannot be undone."
-        confirmButtonText="Delete Rule"
+  title={t('moderation.features.automod.deleteRule.title')}
+  message={t('moderation.features.automod.deleteRule.message')}
+  warningMessage={t('moderation.features.automod.deleteRule.warning')}
+  confirmButtonText={t('moderation.features.automod.deleteRule.confirm')}
         itemDetails={ruleToDelete && (
           <>
             <div className="fw-semibold text-primary mb-2">
@@ -1864,15 +1873,15 @@ export default function AutomodConfigForm({ config, updateConfig, channels, role
             <div className="small text-muted">
               <div className="row">
                 <div className="col-6">
-                  <strong>Trigger:</strong> <span className="badge bg-info ms-1">{ruleToDelete.triggerType}</span>
+                  <strong>{t('moderation.features.automod.table.trigger')}:</strong> <span className="badge bg-info ms-1">{ruleToDelete.triggerType}</span>
                 </div>
                 <div className="col-6">
-                  <strong>Action:</strong> <span className="badge bg-primary ms-1">{ruleToDelete.actionType}</span>
+                  <strong>{t('moderation.features.automod.table.action')}:</strong> <span className="badge bg-primary ms-1">{ruleToDelete.actionType}</span>
                 </div>
               </div>
               {ruleToDelete.thresholdValue && (
                 <div className="mt-2">
-                  <strong>Threshold:</strong> <span className="text-warning">{ruleToDelete.thresholdValue}</span>
+                  <strong>{t('moderation.features.automod.table.threshold')}:</strong> <span className="text-warning">{ruleToDelete.thresholdValue}</span>
                 </div>
               )}
             </div>
@@ -1886,10 +1895,10 @@ export default function AutomodConfigForm({ config, updateConfig, channels, role
         onClose={cancelDeleteWord}
         onConfirm={confirmDeleteWord}
         isDeleting={deletingWord}
-        title="Confirm Word Deletion"
-        message="Are you sure you want to delete this profanity word?"
-        warningMessage="This action cannot be undone."
-        confirmButtonText="Delete Word"
+  title={t('moderation.features.automod.profanity.words.delete.title')}
+  message={t('moderation.features.automod.profanity.words.delete.message')}
+  warningMessage={t('moderation.features.automod.profanity.words.delete.warning')}
+  confirmButtonText={t('moderation.features.automod.profanity.words.delete.confirm')}
         itemDetails={wordToDelete && (
           <div className="fw-semibold text-warning">
             <i className="fa-solid fa-exclamation-triangle me-2"></i>
@@ -1904,10 +1913,10 @@ export default function AutomodConfigForm({ config, updateConfig, channels, role
         onClose={cancelDeletePattern}
         onConfirm={confirmDeletePattern}
         isDeleting={deletingPattern}
-        title="Confirm Pattern Deletion"
-        message="Are you sure you want to delete this profanity pattern?"
-        warningMessage="This action cannot be undone."
-        confirmButtonText="Delete Pattern"
+  title={t('moderation.features.automod.profanity.patterns.delete.title')}
+  message={t('moderation.features.automod.profanity.patterns.delete.message')}
+  warningMessage={t('moderation.features.automod.profanity.patterns.delete.warning')}
+  confirmButtonText={t('moderation.features.automod.profanity.patterns.delete.confirm')}
         itemDetails={patternToDelete && (
           <div>
             <div className="fw-semibold text-warning mb-2">

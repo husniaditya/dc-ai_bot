@@ -1,19 +1,21 @@
 import React, { useState } from 'react';
+import { useI18n } from '../../../i18n';
 import ReactionRolesConfig from './roles/ReactionRolesConfig';
 import SlashCommandRolesConfig from './roles/SlashCommandRolesConfig';
 
 // Role Management Configuration
 export default function RolesConfigForm({ config, updateConfig, channels, roles, guildId, showToast }) {
   const [activeTab, setActiveTab] = useState('reaction');
+  const { t } = useI18n();
 
   return (
     <div className="roles-config-form">
       <div className="mb-4">
         <div className="d-flex align-items-center gap-3 mb-3">
-          <h6 className="mb-0 fw-bold">Role Management System</h6>
+          <h6 className="mb-0 fw-bold">{t('moderation.features.roles.header')}</h6>
           <span className="badge badge-soft">
             <i className="fa-solid fa-users-gear me-1"></i>
-            Multiple Role Assignment Methods
+            {t('moderation.features.roles.badge')}
           </span>
         </div>
         
@@ -32,7 +34,7 @@ export default function RolesConfigForm({ config, updateConfig, channels, roles,
             }}
           >
             <i className="fa-solid fa-face-smile me-2"></i>
-            Reaction Roles
+            {t('moderation.features.roles.tabs.reaction')}
           </button>
           <button
             className={`nav-link ${activeTab === 'slash' ? 'active' : ''}`}
@@ -48,7 +50,7 @@ export default function RolesConfigForm({ config, updateConfig, channels, roles,
             }}
           >
             <i className="fa-solid fa-terminal me-2"></i>
-            Slash Commands
+            {t('moderation.features.roles.tabs.slash')}
           </button>
         </nav>
       </div>

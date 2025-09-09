@@ -7,7 +7,7 @@
     "edit": "Editar",
     "add": "Añadir",
     "loading": "Cargando...",
-    "lastLoad": "última actualización",
+    "lastLoad": "Última actualización",
     "saving": "Guardando...",
     "success": "Éxito",
     "error": "Error",
@@ -29,9 +29,21 @@
     "back": "Atrás",
     "next": "Siguiente",
     "previous": "Anterior",
-    "unsaved": "Sin guardar",
-    "notAvailable": "No disponible",
-    "refresh": "Actualizar analíticas"
+  "unsaved": "Sin guardar",
+  "notAvailable": "No disponible",
+  "refresh": "Actualizar analíticas",
+  "na": "N/D",
+  "none": "Ninguno",
+  "noMatches": "Sin coincidencias",
+  "invalidData": "Datos no válidos",
+  "unknown": "Desconocido",
+  "update": "Actualizar",
+  "editRule": "Editar regla",
+  "deleteRule": "Eliminar regla",
+  "editWord": "Editar palabra",
+  "deleteWord": "Eliminar palabra",
+  "editPattern": "Editar patrón",
+  "deletePattern": "Eliminar patrón"
   },
   "navigation": {
     "dashboard": "Panel",
@@ -48,8 +60,8 @@
     "signOut": "Cerrar sesión",
     "collapseSidebar": "Contraer barra lateral",
     "expandSidebar": "Expandir barra lateral",
-  "toggleTheme": "Cambiar tema claro / oscuro",
-  "openMenu": "Abrir menú"
+    "toggleTheme": "Cambiar tema claro / oscuro",
+    "openMenu": "Abrir menú"
   },
   "settings": {
     "title": "Configuración del Servidor",
@@ -182,8 +194,8 @@
     },
     "charts": {
       "loadingCharts": "Cargando gráficos…",
-      "stackedBarDescription": "La barra apilada compara habilitados vs deshabilitados para autos y comandos.",
-      "count": "Cantidad",
+      "stackedBarDescription": "El gráfico apilado compara habilitado vs deshabilitado para autos y comandos.",
+      "count": "Cuenta",
       "categories": {
         "autos": "Autos",
         "commands": "Comandos"
@@ -433,54 +445,45 @@
       "whoami": { "usage": "/whoami", "desc": "Muestra tu etiqueta e ID de usuario." },
       "echo": { "usage": "/echo <text>", "desc": "Responde con el mismo texto." },
       "help": { "usage": "/help", "desc": "Menú de ayuda por categorías interactivo." },
-
       "ask": { "usage": "/ask prompt:<text>", "desc": "Pregunta algo a la IA (en caché 3 min)." },
       "askfollow": { "usage": "/askfollow prompt:<text>", "desc": "Seguimiento usando el contexto reciente de la conversación." },
       "explain_image": { "usage": "/explain_image image(1-3) [prompt]", "desc": "Explica hasta 3 imágenes con un prompt opcional." },
       "summarize": { "usage": "/summarize [count]", "desc": "Resume los últimos mensajes (por defecto 30)." },
       "translate": { "usage": "/translate text target", "desc": "Traduce texto al idioma objetivo." },
-
       "poll create": { "usage": "/poll create question options", "desc": "Crea una encuesta (hasta 5 opciones)." },
       "poll results": { "usage": "/poll results id", "desc": "Muestra los resultados de una encuesta por id." },
-
       "math": { "usage": "/math add|sub|mul|div a b", "desc": "Operaciones aritméticas básicas." },
       "user info": { "usage": "/user info [target]", "desc": "Consultar información de usuario de Discord." },
       "remind": { "usage": "/remind minutes text", "desc": "Programa un recordatorio por DM o en el canal." },
       "meme": { "usage": "/meme", "desc": "Imagen de meme aleatoria de meme-api.com." },
-
       "level": { "usage": "/level [user]", "desc": "Revisa tu nivel o el nivel de XP de otro usuario." },
       "xp": { "usage": "/xp check|leaderboard [user]", "desc": "Revisa el XP o ve la tabla de clasificación del servidor." },
       "rank": { "usage": "/rank [user]", "desc": "Revisa tu rango en el servidor." },
       "leaderboard": { "usage": "/leaderboard [limit]", "desc": "Muestra la clasificación de XP del servidor." },
       "xpadmin": { "usage": "/xpadmin give|remove|set <user> <amount>", "desc": "Gestiona el XP de usuarios (requiere Gestionar Servidor)." },
-
       "role list": { "usage": "/role list", "desc": "Muestra todos los roles autoasignables disponibles." },
       "role menu": { "usage": "/role menu", "desc": "Menú interactivo de selección de roles (efímero)." },
       "role add": { "usage": "/role add <role> [user]", "desc": "Añade un rol autoasignable a ti o a otro usuario." },
       "role remove": { "usage": "/role remove <role> [user]", "desc": "Quita un rol autoasignable de ti o de otro usuario." },
       "role setup": { "usage": "/role setup <action> <role> [options]", "desc": "Configura roles autoasignables (requiere Gestionar Roles)." },
       "role toggle": { "usage": "/role toggle <command_name>", "desc": "Activa/desactiva un comando de rol (requiere Gestionar Roles)." },
-
       "automod list": { "usage": "/automod list", "desc": "Muestra todas las reglas de automod configuradas." },
       "automod info": { "usage": "/automod info <id>", "desc": "Ver información detallada de una regla de automod." },
       "automod toggle": { "usage": "/automod toggle <id> <enabled>", "desc": "Activa/desactiva una regla de automod (requiere Gestionar Servidor)." },
       "antiraid status": { "usage": "/antiraid status", "desc": "Ver el estado actual de protección anti-raid." },
       "antiraid toggle": { "usage": "/antiraid toggle <enabled>", "desc": "Activa/desactiva la protección anti-raid (requiere Gestionar Servidor)." },
       "audit recent": { "usage": "/audit recent", "desc": "Ver acciones de moderación recientes (requiere Gestionar Servidor)." },
-
       "autoreply": { "usage": "(passive)", "desc": "Respuestas automáticas basadas en patrones configurados." },
       "welcome preview": { "usage": "/welcome preview", "desc": "Vista previa de la configuración actual de bienvenida." },
       "welcome toggle": { "usage": "/welcome toggle <enabled>", "desc": "Activa/desactiva el sistema de bienvenida (requiere Gestionar Servidor)." },
       "automod": { "usage": "(passive)", "desc": "Moderación automática para spam, mayúsculas, enlaces y groserías." },
       "audit logs": { "usage": "(passive)", "desc": "Rastrea todas las acciones de moderación y cambios del servidor." },
       "anti-raid": { "usage": "(passive)", "desc": "Protección contra raids y uniones masivas." },
-
       "scheduler list": { "usage": "/scheduler list", "desc": "Lista todos los mensajes programados." },
       "scheduler info": { "usage": "/scheduler info <id>", "desc": "Ver información detallada de un mensaje programado." },
       "scheduler enable": { "usage": "/scheduler enable <id>", "desc": "Activa un mensaje programado (requiere Gestionar Servidor)." },
       "scheduler disable": { "usage": "/scheduler disable <id>", "desc": "Desactiva un mensaje programado (requiere Gestionar Servidor)." },
       "scheduler run": { "usage": "/scheduler run <id>", "desc": "Ejecuta manualmente un mensaje programado ahora (requiere Gestionar Servidor)." },
-
       "ytwatch": { "usage": "/ytwatch action:<enable|disable|addchannel|removechannel|announcechannel|mentionrole|interval|status>", "desc": "Gestiona notificaciones de YouTube (requiere Gestionar Servidor)." },
       "ytstats": { "usage": "/ytstats", "desc": "Muestra caché y estadísticas de cuota del watcher de YouTube." },
       "ytdebug": { "usage": "/ytdebug", "desc": "Muestra eventos de depuración recientes del watcher de YouTube (requiere Gestionar Servidor)." },
@@ -537,6 +540,479 @@
       "enabled": "Mensajes de bienvenida habilitados",
       "disabled": "Mensajes de bienvenida deshabilitados",
       "toggleFailed": "No se pudo actualizar el interruptor"
+    }
+  },
+  "moderation": {
+    "title": "Moderación",
+    "subtitle": "Configura las herramientas y ajustes de moderación",
+    "loading": {
+      "title": "Cargando Moderación",
+      "message": "Obteniendo funciones y configuración de moderación..."
+    },
+    "badge": {
+      "enabledOfTotal": "{{enabled}} de {{total}} habilitadas"
+    },
+    "overview": {
+      "title": "Resumen de Moderación",
+      "desc": "Activa funciones de protección y configura los ajustes para tu comunidad. Una protección más fuerte puede requerir más configuración.",
+      "protectionLevel": "Nivel de protección",
+      "complete": "completo"
+    },
+    "common": {
+      "enabled": "{{feature}} habilitado",
+      "disabled": "{{feature}} deshabilitado",
+      "enableFailed": "No se pudo habilitar la función",
+      "disableFailed": "No se pudo deshabilitar la función",
+      "loadFailedGeneric": "No se pudieron cargar los datos de moderación",
+      "loadFailed": "No se pudieron cargar los ajustes de {{feature}}",
+      "saveSuccess": "Ajustes de {{feature}} guardados",
+      "saveFailed": "No se pudieron guardar los ajustes de {{feature}}"
+    },
+    "modal": {
+      "title": "Configuración de {{feature}}",
+      "loading": "Cargando configuración...",
+      "loadingHelp": "Obteniendo la configuración actual para esta función",
+      "saving": "Guardando cambios...",
+      "savingHelp": "Aplicando cambios y actualizando la configuración del servidor",
+      "savingShort": "Guardando...",
+      "saveChanges": "Guardar cambios"
+    },
+    "features": {
+      "roles": {
+        "header": "Gestión de Roles",
+        "badge": "Autoasignable",
+        "tabs": {
+          "reaction": "Roles por Reacción",
+          "slash": "Comandos Slash"
+        },
+        "table": {
+          "status": "Estado",
+          "title": "Título",
+          "channel": "Canal",
+          "message": "Mensaje",
+          "reactions": "Reacciones",
+          "roles": "Roles",
+          "actions": "Acciones"
+        },
+        "reaction": {
+          "header": "Configuración de Roles por Reacción",
+          "loading": "Cargando roles por reacción...",
+          "empty": "Aún no hay roles por reacción.",
+          "labels": {
+            "botMessage": "Mensaje del Bot",
+            "userMessage": "Mensaje del Usuario"
+          },
+          "info": {
+            "title": "Cómo funciona",
+            "description": "Los roles por reacción permiten a los usuarios autoasignarse roles reaccionando a un mensaje. Los usuarios pueden reaccionar con los emojis configurados para añadir o quitar el rol correspondiente.",
+            "types": {
+              "title": "Tipos de reacción:",
+              "toggle": "Alternar - El usuario puede añadir o quitar el rol al reaccionar",
+              "addOnly": "Solo Añadir - El usuario solo puede añadir el rol; quitar la reacción no lo elimina",
+              "removeOnly": "Solo Quitar - El usuario solo puede quitar el rol reaccionando"
+            }
+          },
+          "form": {
+            "status": "Habilitar Roles por Reacción",
+            "title": "Título",
+            "titlePlaceholder": "Introduce un título para estos roles por reacción",
+            "titleHelp": "Un título descriptivo para identificar estos roles por reacción",
+            "channel": "Canal",
+            "channelPlaceholder": "Selecciona un canal...",
+            "messageId": "ID del Mensaje",
+            "messageIdReadOnly": "El ID del mensaje es de solo lectura al editar",
+            "messageIdTooltip": "El ID del mensaje no se puede cambiar al editar",
+            "customMessage": "Mensaje Personalizado",
+            "customMessagePlaceholder": "¡Reacciona para obtener tu rol!",
+            "customMessageHelp": {
+              "editing": "Contenido del mensaje para estos roles por reacción",
+              "creating": "Contenido del mensaje que publicará el bot"
+            },
+            "reactions": "Reacciones",
+            "emoji": "Emoji",
+            "emojiPlaceholder": "🎮 o :emoji_personalizado:",
+            "role": "Rol",
+            "rolePlaceholder": "Selecciona un rol...",
+            "type": "Tipo",
+            "typeOptions": {
+              "toggle": "Alternar",
+              "add_only": "Solo Añadir",
+              "remove_only": "Solo Quitar"
+            },
+            "previewSelectRole": "Selecciona un rol"
+          },
+          "buttons": {
+            "add": "Añadir Roles por Reacción",
+            "addReaction": "Añadir Reacción",
+            "removeReaction": "Quitar reacción",
+            "removeReactionDisabled": "No se puede quitar la última reacción"
+          },
+          "emojiPicker": {
+            "title": "Elegir Emoji",
+            "serverEmojis": "Emojis del Servidor",
+            "commonEmojis": "Emojis Comunes"
+          },
+          "delete": {
+            "title": "Eliminar Mensaje de Roles por Reacción",
+            "message": "¿Seguro que quieres eliminar el mensaje de roles por reacción \"{{title}}\"?",
+            "warning": "Esto eliminará todas las reacciones asociadas y no se puede deshacer.",
+            "confirm": "Eliminar Mensaje"
+          },
+          "toasts": {
+            "created": "¡Roles por reacción \"{{title}}\" creados correctamente!",
+            "updated": "¡Roles por reacción \"{{title}}\" actualizados correctamente!",
+            "deleteSuccess": "Mensaje de roles por reacción eliminado correctamente",
+            "deleteFailed": "Error al eliminar el mensaje de roles por reacción",
+            "statusEnabled": "Roles por reacción habilitados",
+            "statusDisabled": "Roles por reacción deshabilitados",
+            "statusFailed": "Error al actualizar el estado de los roles por reacción",
+            "loadFailed": "Error al cargar los roles por reacción"
+          }
+        },
+        "slash": {
+          "header": "Roles por Comandos Slash",
+          "subtitle": "Configura comandos slash personalizados para gestionar roles",
+          "loading": "Cargando roles por comandos slash...",
+          "empty": "Aún no hay roles por comandos slash.",
+          "anyChannel": "Cualquier Canal",
+          "info": {
+            "title": "Cómo funciona",
+            "description": "Los usuarios pueden usar estos comandos slash personalizados para gestionar sus roles. Cada comando puede configurarse con roles y comportamientos específicos.",
+            "types": {
+              "title": "Tipos de comando:",
+              "toggle": "Alternar - El usuario puede añadir o quitar roles",
+              "add": "Solo Añadir - El usuario solo puede añadir roles",
+              "remove": "Solo Quitar - El usuario solo puede quitar roles"
+            }
+          },
+          "buttons": {
+            "add": "Añadir Comando Slash",
+            "addRole": "Añadir Rol"
+          },
+          "form": {
+            "addTitle": "Añadir Nuevo Comando Slash",
+            "editTitle": "Editar Comando Slash",
+            "title": "Título",
+            "titlePlaceholder": "p. ej., asignar-rol",
+            "description": "Descripción",
+            "descriptionPlaceholder": "Descripción del comando",
+            "channel": "Canal (Opcional)",
+            "channelPlaceholder": "Cualquier Canal",
+            "roles": "Roles",
+            "selectRole": "Selecciona un rol...",
+            "type": "Tipo",
+            "typeOptions": {
+              "toggle": "Alternar",
+              "add": "Solo Añadir",
+              "remove": "Solo Quitar"
+            },
+            "requirePermission": "Requerir Permiso",
+            "updateCommand": "Actualizar Comando",
+            "createCommand": "Crear Comando"
+          },
+          "delete": {
+            "title": "Eliminar Comando Slash",
+            "message": "¿Seguro que quieres eliminar el comando slash \"{{name}}\"?",
+            "warning": "Esto eliminará permanentemente el comando y su configuración. Los usuarios ya no podrán utilizarlo.",
+            "confirm": "Eliminar Comando"
+          },
+          "toasts": {
+            "created": "¡Roles por comando slash creados correctamente!",
+            "updated": "¡Roles por comando slash actualizados correctamente!",
+            "statusEnabled": "Comando slash habilitado",
+            "statusDisabled": "Comando slash deshabilitado",
+            "deleteSuccess": "Comando slash eliminado correctamente",
+            "deleteFailed": "Error al eliminar el comando",
+            "fetchFailed": "Error al obtener los roles por comando slash",
+            "toggleFailed": "Error al cambiar el estado del comando"
+          }
+        }
+      },
+      "automod": {
+        "header": "Moderación automática",
+        "badge": "Protección",
+        "info": { "pre": "La detección global de spam, enlaces y URL maliciosas se integra con fuentes de reputación de terceros como" },
+        "globalLog": {
+          "label": "Canal de registro global",
+          "desc": "Canal predeterminado para enviar registros de AutoMod cuando una regla no especifica un canal",
+          "placeholder": "Selecciona un canal de registro (opcional)"
+        },
+        "placeholders": { "addChannels": "Añadir canales", "addRoles": "Añadir roles" },
+        "meta": { "channel": "canal", "role": "rol" },
+        "rules": {
+          "header": "Reglas",
+          "subheader": "Crea reglas para detectar spam, mayúsculas, enlaces, groserías y más.",
+          "add": "Añadir regla",
+          "loading": "Cargando reglas...",
+          "empty": "Aún no hay reglas",
+          "emptyCta": "Haz clic en Añadir regla para crear tu primera regla.",
+          "editTitle": "Editar regla de moderación automática",
+          "createTitle": "Crear nueva regla de moderación automática",
+          "creating": "Creando regla...",
+          "updating": "Actualizando regla...",
+          "creatingShort": "Creando...",
+          "updatingShort": "Actualizando...",
+          "createBtn": "Crear regla",
+          "updateBtn": "Actualizar regla",
+          "form": {
+            "name": "Nombre de la regla",
+            "namePlaceholder": "p. ej., Protección contra spam",
+            "trigger": "Tipo de disparador",
+            "action": "Tipo de acción",
+            "threshold": "Valor de umbral de advertencia",
+            "thresholdPlaceholder": "5",
+            "thresholdHelp": "Número de infracciones antes de tomar acción (Advertir al usuario)",
+            "duration": "Duración (minutos)",
+            "durationPlaceholder": "10",
+            "durationHelp": "Duración para acciones de silencio/baneo (vacío para permanente)",
+            "logChannel": "Canal de registro",
+            "logChannelPlaceholder": "Usar canal de registro global",
+            "messageAction": "Acción del mensaje",
+            "messageActionHelp": "Acción a tomar en mensajes infractores",
+            "whitelistChannels": "Canales en lista blanca",
+            "whitelistChannelsHelp": "Canales donde esta regla no aplica",
+            "whitelistRoles": "Roles en lista blanca",
+            "whitelistRolesHelp": "Roles que omiten esta regla"
+          }
+        },
+        "triggers": {
+          "spam": { "label": "Detección de spam", "description": "Detecta mensajes repetidos y patrones de spam" },
+          "caps": { "label": "Mayúsculas excesivas", "description": "Filtra mensajes con demasiadas mayúsculas" },
+          "links": { "label": "Filtro de enlaces", "description": "Escanea y bloquea enlaces/URLs maliciosos" },
+          "invite_links": { "label": "Enlaces de invitación", "description": "Escanea y bloquea enlaces de invitación de Discord maliciosos" },
+          "profanity": { "label": "Filtro de groserías", "description": "Filtra lenguaje inapropiado" },
+          "mention_spam": { "label": "Spam de menciones", "description": "Evita menciones excesivas de usuarios/roles" }
+        },
+        "actions": {
+          "warn": { "label": "Advertir al usuario", "description": "Enviar una advertencia al usuario" },
+          "delete": { "label": "Eliminar mensaje", "description": "Eliminar el mensaje que infringe" },
+          "mute": { "label": "Silencio temporal", "description": "Silenciar al usuario por una duración específica" },
+          "kick": { "label": "Expulsar usuario", "description": "Expulsar al usuario del servidor" },
+          "ban": { "label": "Banear usuario", "description": "Banear al usuario permanentemente" }
+        },
+        "messageAction": { "keep": "Mantener mensaje", "delete": "Eliminar mensaje" },
+        "table": {
+          "status": "Activo",
+          "name": "Nombre",
+          "trigger": "Disparador",
+          "action": "Acción",
+          "threshold": "Umbral",
+          "channelWhitelist": "Canales permitidos",
+          "roleWhitelist": "Roles permitidos",
+          "actions": "Acciones",
+          "logsTo": "registra en {{channel}}",
+          "minutes": "{{count}} min"
+        },
+        "tip": "Consejo:",
+        "profanity": {
+          "manageTip": "Gestiona tus palabras y patrones de groserías en la sección \"Gestión de groserías\" de arriba para personalizar lo que se filtra.",
+          "header": "Gestión de groserías",
+          "subheader": "Define palabras y patrones regex para detectar lenguaje inapropiado.",
+          "loading": "Cargando datos de groserías...",
+          "words": {
+            "header": "Palabras",
+            "add": "Añadir palabra",
+            "searchPlaceholder": "Buscar palabras",
+            "noMatches": "Ninguna palabra coincide con tu búsqueda.",
+            "empty": "Aún no hay palabras configuradas.",
+            "emptyCta": "Haz clic en Añadir palabra para crear tu primera entrada.",
+            "tryDifferent": "Prueba una búsqueda diferente.",
+            "table": { "word": "Palabra", "severity": "Severidad", "status": "Estado", "actions": "Acciones" },
+            "wholeWord": "palabra completa",
+            "partial": "parcial",
+            "caseSensitive": "sensible a mayúsculas/minúsculas",
+            "caseInsensitive": "no sensible a mayúsculas/minúsculas",
+            "modal": {
+              "editTitle": "Editar palabra de grosería",
+              "addTitle": "Añadir palabra de grosería",
+              "wordLabel": "Palabra",
+              "wordPlaceholder": "Escribe una palabra para bloquear",
+              "caseSensitive": "sensible a mayúsculas/minúsculas",
+              "wholeWordOnly": "Solo palabra completa"
+            },
+            "delete": { "title": "Confirmar eliminación de palabra", "message": "¿Eliminar esta palabra?", "warning": "Esta acción no se puede deshacer.", "confirm": "Eliminar palabra" }
+          },
+          "patterns": {
+            "header": "Patrones",
+            "add": "Añadir patrón",
+            "searchPlaceholder": "Buscar patrones",
+            "noMatches": "Ningún patrón coincide con tu búsqueda.",
+            "empty": "Aún no hay patrones configurados.",
+            "emptyCta": "Haz clic en Añadir patrón para crear tu primera entrada.",
+            "tryDifferent": "Prueba una búsqueda diferente.",
+            "table": { "pattern": "Patrón", "severity": "Severidad", "status": "Estado", "actions": "Acciones" },
+            "modal": {
+              "editTitle": "Editar patrón de grosería",
+              "addTitle": "Añadir patrón de grosería",
+              "patternLabel": "Patrón Regex",
+              "patternPlaceholder": "b+a+d+w+o+r+d+",
+              "flagsLabel": "Modificadores",
+              "flagsPlaceholder": "gi",
+              "testHeader": "Prueba de patrón",
+              "preview": "Vista previa",
+              "status": "Estado",
+              "valid": "Válido",
+              "invalid": "No válido",
+              "descriptionPlaceholder": "Descripción corta (opcional)"
+            },
+            "delete": { "title": "Confirmar eliminación de patrón", "message": "¿Eliminar este patrón?", "warning": "Esta acción no se puede deshacer.", "confirm": "Eliminar patrón" }
+          }
+        },
+        "common": { "severity": "Severidad", "language": "Idioma", "description": "Descripción", "word": "Palabra", "pattern": "Patrón" },
+        "severity": { "low": "Baja", "medium": "Media", "high": "Alta", "extreme": "Extrema" },
+        "deleteRule": { "title": "Confirmar eliminación", "message": "¿Eliminar la regla de automod?", "warning": "Esta acción no se puede deshacer.", "confirm": "Eliminar regla" },
+        "toasts": {
+          "ruleCreated": "¡Regla de automod \"{{name}}\" creada!",
+          "ruleUpdated": "¡Regla de automod \"{{name}}\" actualizada!",
+          "ruleDeleted": "¡Regla de automod \"{{name}}\" eliminada!",
+          "ruleCreateFailed": "No se pudo crear la regla \"{{name}}\". Inténtalo de nuevo.",
+          "ruleUpdateFailed": "No se pudo actualizar la regla \"{{name}}\". Inténtalo de nuevo.",
+          "ruleDeleteFailed": "No se pudo eliminar la regla \"{{name}}\". Inténtalo de nuevo.",
+          "ruleEnabled": "¡Regla \"{{name}}\" habilitada!",
+          "ruleDisabled": "¡Regla \"{{name}}\" deshabilitada!",
+          "ruleToggleFailed": "No se pudo {{action}} la regla \"{{name}}\". Inténtalo de nuevo.",
+          "wordAdded": "¡Palabra de grosería \"{{word}}\" añadida!",
+          "wordUpdated": "¡Palabra de grosería \"{{word}}\" actualizada!",
+          "wordDeleted": "¡Palabra de grosería \"{{word}}\" eliminada!",
+          "wordSaveFailed": "No se pudo guardar la palabra. {{error}}",
+          "wordDeleteFailed": "No se pudo eliminar la palabra. {{error}}",
+          "wordToggleEnabled": "¡Palabra habilitada!",
+          "wordToggleDisabled": "¡Palabra deshabilitada!",
+          "wordToggleFailed": "No se pudo cambiar el estado de la palabra. {{error}}",
+          "patternAdded": "¡Patrón de grosería añadido!",
+          "patternUpdated": "¡Patrón de grosería actualizado!",
+          "patternDeleted": "¡Patrón de grosería {{description}} eliminado!",
+          "patternSaveFailed": "No se pudo guardar el patrón. {{error}}",
+          "patternDeleteFailed": "No se pudo eliminar el patrón. {{error}}",
+          "patternToggleEnabled": "¡Patrón habilitado!",
+          "patternToggleDisabled": "¡Patrón deshabilitado!",
+          "patternToggleFailed": "No se pudo cambiar el estado del patrón. {{error}}",
+          "invalidRegex": "Patrón regex no válido: {{error}}"
+        }
+      },
+      "welcome": {
+        "header": "Mensajes de bienvenida",
+        "badge": "Nuevos miembros",
+        "info": "Configura mensajes de bienvenida para nuevos miembros. Usa marcadores como {user} y {server}. Establece un canal y, opcionalmente, envía un MD y asigna un rol automáticamente.",
+        "defaults": {
+          "messageText": "¡Bienvenido a {server}, {user}!",
+          "dmMessage": "¡Bienvenido a {server}! Gracias por unirte."
+        },
+        "fields": {
+          "channel": {
+            "label": "Canal de bienvenida",
+            "desc": "Selecciona el canal para enviar mensajes de bienvenida",
+            "placeholder": "Selecciona un canal"
+          },
+          "type": {
+            "label": "Tipo de mensaje",
+            "options": {
+              "text": "Texto",
+              "embed": "Embed"
+            }
+          },
+          "message": {
+            "label": "Mensaje de bienvenida",
+            "desc": "Admite marcadores: {user}, {server}",
+            "placeholder": "Escribe un mensaje de bienvenida (admite {user}, {server})"
+          },
+          "card": {
+            "label": "Incluir tarjeta de bienvenida",
+            "desc": "Adjuntar una tarjeta de imagen simple al mensaje"
+          },
+          "role": {
+            "label": "Asignar rol automáticamente",
+            "desc": "Opcionalmente asignar un rol a los nuevos miembros",
+            "placeholder": "Selecciona un rol"
+          },
+          "dm": {
+            "label": "Enviar MD",
+            "desc": "También enviar un mensaje privado al usuario"
+          },
+          "dmMessage": {
+            "label": "Mensaje de MD",
+            "desc": "Se envía como mensaje privado cuando está habilitado",
+            "placeholder": "Escribe un mensaje de MD"
+          }
+        }
+      }
+    },
+    "cards": {
+      "common": {
+        "features": "Funciones:",
+        "configure": "Configurar",
+        "updating": "Actualizando..."
+      },
+      "welcome": {
+        "label": "Mensajes de bienvenida",
+        "desc": "Da la bienvenida a nuevos miembros con mensajes y tarjetas personalizables.",
+        "features": {
+          "customMessages": "Mensajes personalizados",
+          "welcomeCards": "Tarjetas de bienvenida",
+          "roleAssignment": "Asignación de roles",
+          "channelSelection": "Selección de canal"
+        }
+      },
+      "automod": {
+        "label": "Moderación automática",
+        "desc": "Detecta y maneja automáticamente el spam, mayúsculas excesivas y contenido inapropiado.",
+        "features": {
+          "spamDetection": "Detección de spam",
+          "capsLockFilter": "Filtro de mayúsculas",
+          "linkFiltering": "Filtrado de enlaces",
+          "profanityFilter": "Filtro de palabras malsonantes"
+        }
+      },
+      "roles": {
+        "label": "Gestión de roles",
+        "desc": "Gestiona roles con roles por reacción y menús de roles.",
+        "features": {
+          "reactionRoles": "Roles por reacción",
+          "roleMenus": "Menús de roles",
+          "permissionSync": "Sincronización de permisos",
+          "customMessages": "Mensajes personalizados"
+        }
+      },
+      "xp": {
+        "label": "XP y Niveles",
+        "desc": "Recompensa a los miembros activos con puntos de XP y progresión de nivel.",
+        "features": {
+          "xpTracking": "Seguimiento de XP",
+          "levelRewards": "Recompensas por nivel",
+          "leaderboards": "Tablas de clasificación",
+          "customMultipliers": "Multiplicadores personalizados"
+        }
+      },
+      "scheduler": {
+        "label": "Mensajes programados",
+        "desc": "Programa anuncios y mensajes recurrentes para tu servidor.",
+        "features": {
+          "scheduledPosts": "Publicaciones programadas",
+          "recurringMessages": "Mensajes recurrentes",
+          "eventReminders": "Recordatorios de eventos",
+          "autoAnnouncements": "Anuncios automáticos"
+        }
+      },
+      "logging": {
+        "label": "Registro de auditoría",
+        "desc": "Rastrea todas las acciones de moderación y cambios del servidor.",
+        "features": {
+          "messageLogs": "Registros de mensajes",
+          "memberLogs": "Registros de miembros",
+          "channelLogs": "Registros de canales",
+          "roleLogs": "Registros de roles"
+        }
+      },
+      "antiraid": {
+        "label": "Protección Anti-Raid",
+        "desc": "Protege tu servidor de raids y ataques de uniones masivas.",
+        "features": {
+          "joinRateLimiting": "Límite de tasa de unión",
+          "accountAgeFilter": "Filtro de antigüedad de cuenta",
+          "autoLockdown": "Bloqueo automático",
+          "verificationSystem": "Sistema de verificación"
+        }
+      }
     }
   }
 }
