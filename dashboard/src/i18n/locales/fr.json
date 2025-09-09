@@ -737,6 +737,67 @@
           }
         }
       },
+      "xp": {
+        "header": "Système d'XP et de niveaux",
+        "badge": "Engagement des membres",
+        "info": {
+          "description": "Récompensez l’activité des membres avec des points d’XP et une progression de niveau. Configurez les taux d’XP, les délais, des rôles multiplicateurs pour les membres spéciaux, et les salons exclus où l’XP n’est pas gagnée."
+        },
+        "placeholders": {
+          "sameChannel": "Même salon",
+          "addChannelToExclude": "Ajouter un salon à exclure",
+          "addRoleToExclude": "Ajouter un rôle à exclure...",
+          "selectRole": "Sélectionner un rôle...",
+          "multiplier": "ex. 1.5"
+        },
+        "aria": {
+          "removeItem": "Retirer {{name}}"
+        },
+        "fields": {
+          "xpPerMessage": {
+            "label": "XP par message",
+            "desc": "XP gagnée par message"
+          },
+          "cooldownSeconds": {
+            "label": "Délai XP (secondes)",
+            "desc": "Temps que les utilisateurs doivent attendre entre les gains d’XP"
+          },
+          "levelUpChannel": {
+            "label": "Salon de level up",
+            "desc": "Où envoyer les messages de level up (laisser vide pour le même salon)"
+          },
+          "excludedChannels": {
+            "label": "Salons exclus",
+            "desc": "Salons où les utilisateurs ne gagnent pas d’XP"
+          },
+          "excludedRoles": {
+            "label": "Rôles exclus",
+            "desc": "Rôles qui ne gagnent pas d’XP"
+          },
+          "levelUpMessages": {
+            "label": "Messages de level up",
+            "desc": "Envoyer un message lorsqu’un utilisateur monte de niveau"
+          }
+        },
+        "multipliers": {
+          "label": "Rôles multiplicateurs d’XP",
+          "desc": "Configurez des rôles avec un multiplicateur d’XP pour les membres spéciaux",
+          "roleLabel": "Rôle",
+          "multiplierLabel": "Multiplicateur",
+          "multiplierSuffix": "×",
+          "remove": "Retirer",
+          "note": "Les multiplicateurs s’appliquent en plus de l’XP par message et du délai."
+        },
+        "toasts": {
+          "addedExcludedChannel": "Salon {{name}} ajouté aux exclusions",
+          "removedExcludedChannel": "Salon {{name}} retiré des exclusions",
+          "addedExcludedRole": "Rôle {{name}} ajouté aux exclusions",
+          "removedExcludedRole": "Rôle {{name}} retiré des exclusions",
+          "multiplierAdded": "Multiplicateur {{value}}× ajouté pour {{name}}",
+          "multiplierRemoved": "Multiplicateur retiré pour {{name}}",
+          "invalidMultiplier": "Entrez un rôle et un multiplicateur valides (ex. 1.5)"
+        }
+      },
       "automod": {
         "header": "Modération automatique",
         "badge": "Protection",

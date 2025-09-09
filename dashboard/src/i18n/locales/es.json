@@ -728,6 +728,47 @@
           }
         }
       },
+      "xp": {
+        "header": "Sistema de XP y Niveles",
+        "badge": "Engagement de miembros",
+        "info": {
+          "description": "Recompensa la actividad de los miembros con puntos de XP y progreso de nivel. Configura tasas de XP, tiempos de espera, roles multiplicadores para miembros especiales y canales excluidos donde no se gana XP."
+        },
+        "placeholders": {
+          "sameChannel": "Mismo canal",
+          "addChannelToExclude": "Añadir canal a excluir",
+          "addRoleToExclude": "Añadir rol a excluir...",
+          "selectRole": "Selecciona un rol...",
+          "multiplier": "p. ej. 1.5"
+        },
+        "aria": { "removeItem": "Quitar {{name}}" },
+        "fields": {
+          "xpPerMessage": { "label": "XP por mensaje", "desc": "XP ganada por mensaje" },
+          "cooldownSeconds": { "label": "Enfriamiento de XP (segundos)", "desc": "Tiempo que deben esperar los usuarios entre ganancias de XP" },
+          "levelUpChannel": { "label": "Canal de nivel subida", "desc": "Dónde enviar mensajes de nivel subida (dejar vacío para el mismo canal)" },
+          "excludedChannels": { "label": "Canales excluidos", "desc": "Canales donde los usuarios no ganan XP" },
+          "excludedRoles": { "label": "Roles excluidos", "desc": "Roles que no ganan XP" },
+          "levelUpMessages": { "label": "Mensajes de nivel subida", "desc": "Enviar un mensaje cuando un usuario sube de nivel" }
+        },
+        "multipliers": {
+          "label": "Roles multiplicadores de XP",
+          "desc": "Configura roles con multiplicador de XP para miembros especiales",
+          "roleLabel": "Rol",
+          "multiplierLabel": "Multiplicador",
+          "multiplierSuffix": "×",
+          "remove": "Quitar",
+          "note": "Los multiplicadores se aplican además de la XP por mensaje y el enfriamiento."
+        },
+        "toasts": {
+          "addedExcludedChannel": "Canal {{name}} añadido a exclusiones",
+          "removedExcludedChannel": "Canal {{name}} quitado de exclusiones",
+          "addedExcludedRole": "Rol {{name}} añadido a exclusiones",
+          "removedExcludedRole": "Rol {{name}} quitado de exclusiones",
+          "multiplierAdded": "Multiplicador {{value}}× añadido para {{name}}",
+          "multiplierRemoved": "Multiplicador quitado para {{name}}",
+          "invalidMultiplier": "Introduce un rol y multiplicador válidos (p. ej. 1.5)"
+        }
+      },
       "automod": {
         "header": "Moderación automática",
         "badge": "Protección",

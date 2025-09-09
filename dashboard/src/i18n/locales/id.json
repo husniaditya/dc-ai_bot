@@ -978,6 +978,67 @@
             "placeholder": "Tulis pesan DM"
           }
         }
+      },
+      "xp": {
+        "header": "Sistem XP & Leveling",
+        "badge": "Keterlibatan Anggota",
+        "info": {
+          "description": "Hadiahkan aktivitas anggota dengan poin pengalaman dan progres level. Atur nilai XP, jeda (cooldown), peran pengali untuk anggota khusus, dan kanal yang dikecualikan agar tidak mendapat XP."
+        },
+        "placeholders": {
+          "sameChannel": "Kanal yang sama dengan pesan",
+          "addChannelToExclude": "Tambah kanal untuk dikecualikan",
+          "addRoleToExclude": "Tambah peran untuk dikecualikan...",
+          "selectRole": "Pilih peran...",
+          "multiplier": "1.5"
+        },
+        "aria": {
+          "removeItem": "Hapus {{name}}"
+        },
+        "fields": {
+          "xpPerMessage": {
+            "label": "XP per Pesan",
+            "desc": "XP yang didapat per pesan"
+          },
+          "cooldownSeconds": {
+            "label": "Cooldown XP (detik)",
+            "desc": "Waktu tunggu antar perolehan XP"
+          },
+          "levelUpChannel": {
+            "label": "Kanal Level Up",
+            "desc": "Tempat mengirim pesan level up (kosongkan untuk kanal yang sama)"
+          },
+          "excludedChannels": {
+            "label": "Kanal Dikecualikan",
+            "desc": "Kanal di mana pengguna tidak mendapat XP"
+          },
+          "excludedRoles": {
+            "label": "Peran Dikecualikan",
+            "desc": "Peran yang tidak mendapat XP"
+          },
+          "levelUpMessages": {
+            "label": "Pesan Level Up",
+            "desc": "Kirim pesan saat pengguna naik level"
+          }
+        },
+        "multipliers": {
+          "label": "Peran Pengali XP",
+          "desc": "Peran yang mendapatkan pengali XP",
+          "roleLabel": "Peran",
+          "multiplierLabel": "Pengali",
+          "multiplierSuffix": "x pengali",
+          "remove": "Hapus pengali",
+          "note": "Anggota dengan beberapa peran pengali akan mendapat nilai pengali tertinggi."
+        },
+        "toasts": {
+          "addedExcludedChannel": "Kanal dikecualikan ditambahkan: #{{name}}",
+          "removedExcludedChannel": "Kanal dikecualikan dihapus: #{{name}}",
+          "addedExcludedRole": "Peran dikecualikan ditambahkan: @{{name}}",
+          "removedExcludedRole": "Peran dikecualikan dihapus: @{{name}}",
+          "multiplierAdded": "Pengali {{value}}x ditambahkan untuk @{{name}}",
+          "multiplierRemoved": "Pengali dihapus untuk @{{name}}",
+          "invalidMultiplier": "Pilih peran dan masukkan nilai pengali yang valid"
+        }
       }
     },
     "cards": {

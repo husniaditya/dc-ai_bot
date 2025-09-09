@@ -728,6 +728,47 @@
           }
         }
       },
+      "xp": {
+        "header": "XP・レベルの設定",
+        "badge": "メンバーエンゲージメント",
+        "info": {
+          "description": "メンバーの活動をXPポイントとレベル進行で報酬化します。XPレート、クールダウン、特別メンバー向けの倍率ロール、XPを獲得しない除外チャンネルを設定できます。"
+        },
+        "placeholders": {
+          "sameChannel": "同じチャンネル",
+          "addChannelToExclude": "除外するチャンネルを追加",
+          "addRoleToExclude": "除外するロールを追加...",
+          "selectRole": "ロールを選択...",
+          "multiplier": "例: 1.5"
+        },
+        "aria": { "removeItem": "{{name}} を削除" },
+        "fields": {
+          "xpPerMessage": { "label": "メッセージ毎のXP", "desc": "メッセージ1件あたりのXP" },
+          "cooldownSeconds": { "label": "XPクールダウン（秒）", "desc": "XP獲得の間に待機する時間" },
+          "levelUpChannel": { "label": "レベルアップ通知チャンネル", "desc": "レベルアップメッセージの送信先（同一チャンネルは空欄）" },
+          "excludedChannels": { "label": "除外チャンネル", "desc": "XPを獲得しないチャンネル" },
+          "excludedRoles": { "label": "除外ロール", "desc": "XPを獲得しないロール" },
+          "levelUpMessages": { "label": "レベルアップメッセージ", "desc": "ユーザーがレベルアップした時にメッセージを送信" }
+        },
+        "multipliers": {
+          "label": "XP倍率ロール",
+          "desc": "特別メンバー向けにXP倍率を持つロールを設定",
+          "roleLabel": "ロール",
+          "multiplierLabel": "倍率",
+          "multiplierSuffix": "×",
+          "remove": "削除",
+          "note": "倍率はメッセージ毎XPとクールダウンに加算的に適用されます。"
+        },
+        "toasts": {
+          "addedExcludedChannel": "除外にチャンネル {{name}} を追加しました",
+          "removedExcludedChannel": "除外からチャンネル {{name}} を削除しました",
+          "addedExcludedRole": "除外にロール {{name}} を追加しました",
+          "removedExcludedRole": "除外からロール {{name}} を削除しました",
+          "multiplierAdded": "{{name}} に倍率 {{value}}× を追加しました",
+          "multiplierRemoved": "{{name}} の倍率を削除しました",
+          "invalidMultiplier": "有効なロールと倍率（例: 1.5）を入力してください"
+        }
+      },
       "automod": {
         "header": "オートモデレーション",
         "badge": "保護",

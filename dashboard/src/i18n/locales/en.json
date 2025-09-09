@@ -1001,6 +1001,67 @@
             "placeholder": "Type a DM message"
           }
         }
+      },
+      "xp": {
+        "header": "XP & Leveling System",
+        "badge": "Member Engagement",
+        "info": {
+          "description": "Reward member activity with experience points and level progression. Configure XP rates, cooldowns, multiplier roles for special members, and excluded channels where XP won't be gained."
+        },
+        "placeholders": {
+          "sameChannel": "Same channel as message",
+          "addChannelToExclude": "Add channel to exclude",
+          "addRoleToExclude": "Add role to exclude...",
+          "selectRole": "Select role...",
+          "multiplier": "1.5"
+        },
+        "aria": {
+          "removeItem": "Remove {{name}}"
+        },
+        "fields": {
+          "xpPerMessage": {
+            "label": "XP per Message",
+            "desc": "XP gained per message"
+          },
+          "cooldownSeconds": {
+            "label": "XP Cooldown (seconds)",
+            "desc": "Time users must wait between XP gains"
+          },
+          "levelUpChannel": {
+            "label": "Level Up Channel",
+            "desc": "Where to send level up messages (leave empty for same channel)"
+          },
+          "excludedChannels": {
+            "label": "Excluded Channels",
+            "desc": "Channels where users won't gain XP"
+          },
+          "excludedRoles": {
+            "label": "Excluded Roles",
+            "desc": "Roles that won't gain XP"
+          },
+          "levelUpMessages": {
+            "label": "Level Up Messages",
+            "desc": "Send a message when users level up"
+          }
+        },
+        "multipliers": {
+          "label": "XP Multiplier Roles",
+          "desc": "Roles that get bonus XP multipliers",
+          "roleLabel": "Role",
+          "multiplierLabel": "Multiplier",
+          "multiplierSuffix": "x multiplier",
+          "remove": "Remove multiplier",
+          "note": "Members with multiple multiplier roles will get the highest multiplier."
+        },
+        "toasts": {
+          "addedExcludedChannel": "Excluded channel added: #{{name}}",
+          "removedExcludedChannel": "Excluded channel removed: #{{name}}",
+          "addedExcludedRole": "Excluded role added: @{{name}}",
+          "removedExcludedRole": "Excluded role removed: @{{name}}",
+          "multiplierAdded": "Added multiplier {{value}}x for @{{name}}",
+          "multiplierRemoved": "Removed multiplier for @{{name}}",
+          "invalidMultiplier": "Please select a role and enter a valid multiplier"
+        }
       }
     },
     "cards": {

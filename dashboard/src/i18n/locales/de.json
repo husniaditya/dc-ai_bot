@@ -728,6 +728,47 @@
           }
         }
       },
+      "xp": {
+        "header": "XP- & Level-System",
+        "badge": "Mitglieder-Engagement",
+        "info": {
+          "description": "Belohnen Sie Mitgliederaktivität mit XP-Punkten und Level-Fortschritt. Konfigurieren Sie XP-Raten, Abklingzeiten, Multiplikator-Rollen für besondere Mitglieder sowie ausgeschlossene Kanäle, in denen keine XP gesammelt wird."
+        },
+        "placeholders": {
+          "sameChannel": "Gleicher Kanal",
+          "addChannelToExclude": "Kanal zum Ausschließen hinzufügen",
+          "addRoleToExclude": "Rolle zum Ausschließen hinzufügen...",
+          "selectRole": "Rolle auswählen...",
+          "multiplier": "z. B. 1.5"
+        },
+        "aria": { "removeItem": "{{name}} entfernen" },
+        "fields": {
+          "xpPerMessage": { "label": "XP pro Nachricht", "desc": "XP pro Nachricht" },
+          "cooldownSeconds": { "label": "XP-Abklingzeit (Sekunden)", "desc": "Wartezeit zwischen XP-Gewinnen" },
+          "levelUpChannel": { "label": "Level-Up-Kanal", "desc": "Wohin Level-Up-Nachrichten gesendet werden (leer lassen für gleichen Kanal)" },
+          "excludedChannels": { "label": "Ausgeschlossene Kanäle", "desc": "Kanäle, in denen Nutzer keine XP erhalten" },
+          "excludedRoles": { "label": "Ausgeschlossene Rollen", "desc": "Rollen, die keine XP erhalten" },
+          "levelUpMessages": { "label": "Level-Up-Nachrichten", "desc": "Nachricht senden, wenn ein Nutzer aufsteigt" }
+        },
+        "multipliers": {
+          "label": "XP-Multiplikator-Rollen",
+          "desc": "Rollen mit XP-Multiplikator für besondere Mitglieder konfigurieren",
+          "roleLabel": "Rolle",
+          "multiplierLabel": "Multiplikator",
+          "multiplierSuffix": "×",
+          "remove": "Entfernen",
+          "note": "Multiplikatoren wirken zusätzlich zur XP pro Nachricht und Abklingzeit."
+        },
+        "toasts": {
+          "addedExcludedChannel": "Kanal {{name}} zu Ausschlüssen hinzugefügt",
+          "removedExcludedChannel": "Kanal {{name}} aus Ausschlüssen entfernt",
+          "addedExcludedRole": "Rolle {{name}} zu Ausschlüssen hinzugefügt",
+          "removedExcludedRole": "Rolle {{name}} aus Ausschlüssen entfernt",
+          "multiplierAdded": "Multiplikator {{value}}× für {{name}} hinzugefügt",
+          "multiplierRemoved": "Multiplikator für {{name}} entfernt",
+          "invalidMultiplier": "Bitte gültige Rolle und Multiplikator eingeben (z. B. 1.5)"
+        }
+      },
       "automod": {
         "header": "Automod",
         "badge": "Schutz",

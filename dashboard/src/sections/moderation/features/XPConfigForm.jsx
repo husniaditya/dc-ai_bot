@@ -1,22 +1,23 @@
 import React from 'react';
 import { ChannelSelector, FormField, SwitchToggle } from '../components/SharedComponents';
+import { useI18n } from '../../../i18n';
 
 // XP & Leveling Configuration
-export default function XPConfigForm({ config, updateConfig, channels, roles }) {
+export default function XPConfigForm({ config, updateConfig, channels, roles, showToast }) {
+  const { t } = useI18n();
   return (
     <div className="moderation-config-form space-y-4">
       {/* Information Section */}
       <div className="mb-4">
         <div className="d-flex align-items-center gap-3 mb-3">
-          <h6 className="mb-0 fw-bold">XP & Leveling System</h6>
+          <h6 className="mb-0 fw-bold">{t('moderation.features.xp.header')}</h6>
           <span className="badge badge-soft">
             <i className="fa-solid fa-chart-line me-1"></i>
-            Member Engagement
+            {t('moderation.features.xp.badge')}
           </span>
         </div>
         <p className="text-muted small mb-0" style={{ fontSize: '0.85rem', lineHeight: 1.4 }}>
-          Reward member activity with experience points and level progression. Configure XP rates, cooldowns, 
-          multiplier roles for special members, and excluded channels where XP won't be gained.
+          {t('moderation.features.xp.info.description')}
         </p>
       </div>
       <hr />
@@ -24,8 +25,8 @@ export default function XPConfigForm({ config, updateConfig, channels, roles }) 
       <div className="row">
         <div className="col-md-6">
           <FormField 
-            label="XP per Message"
-            description="XP gained per message"
+            label={t('moderation.features.xp.fields.xpPerMessage.label')}
+            description={t('moderation.features.xp.fields.xpPerMessage.desc')}
           >
             <input 
               type="number"
@@ -39,8 +40,8 @@ export default function XPConfigForm({ config, updateConfig, channels, roles }) 
         </div>
         <div className="col-md-6">
           <FormField 
-            label="XP Cooldown (seconds)"
-            description="Time users must wait between XP gains"
+            label={t('moderation.features.xp.fields.cooldownSeconds.label')}
+            description={t('moderation.features.xp.fields.cooldownSeconds.desc')}
           >
             <input 
               type="number"
@@ -56,21 +57,21 @@ export default function XPConfigForm({ config, updateConfig, channels, roles }) 
 
       {config.levelUpMessages !== false && (
         <FormField 
-          label="Level Up Channel"
-          description="Where to send level up messages (leave empty for same channel)"
+          label={t('moderation.features.xp.fields.levelUpChannel.label')}
+          description={t('moderation.features.xp.fields.levelUpChannel.desc')}
         >
           <ChannelSelector
             value={config.levelUpChannel}
             onChange={(value) => updateConfig('levelUpChannel', value)}
             channels={channels}
-            placeholder="Same channel as message"
+            placeholder={t('moderation.features.xp.placeholders.sameChannel')}
           />
         </FormField>
       )}
 
       <FormField 
-        label="Excluded Channels"
-        description="Channels where users won't gain XP"
+        label={t('moderation.features.xp.fields.excludedChannels.label')}
+        description={t('moderation.features.xp.fields.excludedChannels.desc')}
       >
         <div className="excluded-channels">
           {config.excludedChannels?.length > 0 && (
@@ -89,8 +90,9 @@ export default function XPConfigForm({ config, updateConfig, channels, roles }) 
                         onClick={() => {
                           const newExcluded = config.excludedChannels.filter(id => id !== channelId);
                           updateConfig('excludedChannels', newExcluded);
+                          showToast?.('success', t('moderation.features.xp.toasts.removedExcludedChannel', { name: channel.name }));
                         }}
-                        aria-label={`Remove ${channel.name}`}
+                        aria-label={t('moderation.features.xp.aria.removeItem', { name: channel.name })}
                       />
                     </span>
                   );
@@ -104,17 +106,19 @@ export default function XPConfigForm({ config, updateConfig, channels, roles }) 
             onChange={(channelId) => {
               if (channelId && !config.excludedChannels?.includes(channelId)) {
                 updateConfig('excludedChannels', [...(config.excludedChannels || []), channelId]);
+                const ch = channels.find(c => c.id === channelId);
+                if (ch) showToast?.('success', t('moderation.features.xp.toasts.addedExcludedChannel', { name: ch.name }));
               }
             }}
             channels={channels.filter(ch => !config.excludedChannels?.includes(ch.id))}
-            placeholder="Add channel to exclude"
+            placeholder={t('moderation.features.xp.placeholders.addChannelToExclude')}
           />
         </div>
       </FormField>
 
       <FormField 
-        label="Excluded Roles"
-        description="Roles that won't gain XP"
+        label={t('moderation.features.xp.fields.excludedRoles.label')}
+        description={t('moderation.features.xp.fields.excludedRoles.desc')}
       >
         <div className="excluded-roles">
           {config.excludedRoles?.length > 0 && (
@@ -133,8 +137,9 @@ export default function XPConfigForm({ config, updateConfig, channels, roles }) 
                         onClick={() => {
                           const newExcluded = config.excludedRoles.filter(id => id !== roleId);
                           updateConfig('excludedRoles', newExcluded);
+                          showToast?.('success', t('moderation.features.xp.toasts.removedExcludedRole', { name: role.name }));
                         }}
-                        aria-label={`Remove ${role.name}`}
+                        aria-label={t('moderation.features.xp.aria.removeItem', { name: role.name })}
                       />
                     </span>
                   );
@@ -150,11 +155,13 @@ export default function XPConfigForm({ config, updateConfig, channels, roles }) 
               const roleId = e.target.value;
               if (roleId && !config.excludedRoles?.includes(roleId)) {
                 updateConfig('excludedRoles', [...(config.excludedRoles || []), roleId]);
+                const rr = roles.find(r => r.id === roleId);
+                if (rr) showToast?.('success', t('moderation.features.xp.toasts.addedExcludedRole', { name: rr.name }));
               }
               e.target.value = ''; // Reset selection
             }}
           >
-            <option value="">Add role to exclude...</option>
+            <option value="">{t('moderation.features.xp.placeholders.addRoleToExclude')}</option>
             {roles
               .filter(role => !role.managed && role.name !== '@everyone' && !config.excludedRoles?.includes(role.id))
               .map(role => (
@@ -165,8 +172,8 @@ export default function XPConfigForm({ config, updateConfig, channels, roles }) 
       </FormField>
 
       <FormField 
-        label="XP Multiplier Roles"
-        description="Roles that get bonus XP multipliers"
+        label={t('moderation.features.xp.multipliers.label')}
+        description={t('moderation.features.xp.multipliers.desc')}
       >
         <div className="role-multipliers">
           {config.doubleXpEvents?.filter(event => event.roleId)?.length > 0 && (
@@ -181,7 +188,7 @@ export default function XPConfigForm({ config, updateConfig, channels, roles }) 
                         <div className="d-flex justify-content-between align-items-center">
                           <div>
                             <div className="fw-semibold text-success" style={{ fontSize: '0.9rem' }}>@{role.name}</div>
-                            <div className="text-muted-primary" style={{ fontSize: '0.8rem' }}>{roleMultiplier.multiplier}x multiplier</div>
+                            <div className="text-muted-primary" style={{ fontSize: '0.8rem' }}>{roleMultiplier.multiplier}{t('moderation.features.xp.multipliers.multiplierSuffix')}</div>
                           </div>
                           <button
                             type="button"
@@ -189,8 +196,9 @@ export default function XPConfigForm({ config, updateConfig, channels, roles }) 
                             onClick={() => {
                               const newEvents = config.doubleXpEvents.filter(event => event.roleId !== roleMultiplier.roleId);
                               updateConfig('doubleXpEvents', newEvents);
+                              showToast?.('success', t('moderation.features.xp.toasts.multiplierRemoved', { name: role.name }));
                             }}
-                            title="Remove multiplier"
+                            title={t('moderation.features.xp.multipliers.remove')}
                           >
                             <i className="fa-solid fa-trash" style={{ fontSize: '0.8rem' }}></i>
                           </button>
@@ -208,13 +216,13 @@ export default function XPConfigForm({ config, updateConfig, channels, roles }) 
             <div className="row g-2">
               <div className="col-md-6">
                 <div className="mb-2 mb-md-0">
-                  <label className="form-label small fw-semibold mb-1" htmlFor="new-multiplier-role">Role</label>
+                  <label className="form-label small fw-semibold mb-1" htmlFor="new-multiplier-role">{t('moderation.features.xp.multipliers.roleLabel')}</label>
                   <select 
                     id="new-multiplier-role"
                     className="form-select form-select-sm"
                     defaultValue=""
                   >
-                    <option value="">Select role...</option>
+                    <option value="">{t('moderation.features.xp.placeholders.selectRole')}</option>
                     {roles
                       .filter(role => 
                         !role.managed && 
@@ -229,12 +237,12 @@ export default function XPConfigForm({ config, updateConfig, channels, roles }) 
               </div>
               <div className="col-md-4">
                 <div className="mb-2 mb-md-0">
-                  <label className="form-label small fw-semibold mb-1" htmlFor="new-multiplier-value">Multiplier</label>
+                  <label className="form-label small fw-semibold mb-1" htmlFor="new-multiplier-value">{t('moderation.features.xp.multipliers.multiplierLabel')}</label>
                   <input 
                     id="new-multiplier-value"
                     type="number"
                     className="form-control form-control-sm"
-                    placeholder="1.5"
+                    placeholder={t('moderation.features.xp.placeholders.multiplier')}
                     min="0.1"
                     max="10"
                     step="0.1"
@@ -243,7 +251,7 @@ export default function XPConfigForm({ config, updateConfig, channels, roles }) 
               </div>
               <div className="col-md-2">
                 {/* Invisible label to preserve vertical rhythm with other fields */}
-                <label className="form-label small fw-semibold mb-1 invisible">Add</label>
+                <label className="form-label small fw-semibold mb-1 invisible">{t('common.add')}</label>
                 <button
                   type="button"
                   className="btn btn-primary btn-sm w-100"
@@ -257,18 +265,22 @@ export default function XPConfigForm({ config, updateConfig, channels, roles }) 
                       updateConfig('doubleXpEvents', newEvents);
                       roleSelect.value = '';
                       multiplierInput.value = '';
+                      const role = roles.find(r => r.id === roleId);
+                      if (role) showToast?.('success', t('moderation.features.xp.toasts.multiplierAdded', { name: role.name, value: multiplier }));
+                    } else {
+                      showToast?.('error', t('moderation.features.xp.toasts.invalidMultiplier'));
                     }
                   }}
                 >
                   <i className="fa-solid fa-plus me-1"></i>
-                  Add
+                  {t('common.add')}
                 </button>
               </div>
             </div>
             <div className="mt-2">
               <small className="text-muted">
                 <i className="fa-solid fa-info-circle me-1"></i>
-                Members with multiple multiplier roles will get the highest multiplier.
+                {t('moderation.features.xp.multipliers.note')}
               </small>
             </div>
           </div>
@@ -277,10 +289,10 @@ export default function XPConfigForm({ config, updateConfig, channels, roles }) 
 
       <SwitchToggle
         id="xp-levelup-message"
-        label="Level Up Messages"
+        label={t('moderation.features.xp.fields.levelUpMessages.label')}
         checked={config.levelUpMessages !== false}
         onChange={(checked) => updateConfig('levelUpMessages', checked)}
-        description="Send a message when users level up"
+        description={t('moderation.features.xp.fields.levelUpMessages.desc')}
       />
     </div>
   );
