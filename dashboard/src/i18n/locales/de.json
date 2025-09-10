@@ -1446,7 +1446,9 @@
           "type": "{{type}}"
         },
         "labels": {
-          "schedule": "Zeitplan: {{value}}"
+          "schedule": "Zeitplan: {{value}}",
+          "nextRun": "Nächster Lauf: {{time}}",
+          "lastRun": "Letzter Lauf: {{time}}"
         },
         "buttons": {
           "add": "Nachricht hinzufügen",

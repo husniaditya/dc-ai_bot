@@ -15,6 +15,7 @@ export default function ConfigurationModal({
   channels, 
   roles, 
   guildId, 
+  settings,
   onSave, 
   onClose, 
   showToast 
@@ -74,12 +75,9 @@ export default function ConfigurationModal({
             }
           });
         } else if (feature.key === 'scheduler') {
-          response = await fetch('/api/moderation/scheduler/config', {
-            headers: { 
-              Authorization: `Bearer ${localStorage.getItem('token')}`,
-              'X-Guild-Id': guildId
-            }
-          });
+          // Scheduler manages its own data loading, skip modal config fetch
+          setLoading(false);
+          return;
         } else {
           response = await fetch(`/api/moderation/features/${feature.key}/config`, {
             headers: { 
@@ -120,6 +118,26 @@ export default function ConfigurationModal({
 
     fetchConfig();
   }, [feature.key, guildId]);
+
+  // Refresh scheduler data when modal opens for scheduler feature
+  useEffect(() => {
+    if (feature.key === 'scheduler') {
+      // Initialize scheduler config to prevent dirty state
+      const schedulerConfig = { enabled: false, messages: [] };
+      setConfig(schedulerConfig);
+      setOriginalConfig(schedulerConfig);
+      
+      if (schedulerFormRef.current) {
+        // Add a small delay to ensure the form is fully mounted
+        const timer = setTimeout(() => {
+          if (schedulerFormRef.current && schedulerFormRef.current.refresh) {
+            schedulerFormRef.current.refresh();
+          }
+        }, 100);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [feature.key]);
 
   // Get default configuration for a feature
   const getDefaultConfig = (featureKey) => {
@@ -197,13 +215,12 @@ export default function ConfigurationModal({
 
   // Check if configuration has been modified
   const isDirty = () => {
-    // For scheduler, also check if there's an open form
-    if (feature.key === 'scheduler' && schedulerFormRef?.current) {
-      const schedulerDirty = schedulerFormRef.current.isDirty?.() || false;
-      if (schedulerDirty) return true;
+    // For scheduler, only check if there's an open form with unsaved changes
+    if (feature.key === 'scheduler') {
+      return schedulerFormRef?.current?.isDirty?.() || false;
     }
     
-    // Use standard config comparison for all forms
+    // Use standard config comparison for all other forms
     return JSON.stringify(config) !== JSON.stringify(originalConfig);
   };
 
@@ -309,6 +326,7 @@ export default function ConfigurationModal({
     // Add onConfigSaved callback for forms that handle their own saving
     const schedulerProps = {
       ...commonProps,
+      settings,
       ref: schedulerFormRef,
       onConfigSaved: (savedConfig) => {
         setOriginalConfig(savedConfig);

@@ -6,7 +6,7 @@ import ConfigurationModal from './components/ConfigurationModal';
 import LoadingSection from '../../components/LoadingSection';
 import { useI18n } from '../../i18n';
 
-export default function ModerationSection({ guildId, pushToast }) {
+export default function ModerationSection({ guildId, pushToast, settings }) {
   const { t } = useI18n();
   const [features, setFeatures] = useState({});
   const [loading, setLoading] = useState(true);
@@ -245,6 +245,14 @@ export default function ModerationSection({ guildId, pushToast }) {
     }
   };
 
+  // Compute counts based only on declared features
+  const total = MODERATION_FEATURES.length;
+  const enabledCount = MODERATION_FEATURES.reduce(
+    (n, f) => n + (features?.[f.key]?.enabled ? 1 : 0),
+    0
+  );
+  const pct = Math.round((enabledCount / total) * 100);
+
   return (
     <LoadingSection
       loading={loading}
@@ -256,7 +264,7 @@ export default function ModerationSection({ guildId, pushToast }) {
       <div className="d-flex align-items-center gap-2 mb-3">
         <h5 className="mb-0">{t('moderation.title')}</h5>
         <span className="badge badge-soft">
-          {t('moderation.badge.enabledOfTotal', { enabled: Object.values(features).filter(f => f.enabled).length, total: MODERATION_FEATURES.length })}
+          {t('moderation.badge.enabledOfTotal', { enabled: enabledCount, total })}
         </span>
       </div>
       
@@ -288,17 +296,19 @@ export default function ModerationSection({ guildId, pushToast }) {
                 <div 
                   className="progress-bar bg-primary"
                   style={{ 
-                    width: `${(Object.values(features).filter(f => f.enabled).length / MODERATION_FEATURES.length) * 100}%`
+                    width: `${(enabledCount / total) * 100}%`
                   }}
                 />
               </div>
               <div className="small text-muted mt-1">
-                {Math.round((Object.values(features).filter(f => f.enabled).length / MODERATION_FEATURES.length) * 100)}% {t('moderation.overview.complete')}
+                {pct}% {t('moderation.overview.complete')}
               </div>
             </div>
           </div>
         </div>
-      </div>
+
+  </div>
+
 
       {/* Configuration Modal */}
       {showConfigModal && activeFeature && (
@@ -307,6 +317,7 @@ export default function ModerationSection({ guildId, pushToast }) {
           channels={channels}
           roles={roles}
           guildId={guildId}
+          settings={settings}
           onSave={saveFeatureConfig}
           onClose={closeConfigModal}
           showToast={showToast}

@@ -549,7 +549,7 @@ function createModerationRoutes(client, store) {
     }
   });
 
-  // Get scheduled messages
+  // Get scheduled messages - fetch directly from database
   router.get('/scheduler/messages', async (req, res) => {
     try {
       const guildId = req.headers['x-guild-id'];
@@ -557,23 +557,34 @@ function createModerationRoutes(client, store) {
         return res.status(400).json({ error: 'Guild ID required' });
       }
 
-      const messages = await store.getGuildScheduledMessages(guildId);
-      res.json({ messages });
-    } catch (error) {
-      console.error('Error fetching scheduled messages:', error);
-      res.status(500).json({ error: 'Failed to fetch scheduled messages' });
-    }
-  });
-
-  // Get scheduled messages
-  router.get('/scheduler/messages', async (req, res) => {
-    try {
-      const guildId = req.headers['x-guild-id'];
-      if (!guildId) {
-        return res.status(400).json({ error: 'Guild ID required' });
+      // Fetch directly from database bypassing cache
+      const db = require('../../config/store/database/connection');
+      let messages = [];
+      
+      if (db.mariaAvailable && db.sqlPool) {
+        const [rows] = await db.sqlPool.query(`
+          SELECT id, title, channel_id, message_content, embed_data, schedule_type,
+                 schedule_value, next_run, last_run, enabled, created_by, created_at, updated_at
+          FROM guild_scheduled_messages WHERE guild_id=? ORDER BY id
+        `, [guildId]);
+        
+        messages = rows.map(row => ({
+          id: row.id,
+          title: row.title,
+          channelId: row.channel_id,
+          messageContent: row.message_content,
+          embedData: row.embed_data ? JSON.parse(row.embed_data) : null,
+          scheduleType: row.schedule_type,
+          scheduleValue: row.schedule_value,
+          nextRun: row.next_run,
+          lastRun: row.last_run,
+          enabled: !!row.enabled, // Convert to boolean
+          createdBy: row.created_by,
+          createdAt: row.created_at,
+          updatedAt: row.updated_at
+        }));
       }
-
-      const messages = await store.getGuildScheduledMessages(guildId);
+      
       res.json({ messages });
     } catch (error) {
       console.error('Error fetching scheduled messages:', error);
@@ -662,7 +673,7 @@ function createModerationRoutes(client, store) {
         return res.status(400).json({ error: 'Guild ID required' });
       }
 
-      const { title, channelId, message, scheduleType, scheduleValue, embedData } = req.body;
+      const { title, channelId, message, scheduleType, scheduleValue, embedData, enabled } = req.body;
       
       if (!title || !channelId || !message || !scheduleValue) {
         return res.status(400).json({ error: 'Missing required fields: title, channelId, message, scheduleValue' });
@@ -674,7 +685,8 @@ function createModerationRoutes(client, store) {
         messageContent: message,
         scheduleType: scheduleType || 'cron',
         scheduleValue,
-        embedData: embedData || null
+        embedData: embedData || null,
+        enabled: enabled !== undefined ? enabled : 1 // Default to enabled if not specified
       };
 
       const createdMessage = await store.createGuildScheduledMessage(guildId, messageData, req.user?.id || 'system');
@@ -702,6 +714,7 @@ function createModerationRoutes(client, store) {
       if (req.body.scheduleType !== undefined) messageData.scheduleType = req.body.scheduleType;
       if (req.body.scheduleValue !== undefined) messageData.scheduleValue = req.body.scheduleValue;
       if (req.body.embedData !== undefined) messageData.embedData = req.body.embedData;
+      if (req.body.enabled !== undefined) messageData.enabled = req.body.enabled;
 
       const updatedMessage = await store.updateGuildScheduledMessage(guildId, messageId, messageData);
       res.json({ success: true, message: updatedMessage });

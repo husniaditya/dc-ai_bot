@@ -2,12 +2,13 @@ import React, { useState, useEffect, forwardRef, useImperativeHandle } from 'rea
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { ChannelSelector, FormField } from '../components/SharedComponents';
-import { createScheduledMessage, updateScheduledMessage, deleteScheduledMessage } from '../../../api';
-import useTranslation from '../../../i18n/useTranslation';
+import { createScheduledMessage, updateScheduledMessage, deleteScheduledMessage, getScheduledMessages } from '../../../api';
+import { useI18n } from '../../../i18n';
+import LoadingOverlay from '../../../components/LoadingOverlay';
 
 // Delete Confirmation Component
 function DeleteConfirmationModal({ show, onHide, onConfirm, message }) {
-  const { t } = useTranslation();
+  const { t } = useI18n();
   if (!show) return null;
 
   return (
@@ -40,13 +41,16 @@ function DeleteConfirmationModal({ show, onHide, onConfirm, message }) {
 }
 
 // Scheduled Messages Configuration
-export default forwardRef(function SchedulerConfigForm({ config, updateConfig, channels, guildId, showToast, onConfigSaved, onClose }, ref) {
-  const { t } = useTranslation();
+// Integrates with guild settings for timezone and hour format (12h/24h)
+export default forwardRef(function SchedulerConfigForm({ config, updateConfig, channels, guildId, settings, showToast, onConfigSaved, onClose }, ref) {
+  const { t } = useI18n();
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingMessage, setEditingMessage] = useState(null);
   const [deleteConfirmation, setDeleteConfirmation] = useState({ show: false, messageId: null, messageTitle: '' });
   const [isFormDirty, setIsFormDirty] = useState(false);
   const [originalFormData, setOriginalFormData] = useState(null);
+  const [isLoading, setIsLoading] = useState(true); // Start with loading true for initial load
+  const [scheduledMessages, setScheduledMessages] = useState([]);
   const [formData, setFormData] = useState({
     title: '',
     channelId: '',
@@ -56,9 +60,76 @@ export default forwardRef(function SchedulerConfigForm({ config, updateConfig, c
     embedData: null,
     useEmbed: false
   });
-  const [timeFormatMode, setTimeFormatMode] = useState('24h'); // '24h' | '12h'
+  // Initialize time format from settings, fallback to 24h
+  const [timeFormatMode, setTimeFormatMode] = useState(
+    settings?.hourFormat === '12' ? '12h' : '24h'
+  );
+  
+  // Update timeFormatMode when settings change
+  useEffect(() => {
+    if (settings?.hourFormat) {
+      setTimeFormatMode(settings.hourFormat === '12' ? '12h' : '24h');
+    }
+  }, [settings?.hourFormat]);
 
-  const scheduledMessages = config.messages || [];
+  // Load messages when component mounts for the first time
+  useEffect(() => {
+    if (guildId) {
+      loadScheduledMessages();
+    }
+  }, [guildId]);
+
+  const loadScheduledMessages = async () => {
+    if (!guildId) return;
+    
+    try {
+      setIsLoading(true);
+      const response = await getScheduledMessages(guildId);
+      
+      // Handle different possible API response structures
+      let messages = [];
+      if (Array.isArray(response)) {
+        messages = response;
+      } else if (response?.messages && Array.isArray(response.messages)) {
+        messages = response.messages;
+      } else if (response?.data && Array.isArray(response.data)) {
+        messages = response.data;
+      } else {
+        console.warn('Unexpected API response structure:', response);
+        messages = [];
+      }
+      
+      // Ensure each message has the required properties with defaults
+      const processedMessages = messages.map(msg => ({
+        id: msg.id,
+        title: msg.title || '',
+        channelId: msg.channelId || msg.channel_id || '',
+        messageContent: msg.messageContent || msg.message_content || msg.message || '',
+        embedData: msg.embedData || msg.embed_data || null,
+        scheduleType: msg.scheduleType || msg.schedule_type || 'cron',
+        scheduleValue: msg.scheduleValue || msg.schedule_value || '',
+        nextRun: msg.nextRun || msg.next_run || null,
+        lastRun: msg.lastRun || msg.last_run || null,
+        enabled: msg.enabled !== undefined ? Boolean(msg.enabled) : true,
+        createdBy: msg.createdBy || msg.created_by || null,
+        createdAt: msg.createdAt || msg.created_at || null,
+        updatedAt: msg.updatedAt || msg.updated_at || null
+      }));
+      
+      setScheduledMessages(processedMessages);
+      
+      // Update the parent config if provided for backward compatibility
+      if (updateConfig) {
+        updateConfig('messages', processedMessages);
+      }
+    } catch (error) {
+      console.error('Failed to load scheduled messages:', error);
+      showToast?.('error', t('moderation.features.scheduler.toasts.loadFailed'));
+      setScheduledMessages([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Helpers for new pipe-based schedule formats (option 2)
   const parseWeekly = (value) => {
@@ -93,12 +164,61 @@ export default forwardRef(function SchedulerConfigForm({ config, updateConfig, c
     const d = new Date();
     d.setSeconds(0, 0);
     d.setHours(parseInt(hour, 10), parseInt(minute, 10), 0, 0);
+    
+    // If settings timezone is provided, adjust the date to that timezone
+    if (settings?.timezone) {
+      // Create date in the user's preferred timezone
+      try {
+        const formatter = new Intl.DateTimeFormat('en-CA', {
+          timeZone: settings.timezone,
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: false
+        });
+        
+        const parts = formatter.formatToParts(d);
+        const year = parseInt(parts.find(p => p.type === 'year').value);
+        const month = parseInt(parts.find(p => p.type === 'month').value) - 1;
+        const day = parseInt(parts.find(p => p.type === 'day').value);
+        
+        return new Date(year, month, day, parseInt(hour, 10), parseInt(minute, 10), 0, 0);
+      } catch (error) {
+        console.warn('Invalid timezone in settings, using local time:', settings.timezone);
+      }
+    }
+    
     return d;
   };
 
   const getWeeklyDate = (day, time) => {
     const { hour, minute } = parseDaily(time);
-    const now = new Date();
+    let now = new Date();
+    
+    // If settings timezone is provided, get current time in that timezone
+    if (settings?.timezone) {
+      try {
+        const formatter = new Intl.DateTimeFormat('en-CA', {
+          timeZone: settings.timezone,
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+          weekday: 'numeric'
+        });
+        
+        const parts = formatter.formatToParts(now);
+        const year = parseInt(parts.find(p => p.type === 'year').value);
+        const month = parseInt(parts.find(p => p.type === 'month').value) - 1;
+        const dayNum = parseInt(parts.find(p => p.type === 'day').value);
+        
+        now = new Date(year, month, dayNum);
+      } catch (error) {
+        console.warn('Invalid timezone in settings, using local time:', settings.timezone);
+      }
+    }
+    
     const target = new Date(now);
     const currentDow = now.getDay();
     let diff = parseInt(day, 10) - currentDow;
@@ -110,7 +230,28 @@ export default forwardRef(function SchedulerConfigForm({ config, updateConfig, c
 
   const getMonthlyDate = (day, time) => {
     const { hour, minute } = parseDaily(time);
-    const now = new Date();
+    let now = new Date();
+    
+    // If settings timezone is provided, get current time in that timezone
+    if (settings?.timezone) {
+      try {
+        const formatter = new Intl.DateTimeFormat('en-CA', {
+          timeZone: settings.timezone,
+          year: 'numeric',
+          month: '2-digit'
+        });
+        
+        const parts = formatter.formatToParts(now);
+        const year = parseInt(parts.find(p => p.type === 'year').value);
+        const month = parseInt(parts.find(p => p.type === 'month').value) - 1;
+        
+        const target = new Date(year, month, parseInt(day, 10), parseInt(hour, 10), parseInt(minute, 10), 0, 0);
+        return target;
+      } catch (error) {
+        console.warn('Invalid timezone in settings, using local time:', settings.timezone);
+      }
+    }
+    
     const target = new Date(now.getFullYear(), now.getMonth(), parseInt(day, 10), parseInt(hour, 10), parseInt(minute, 10), 0, 0);
     // If date already passed this month, keep it (only used for picking), user can re-pick
     return target;
@@ -118,7 +259,9 @@ export default forwardRef(function SchedulerConfigForm({ config, updateConfig, c
 
   // Expose methods to parent component
   useImperativeHandle(ref, () => ({
-    isDirty: () => showAddForm && isFormDirty
+    isDirty: () => showAddForm && isFormDirty,
+    getMessages: () => scheduledMessages,
+    refresh: () => loadScheduledMessages()
   }));
 
   const resetForm = () => {
@@ -135,7 +278,8 @@ export default forwardRef(function SchedulerConfigForm({ config, updateConfig, c
         useEmbed: false
       });
     }
-    setEditingMessage(null);
+    // Don't clear editingMessage when resetting - keep the editing state
+    // setEditingMessage(null); // Removed this line
     setIsFormDirty(false);
   };
 
@@ -146,9 +290,40 @@ export default forwardRef(function SchedulerConfigForm({ config, updateConfig, c
 
   const saveMessage = async () => {
     if (!formData.title || !formData.channelId || !formData.message || !formData.scheduleValue) {
-  showToast?.('error', t('moderation.features.scheduler.toasts.validationRequired'));
+      showToast?.('error', t('moderation.features.scheduler.toasts.validationRequired'));
       return;
     }
+
+    // Calculate if the scheduled message should be enabled based on timing
+    const calculateEnabled = () => {
+      const now = new Date();
+      
+      switch (formData.scheduleType) {
+        case 'once': {
+          // For one-time messages, check if scheduled time is in the future
+          const scheduledDate = new Date(formData.scheduleValue);
+          return scheduledDate > now;
+        }
+        case 'daily': {
+          // For daily messages, always enable (they repeat daily)
+          return true;
+        }
+        case 'weekly': {
+          // For weekly messages, always enable (they repeat weekly) 
+          return true;
+        }
+        case 'monthly': {
+          // For monthly messages, always enable (they repeat monthly)
+          return true;
+        }
+        case 'cron': {
+          // For cron expressions, always enable (they are recurring)
+          return true;
+        }
+        default:
+          return true;
+      }
+    };
 
     const messageData = {
       title: formData.title,
@@ -156,45 +331,37 @@ export default forwardRef(function SchedulerConfigForm({ config, updateConfig, c
       message: formData.message,
       scheduleType: formData.scheduleType,
       scheduleValue: formData.scheduleValue,
-      embedData: formData.useEmbed ? formData.embedData : null
+      embedData: formData.useEmbed ? formData.embedData : null,
+      enabled: calculateEnabled() ? 1 : 0 // Store as integer: 1 for enabled, 0 for disabled
     };
 
     try {
-      let updatedMessage;
+      let response;
       
       if (editingMessage && editingMessage.id && !String(editingMessage.id).startsWith('temp_')) {
         // Update existing message (has a real database ID)
-        updatedMessage = await updateScheduledMessage(editingMessage.id, messageData, guildId);
+        response = await updateScheduledMessage(editingMessage.id, messageData, guildId);
       } else {
         // Create new message
-        updatedMessage = await createScheduledMessage(messageData, guildId);
+        response = await createScheduledMessage(messageData, guildId);
       }
 
-      // Update local config state with the response from backend
-      let newMessages;
-      if (editingMessage) {
-        newMessages = scheduledMessages.map(msg => 
-          msg.id === editingMessage.id ? updatedMessage.message : msg
-        );
-      } else {
-        newMessages = [...scheduledMessages, updatedMessage.message];
-      }
+      // Refresh the messages from the database to ensure we have the latest data
+      await loadScheduledMessages();
       
-      updateConfig('messages', newMessages);
+      // Notify parent that config has been saved
+      onConfigSaved?.(scheduledMessages);
       
-      // Notify parent that config has been saved - use the updated messages
-      const newConfig = { ...config, messages: newMessages };
-      onConfigSaved?.(newConfig);
-      
-      // Reset form state
+      // Reset form state and clear editing state
+      setEditingMessage(null); // Clear editing state after successful save
       resetForm();
       setShowAddForm(false);
       
       // Show success message
-  showToast?.('success', editingMessage ? t('moderation.features.scheduler.toasts.savedUpdated') : t('moderation.features.scheduler.toasts.savedAdded'));
+      showToast?.('success', editingMessage ? t('moderation.features.scheduler.toasts.savedUpdated') : t('moderation.features.scheduler.toasts.savedAdded'));
     } catch (error) {
       console.error('Failed to save scheduler message:', error);
-  showToast?.('error', t('moderation.features.scheduler.toasts.saveFailed'));
+      showToast?.('error', t('moderation.features.scheduler.toasts.saveFailed'));
     }
   };
 
@@ -216,19 +383,17 @@ export default forwardRef(function SchedulerConfigForm({ config, updateConfig, c
         await deleteScheduledMessage(messageToDelete.id, guildId);
       }
       
-      // Update local config state
-      const newMessages = scheduledMessages.filter(msg => msg.id !== deleteConfirmation.messageId);
-      updateConfig('messages', newMessages);
+      // Refresh the messages from the database to ensure we have the latest data
+      await loadScheduledMessages();
       
       // Notify parent that config has been saved
-      const newConfig = { ...config, messages: newMessages };
-      onConfigSaved?.(newConfig);
+      onConfigSaved?.(scheduledMessages);
       
       setDeleteConfirmation({ show: false, messageId: null, messageTitle: '' });
-  showToast?.('success', t('moderation.features.scheduler.toasts.deleted'));
+      showToast?.('success', t('moderation.features.scheduler.toasts.deleted'));
     } catch (error) {
       console.error('Failed to delete scheduler message:', error);
-  showToast?.('error', t('moderation.features.scheduler.toasts.deleteFailed'));
+      showToast?.('error', t('moderation.features.scheduler.toasts.deleteFailed'));
     }
   };
 
@@ -321,8 +486,32 @@ export default forwardRef(function SchedulerConfigForm({ config, updateConfig, c
             selected={formData.scheduleValue ? new Date(formData.scheduleValue) : null}
             onChange={(date) => {
               if (!date) return updateFormData({ scheduleValue: '' });
-              // Store ISO string truncated to minutes to remain compatible with backend expectation
-              const iso = new Date(date.getTime() - date.getTimezoneOffset() * 60000)
+              
+              // If timezone setting is available, convert to that timezone
+              let targetDate = date;
+              if (settings?.timezone) {
+                try {
+                  // Create a date in the user's timezone
+                  const formatter = new Intl.DateTimeFormat('en-CA', {
+                    timeZone: settings.timezone,
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hour12: false
+                  });
+                  
+                  // Format the selected date using the target timezone
+                  const formatted = formatter.format(date);
+                  targetDate = new Date(formatted.replace(/(\d{4})-(\d{2})-(\d{2}), (\d{2}):(\d{2})/, '$1-$2-$3T$4:$5:00'));
+                } catch (error) {
+                  console.warn('Timezone conversion failed, using original date:', error);
+                }
+              }
+              
+              // Store ISO string truncated to minutes to remain compatible with backend expectation  
+              const iso = new Date(targetDate.getTime() - targetDate.getTimezoneOffset() * 60000)
                 .toISOString()
                 .slice(0, 16);
               updateFormData({ scheduleValue: iso });
@@ -438,7 +627,16 @@ export default forwardRef(function SchedulerConfigForm({ config, updateConfig, c
   };
 
   return (
-    <div className="moderation-config-form space-y-4">
+    <>
+      {/* Loading Overlay */}
+      {isLoading && (
+        <LoadingOverlay
+          title={t('moderation.features.scheduler.loading.title')}
+          message={t('moderation.features.scheduler.loading.message')}
+          fullHeight={false}
+        />
+      )}
+
       {/* Delete Confirmation Modal */}
       <DeleteConfirmationModal
         show={deleteConfirmation.show}
@@ -447,19 +645,21 @@ export default forwardRef(function SchedulerConfigForm({ config, updateConfig, c
         message={t('moderation.features.scheduler.delete.message', { title: deleteConfirmation.messageTitle })}
       />
 
-      {/* Information Section */}
-      <div className="mb-4">
-        <div className="d-flex align-items-center gap-3 mb-3">
-          <h6 className="mb-0 fw-bold">{t('moderation.features.scheduler.header')}</h6>
-          <span className="badge badge-soft">
-            <i className="fa-solid fa-calendar-clock me-1"></i>
-            {t('moderation.features.scheduler.badge')}
-          </span>
+      {/* Main Content */}
+      <div className="moderation-config-form space-y-4">
+        {/* Information Section */}
+        <div className="mb-4">
+          <div className="d-flex align-items-center gap-3 mb-3">
+            <h6 className="mb-0 fw-bold">{t('moderation.features.scheduler.header')}</h6>
+            <span className="badge badge-soft">
+              <i className="fa-solid fa-calendar-clock me-1"></i>
+              {t('moderation.features.scheduler.badge')}
+            </span>
+          </div>
+          <p className="text-muted mb-0">
+            {t('moderation.features.scheduler.info.description')}
+          </p>
         </div>
-        <p className="text-muted mb-0">
-          {t('moderation.features.scheduler.info.description')}
-        </p>
-      </div>
 
       {/* Existing Messages */}
       <div className="mb-4">
@@ -468,13 +668,14 @@ export default forwardRef(function SchedulerConfigForm({ config, updateConfig, c
           <button
             className="btn btn-primary btn-sm"
             onClick={startAdd}
+            disabled={isLoading}
           >
             <i className="fa-solid fa-plus me-1"></i>
             {t('moderation.features.scheduler.buttons.add')}
           </button>
         </div>
 
-        {scheduledMessages.length === 0 ? (
+        {scheduledMessages.length === 0 && !isLoading ? (
           <div className="text-center py-4 text-muted">
             <i className="fa-solid fa-calendar-xmark fs-1 mb-3 opacity-50"></i>
             <p>{t('moderation.features.scheduler.list.emptyTitle')}</p>
@@ -509,9 +710,26 @@ export default forwardRef(function SchedulerConfigForm({ config, updateConfig, c
                           <i className="fa-solid fa-clock me-1"></i>
                           {t('moderation.features.scheduler.labels.schedule', { value: message.scheduleValue })}
                         </span>
-                        <span className={`badge ${message.enabled ? 'badge-success' : 'badge-soft'}`}>
+                        <span className={`badge ${message.enabled ? 'badge-success' : 'badge-secondary'}`}>
+                          <i className={`fa-solid ${message.enabled ? 'fa-check-circle' : 'fa-pause-circle'} me-1`}></i>
                           {message.enabled ? t('moderation.features.scheduler.badges.active') : t('moderation.features.scheduler.badges.inactive')}
                         </span>
+                        {message.nextRun && (
+                          <span className="text-muted">
+                            <i className="fa-solid fa-calendar-days me-1"></i>
+                            {t('moderation.features.scheduler.labels.nextRun', { 
+                              time: new Date(message.nextRun).toLocaleString()
+                            })}
+                          </span>
+                        )}
+                        {message.lastRun && (
+                          <span className="text-muted">
+                            <i className="fa-solid fa-history me-1"></i>
+                            {t('moderation.features.scheduler.labels.lastRun', { 
+                              time: new Date(message.lastRun).toLocaleString()
+                            })}
+                          </span>
+                        )}
                       </div>
                     </div>
                     <div className="d-flex gap-1">
@@ -597,6 +815,12 @@ export default forwardRef(function SchedulerConfigForm({ config, updateConfig, c
                         <option value="24h">{t('moderation.features.scheduler.form.fields.timeDisplay.option24')}</option>
                         <option value="12h">{t('moderation.features.scheduler.form.fields.timeDisplay.option12')}</option>
                       </select>
+                      {settings?.timezone && (
+                        <div className="form-text small mt-1">
+                          <i className="fa-solid fa-info-circle text-info me-1"></i>
+                          Using timezone: {settings.timezone}
+                        </div>
+                      )}
                     </FormField>
                   </div>
                 )}
@@ -756,6 +980,7 @@ export default forwardRef(function SchedulerConfigForm({ config, updateConfig, c
                   className="btn btn-secondary btn-sm"
                   onClick={() => {
                     setShowAddForm(false);
+                    setEditingMessage(null); // Clear editing state when canceling
                     resetForm();
                   }}
                 >
@@ -775,6 +1000,7 @@ export default forwardRef(function SchedulerConfigForm({ config, updateConfig, c
           </div>
         </div>
       )}
-    </div>
+      </div> {/* End of main content div */}
+    </>
   );
 });

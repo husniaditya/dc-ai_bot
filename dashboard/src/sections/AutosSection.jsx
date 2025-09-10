@@ -100,7 +100,7 @@ export default function AutosSection({
       <div className="section-title visually-hidden">{t('autoResponses.title')}</div>
       <div className="auto-head-search"><input className="form-control form-control-sm search-input w-100" placeholder={`${t('common.search')}...`} value={search} onChange={e=>{ setSearch(e.target.value); setPage(1); }} /></div>
       <div className="auto-head-actions">
-        <button className="btn btn-sm btn-outline-light d-inline-flex align-items-center gap-1" type="button" onClick={()=>setShowRegexTester(s=>!s)}>
+  <button className="btn btn-sm btn-regex d-inline-flex align-items-center gap-1" type="button" onClick={()=>setShowRegexTester(s=>!s)}>
           <i className="fa-solid fa-code" /> {showRegexTester? t('autosSection.regexTester.close') : t('autosSection.regexTester.open')}
         </button>
         <button className="btn btn-sm btn-brand d-inline-flex align-items-center gap-1" onClick={openNewAuto} title={t('autoResponses.addResponse')}>
@@ -114,15 +114,15 @@ export default function AutosSection({
       <div className="d-flex flex-wrap gap-2 align-items-center">
         <strong className="small">{t('autosSection.bulk.selectedCount', { count: selectedKeys.size })}</strong>
         {!isMobile && <>
-          <button className="btn btn-sm btn-outline-light d-inline-flex align-items-center gap-1" onClick={()=>bulkEnable(false)} title={t('autosSection.bulk.enableSelected')}><i className="fa-solid fa-toggle-on" /> {t('autosSection.bulk.enable')}</button>
-          <button className="btn btn-sm btn-outline-light d-inline-flex align-items-center gap-1" onClick={()=>bulkEnable(true)} disabled={!selectedKeys.size} title={t('autosSection.bulk.disableSelected')}><i className="fa-solid fa-toggle-off" /> {t('autosSection.bulk.disable')}</button>
+          <button className="btn btn-sm btn-enable d-inline-flex align-items-center gap-1" onClick={()=>bulkEnable(false)} title={t('autosSection.bulk.enableSelected')}><i className="fa-solid fa-toggle-on" /> {t('autosSection.bulk.enable')}</button>
+          <button className="btn btn-sm btn-disable d-inline-flex align-items-center gap-1" onClick={()=>bulkEnable(true)} disabled={!selectedKeys.size} title={t('autosSection.bulk.disableSelected')}><i className="fa-solid fa-toggle-off" /> {t('autosSection.bulk.disable')}</button>
           <button className="btn btn-sm btn-outline-danger d-inline-flex align-items-center gap-1" onClick={bulkDelete} title={t('autosSection.bulk.deleteSelected')}><i className="fa-solid fa-trash" /> {t('common.delete')}</button>
           <button className="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-1" onClick={clearSelection} disabled={!selectedKeys.size} title={t('autosSection.bulk.clearSelection')}><i className="fa-solid fa-xmark" /> {t('common.clear')}</button>
         </>}
         {isMobile && <>
           <button className="btn btn-sm btn-outline-light" onClick={selectAllFiltered} disabled={allFilteredSelected} title={t('autosSection.bulk.selectAllFiltered')}><i className="fa-solid fa-check-double" /></button>
-          <button className="btn btn-sm btn-outline-light" onClick={()=>bulkEnable(false)} disabled={!selectedKeys.size} title={t('autosSection.bulk.enableSelected')}><i className="fa-solid fa-toggle-on" /></button>
-            <button className="btn btn-sm btn-outline-light" onClick={()=>bulkEnable(true)} disabled={!selectedKeys.size} title={t('autosSection.bulk.disableSelected')}><i className="fa-solid fa-toggle-off" /></button>
+          <button className="btn btn-sm btn-enable" onClick={()=>bulkEnable(false)} disabled={!selectedKeys.size} title={t('autosSection.bulk.enableSelected')}><i className="fa-solid fa-toggle-on" /></button>
+            <button className="btn btn-sm btn-disable" onClick={()=>bulkEnable(true)} disabled={!selectedKeys.size} title={t('autosSection.bulk.disableSelected')}><i className="fa-solid fa-toggle-off" /></button>
           <button className="btn btn-sm btn-outline-danger" onClick={bulkDelete} disabled={!selectedKeys.size} title={t('autosSection.bulk.deleteSelected')}><i className="fa-solid fa-trash" /></button>
           <button className="btn btn-sm btn-outline-secondary" onClick={clearSelection} disabled={!selectedKeys.size} title={t('autosSection.bulk.clearSelection')}><i className="fa-solid fa-xmark" /></button>
         </>}

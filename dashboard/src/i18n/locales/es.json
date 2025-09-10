@@ -988,7 +988,9 @@
           "type": "{{type}}"
         },
         "labels": {
-          "schedule": "Horario: {{value}}"
+          "schedule": "Horario: {{value}}",
+          "nextRun": "Próxima ejecución: {{time}}",
+          "lastRun": "Última ejecución: {{time}}"
         },
         "buttons": {
           "add": "Agregar mensaje",

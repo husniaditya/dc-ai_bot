@@ -76,21 +76,45 @@ function parseCanonicalNext(scheduleType, scheduleValue, fromDate = new Date()) 
 async function persistNextRun(guildId, id, nextDate){
   if (!nextDate) return;
   if (db.mariaAvailable && db.sqlPool){
-    try { await db.sqlPool.query('UPDATE guild_scheduled_messages SET next_run=? WHERE id=? AND guild_id=?',[nextDate, id, guildId]); }
+    try { 
+      await db.sqlPool.query('UPDATE guild_scheduled_messages SET next_run=? WHERE id=? AND guild_id=?',[nextDate, id, guildId]);
+      
+      // Clear cache to ensure UI reflects the change
+      const cacheData = cache.getCache();
+      if (cacheData.guildScheduledMessagesCache) {
+        cacheData.guildScheduledMessagesCache.delete(guildId);
+      }
+    }
     catch(e){ log('Persist next_run fail', e.message); }
   }
 }
 
 async function markLastRun(guildId, id){
   if (db.mariaAvailable && db.sqlPool){
-    try { await db.sqlPool.query('UPDATE guild_scheduled_messages SET last_run=NOW() WHERE id=? AND guild_id=?',[id, guildId]); }
+    try { 
+      await db.sqlPool.query('UPDATE guild_scheduled_messages SET last_run=NOW() WHERE id=? AND guild_id=?',[id, guildId]);
+      
+      // Clear cache to ensure UI reflects the change
+      const cacheData = cache.getCache();
+      if (cacheData.guildScheduledMessagesCache) {
+        cacheData.guildScheduledMessagesCache.delete(guildId);
+      }
+    }
     catch(e){ log('Persist last_run fail', e.message); }
   }
 }
 
 async function disableOneOff(guildId, id){
   if (db.mariaAvailable && db.sqlPool){
-    try { await db.sqlPool.query('UPDATE guild_scheduled_messages SET enabled=0 WHERE id=? AND guild_id=?',[id, guildId]); }
+    try { 
+      await db.sqlPool.query('UPDATE guild_scheduled_messages SET enabled=0 WHERE id=? AND guild_id=?',[id, guildId]);
+      
+      // Clear cache to ensure UI reflects the change
+      const cacheData = cache.getCache();
+      if (cacheData.guildScheduledMessagesCache) {
+        cacheData.guildScheduledMessagesCache.delete(guildId);
+      }
+    }
     catch(e){ log('Disable once fail', e.message); }
   }
 }

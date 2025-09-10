@@ -1446,7 +1446,9 @@
           "type": "{{type}}"
         },
         "labels": {
-          "schedule": "Programmation : {{value}}"
+          "schedule": "Programmation : {{value}}",
+          "nextRun": "Prochaine exécution : {{time}}",
+          "lastRun": "Dernière exécution : {{time}}"
         },
         "buttons": {
           "add": "Ajouter un message",

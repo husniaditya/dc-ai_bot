@@ -1156,7 +1156,9 @@
           "type": "{{type}}"
         },
         "labels": {
-          "schedule": "Jadwal: {{value}}"
+          "schedule": "Jadwal: {{value}}",
+          "nextRun": "Jalankan berikutnya: {{time}}",
+          "lastRun": "Terakhir dijalankan: {{time}}"
         },
         "buttons": {
           "add": "Tambah Pesan",

@@ -551,7 +551,7 @@ export default function OverviewSection({ analytics, apiStatus, autos, totalEnab
                 <span>{t('overview.recentActivityStream')}</span>
                 <span className="badge bg-secondary">{(analytics?.activity?.recent || []).length} {t('overview.activityStream.recent')}</span>
               </div>
-              <div className="activity-stream" style={{maxHeight: '250px', overflowY: 'auto'}}>
+              <div className="activity-stream" style={{maxHeight: '300px', overflowY: 'auto'}}>
                 {(analytics?.activity?.recent || [
                   { action: t('overview.sampleActivity.schedulerUsed'), guild: t('overview.activityStream.discordServer'), type: 'command', timestamp: new Date(Date.now() - 180000).toISOString() },
                   { action: t('overview.sampleActivity.autoReplyTriggered'), guild: t('overview.activityStream.discordServer'), type: 'auto', timestamp: new Date(Date.now() - 420000).toISOString() },

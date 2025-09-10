@@ -1446,7 +1446,9 @@
           "type": "{{type}}"
         },
         "labels": {
-          "schedule": "スケジュール: {{value}}"
+          "schedule": "スケジュール: {{value}}",
+          "nextRun": "次回の実行：{{time}}",
+          "lastRun": "前回の実行：{{time}}"
         },
         "buttons": {
           "add": "メッセージを追加",

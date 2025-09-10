@@ -75,6 +75,90 @@ https://discord.com/oauth2/authorize?client_id=951335667756072981&scope=bot%20ap
 - **Error Handling**: Comprehensive error tracking and graceful failure recovery
 - **Real-time Updates**: Live configuration changes without bot restart
 
+## 🌐 Multi-Language Support (i18n)
+
+The bot dashboard features comprehensive internationalization support with **7 languages** available:
+
+### 🗣️ Supported Languages
+- **English (en)** - Default language
+- **Indonesian (id)** - Bahasa Indonesia  
+- **Spanish (es)** - Español
+- **French (fr)** - Français
+- **German (de)** - Deutsch
+- **Japanese (ja)** - 日本語
+- **Chinese Traditional (cn)** - 繁體中文
+
+### 🎯 Language Features
+- **Instant Switching**: Real-time language changes without page reload
+- **Persistent Preference**: Language choice saved across browser sessions
+- **Auto-Detection**: Automatically detects browser language on first visit
+- **Fallback System**: Graceful fallback to English for missing translations
+- **Complete Coverage**: All UI elements, buttons, forms, and messages translated
+
+### 🔧 Dashboard Localization
+The dashboard provides full translation coverage for:
+
+| Feature Category | Translation Coverage |
+|------------------|---------------------|
+| **Navigation & Menus** | Complete interface navigation and menu items |
+| **Settings Panels** | All configuration options and descriptions |
+| **Moderation Tools** | Auto-mod rules, anti-raid settings, audit logs |
+| **XP & Leveling** | Experience system and leaderboard interface |
+| **Role Management** | Reaction roles and permission configuration |
+| **Scheduled Messages** | Automation and scheduling interface |
+| **Error Messages** | User-friendly error descriptions and tooltips |
+| **Forms & Validation** | Input labels, placeholders, and validation messages |
+
+### 🎨 Language Selector
+<div align="center">
+  <img src="https://github.com/husniaditya/dc-ai_bot/blob/main/dashboard/public/images/dashboard/language_selector.png" alt="Language Selector" width="40%">
+</div>
+
+<p align="center">
+  <em>Language selector dropdown available in the dashboard navbar for instant switching</em>
+</p>
+
+### 🚀 Advanced Translation Features
+
+#### Smart Interpolation
+Support for dynamic content with variable substitution:
+```javascript
+// Example: "Welcome back, {{username}}!"
+t('welcome', { username: 'John' })
+// Result: "Welcome back, John!" (English)
+// Result: "Selamat datang kembali, John!" (Indonesian)
+```
+
+#### Contextual Translations
+Separate translations for different contexts:
+```json
+{
+  "buttons": {
+    "save": "Save"
+  },
+  "messages": {
+    "save": "Your changes have been saved"
+  }
+}
+```
+
+#### Date & Time Localization
+Automatic formatting for dates and timestamps based on selected language:
+- **Time Format**: 24-hour vs 12-hour (AM/PM) based on locale
+- **Date Format**: DD/MM/YYYY vs MM/DD/YYYY based on region
+- **Relative Time**: "2 hours ago" properly localized
+
+### 🔄 Language Detection Priority
+1. **User Preference** - Previously saved language choice
+2. **Browser Language** - Automatic detection from navigator.language
+3. **Default Fallback** - English as the default language
+
+### 📊 Translation Statistics
+- **7 languages** fully supported
+- **500+ translation keys** covering all interface elements
+- **99% coverage** across all dashboard features
+- **Real-time switching** with no performance impact
+
 ## ⚙️ Technology Stack
 
 ### Backend

@@ -1007,7 +1007,7 @@ async function createGuildScheduledMessage(guildId, messageData, createdBy = 'sy
         messageData.embedData ? JSON.stringify(messageData.embedData) : null,
         messageData.scheduleType || 'cron',
         messageData.scheduleValue,
-        1, // Always enabled - no toggle functionality
+        messageData.enabled !== undefined ? messageData.enabled : 1, // Use provided enabled value, default to 1
         createdBy
       ]);
 
@@ -1080,6 +1080,10 @@ async function updateGuildScheduledMessage(guildId, messageId, messageData) {
       if (messageData.scheduleValue !== undefined) {
         updateFields.push('schedule_value = ?');
         updateValues.push(messageData.scheduleValue);
+      }
+      if (messageData.enabled !== undefined) {
+        updateFields.push('enabled = ?');
+        updateValues.push(messageData.enabled);
       }
 
       if (updateFields.length === 0) {

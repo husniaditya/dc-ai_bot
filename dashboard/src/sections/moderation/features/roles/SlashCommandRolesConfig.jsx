@@ -333,10 +333,10 @@ export default function SlashCommandRolesConfig({ config, updateConfig, channels
                       <code className="mobile-truncate">{command.commandName}</code>
                     </td>
                     <td>
-                      <span className="tablet-truncate text-primary">{command.description}</span>
+                      <span className="tablet-truncate desc-text">{command.description}</span>
                     </td>
                     <td>
-                      <span className="mobile-truncate text-black">
+                      <span className="mobile-truncate channel-text">
                         {command.channelId ? getChannelName(command.channelId) : t('moderation.features.roles.slash.anyChannel')}
                       </span>
                     </td>

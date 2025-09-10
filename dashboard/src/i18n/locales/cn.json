@@ -1338,6 +1338,151 @@
           "saved": "防突襲設定已儲存",
           "saveFailed": "防突襲設定儲存失敗"
         }
+      },"scheduler": {
+        "header": "定時訊息系統",
+        "badge": "自動公告",
+        "info": {
+          "description": "設定在指定時間或間隔自動發送訊息。非常適合用於公告、提醒事項或重複發布內容。"
+        },
+        "list": {
+          "title": "定時訊息（{{count}}則）",
+          "emptyTitle": "尚未設定定時訊息",
+          "emptyCta": "點擊「新增訊息」以建立第一則定時訊息"
+        },
+        "unknownChannel": "未知頻道",
+        "badges": {
+          "embed": "嵌入",
+          "active": "啟用中",
+          "inactive": "未啟用",
+          "type": "{{type}}"
+        },
+        "labels": {
+          "schedule": "排程：{{value}}",
+          "nextRun": "下次執行時間：{{time}}",
+          "lastRun": "上次執行時間：{{time}}"
+        },
+        "buttons": {
+          "add": "新增訊息",
+          "edit": "編輯",
+          "delete": "刪除",
+          "cancel": "取消",
+          "reset": "重設",
+          "saveAdd": "新增訊息",
+          "saveUpdate": "更新訊息"
+        },
+        "delete": {
+          "title": "確認刪除",
+          "message": "確定要刪除定時訊息「{{title}}」嗎？此操作無法還原。",
+          "confirm": "刪除",
+          "cancel": "取消"
+        },
+        "form": {
+          "addTitle": "新增定時訊息",
+          "editTitle": "編輯定時訊息",
+          "fields": {
+            "title": {
+              "label": "訊息標題",
+              "placeholder": "請輸入訊息標題"
+            },
+            "channel": {
+              "label": "頻道",
+              "placeholder": "請選擇頻道"
+            },
+            "scheduleType": {
+              "label": "排程類型"
+            },
+            "timeDisplay": {
+              "label": "時間顯示方式",
+              "option24": "24小時制",
+              "option12": "12小時制（AM/PM）"
+            },
+            "scheduleValue": {
+              "label": "排程設定值",
+              "placeholder": "0 9 * * *"
+            },
+            "message": {
+              "label": "訊息內容",
+              "placeholder": "請輸入您的訊息內容…"
+            },
+            "useEmbed": {
+              "label": "使用 Discord 嵌入"
+            },
+            "embed": {
+              "header": "嵌入設定",
+              "title": {
+                "label": "嵌入標題",
+                "placeholder": "嵌入標題"
+              },
+              "color": {
+                "label": "顏色"
+              },
+              "description": {
+                "label": "說明",
+                "placeholder": "嵌入說明"
+              },
+              "footer": {
+                "label": "頁尾文字",
+                "placeholder": "頁尾文字"
+              },
+              "thumbnail": {
+                "label": "縮圖 URL",
+                "placeholder": "https://example.com/image.png"
+              },
+              "image": {
+                "label": "圖片 URL",
+                "placeholder": "https://example.com/image.png"
+              }
+            }
+          },
+          "scheduleTypes": {
+            "once": "單次（時間戳）",
+            "daily": "每天",
+            "weekly": "每週",
+            "monthly": "每月",
+            "cron": "自訂（Cron）"
+          },
+          "pickers": {
+            "once": {
+              "placeholder": "選擇日期與時間"
+            },
+            "daily": {
+              "timeCaption": "時間",
+              "placeholder": "選擇時間",
+              "help": "以 HH:MM（24 小時制）儲存。"
+            },
+            "weekly": {
+              "placeholder": "選擇星期與時間",
+              "help": "可撿任一天，僅儲存星期+時間為 D|HH:MM（0=星期日）。"
+            },
+            "monthly": {
+              "placeholder": "選擇日期與時間",
+              "help": "可撿任一月份，儲存為 DD|HH:MM。"
+            },
+            "cron": {
+              "presetsTitle": "常用預設：",
+              "placeholders": {
+                "expression": "0 9 * * *"
+              },
+              "presets": {
+                "everyHour": "每小時一次",
+                "everyDay9": "每日上午 9:00",
+                "everyMonday9": "每周一上午 9:00",
+                "everySunday9": "每週（星期日上午 9:00）",
+                "everyMonthFirst9": "每月（1 號上午 9:00）",
+                "every6Hours": "每 6 小時一次",
+                "everyWeekday8": "每個工作日上午 8:00"
+              }
+            }
+          }
+        },
+        "toasts": {
+          "savedAdded": "訊息新增成功",
+          "savedUpdated": "訊息更新成功",
+          "saveFailed": "儲存訊息失敗",
+          "deleted": "已成功刪除預排訊息",
+          "deleteFailed": "刪除訊息失敗",
+          "validationRequired": "請填寫所有必填欄位"
+        }
       },
       "welcome": {
         "header": "歡迎訊息",
@@ -1444,150 +1589,6 @@
           "multiplierAdded": "已為 @{{name}} 新增加成倍率 {{value}}x",
           "multiplierRemoved": "已移除 @{{name}} 的加成倍率",
           "invalidMultiplier": "請選擇一個角色並輸入有效的倍率"
-        },
-        "scheduler": {
-          "header": "定時訊息系統",
-          "badge": "自動公告",
-          "info": {
-            "description": "設定在指定時間或間隔自動發送訊息。非常適合用於公告、提醒事項或重複發布內容。"
-          },
-          "list": {
-            "title": "定時訊息（{{count}}則）",
-            "emptyTitle": "尚未設定定時訊息",
-            "emptyCta": "點擊「新增訊息」以建立第一則定時訊息"
-          },
-          "unknownChannel": "未知頻道",
-          "badges": {
-            "embed": "嵌入",
-            "active": "啟用中",
-            "inactive": "未啟用",
-            "type": "{{type}}"
-          },
-          "labels": {
-            "schedule": "排程：{{value}}"
-          },
-          "buttons": {
-            "add": "新增訊息",
-            "edit": "編輯",
-            "delete": "刪除",
-            "cancel": "取消",
-            "reset": "重設",
-            "saveAdd": "新增訊息",
-            "saveUpdate": "更新訊息"
-          },
-          "delete": {
-            "title": "確認刪除",
-            "message": "確定要刪除定時訊息「{{title}}」嗎？此操作無法還原。",
-            "confirm": "刪除",
-            "cancel": "取消"
-          },
-          "form": {
-            "addTitle": "新增定時訊息",
-            "editTitle": "編輯定時訊息",
-            "fields": {
-              "title": {
-                "label": "訊息標題",
-                "placeholder": "請輸入訊息標題"
-              },
-              "channel": {
-                "label": "頻道",
-                "placeholder": "請選擇頻道"
-              },
-              "scheduleType": {
-                "label": "排程類型"
-              },
-              "timeDisplay": {
-                "label": "時間顯示方式",
-                "option24": "24小時制",
-                "option12": "12小時制（AM/PM）"
-              },
-              "scheduleValue": {
-                "label": "排程設定值",
-                "placeholder": "0 9 * * *"
-              },
-              "message": {
-                "label": "訊息內容",
-                "placeholder": "請輸入您的訊息內容…"
-              },
-              "useEmbed": {
-                "label": "使用 Discord 嵌入"
-              },
-              "embed": {
-                "header": "嵌入設定",
-                "title": {
-                  "label": "嵌入標題",
-                  "placeholder": "嵌入標題"
-                },
-                "color": {
-                  "label": "顏色"
-                },
-                "description": {
-                  "label": "說明",
-                  "placeholder": "嵌入說明"
-                },
-                "footer": {
-                  "label": "頁尾文字",
-                  "placeholder": "頁尾文字"
-                },
-                "thumbnail": {
-                  "label": "縮圖 URL",
-                  "placeholder": "https://example.com/image.png"
-                },
-                "image": {
-                  "label": "圖片 URL",
-                  "placeholder": "https://example.com/image.png"
-                }
-              }
-            },
-            "scheduleTypes": {
-              "once": "單次（時間戳）",
-              "daily": "每天",
-              "weekly": "每週",
-              "monthly": "每月",
-              "cron": "自訂（Cron）"
-            },
-            "pickers": {
-              "once": {
-                "placeholder": "選擇日期與時間"
-              },
-              "daily": {
-                "timeCaption": "時間",
-                "placeholder": "選擇時間",
-                "help": "以 HH:MM（24 小時制）儲存。"
-              },
-              "weekly": {
-                "placeholder": "選擇星期與時間",
-                "help": "可撿任一天，僅儲存星期+時間為 D|HH:MM（0=星期日）。"
-              },
-              "monthly": {
-                "placeholder": "選擇日期與時間",
-                "help": "可撿任一月份，儲存為 DD|HH:MM。"
-              },
-              "cron": {
-                "presetsTitle": "常用預設：",
-                "placeholders": {
-                  "expression": "0 9 * * *"
-                },
-                "presets": {
-                  "everyHour": "每小時一次",
-                  "everyDay9": "每日上午 9:00",
-                  "everyMonday9": "每周一上午 9:00",
-                  "everySunday9": "每週（星期日上午 9:00）",
-                  "everyMonthFirst9": "每月（1 號上午 9:00）",
-                  "every6Hours": "每 6 小時一次",
-                  "everyWeekday8": "每個工作日上午 8:00"
-                }
-              }
-            }
-          },
-          "toasts": {
-            "savedAdded": "訊息新增成功",
-            "savedUpdated": "訊息更新成功",
-            "saveFailed": "儲存訊息失敗",
-            "deleted": "已成功刪除預排訊息",
-            "deleteFailed": "刪除訊息失敗",
-            "validationRequired": "請填寫所有必填欄位"
-          }
         }
       }
     },
@@ -1635,16 +1636,6 @@
           "levelRewards": "等級獎勵",
           "leaderboards": "排行榜",
           "customMultipliers": "自訂倍數"
-        }
-      },
-      "scheduler": {
-        "label": "預排訊息",
-        "desc": "為伺服器預排公告及重複訊息。",
-        "features": {
-          "scheduledPosts": "預排貼文",
-          "recurringMessages": "重複訊息",
-          "eventReminders": "活動提醒",
-          "autoAnnouncements": "自動公告"
         }
       },
       "logging": {

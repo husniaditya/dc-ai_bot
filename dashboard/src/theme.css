@@ -1459,6 +1459,78 @@ html:not(.dark) #profanity-patterns-modal .modal-title {
 }
 .btn-brand:hover { filter: brightness(1.07); }
 
+/* Themed action buttons (Enable/Disable/Regex) */
+.btn-enable { 
+  background: rgba(16,185,129,0.12) !important; 
+  border: 1px solid rgba(16,185,129,0.45) !important; 
+  color: #34d399 !important; 
+}
+.btn-enable:hover { 
+  background: linear-gradient(135deg, rgba(16,185,129,0.32), rgba(16,185,129,0.22)) !important; 
+  color:#ffffff !important; 
+  border-color: rgba(16,185,129,0.65) !important;
+  box-shadow: 0 0 0 2px rgba(16,185,129,0.28);
+}
+.btn-disable { 
+  background: rgba(239,68,68,0.12) !important; 
+  border: 1px solid rgba(239,68,68,0.5) !important; 
+  color: #f87171 !important; 
+}
+.btn-disable:hover { 
+  background: linear-gradient(135deg, rgba(239,68,68,0.28), rgba(239,68,68,0.18)) !important; 
+  color:#ffffff !important; 
+  border-color: rgba(239,68,68,0.7) !important;
+  box-shadow: 0 0 0 2px rgba(239,68,68,0.28);
+}
+.btn-regex { 
+  background: rgba(99,102,241,0.12) !important; 
+  border: 1px solid rgba(99,102,241,0.45) !important; 
+  color: #aab3ff !important; 
+}
+.btn-regex:hover { 
+  background: linear-gradient(135deg, rgba(99,102,241,0.25), rgba(99,102,241,0.16)) !important; 
+  color:#fff !important; 
+  box-shadow: var(--accent-glow);
+}
+
+/* Slash Roles table semantic text colors */
+/* Dark theme: description = soft light, channel = softer light */
+html.dark .desc-text { color: #e5e7eb !important; }
+html.dark .channel-text { color: #cbd5e1 !important; opacity: 0.85; }
+
+/* Light theme: fall back to defaults; adjust slightly for readability */
+html:not(.dark) .desc-text { color: #1f2530 !important; }
+html:not(.dark) .channel-text { color: #374151 !important; }
+
+/* Light theme variants */
+html:not(.dark) .btn-enable { 
+  background: rgba(16,185,129,0.1) !important; 
+  border-color: rgba(16,185,129,0.45) !important; 
+  color: #059669 !important; 
+}
+html:not(.dark) .btn-enable:hover { 
+  background: rgba(16,185,129,0.18) !important; 
+  color: #065f46 !important; /* dark green text for light background */
+}
+html:not(.dark) .btn-disable { 
+  background: rgba(239,68,68,0.1) !important; 
+  border-color: rgba(239,68,68,0.5) !important; 
+  color: #b91c1c !important; 
+}
+html:not(.dark) .btn-disable:hover { 
+  background: rgba(239,68,68,0.18) !important; 
+  color: #991b1b !important; /* dark red text for light background */
+}
+html:not(.dark) .btn-regex {
+  background: rgba(99,102,241,0.12) !important; 
+  border-color: rgba(99,102,241,0.45) !important; 
+  color: #303d66 !important;
+}
+html:not(.dark) .btn-regex:hover { 
+  background: rgba(99,102,241,0.2) !important; 
+  color: #1f2530 !important; 
+}
+
 .badge-soft {
   background: rgba(255,255,255,0.08);
   border: 1px solid rgba(255,255,255,0.12);
