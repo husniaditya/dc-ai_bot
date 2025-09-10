@@ -7,6 +7,7 @@ import SchedulerConfigForm from '../features/SchedulerConfigForm';
 import LoggingConfigForm from '../features/LoggingConfigForm';
 import AntiRaidConfigForm from '../features/AntiRaidConfigForm';
 import UnsavedChangesModal from './UnsavedChangesModal';
+import { useI18n } from '../../../i18n';
 
 // Configuration Modal Component
 export default function ConfigurationModal({ 
@@ -18,6 +19,11 @@ export default function ConfigurationModal({
   onClose, 
   showToast 
 }) {
+  const { t } = useI18n();
+  const isLogging = feature?.key === 'logging';
+  const isAntiRaid = feature?.key === 'antiraid';
+  // Use localized label if available
+  const localizedFeatureLabel = feature?.labelKey ? t(feature.labelKey) : feature?.label;
   const [config, setConfig] = useState(feature.config || {});
   const [originalConfig, setOriginalConfig] = useState(feature.config || {});
   const [saving, setSaving] = useState(false);
@@ -101,7 +107,7 @@ export default function ConfigurationModal({
         }
       } catch (error) {
         console.error(`Failed to fetch ${feature.key} config:`, error);
-        showToast('error', `Failed to load ${feature.label} configuration`);
+  showToast('error', t('moderation.common.loadFailed', { feature: localizedFeatureLabel }));
         
         // Fallback to default config on error
         const defaultConfig = getDefaultConfig(feature.key);
@@ -237,11 +243,23 @@ export default function ConfigurationModal({
       } else {
         await onSave(config);
       }
-      
-      showToast('success', `${feature.label} configuration saved successfully`);
+      // Success toast (feature-specific override)
+      if (isLogging) {
+        showToast('success', t('moderation.features.logging.toasts.saved'));
+      } else if (isAntiRaid) {
+        showToast('success', t('moderation.features.antiraid.toasts.saved'));
+      } else {
+        showToast('success', t('moderation.common.saveSuccess', { feature: localizedFeatureLabel }));
+      }
     } catch (error) {
       console.error('Save failed:', error);
-      showToast('error', `Failed to save ${feature.label} configuration`);
+      if (isLogging) {
+        showToast('error', t('moderation.features.logging.toasts.saveFailed'));
+      } else if (isAntiRaid) {
+        showToast('error', t('moderation.features.antiraid.toasts.saveFailed'));
+      } else {
+        showToast('error', t('moderation.common.saveFailed', { feature: localizedFeatureLabel }));
+      }
     } finally {
       setSaving(false);
     }
@@ -352,10 +370,10 @@ export default function ConfigurationModal({
             >
               <div className="text-center text-light">
                 <div className="spinner-border spinner-border-lg mb-3" role="status">
-                  <span className="visually-hidden">Loading...</span>
+                  <span className="visually-hidden">{t('common.loading')}</span>
                 </div>
-                <div className="h6 mb-0">Saving Configuration...</div>
-                <div className="small text-muted">Please wait while we update your settings</div>
+                <div className="h6 mb-0">{isLogging ? t('moderation.features.logging.modal.saving') : (isAntiRaid ? t('moderation.features.antiraid.modal.saving') : t('moderation.modal.saving'))}</div>
+                <div className="small text-muted">{t('moderation.modal.savingHelp')}</div>
               </div>
             </div>
           )}
@@ -363,8 +381,8 @@ export default function ConfigurationModal({
           <div className="modal-header border-secondary">
             <h5 className="modal-title d-flex align-items-center gap-2">
               <i className={`fa-solid ${feature.icon}`} style={{ color: feature.color }} />
-              {feature.label} Configuration
-              {isDirty() && <span className="dirty-badge">Unsaved</span>}
+              {isLogging ? t('moderation.features.logging.modal.title') : (isAntiRaid ? t('moderation.features.antiraid.modal.title') : t('moderation.modal.title', { feature: localizedFeatureLabel }))}
+              {isDirty() && <span className="dirty-badge">{t('common.unsaved')}</span>}
             </h5>
             <button type="button" className="btn-close btn-close-white" onClick={handleClose} />
           </div>
@@ -372,10 +390,10 @@ export default function ConfigurationModal({
             {loading ? (
               <div className="text-center py-5">
                 <div className="spinner-border spinner-border-lg mb-3" role="status">
-                  <span className="visually-hidden">Loading...</span>
+                  <span className="visually-hidden">{t('common.loading')}</span>
                 </div>
-                <div className="h6 mb-0">Loading Configuration...</div>
-                <div className="small text-muted">Fetching your current settings</div>
+                <div className="h6 mb-0">{t('moderation.modal.loading')}</div>
+                <div className="small text-muted">{t('moderation.modal.loadingHelp')}</div>
               </div>
             ) : (
               renderConfigForm()
@@ -392,7 +410,7 @@ export default function ConfigurationModal({
                 disabled={saving}
               >
                 <i className="fa-solid fa-rotate-left me-1" />
-                Reset
+                {t('common.reset')}
               </button>
             )}
             <button 
@@ -402,7 +420,7 @@ export default function ConfigurationModal({
               disabled={saving}
             >
               <i className="fa-solid fa-times me-1" />
-              Close
+              {t('common.close')}
             </button>
             {/* Add Save button for all forms except roles */}
             {feature.key !== 'roles' && feature.key !== 'scheduler' && feature.key !== 'automod' && (
@@ -415,14 +433,14 @@ export default function ConfigurationModal({
                 {saving ? (
                   <>
                     <div className="spinner-border spinner-border-sm me-1" role="status">
-                      <span className="visually-hidden">Loading...</span>
+                      <span className="visually-hidden">{t('common.loading')}</span>
                     </div>
-                    Saving...
+                    {t('moderation.modal.savingShort')}
                   </>
                 ) : (
                   <>
                     <i className="fa-solid fa-save me-1" />
-                    Save Changes
+                    {t('moderation.modal.saveChanges')}
                   </>
                 )}
               </button>
@@ -436,7 +454,7 @@ export default function ConfigurationModal({
         isOpen={showUnsavedModal}
         onConfirm={handleConfirmClose}
         onCancel={handleCancelClose}
-        featureName={feature.label}
+  featureName={localizedFeatureLabel}
       />
     </div>
   );

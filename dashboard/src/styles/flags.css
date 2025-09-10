@@ -1,0 +1,5 @@
+/* Minimal styles for inline flag icons */
+/* Adjust spacing for flag-icons lib */
+.fi { margin-right: 8px; }
+.language-option .fi { margin-right: 10px; }
+.language-dropdown-trigger .fi { margin-right: 6px; }

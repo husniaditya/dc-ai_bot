@@ -3,6 +3,7 @@ import { resolveTwitchStreamer } from '../../../api';
 import MentionTargetsPicker from '../components/MentionTargetsPicker';
 import TemplatePreview from '../components/TemplatePreview';
 import { TEMPLATE_PLACEHOLDERS } from '../constants';
+import { useI18n } from '../../../i18n';
 
 /**
  * TwitchConfig - Twitch integration configuration component
@@ -17,12 +18,13 @@ export default function TwitchConfig({
   pushToast,
   isSaving = false 
 }) {
+  const { t } = useI18n();
   const [newStreamerId, setNewStreamerId] = useState('');
   const [resolving, setResolving] = useState(false);
   const [editingStreamer, setEditingStreamer] = useState(null);
 
   if (!config) {
-    return <div className="text-muted small">Loading Twitch config…</div>;
+    return <div className="text-muted small">{t('gamesSocials.common.loadingConfig', { service: t('gamesSocials.services.twitch.label') })}</div>;
   }
 
   async function addStreamer() {
@@ -38,9 +40,9 @@ export default function TwitchConfig({
       username = r?.username || null;
       resolvedName = r?.displayName || null;
       if (!username) throw new Error('not resolved');
-      pushToast && pushToast('success', `Resolved to ${username}`);
+  pushToast && pushToast('success', t('gamesSocials.twitch.toasts.resolvedTo', { username }));
     } catch (e) {
-      pushToast && pushToast('error', 'Could not resolve streamer');
+  pushToast && pushToast('error', t('gamesSocials.twitch.toasts.resolveFailed'));
     } finally {
       setResolving(false);
     }
@@ -72,7 +74,7 @@ export default function TwitchConfig({
         <div className="yt-config-block">
           <div className="d-flex justify-content-between align-items-start mb-2">
             <div>
-              <div className="small text-uppercase text-muted fw-semibold mb-1">Announcement</div>
+              <div className="small text-uppercase text-muted fw-semibold mb-1">{t('gamesSocials.common.announcement')}</div>
               <div className="form-check form-switch m-0">
                 <input 
                   className="form-check-input" 
@@ -81,20 +83,20 @@ export default function TwitchConfig({
                   onChange={e => onChange({ ...config, enabled: e.target.checked })} 
                 />
                 <label className="form-check-label ms-2">
-                  {config.enabled ? 'Enabled' : 'Disabled'}
+                  {config.enabled ? t('common.enabled') : t('common.disabled')}
                 </label>
               </div>
             </div>
           </div>
 
           <div className="mb-3">
-            <label className="form-label small fw-semibold mb-1">Announce Channel</label>
+            <label className="form-label small fw-semibold mb-1">{t('gamesSocials.twitch.fields.announceChannel')}</label>
             <select 
               className="form-select form-select-sm" 
               value={config.announceChannelId || ''} 
               onChange={e => onChange({ ...config, announceChannelId: e.target.value || null })}
             >
-              <option value="">Select…</option>
+              <option value="">{t('gamesSocials.common.select')}</option>
               {discordChannels.map(ch => 
                 <option key={ch.id} value={ch.id}>{ch.name}</option>
               )}
@@ -103,7 +105,7 @@ export default function TwitchConfig({
 
           <div className="mb-3">
             <label className="form-label small fw-semibold d-flex align-items-center gap-2 mb-1">
-              Mention Targets 
+              {t('gamesSocials.common.mentionTargets')} 
               {config.mentionTargets?.length ? (
                 <span className="badge-soft" style={{fontSize: '.55rem'}}>
                   {config.mentionTargets.length}
@@ -120,12 +122,12 @@ export default function TwitchConfig({
               })}
             />
             <div className="form-text tiny text-muted mt-1">
-              Enter to add • Backspace to remove • Order preserved
+              {t('gamesSocials.common.mentionHelper')}
             </div>
           </div>
 
           <div className="mb-3">
-            <label className="form-label small fw-semibold mb-1">Interval (sec)</label>
+            <label className="form-label small fw-semibold mb-1">{t('gamesSocials.common.intervalSec')}</label>
             <input 
               type="number" 
               min={60} 
@@ -140,7 +142,7 @@ export default function TwitchConfig({
           </div>
 
           <div className="mb-3">
-            <label className="form-label small fw-semibold mb-1">Embeds</label>
+            <label className="form-label small fw-semibold mb-1">{t('gamesSocials.common.embeds')}</label>
             <div className="form-check form-switch m-0">
               <input 
                 className="form-check-input" 
@@ -149,7 +151,7 @@ export default function TwitchConfig({
                 onChange={e => onChange({ ...config, embedEnabled: e.target.checked })} 
               />
               <label className="form-check-label ms-2">
-                {config.embedEnabled !== false ? 'Enabled' : 'Plain'}
+                {config.embedEnabled !== false ? t('common.enabled') : t('gamesSocials.common.plain')}
               </label>
             </div>
           </div>
@@ -157,10 +159,10 @@ export default function TwitchConfig({
 
         {/* GLOBAL TEMPLATES */}
         <div className="yt-config-block">
-          <div className="small text-uppercase text-muted fw-semibold mb-2">Global Template</div>
+          <div className="small text-uppercase text-muted fw-semibold mb-2">{t('gamesSocials.twitch.sections.globalTemplate')}</div>
           
           <div className="mb-2">
-            <label className="form-label small fw-semibold mb-1">Live Stream</label>
+            <label className="form-label small fw-semibold mb-1">{t('gamesSocials.twitch.fields.liveStream')}</label>
             <textarea 
               rows={7} 
               className="form-control form-control-sm" 
@@ -170,13 +172,13 @@ export default function TwitchConfig({
           </div>
           
           <div className="form-text tiny mt-2">
-            Placeholders: {TEMPLATE_PLACEHOLDERS.twitch.join(' ')}
+            {t('gamesSocials.common.placeholders')}: {TEMPLATE_PLACEHOLDERS.twitch.join(' ')}
           </div>
         </div>
 
         {/* TEMPLATE PREVIEW */}
         <div className="yt-config-block">
-          <div className="small text-uppercase text-muted fw-semibold mb-2">Template Preview</div>
+          <div className="small text-uppercase text-muted fw-semibold mb-2">{t('gamesSocials.twitch.sections.templatePreview')}</div>
           
           <div className="mb-2">
             <TemplatePreview 
@@ -189,7 +191,7 @@ export default function TwitchConfig({
           </div>
           
           <div className="form-text tiny mt-2">
-            Placeholders: {TEMPLATE_PLACEHOLDERS.twitch.join(' ')}
+            {t('gamesSocials.common.placeholders')}: {TEMPLATE_PLACEHOLDERS.twitch.join(' ')}
           </div>
         </div>
       </div>
@@ -198,10 +200,10 @@ export default function TwitchConfig({
       <div className="yt-config-block mt-3">
         <div className="d-flex flex-wrap align-items-end gap-2 mb-3">
           <div style={{flex: '1 1 260px'}}>
-            <label className="form-label small fw-semibold mb-1">Add Streamer (username / URL)</label>
+            <label className="form-label small fw-semibold mb-1">{t('gamesSocials.twitch.streamers.addLabel')}</label>
             <input 
               className="form-control form-control-sm" 
-              placeholder="username, https://twitch.tv/username" 
+              placeholder={t('gamesSocials.twitch.streamers.addPlaceholder')} 
               value={newStreamerId} 
               onChange={e => setNewStreamerId(e.target.value)} 
               onKeyDown={e => { 
@@ -218,13 +220,13 @@ export default function TwitchConfig({
             onClick={addStreamer} 
             disabled={!newStreamerId.trim() || resolving}
           >
-            <i className="fa-solid fa-plus" /> {resolving ? 'Resolving...' : 'Add'}
+            <i className="fa-solid fa-plus" /> {resolving ? t('gamesSocials.common.resolving') : t('common.add')}
           </button>
         </div>
 
         <ul className="yt-channel-list list-unstyled m-0 p-0">
           {(!Array.isArray(config.streamers) || config.streamers.length === 0) && (
-            <li className="text-muted small py-2">No streamers added yet.</li>
+            <li className="text-muted small py-2">{t('gamesSocials.twitch.streamers.empty')}</li>
           )}
           
           {Array.isArray(config.streamers) && config.streamers.map(username => {
@@ -240,7 +242,7 @@ export default function TwitchConfig({
                       <code className="small text-muted">{username}</code>
                       <input 
                         className="form-control form-control-sm flex-grow-1" 
-                        placeholder="Display Name" 
+                        placeholder={t('gamesSocials.common.namePlaceholder')} 
                         value={name} 
                         onChange={e => onChange({
                           ...config,
@@ -257,7 +259,7 @@ export default function TwitchConfig({
                     <button 
                       type="button" 
                       className="btn btn-icon btn-xs" 
-                      title="Edit per-streamer templates" 
+                      title={t('gamesSocials.twitch.streamers.editTitle')} 
                       onClick={() => setEditingStreamer(p => p === username ? null : username)}
                     >
                       <i className="fa-solid fa-pen" />
@@ -267,7 +269,7 @@ export default function TwitchConfig({
                       <button 
                         type="button" 
                         className="btn btn-icon btn-xs" 
-                        title="Fetch streamer name" 
+                        title={t('gamesSocials.twitch.streamers.fetchTitle')} 
                         onClick={async () => {
                           try { 
                             setResolving(true); 
@@ -294,7 +296,7 @@ export default function TwitchConfig({
                     <button 
                       type="button" 
                       className="btn btn-icon btn-xs text-danger" 
-                      title="Remove" 
+                      title={t('gamesSocials.common.remove')} 
                       onClick={() => removeStreamer(username)}
                     >
                       <i className="fa-solid fa-trash" />
@@ -306,7 +308,7 @@ export default function TwitchConfig({
                   <div className="yt-channel-edit mt-2">
                     <div className="row g-2">
                       <div className="col-md-12">
-                        <label className="form-label tiny fw-semibold mb-1">Live Template</label>
+                        <label className="form-label tiny fw-semibold mb-1">{t('gamesSocials.twitch.streamers.liveTemplate')}</label>
                         <textarea 
                           rows={2} 
                           className="form-control form-control-sm" 
@@ -342,14 +344,14 @@ export default function TwitchConfig({
                           onChange({ ...config, streamerMessages: sm }); 
                         }}
                       >
-                        Clear Overrides
+                        {t('gamesSocials.common.clearOverrides')}
                       </button>
                       <button 
                         type="button" 
                         className="btn btn-sm btn-outline-light" 
                         onClick={() => setEditingStreamer(null)}
                       >
-                        Close
+                        {t('common.close')}
                       </button>
                     </div>
                   </div>

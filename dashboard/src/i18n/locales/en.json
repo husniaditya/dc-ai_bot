@@ -1,0 +1,1843 @@
+{
+  "common": {
+    "save": "Save",
+    "reset": "Reset",
+    "cancel": "Cancel",
+    "create": "Create",
+    "delete": "Delete",
+    "edit": "Edit",
+    "add": "Add",
+    "loading": "Loading...",
+    "lastLoad": "Last updated",
+    "saving": "Saving...",
+    "creating": "Creating...",
+    "updating": "Updating...",
+    "success": "Success",
+    "error": "Error",
+    "warning": "Warning",
+    "info": "Info",
+    "yes": "Yes",
+    "no": "No",
+    "enabled": "Enabled",
+    "disabled": "Disabled",
+    "name": "Name",
+    "description": "Description",
+    "actions": "Actions",
+    "settings": "Settings",
+    "search": "Search",
+    "filter": "Filter",
+    "clear": "Clear",
+    "apply": "Apply",
+    "close": "Close",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "unsaved": "Unsaved",
+    "unsavedChanges": "Unsaved Changes",
+    "notAvailable": "N/A",
+    "refresh": "Refresh analytics",
+    "na": "N/A",
+    "none": "None",
+    "noMatches": "No matches",
+    "invalidData": "Invalid data",
+    "unknown": "Unknown",
+    "update": "Update",
+    "editRule": "Edit Rule",
+    "deleteRule": "Delete Rule",
+    "editWord": "Edit Word",
+    "deleteWord": "Delete Word",
+    "editPattern": "Edit Pattern",
+    "deletePattern": "Delete Pattern"
+  },
+  "navigation": {
+    "dashboard": "Dashboard",
+    "changeServer": "Change server",
+    "selectServer": "Select a Server",
+    "overview": "Overview",
+    "autos": "Auto Responses",
+    "commands": "Commands",
+    "personal": "Bot Personalization",
+    "moderation": "Moderation",
+    "games": "Games & Socials",
+    "settings": "Settings",
+    "logout": "Logout",
+    "signOut": "Sign out",
+    "collapseSidebar": "Collapse sidebar",
+    "expandSidebar": "Expand sidebar",
+    "toggleTheme": "Toggle light / dark theme",
+    "openMenu": "Open menu"
+  },
+  "settings": {
+    "title": "Server Settings",
+    "subtitle": "Configure your server preferences and behavior",
+    "loadingTitle": "Loading Server Settings",
+    "loadingMessage": "Fetching your server configuration and preferences...",
+    "selectServerFirst": "Select a server first.",
+    "autoReply": {
+      "enabled": "Auto Reply Enabled",
+      "cooldown": "Auto Reply Cooldown (ms)",
+      "cooldownHelp": "Minimum time between auto replies in milliseconds"
+    },
+    "language": {
+      "label": "Language",
+      "help": "Default language for bot responses and dashboard interface",
+      "changeNote": "Dashboard language will change after saving settings",
+      "saved": "Language setting saved successfully",
+      "saveFailed": "Failed to save language setting",
+      "changedTo": "Language changed to {{language}}"
+    },
+    "timezone": {
+      "label": "Timezone",
+      "placeholder": "Type to search (e.g. Jakarta, UTC+07)",
+      "help": "Type to filter. Saved value: {{value}}",
+      "searchHelp": "Type to search for your timezone"
+    },
+    "hourFormat": {
+      "label": "Hour Format",
+      "24hour": "24 Hour",
+      "12hour": "12 Hour"
+    },
+    "slashCommands": {
+      "enabled": "Enable Slash Commands",
+      "help": "Allow users to use slash commands"
+    },
+    "preview": {
+      "title": "Preview",
+      "sampleTimestamp": "Example timestamp: {{timestamp}}",
+      "help": "Adjust settings then save. Future AI responses may honor language & local time."
+    },
+    "messages": {
+      "saved": "Settings saved",
+      "saveFailed": "Save failed",
+      "resetConfirm": "Are you sure you want to reset all changes?",
+      "unsavedChanges": "You have unsaved changes. Are you sure you want to leave?"
+    }
+  },
+  "auth": {
+    "login": "Login",
+    "logout": "Logout",
+    "loginWithDiscord": "Login with Discord",
+    "loggingIn": "Logging in...",
+    "welcomeBack": "Welcome back!",
+    "loginRequired": "Please login to continue",
+    "sessionExpired": "Your session has expired. Please login again."
+  },
+  "errors": {
+    "general": "An error occurred. Please try again.",
+    "network": "Network error. Please check your connection.",
+    "unauthorized": "You are not authorized to perform this action.",
+    "forbidden": "Access denied.",
+    "notFound": "The requested resource was not found.",
+    "serverError": "Server error. Please try again later.",
+    "validationFailed": "Validation failed. Please check your input.",
+    "timeout": "Request timeout. Please try again."
+  },
+  "loading": {
+    "pleaseWait": "Please wait...",
+    "fetchingData": "Fetching data...",
+    "processing": "Processing...",
+    "almostDone": "Almost done..."
+  },
+  "languages": {
+    "en": "English",
+    "id": "Indonesian",
+    "es": "Spanish",
+    "fr": "French",
+    "de": "German",
+    "ja": "Japanese",
+    "cn": "Chinese (Traditional)"
+  },
+  "overview": {
+    "title": "Server Overview",
+    "subtitle": "Dashboard overview and server statistics",
+    "activityDashboardTitle": "Activity Dashboard",
+    "serverInfo": "Server Information",
+    "botStatus": "Bot Status",
+    "quickActions": "Quick Actions",
+    "quickStats": "Quick Statistics",
+    "autosEnabled": "Autos Enabled",
+    "commandsEnabled": "Commands Enabled",
+    "guildMembers": "Guild Members",
+    "commandsToday": "Commands Today",
+    "totalAutos": "Total Autos",
+    "enabled": "Enabled",
+    "disabled": "Disabled",
+    "featureStatus": "Feature Status",
+    "coreFeatures": "Core Features",
+    "advancedFeatures": "Advanced Features",
+    "welcomeSystem": "Welcome System",
+    "roleManagement": "Role Management",
+    "xpLeveling": "XP & Leveling",
+    "scheduler": "Scheduler",
+    "autoModeration": "Auto Moderation",
+    "antiRaid": "Anti-Raid",
+    "auditLogging": "Audit Logging",
+    "active": "Active",
+    "partial": "Partial",
+    "unknown": "Unknown",
+    "status": {
+      "enabled": "Enabled",
+      "disabled": "Disabled",
+      "active": "Active",
+      "partial": "Partial",
+      "unknown": "Unknown"
+    },
+    "apiStatus": {
+      "geminiAi": "Gemini AI",
+      "discord": "Discord",
+      "database": "Database",
+      "uptime": "Uptime",
+      "memory": "Memory",
+      "errorsHour": "Errors/Hour",
+      "cacheHit": "Cache Hit",
+      "ready": "Ready",
+      "down": "Down",
+      "on": "On",
+      "off": "Off",
+      "lastHour": "last hour",
+      "entries": "entries",
+      "used": "used"
+    },
+    "charts": {
+      "loadingCharts": "Loading charts…",
+      "stackedBarDescription": "Stacked bar compares enabled vs disabled for autos and commands.",
+      "count": "Count",
+      "categories": {
+        "autos": "Autos",
+        "commands": "Commands"
+      },
+      "days": {
+        "sun": "Sun",
+        "mon": "Mon",
+        "tue": "Tue",
+        "wed": "Wed",
+        "thu": "Thu",
+        "fri": "Fri",
+        "sat": "Sat"
+      },
+      "commandActivity": "Command Activity (7 days)",
+      "noData": "No data available"
+    },
+    "loadingAnalytics": "Loading analytics…",
+    "of": "of",
+    "serverInformation": "Server Information",
+    "activityStreamTitle": "Recent Activity Stream",
+    "topCommands24h": "Top Commands (24h)",
+    "total": "total",
+    "executions": "executions",
+    "avg": "avg",
+    "topCommandsEmpty": "No commands executed in the last 24 hours.",
+    "systemStatusTitle": "System Status",
+    "antiRaidProtectionTitle": "Anti-Raid Protection",
+    "last24Hours": "Last 24 Hours",
+    "joinPatternLast6Hours": "Join Pattern (Last 6 Hours)",
+    "securityTrendsTitle": "Security Trends & Member Safety",
+    "badges": {
+      "todayCount": "{{count}} today"
+    },
+    "time": {
+      "hoursAgo": "{{count}}h ago",
+      "now": "Now",
+      "secondsShort": "s",
+      "days": "day(s)"
+    },
+    "performanceMetrics": "Performance Metrics",
+    "guildInfo": {
+      "members": "members",
+      "online": "Online",
+      "today": "Today",
+      "roles": "Roles",
+      "newMembersToday": "+{count}"
+    },
+    "metrics": {
+      "apiResponse": "API Response",
+      "excellent": "Excellent",
+      "good": "Good",
+      "slow": "Slow",
+      "commandUsage": "Command Usage",
+      "highActivity": "High activity",
+      "moderateActivity": "Moderate activity",
+      "lowActivity": "Low activity",
+      "errorRate": "Error Rate",
+      "systemHealth": "System Health",
+      "optimal": "Optimal",
+      "degraded": "Degraded",
+      "critical": "Critical",
+      "successRate": "Success Rate",
+      "cpuUsage": "CPU Usage",
+      "improvement": "improvement",
+      "normalLoad": "Normal load",
+      "yesterdayChange": "-12ms from yesterday",
+      "newToday": "new today"
+    },
+    "activeUsers": "Active Users",
+    "recentActivityStream": "Recent Activity Stream",
+    "systemHealth": {
+      "botOnline": "Bot Online",
+      "database": "Database",
+      "aiServices": "AI Services",
+      "cacheSystem": "Cache System",
+      "systemHealthScore": "System Health Score",
+      "status": {
+        "active": "Active",
+        "connected": "Connected",
+        "operational": "Operational",
+        "warming": "Warming"
+      }
+    },
+    "security": {
+      "protectionStatus": "Protection Status",
+      "raidsBlocked": "Raids Blocked",
+      "suspicious": "Suspicious",
+      "legitimate": "Legitimate",
+      "filterEffectiveness": "Filter Effectiveness",
+      "filters": {
+        "spam": "Spam",
+        "links": "Links",
+        "caps": "Caps",
+        "profanity": "Profanity",
+        "invites": "Invites",
+        "mentions": "Mentions"
+      },
+      "actionsTaken": "Actions Taken",
+      "securityScore": "Security Score",
+      "cleanMembers": "Clean Members",
+      "warnedUsers": "Warned Users",
+      "bannedToday": "Banned Today",
+      "newMembers": "New Members",
+      "joins": "Joins",
+      "joinRateLimit": "Join Rate Limit",
+      "minAccountAgeLabel": "Min Account Age",
+      "violationsCaught": "Violations Caught",
+      "violationsCaught24h": "Violations Caught (24h)",
+      "securityEventsLast7d": "Security Events (Last 7 Days)",
+      "excellentProtection": "Excellent Protection",
+      "actions": {
+        "actions": "Actions",
+        "delete": "Delete",
+        "warn": "Warn",
+        "mute": "Mute",
+        "kick": "Kick",
+        "ban": "Ban"
+      },
+      "thisWeek": "this week",
+      "noDataThisWeek": "No data this week"
+    },
+    "activityStream": {
+      "noActivityMessage": "No recent activity found. Commands will appear here as they are executed.",
+      "recent": "recent",
+      "discordServer": "Discord Server",
+      "unknownGuild": "Unknown Guild",
+      "byUser": "by {{user}}",
+      "now": "Now"
+    },
+    "sampleActivity": {
+      "schedulerUsed": "/scheduler used",
+      "autoReplyTriggered": "Auto-reply triggered",
+      "pingExecuted": "/ping executed",
+      "welcomeMessageSent": "Welcome message sent",
+      "helpRequested": "/help requested"
+    }
+  },
+  "autoResponses": {
+    "title": "Auto Responses",
+    "subtitle": "Manage automatic bot responses",
+    "enabled": "Auto responses enabled",
+    "disabled": "Auto responses disabled",
+    "cooldown": "Response cooldown",
+    "addResponse": "Add Response",
+    "editResponse": "Edit Response",
+    "deleteResponse": "Delete Response"
+  },
+  "autosSection": {
+    "loadingTitle": "Loading Auto Responses",
+    "loadingMessage": "Fetching your server's auto response patterns and settings...",
+    "regexTester": {
+      "open": "Regex Tester",
+      "close": "Close Tester",
+      "pattern": "Pattern",
+      "flags": "Flags",
+      "sampleLabel": "Sample Text (multi-line)",
+      "samplePlaceholder": "hello world\nHi there",
+      "run": "Run",
+      "empty": "empty",
+      "error": "Regex error: {{error}}"
+    },
+    "bulk": {
+      "selectedCount": "Selected: {{count}}",
+      "enable": "Enable",
+      "disable": "Disable",
+      "enableSelected": "Enable selected",
+      "disableSelected": "Disable selected",
+      "deleteSelected": "Delete selected",
+      "clearSelection": "Clear selection",
+      "selectAllFiltered": "Select all filtered",
+      "rows": "Rows"
+    },
+    "columns": {
+      "select": "Select",
+      "key": "Key",
+      "pattern": "Pattern",
+      "flags": "Flags",
+      "replies": "Replies",
+      "enabled": "On"
+    },
+    "pagination": {
+      "rows": "Rows",
+      "prevPage": "Previous page",
+      "nextPage": "Next page",
+      "page": "Page {{page}} / {{total}}",
+      "showing": "Showing {{count}} of {{filtered}} filtered (total {{total}})"
+    },
+    "empty": "No auto responses match your search.",
+    "confirm": {
+      "deleteSelected": "Delete {{count}} selected?",
+      "deleteOne": "Delete {{key}}?"
+    },
+    "toasts": {
+      "bulkEnabled": "Enabled selected",
+      "bulkDisabled": "Disabled selected",
+      "bulkDeleted": "Deleted selected",
+      "deleted": "Deleted",
+      "saved": "Auto response saved"
+    },
+    "modal": {
+      "titleAdd": "Add Auto Response",
+      "titleEdit": "Edit Auto Response",
+      "key": "Key",
+      "keyHelpUnique": "unique id",
+      "keyPlaceholder": "greet",
+      "keyNoSpaces": "No spaces.",
+      "pattern": "Regex Pattern",
+      "patternPlaceholder": "^hello|hi",
+      "flags": "Flags",
+      "flagsPlaceholder": "i",
+      "replies": "Replies",
+      "repliesHelp": "one per line",
+      "repliesPlaceholder": "Hello there!\nHi!",
+      "enabled": "Enabled",
+      "footerNote": "Bot picks one reply randomly."
+    }
+  },
+  "commands": {
+    "title": "Commands",
+    "subtitle": "Manage bot commands and permissions",
+    "slashCommands": "Slash Commands",
+    "prefixCommands": "Prefix Commands",
+    "permissions": "Command Permissions",
+    "enableAll": "Enable All",
+    "disableAll": "Disable All",
+    "section": {
+      "commandOne": "1 command",
+      "commandMany": "{{count}} commands",
+      "requiresManage": "Requires Manage Server permission",
+      "alwaysActive": "Always Active",
+      "updatedBy": "Updated by {{user}}",
+      "readOnly": "Read-only",
+      "passive": "Passive",
+      "bottomNote": "Some commands are always-on or require specific permissions to toggle.",
+      "unknownUser": "Unknown"
+    },
+    "groups": {
+      "core": {
+        "title": "Core"
+      },
+      "ai": {
+        "title": "AI & Language"
+      },
+      "polls": {
+        "title": "Polls"
+      },
+      "utilities": {
+        "title": "Utilities"
+      },
+      "xp": {
+        "title": "XP & Leveling"
+      },
+      "roles": {
+        "title": "Roles & Self-Assignment"
+      },
+      "moderation": {
+        "title": "Moderation & Security"
+      },
+      "passive": {
+        "title": "Passive / Automation"
+      },
+      "scheduler": {
+        "title": "Scheduler"
+      },
+      "streaming": {
+        "title": "Streaming Integration"
+      }
+    },
+    "toasts": {
+      "enabled": "Command \"{{name}}\" enabled",
+      "disabled": "Command \"{{name}}\" disabled",
+      "toggleFailed": "Failed to update {{name}}"
+    },
+    "items": {
+      "ping": {
+        "usage": "/ping",
+        "desc": "Health check – replies with Pong."
+      },
+      "uptime": {
+        "usage": "/uptime",
+        "desc": "Shows bot process uptime."
+      },
+      "whoami": {
+        "usage": "/whoami",
+        "desc": "Shows your user tag & id."
+      },
+      "echo": {
+        "usage": "/echo <text>",
+        "desc": "Replies with the same text."
+      },
+      "help": {
+        "usage": "/help",
+        "desc": "Interactive category help menu."
+      },
+      "ask": {
+        "usage": "/ask prompt:<text>",
+        "desc": "Ask AI a question (cached 3 min)."
+      },
+      "askfollow": {
+        "usage": "/askfollow prompt:<text>",
+        "desc": "Follow-up using recent conversation context."
+      },
+      "explain_image": {
+        "usage": "/explain_image image(1-3) [prompt]",
+        "desc": "Explain up to 3 images with optional prompt."
+      },
+      "summarize": {
+        "usage": "/summarize [count]",
+        "desc": "Summarize last messages (default 30)."
+      },
+      "translate": {
+        "usage": "/translate text target",
+        "desc": "Translate text into the target language."
+      },
+      "poll create": {
+        "usage": "/poll create question options",
+        "desc": "Create a poll (up to 5 options)."
+      },
+      "poll results": {
+        "usage": "/poll results id",
+        "desc": "Show results for a poll id."
+      },
+      "math": {
+        "usage": "/math add|sub|mul|div a b",
+        "desc": "Basic arithmetic operations."
+      },
+      "user info": {
+        "usage": "/user info [target]",
+        "desc": "Lookup Discord user info."
+      },
+      "remind": {
+        "usage": "/remind minutes text",
+        "desc": "Schedule a reminder DM or channel."
+      },
+      "meme": {
+        "usage": "/meme",
+        "desc": "Random meme image from meme-api.com."
+      },
+      "level": {
+        "usage": "/level [user]",
+        "desc": "Check your level or someone else's XP level."
+      },
+      "xp": {
+        "usage": "/xp check|leaderboard [user]",
+        "desc": "Check XP or view server leaderboard."
+      },
+      "rank": {
+        "usage": "/rank [user]",
+        "desc": "Check your rank in the server."
+      },
+      "leaderboard": {
+        "usage": "/leaderboard [limit]",
+        "desc": "Show the server XP leaderboard."
+      },
+      "xpadmin": {
+        "usage": "/xpadmin give|remove|set <user> <amount>",
+        "desc": "Manage user XP (requires Manage Server)."
+      },
+      "role list": {
+        "usage": "/role list",
+        "desc": "Show all available self-assignable roles."
+      },
+      "role menu": {
+        "usage": "/role menu",
+        "desc": "Interactive role selection menu (ephemeral)."
+      },
+      "role add": {
+        "usage": "/role add <role> [user]",
+        "desc": "Add a self-assignable role to yourself or another user."
+      },
+      "role remove": {
+        "usage": "/role remove <role> [user]",
+        "desc": "Remove a self-assignable role from yourself or another user."
+      },
+      "role setup": {
+        "usage": "/role setup <action> <role> [options]",
+        "desc": "Configure self-assignable roles (requires Manage Roles)."
+      },
+      "role toggle": {
+        "usage": "/role toggle <command_name>",
+        "desc": "Enable/disable a role command (requires Manage Roles)."
+      },
+      "automod list": {
+        "usage": "/automod list",
+        "desc": "Show all configured automod rules."
+      },
+      "automod info": {
+        "usage": "/automod info <id>",
+        "desc": "View detailed info for an automod rule."
+      },
+      "automod toggle": {
+        "usage": "/automod toggle <id> <enabled>",
+        "desc": "Enable/disable an automod rule (requires Manage Server)."
+      },
+      "antiraid status": {
+        "usage": "/antiraid status",
+        "desc": "View current anti-raid protection status."
+      },
+      "antiraid toggle": {
+        "usage": "/antiraid toggle <enabled>",
+        "desc": "Enable/disable anti-raid protection (requires Manage Server)."
+      },
+      "audit recent": {
+        "usage": "/audit recent",
+        "desc": "View recent moderation actions (requires Manage Server)."
+      },
+      "autoreply": {
+        "usage": "(passive)",
+        "desc": "Automatic replies based on configured patterns."
+      },
+      "welcome preview": {
+        "usage": "/welcome preview",
+        "desc": "Preview current welcome message configuration."
+      },
+      "welcome toggle": {
+        "usage": "/welcome toggle <enabled>",
+        "desc": "Enable/disable welcome system (requires Manage Server)."
+      },
+      "automod": {
+        "usage": "(passive)",
+        "desc": "Automatic moderation for spam, caps, links, and profanity."
+      },
+      "audit logs": {
+        "usage": "(passive)",
+        "desc": "Track all moderation actions and server changes."
+      },
+      "anti-raid": {
+        "usage": "(passive)",
+        "desc": "Protection against raids and mass join attacks."
+      },
+      "scheduler list": {
+        "usage": "/scheduler list",
+        "desc": "List all scheduled messages."
+      },
+      "scheduler info": {
+        "usage": "/scheduler info <id>",
+        "desc": "View detailed info for a scheduled message."
+      },
+      "scheduler enable": {
+        "usage": "/scheduler enable <id>",
+        "desc": "Enable a scheduled message (requires Manage Server)."
+      },
+      "scheduler disable": {
+        "usage": "/scheduler disable <id>",
+        "desc": "Disable a scheduled message (requires Manage Server)."
+      },
+      "scheduler run": {
+        "usage": "/scheduler run <id>",
+        "desc": "Manually trigger a scheduled message now (requires Manage Server)."
+      },
+      "ytwatch": {
+        "usage": "/ytwatch action:<enable|disable|addchannel|removechannel|announcechannel|mentionrole|interval|status>",
+        "desc": "Manage YouTube notifications (requires Manage Server)."
+      },
+      "ytstats": {
+        "usage": "/ytstats",
+        "desc": "Show YouTube watcher cache & quota stats."
+      },
+      "ytdebug": {
+        "usage": "/ytdebug",
+        "desc": "Show recent YouTube watcher debug events (requires Manage Server)."
+      },
+      "twitchstats": {
+        "usage": "/twitchstats",
+        "desc": "Show Twitch watcher cache & API stats."
+      },
+      "twitchdebug": {
+        "usage": "/twitchdebug action:<config|status|test|resolve>",
+        "desc": "Debug Twitch integration and test notifications."
+      }
+    }
+  },
+  "personalization": {
+    "title": "Bot Personalization",
+    "subtitle": "Customize your bot's appearance and behavior",
+    "fields": {
+      "nickname": "Bot Nickname (guild only)",
+      "nicknamePlaceholder": "Leave blank to keep current",
+      "activityType": "Activity Type",
+      "activityText": "Activity Text",
+      "activityTextPlaceholder": "e.g. with your messages",
+      "status": "Status",
+      "avatar": "Avatar Image",
+      "preview": "Live Preview",
+      "permissionsNote": "Nickname & avatar require bot permissions; activity applies globally per shard if implemented.",
+      "currentBotName": "Current Bot Name",
+      "defaultStatus": "Default status",
+      "noActivity": "No activity set",
+      "previewNote": "This preview updates instantly with your unsaved changes."
+    },
+    "activityTypes": {
+      "none": "(none)",
+      "playing": "Playing",
+      "listening": "Listening",
+      "watching": "Watching",
+      "competing": "Competing"
+    },
+    "statuses": {
+      "default": "(default)",
+      "online": "Online",
+      "idle": "Idle",
+      "dnd": "Do Not Disturb",
+      "invisible": "Invisible"
+    },
+    "toasts": {
+      "saved": "Bot personalization saved",
+      "saveFailed": "Save failed"
+    },
+    "avatar": "Bot Avatar",
+    "nickname": "Bot Nickname",
+    "status": "Bot Status",
+    "embedColor": "Embed Color",
+    "prefix": "Command Prefix"
+  },
+  "moderation": {
+    "title": "Moderation",
+    "subtitle": "Configure moderation tools and settings",
+    "automod": "Auto Moderation",
+    "warnings": "Warning System",
+    "roles": "Role Management",
+    "logging": "Audit Logging",
+    "loading": {
+      "title": "Loading Moderation",
+      "message": "Fetching moderation features and configuration..."
+    },
+    "badge": {
+      "enabledOfTotal": "{{enabled}} of {{total}} enabled"
+    },
+    "overview": {
+      "title": "Moderation Overview",
+      "desc": "Toggle protection features and configure settings for your community. Stronger protection may require more configuration.",
+      "protectionLevel": "Protection Level",
+      "complete": "complete"
+    },
+    "common": {
+      "enabled": "{{feature}} enabled",
+      "disabled": "{{feature}} disabled",
+      "enableFailed": "Failed to enable feature",
+      "disableFailed": "Failed to disable feature",
+      "loadFailedGeneric": "Failed to load moderation data",
+      "loadFailed": "Failed to load {{feature}} settings",
+      "saveSuccess": "{{feature}} settings saved",
+      "saveFailed": "Failed to save {{feature}} settings"
+    },
+    "modal": {
+      "title": "{{feature}} Settings",
+      "loading": "Loading configuration...",
+      "loadingHelp": "Fetching current settings for this feature",
+      "saving": "Saving changes...",
+      "savingHelp": "Applying changes and updating server configuration",
+      "savingShort": "Saving...",
+      "saveChanges": "Save Changes"
+    },
+    "features": {
+      "roles": {
+        "header": "Role Management",
+        "badge": "Self-assign",
+        "tabs": {
+          "reaction": "Reaction Roles",
+          "slash": "Slash Commands"
+        },
+        "table": {
+          "status": "Status",
+          "title": "Title",
+          "channel": "Channel",
+          "message": "Message",
+          "reactions": "Reactions",
+          "roles": "Roles",
+          "actions": "Actions"
+        },
+        "reaction": {
+          "header": "Reaction Role Configurations",
+          "loading": "Loading reaction roles...",
+          "empty": "No reaction roles configured.",
+          "labels": {
+            "botMessage": "Bot Message",
+            "userMessage": "User Message"
+          },
+          "info": {
+            "title": "How It Works",
+            "description": "Reaction roles allow users to self-assign roles by reacting to messages. Users can react to the configured emojis to add or remove the associated roles.",
+            "types": {
+              "title": "Reaction Types:",
+              "toggle": "Toggle - Users can add or remove the role by reacting",
+              "addOnly": "Add Only - Users can only add the role, removing the reaction doesn't remove the role",
+              "removeOnly": "Remove Only - Users can only remove the role by reacting"
+            }
+          },
+          "form": {
+            "status": "Enable Reaction Role",
+            "title": "Title",
+            "titlePlaceholder": "Enter a title for this reaction role",
+            "titleHelp": "A descriptive title to help identify this reaction role",
+            "channel": "Channel",
+            "channelPlaceholder": "Select a channel...",
+            "messageId": "Message ID",
+            "messageIdReadOnly": "Message ID is read-only when editing",
+            "messageIdTooltip": "Message ID cannot be changed when editing",
+            "customMessage": "Custom Message",
+            "customMessagePlaceholder": "React to get your roles!",
+            "customMessageHelp": {
+              "editing": "The message content for this reaction role",
+              "creating": "The message content that will be posted by the bot"
+            },
+            "reactions": "Reactions",
+            "emoji": "Emoji",
+            "emojiPlaceholder": "🎮 or :custom_emoji:",
+            "role": "Role",
+            "rolePlaceholder": "Select role...",
+            "type": "Type",
+            "typeOptions": {
+              "toggle": "Toggle",
+              "add_only": "Add Only",
+              "remove_only": "Remove Only"
+            },
+            "previewSelectRole": "Select a role"
+          },
+          "buttons": {
+            "add": "Add Reaction Role",
+            "addReaction": "Add Reaction",
+            "removeReaction": "Remove reaction",
+            "removeReactionDisabled": "Cannot remove the last reaction"
+          },
+          "emojiPicker": {
+            "title": "Select Emoji",
+            "serverEmojis": "Server Emojis",
+            "commonEmojis": "Common Emojis"
+          },
+          "delete": {
+            "title": "Delete Reaction Role Message",
+            "message": "Are you sure you want to delete the reaction role message \"{{title}}\"?",
+            "warning": "This will remove all associated reactions and cannot be undone.",
+            "confirm": "Delete Message"
+          },
+          "toasts": {
+            "created": "Reaction role \"{{title}}\" created successfully!",
+            "updated": "Reaction role \"{{title}}\" updated successfully!",
+            "deleteSuccess": "Reaction role message deleted successfully",
+            "deleteFailed": "Failed to delete reaction role message",
+            "statusEnabled": "Reaction role enabled",
+            "statusDisabled": "Reaction role disabled",
+            "statusFailed": "Failed to update reaction role status",
+            "loadFailed": "Failed to load reaction roles"
+          }
+        },
+        "slash": {
+          "header": "Slash Command Roles",
+          "subtitle": "Configure custom slash commands for role management",
+          "loading": "Loading slash command roles...",
+          "empty": "No slash command roles configured.",
+          "anyChannel": "Any Channel",
+          "info": {
+            "title": "How It Works",
+            "description": "Users can use these custom slash commands to manage their roles. Each command can be configured with specific roles and behavior.",
+            "types": {
+              "title": "Command Types:",
+              "toggle": "Toggle - Users can add or remove the role",
+              "add": "Add Only - Users can only add the role",
+              "remove": "Remove Only - Users can only remove the role"
+            }
+          },
+          "buttons": {
+            "add": "Add Slash Command",
+            "addRole": "Add Role"
+          },
+          "form": {
+            "addTitle": "Add New Slash Command",
+            "editTitle": "Edit Slash Command",
+            "title": "Title",
+            "titlePlaceholder": "e.g. assign-role",
+            "description": "Description",
+            "descriptionPlaceholder": "Command description",
+            "channel": "Channel (Optional)",
+            "channelPlaceholder": "Any Channel",
+            "roles": "Roles",
+            "selectRole": "Select a role...",
+            "type": "Type",
+            "typeOptions": {
+              "toggle": "Toggle",
+              "add": "Add Only",
+              "remove": "Remove Only"
+            },
+            "requirePermission": "Require Permission",
+            "updateCommand": "Update Command",
+            "createCommand": "Create Command"
+          },
+          "delete": {
+            "title": "Delete Slash Command",
+            "message": "Are you sure you want to delete the slash command \"{{name}}\"?",
+            "warning": "This will permanently remove the command and all its configurations. Users will no longer be able to use this command.",
+            "confirm": "Delete Command"
+          },
+          "toasts": {
+            "created": "Slash command role created successfully!",
+            "updated": "Slash command role updated successfully!",
+            "statusEnabled": "Slash command enabled",
+            "statusDisabled": "Slash command disabled",
+            "deleteSuccess": "Slash command deleted successfully",
+            "deleteFailed": "Failed to delete command",
+            "fetchFailed": "Failed to fetch slash command roles",
+            "toggleFailed": "Failed to toggle command status"
+          }
+        }
+      },
+      "automod": {
+        "header": "Auto Moderation",
+        "badge": "Protection",
+        "info": {
+          "pre": "Global spam, link, and malicious URL detection integrates with third-party reputation sources like"
+        },
+        "globalLog": {
+          "label": "Global Log Channel",
+          "desc": "Default channel to send AutoMod logs when a rule doesn't specify a channel",
+          "placeholder": "Select a log channel (optional)"
+        },
+        "placeholders": {
+          "addChannels": "Add channels",
+          "addRoles": "Add roles"
+        },
+        "meta": {
+          "channel": "channel",
+          "role": "role"
+        },
+        "rules": {
+          "header": "Rules",
+          "subheader": "Create rules to detect spam, caps, links, profanity, and more.",
+          "add": "Add Rule",
+          "loading": "Loading rules...",
+          "empty": "No rules yet",
+          "emptyCta": "Click Add Rule to create your first rule.",
+          "editTitle": "Edit Auto Moderation Rule",
+          "createTitle": "Create New Auto Moderation Rule",
+          "creating": "Creating rule...",
+          "updating": "Updating rule...",
+          "creatingShort": "Creating...",
+          "updatingShort": "Updating...",
+          "createBtn": "Create Rule",
+          "updateBtn": "Update Rule",
+          "form": {
+            "name": "Rule Name",
+            "namePlaceholder": "e.g., Spam Protection",
+            "trigger": "Trigger Type",
+            "action": "Action Type",
+            "threshold": "Warning Threshold Value",
+            "thresholdPlaceholder": "5",
+            "thresholdHelp": "Number of violations before action is taken (Warn to user)",
+            "duration": "Duration (minutes)",
+            "durationPlaceholder": "10",
+            "durationHelp": "Duration for mute/ban actions (leave empty for permanent)",
+            "logChannel": "Log Channel",
+            "logChannelPlaceholder": "Use global log channel",
+            "messageAction": "Message Action",
+            "messageActionHelp": "Action to take on violating messages",
+            "whitelistChannels": "Whitelist Channels",
+            "whitelistChannelsHelp": "Channels where this rule won't apply",
+            "whitelistRoles": "Whitelist Roles",
+            "whitelistRolesHelp": "Roles that bypass this specific rule"
+          }
+        },
+        "triggers": {
+          "spam": {
+            "label": "Spam Detection",
+            "description": "Detect repeated messages and spam patterns"
+          },
+          "caps": {
+            "label": "Excessive Caps",
+            "description": "Filter messages with too many capital letters"
+          },
+          "links": {
+            "label": "Link Filter",
+            "description": "Scan and block malicious links and URLs"
+          },
+          "invite_links": {
+            "label": "Invite Links",
+            "description": "Scan and block malicious Discord invite links"
+          },
+          "profanity": {
+            "label": "Profanity Filter",
+            "description": "Filter inappropriate language"
+          },
+          "mention_spam": {
+            "label": "Mention Spam",
+            "description": "Prevent excessive user/role mentions"
+          }
+        },
+        "actions": {
+          "warn": {
+            "label": "Warn User",
+            "description": "Send a warning to the user"
+          },
+          "delete": {
+            "label": "Delete Message",
+            "description": "Remove the violating message"
+          },
+          "mute": {
+            "label": "Temporary Mute",
+            "description": "Mute the user for a specified duration"
+          },
+          "kick": {
+            "label": "Kick User",
+            "description": "Remove the user from the server"
+          },
+          "ban": {
+            "label": "Ban User",
+            "description": "Permanently ban the user"
+          }
+        },
+        "messageAction": {
+          "keep": "Keep Message",
+          "delete": "Delete Message"
+        },
+        "table": {
+          "status": "On",
+          "name": "Name",
+          "trigger": "Trigger",
+          "action": "Action",
+          "threshold": "Threshold",
+          "channelWhitelist": "Channel Whitelist",
+          "roleWhitelist": "Role Whitelist",
+          "actions": "Actions",
+          "logsTo": "logs to {{channel}}",
+          "minutes": "{{count}} min"
+        },
+        "tip": "Tip:",
+        "profanity": {
+          "manageTip": "Manage your profanity words and patterns in the \"Profanity Management\" section above to customize what content gets filtered.",
+          "header": "Profanity Management",
+          "subheader": "Define words and regex patterns to detect inappropriate language.",
+          "loading": "Loading profanity data...",
+          "words": {
+            "header": "Words",
+            "add": "Add Word",
+            "searchPlaceholder": "Search words",
+            "noMatches": "No words match your search.",
+            "empty": "No profanity words configured yet.",
+            "emptyCta": "Click Add Word to create your first entry.",
+            "tryDifferent": "Try a different search.",
+            "table": {
+              "word": "Word",
+              "severity": "Severity",
+              "status": "Status",
+              "actions": "Actions"
+            },
+            "wholeWord": "whole word",
+            "partial": "partial",
+            "caseSensitive": "case-sensitive",
+            "caseInsensitive": "case-insensitive",
+            "modal": {
+              "editTitle": "Edit Profanity Word",
+              "addTitle": "Add Profanity Word",
+              "wordLabel": "Word",
+              "wordPlaceholder": "Type a word to block",
+              "caseSensitive": "Case sensitive",
+              "wholeWordOnly": "Whole word only"
+            },
+            "delete": {
+              "title": "Confirm Word Deletion",
+              "message": "Are you sure you want to delete this profanity word?",
+              "warning": "This action cannot be undone.",
+              "confirm": "Delete Word"
+            }
+          },
+          "patterns": {
+            "header": "Patterns",
+            "add": "Add Pattern",
+            "searchPlaceholder": "Search patterns",
+            "noMatches": "No patterns match your search.",
+            "empty": "No profanity patterns configured yet.",
+            "emptyCta": "Click Add Pattern to create your first entry.",
+            "tryDifferent": "Try a different search.",
+            "table": {
+              "pattern": "Pattern",
+              "severity": "Severity",
+              "status": "Status",
+              "actions": "Actions"
+            },
+            "modal": {
+              "editTitle": "Edit Profanity Pattern",
+              "addTitle": "Add Profanity Pattern",
+              "patternLabel": "Regex Pattern",
+              "patternPlaceholder": "b+a+d+w+o+r+d+",
+              "flagsLabel": "Flags",
+              "flagsPlaceholder": "gi",
+              "testHeader": "Pattern Test",
+              "preview": "Preview",
+              "status": "Status",
+              "valid": "Valid",
+              "invalid": "Invalid",
+              "descriptionPlaceholder": "Short description (optional)"
+            },
+            "delete": {
+              "title": "Confirm Pattern Deletion",
+              "message": "Are you sure you want to delete this profanity pattern?",
+              "warning": "This action cannot be undone.",
+              "confirm": "Delete Pattern"
+            }
+          }
+        },
+        "common": {
+          "severity": "Severity",
+          "language": "Language",
+          "description": "Description",
+          "word": "Word",
+          "pattern": "Pattern"
+        },
+        "severity": {
+          "low": "Low",
+          "medium": "Medium",
+          "high": "High",
+          "extreme": "Extreme"
+        },
+        "deleteRule": {
+          "title": "Confirm Deletion",
+          "message": "Are you sure you want to delete the automod rule?",
+          "warning": "This action cannot be undone.",
+          "confirm": "Delete Rule"
+        },
+        "toasts": {
+          "ruleCreated": "Automod rule \"{{name}}\" created successfully!",
+          "ruleUpdated": "Automod rule \"{{name}}\" updated successfully!",
+          "ruleDeleted": "Automod rule \"{{name}}\" deleted successfully!",
+          "ruleCreateFailed": "Failed to create automod rule \"{{name}}\". Please try again.",
+          "ruleUpdateFailed": "Failed to update automod rule \"{{name}}\". Please try again.",
+          "ruleDeleteFailed": "Failed to delete automod rule \"{{name}}\". Please try again.",
+          "ruleEnabled": "Automod rule \"{{name}}\" enabled successfully!",
+          "ruleDisabled": "Automod rule \"{{name}}\" disabled successfully!",
+          "ruleToggleFailed": "Failed to {{action}} automod rule \"{{name}}\". Please try again.",
+          "wordAdded": "Profanity word \"{{word}}\" added successfully!",
+          "wordUpdated": "Profanity word \"{{word}}\" updated successfully!",
+          "wordDeleted": "Profanity word \"{{word}}\" deleted successfully!",
+          "wordSaveFailed": "Failed to save profanity word. {{error}}",
+          "wordDeleteFailed": "Failed to delete profanity word. {{error}}",
+          "wordToggleEnabled": "Profanity word enabled successfully!",
+          "wordToggleDisabled": "Profanity word disabled successfully!",
+          "wordToggleFailed": "Failed to toggle profanity word status. {{error}}",
+          "patternAdded": "Profanity pattern added successfully!",
+          "patternUpdated": "Profanity pattern updated successfully!",
+          "patternDeleted": "Profanity pattern {{description}} deleted successfully!",
+          "patternSaveFailed": "Failed to save profanity pattern. {{error}}",
+          "patternDeleteFailed": "Failed to delete profanity pattern. {{error}}",
+          "patternToggleEnabled": "Profanity pattern enabled successfully!",
+          "patternToggleDisabled": "Profanity pattern disabled successfully!",
+          "patternToggleFailed": "Failed to toggle profanity pattern status. {{error}}",
+          "invalidRegex": "Invalid regex pattern: {{error}}"
+        }
+      },
+      "logging": {
+        "header": "Audit Logging",
+        "badge": "Monitoring",
+        "info": {
+          "description": "Track message edits/deletions, member updates, channel and role changes, and server events. Configure a global channel or separate channels per category."
+        },
+        "fields": {
+          "globalChannel": {
+            "label": "Global Log Channel (Optional)",
+            "desc": "Set all empty channels to this channel",
+            "placeholder": "Set all empty channels to this"
+          },
+          "includeBots": {
+            "label": "Include Bot Actions",
+            "desc": "Log actions performed by bots and integrations"
+          },
+          "enhancedDetails": {
+            "label": "Enhanced Details",
+            "desc": "Include additional context and metadata in logs"
+          },
+          "channels": {
+            "message": {
+              "label": "Message Logs",
+              "desc": "Log message edits, deletions, and bulk deletions"
+            },
+            "member": {
+              "label": "Member Logs",
+              "desc": "Log member joins, leaves, kicks, and bans"
+            },
+            "channel": {
+              "label": "Channel Logs",
+              "desc": "Log channel creation, deletion, and modifications"
+            },
+            "role": {
+              "label": "Role Logs",
+              "desc": "Log role creation, deletion, and permission changes"
+            },
+            "server": {
+              "label": "Server Logs",
+              "desc": "Log server settings changes and emoji updates"
+            },
+            "voice": {
+              "label": "Voice Logs",
+              "desc": "Log voice channel joins, leaves, and moves"
+            }
+          }
+        },
+        "placeholders": {
+          "noLogging": "No logging",
+          "selectChannel": "Select a channel"
+        },
+        "buttons": {
+          "applyGlobal": "Apply Global",
+          "reset": "Reset",
+          "save": "Save Changes",
+          "cancel": "Cancel"
+        },
+        "modal": {
+          "title": "Audit Logging Settings",
+          "saving": "Saving logging settings...",
+          "saved": "Logging settings saved"
+        },
+        "toasts": {
+          "saved": "Audit logging settings saved",
+          "saveFailed": "Failed to save audit logging settings",
+          "updatedGlobal": "Global log channel updated",
+          "copiedToEmpty": "Copied global channel to empty categories",
+          "validationRequired": "Please select at least one log channel or set a global channel"
+        }
+      },
+      "antiraid": {
+        "header": "Anti-Raid Protection",
+        "badge": "Security",
+        "info": {
+          "description": "Detect and block raid attempts with join-rate limits, account-age checks, automated responses, and content safeguards."
+        },
+        "features": {
+          "joinRate": {
+            "title": "Join-rate Monitoring",
+            "items": {
+              "trackPatterns": "Track sudden spikes and suspicious join patterns",
+              "detectAttacks": "Detect coordinated raid attempts in real-time",
+              "thresholds": "Configurable thresholds to trigger protection"
+            }
+          },
+          "accountAnalysis": {
+            "title": "Account Analysis",
+            "items": {
+              "age": "Minimum account age requirement",
+              "patterns": "Detect bot-like naming and activity patterns",
+              "avatarUsername": "Consider avatar/username characteristics"
+            }
+          },
+          "automatedResponse": {
+            "title": "Automated Response",
+            "items": {
+              "lockdown": "Auto-lockdown channels or slowmode",
+              "verification": "Require higher verification levels",
+              "removal": "Kick/ban or timeout suspicious accounts"
+            }
+          },
+          "contentFiltering": {
+            "title": "Content Safeguards",
+            "items": {
+              "inviteSpam": "Reduce invite spam from new accounts",
+              "massMention": "Mitigate mass-mention spam",
+              "newMember": "Extra filters for brand-new members"
+            }
+          }
+        },
+        "warning": {
+          "title": "Note:",
+          "message": "Anti-raid actions can be strict. Tune thresholds to avoid impacting legitimate members during busy periods."
+        },
+        "fields": {
+          "joinRate": {
+            "label": "Join Rate",
+            "desc": "Max joins allowed within the time window"
+          },
+          "joinWindow": {
+            "label": "Time Window (seconds)",
+            "desc": "Interval used for join-rate checks"
+          },
+          "accountAge": {
+            "label": "Minimum Account Age (days)",
+            "desc": "Block accounts newer than this age"
+          },
+          "raidAction": {
+            "label": "On Raid Detected",
+            "desc": "Primary action to take when a raid is detected"
+          },
+          "raidActionDuration": {
+            "label": "Action Duration (minutes)",
+            "desc": "Duration for timeout/lockdown actions",
+            "notApplicable": "Not applicable for kick/ban/alert"
+          },
+          "alertChannel": {
+            "label": "Alert Channel",
+            "desc": "Where to send anti-raid alerts and summaries"
+          },
+          "autoKick": {
+            "label": "Auto-kick Suspicious",
+            "desc": "Automatically kick accounts that fail checks"
+          },
+          "gracePeriod": {
+            "label": "Grace Period (minutes)",
+            "desc": "Time to keep elevated protections enabled after detection"
+          },
+          "whitelistRoles": {
+            "label": "Bypass Roles",
+            "desc": "Members with these roles bypass anti-raid checks"
+          }
+        },
+        "actions": {
+          "lockdown": "Lockdown",
+          "kick": "Kick",
+          "ban": "Ban",
+          "timeout": "Timeout",
+          "alert": "Alert Only"
+        },
+        "verification": {
+          "label": "Required Verification Level",
+          "levels": {
+            "none": "None",
+            "low": "Low",
+            "medium": "Medium",
+            "high": "High",
+            "highest": "Highest"
+          }
+        },
+        "placeholders": {
+          "noAlerts": "No alert channel"
+        },
+        "roles": {
+          "placeholder": "Add roles to bypass...",
+          "meta": {
+            "role": "role"
+          },
+          "noMatches": "No roles match your search.",
+          "allAdded": "All roles are added"
+        },
+        "modal": {
+          "title": "Anti-Raid Settings",
+          "saving": "Saving anti-raid settings...",
+          "saved": "Anti-raid settings saved"
+        },
+        "toasts": {
+          "saved": "Anti-raid settings saved",
+          "saveFailed": "Failed to save anti-raid settings"
+        }
+      },
+      "welcome": {
+        "header": "Welcome Messages",
+        "badge": "New members",
+        "info": "Configure welcome messages for new members. Use placeholders like {user} and {server}. Set a channel and optionally send a DM and auto-assign a role.",
+        "defaults": {
+          "messageText": "Welcome to {server}, {user}!",
+          "dmMessage": "Welcome to {server}! Thanks for joining us."
+        },
+        "fields": {
+          "channel": {
+            "label": "Welcome Channel",
+            "desc": "Select the channel to send welcome messages",
+            "placeholder": "Select a channel"
+          },
+          "type": {
+            "label": "Message Type",
+            "options": {
+              "text": "Text",
+              "embed": "Embed"
+            }
+          },
+          "message": {
+            "label": "Welcome Message",
+            "desc": "Supports placeholders: {user}, {server}",
+            "placeholder": "Type a welcome message (supports {user}, {server})"
+          },
+          "card": {
+            "label": "Include Welcome Card",
+            "desc": "Attach a simple image card with the message"
+          },
+          "role": {
+            "label": "Auto-Assign Role",
+            "desc": "Optionally assign a role to new members",
+            "placeholder": "Select a role"
+          },
+          "dm": {
+            "label": "Send a DM",
+            "desc": "Also send a private welcome message to the user"
+          },
+          "dmMessage": {
+            "label": "DM Message",
+            "desc": "Sent as a private message when enabled",
+            "placeholder": "Type a DM message"
+          }
+        }
+      },
+      "xp": {
+        "header": "XP & Leveling System",
+        "badge": "Member Engagement",
+        "info": {
+          "description": "Reward member activity with experience points and level progression. Configure XP rates, cooldowns, multiplier roles for special members, and excluded channels where XP won't be gained."
+        },
+        "placeholders": {
+          "sameChannel": "Same channel as message",
+          "addChannelToExclude": "Add channel to exclude",
+          "addRoleToExclude": "Add role to exclude...",
+          "selectRole": "Select role...",
+          "multiplier": "1.5"
+        },
+        "aria": {
+          "removeItem": "Remove {{name}}"
+        },
+        "fields": {
+          "xpPerMessage": {
+            "label": "XP per Message",
+            "desc": "XP gained per message"
+          },
+          "cooldownSeconds": {
+            "label": "XP Cooldown (seconds)",
+            "desc": "Time users must wait between XP gains"
+          },
+          "levelUpChannel": {
+            "label": "Level Up Channel",
+            "desc": "Where to send level up messages (leave empty for same channel)"
+          },
+          "excludedChannels": {
+            "label": "Excluded Channels",
+            "desc": "Channels where users won't gain XP"
+          },
+          "excludedRoles": {
+            "label": "Excluded Roles",
+            "desc": "Roles that won't gain XP"
+          },
+          "levelUpMessages": {
+            "label": "Level Up Messages",
+            "desc": "Send a message when users level up"
+          }
+        },
+        "multipliers": {
+          "label": "XP Multiplier Roles",
+          "desc": "Roles that get bonus XP multipliers",
+          "roleLabel": "Role",
+          "multiplierLabel": "Multiplier",
+          "multiplierSuffix": "x multiplier",
+          "remove": "Remove multiplier",
+          "note": "Members with multiple multiplier roles will get the highest multiplier."
+        },
+        "toasts": {
+          "addedExcludedChannel": "Excluded channel added: #{{name}}",
+          "removedExcludedChannel": "Excluded channel removed: #{{name}}",
+          "addedExcludedRole": "Excluded role added: @{{name}}",
+          "removedExcludedRole": "Excluded role removed: @{{name}}",
+          "multiplierAdded": "Added multiplier {{value}}x for @{{name}}",
+          "multiplierRemoved": "Removed multiplier for @{{name}}",
+          "invalidMultiplier": "Please select a role and enter a valid multiplier"
+        },
+        "scheduler": {
+          "header": "Scheduled Messages System",
+          "badge": "Automated Announcements",
+          "info": {
+            "description": "Set up automated messages to be sent at specific times or intervals. Perfect for announcements, reminders, and recurring posts."
+          },
+          "list": {
+            "title": "Scheduled Messages ({{count}})",
+            "emptyTitle": "No scheduled messages configured",
+            "emptyCta": "Click \"Add Message\" to create your first scheduled message"
+          },
+          "unknownChannel": "Unknown Channel",
+          "badges": {
+            "embed": "Embed",
+            "active": "Active",
+            "inactive": "Inactive",
+            "type": "{{type}}"
+          },
+          "labels": {
+            "schedule": "Schedule: {{value}}"
+          },
+          "buttons": {
+            "add": "Add Message",
+            "edit": "Edit",
+            "delete": "Delete",
+            "cancel": "Cancel",
+            "reset": "Reset",
+            "saveAdd": "Add Message",
+            "saveUpdate": "Update Message"
+          },
+          "delete": {
+            "title": "Confirm Deletion",
+            "message": "Are you sure you want to delete the scheduled message \"{{title}}\"? This action cannot be undone.",
+            "confirm": "Delete",
+            "cancel": "Cancel"
+          },
+          "form": {
+            "addTitle": "Add Scheduled Message",
+            "editTitle": "Edit Scheduled Message",
+            "fields": {
+              "title": {
+                "label": "Message Title",
+                "placeholder": "Enter message title"
+              },
+              "channel": {
+                "label": "Channel",
+                "placeholder": "Select channel"
+              },
+              "scheduleType": {
+                "label": "Schedule Type"
+              },
+              "timeDisplay": {
+                "label": "Time Display",
+                "option24": "24-hour",
+                "option12": "12-hour (AM/PM)"
+              },
+              "scheduleValue": {
+                "label": "Schedule Value",
+                "placeholder": "0 9 * * *"
+              },
+              "message": {
+                "label": "Message Content",
+                "placeholder": "Enter your message content..."
+              },
+              "useEmbed": {
+                "label": "Use Discord Embed"
+              },
+              "embed": {
+                "header": "Embed Configuration",
+                "title": {
+                  "label": "Embed Title",
+                  "placeholder": "Embed title"
+                },
+                "color": {
+                  "label": "Color"
+                },
+                "description": {
+                  "label": "Description",
+                  "placeholder": "Embed description"
+                },
+                "footer": {
+                  "label": "Footer Text",
+                  "placeholder": "Footer text"
+                },
+                "thumbnail": {
+                  "label": "Thumbnail URL",
+                  "placeholder": "https://example.com/image.png"
+                },
+                "image": {
+                  "label": "Image URL",
+                  "placeholder": "https://example.com/image.png"
+                }
+              }
+            },
+            "scheduleTypes": {
+              "once": "Once (timestamp)",
+              "daily": "Daily",
+              "weekly": "Weekly",
+              "monthly": "Monthly",
+              "cron": "Custom (Cron)"
+            },
+            "pickers": {
+              "once": {
+                "placeholder": "Select date & time"
+              },
+              "daily": {
+                "timeCaption": "Time",
+                "placeholder": "Select time",
+                "help": "Stored as HH:MM (24h)."
+              },
+              "weekly": {
+                "placeholder": "Select weekday & time",
+                "help": "Pick any date; only weekday + time stored as D|HH:MM (0=Sun)."
+              },
+              "monthly": {
+                "placeholder": "Select day & time",
+                "help": "Pick any month; stored as DD|HH:MM."
+              },
+              "cron": {
+                "presetsTitle": "Common presets:",
+                "placeholders": {
+                  "expression": "0 9 * * *"
+                },
+                "presets": {
+                  "everyHour": "Every hour",
+                  "everyDay9": "Every day at 9 AM",
+                  "everyMonday9": "Every Monday at 9 AM",
+                  "everySunday9": "Every week (Sunday 9 AM)",
+                  "everyMonthFirst9": "Every month (1st at 9 AM)",
+                  "every6Hours": "Every 6 hours",
+                  "everyWeekday8": "Every weekday at 8 AM"
+                }
+              }
+            }
+          },
+          "toasts": {
+            "savedAdded": "Message added successfully",
+            "savedUpdated": "Message updated successfully",
+            "saveFailed": "Failed to save message",
+            "deleted": "Scheduled message deleted successfully",
+            "deleteFailed": "Failed to delete message",
+            "validationRequired": "Please fill in all required fields"
+          }
+        }
+      }
+    },
+    "cards": {
+      "common": {
+        "features": "Features:",
+        "configure": "Configure",
+        "updating": "Updating..."
+      },
+      "welcome": {
+        "label": "Welcome Messages",
+        "desc": "Greet new members with customizable welcome messages and cards.",
+        "features": {
+          "customMessages": "Custom Messages",
+          "welcomeCards": "Welcome Cards",
+          "roleAssignment": "Role Assignment",
+          "channelSelection": "Channel Selection"
+        }
+      },
+      "automod": {
+        "label": "Auto Moderation",
+        "desc": "Automatically detect and handle spam, excessive caps, and inappropriate content.",
+        "features": {
+          "spamDetection": "Spam Detection",
+          "capsLockFilter": "Caps Lock Filter",
+          "linkFiltering": "Link Filtering",
+          "profanityFilter": "Profanity Filter"
+        }
+      },
+      "roles": {
+        "label": "Role Management",
+        "desc": "Manage roles with reaction roles and role menus.",
+        "features": {
+          "reactionRoles": "Reaction Roles",
+          "roleMenus": "Role Menus",
+          "permissionSync": "Permission Sync",
+          "customMessages": "Custom Messages"
+        }
+      },
+      "xp": {
+        "label": "XP & Leveling",
+        "desc": "Reward active members with XP points and level progression.",
+        "features": {
+          "xpTracking": "XP Tracking",
+          "levelRewards": "Level Rewards",
+          "leaderboards": "Leaderboards",
+          "customMultipliers": "Custom Multipliers"
+        }
+      },
+      "scheduler": {
+        "label": "Scheduled Messages",
+        "desc": "Schedule announcements and recurring messages for your server.",
+        "features": {
+          "scheduledPosts": "Scheduled Posts",
+          "recurringMessages": "Recurring Messages",
+          "eventReminders": "Event Reminders",
+          "autoAnnouncements": "Auto Announcements"
+        }
+      },
+      "logging": {
+        "label": "Audit Logging",
+        "desc": "Track all moderation actions and server changes.",
+        "features": {
+          "messageLogs": "Message Logs",
+          "memberLogs": "Member Logs",
+          "channelLogs": "Channel Logs",
+          "roleLogs": "Role Logs"
+        }
+      },
+      "antiraid": {
+        "label": "Anti-Raid Protection",
+        "desc": "Protect your server from raids and mass join attacks.",
+        "features": {
+          "joinRateLimiting": "Join Rate Limiting",
+          "accountAgeFilter": "Account Age Filter",
+          "autoLockdown": "Auto Lockdown",
+          "verificationSystem": "Verification System"
+        }
+      }
+    }
+  },
+  "gamesSocials": {
+    "title": "Games & Social",
+    "subtitle": "Gaming and social features configuration",
+    "loading": {
+      "title": "Loading Integration Settings",
+      "message": "Fetching your integration configuration and server data..."
+    },
+    "toasts": {
+      "serviceEnabled": "{{service}} enabled",
+      "serviceDisabled": "{{service}} disabled",
+      "toggleFailed": "Failed to update toggle",
+      "saved": "{{service}} settings saved",
+      "saveFailed": "Save failed"
+    },
+    "services": {
+      "youtube": {
+        "label": "YouTube",
+        "desc": "Announce new uploads and live streams from selected channels"
+      },
+      "twitch": {
+        "label": "Twitch",
+        "desc": "Announce when your favorite streamer goes live"
+      },
+      "pubg": {
+        "label": "PUBG",
+        "desc": "Player stats, match summaries, and notifications (planned)"
+      },
+      "valorant": {
+        "label": "Valorant",
+        "desc": "Match updates, highlights, and notifications (planned)"
+      },
+      "apex": {
+        "label": "Apex Legends",
+        "desc": "Match updates, highlights, and notifications (planned)"
+      },
+      "mobilelegends": {
+        "label": "Mobile Legends",
+        "desc": "Team updates and match notifications (planned)"
+      },
+      "clashofclans": {
+        "label": "Clash of Clans",
+        "desc": "Clan war progress and updates (planned)"
+      },
+      "fortnite": {
+        "label": "Fortnite",
+        "desc": "Match updates and event notifications (planned)"
+      },
+      "genshin": {
+        "label": "Genshin Impact",
+        "desc": "Event updates and news (planned)"
+      }
+    },
+    "preview": {
+      "samples": {
+        "twitch": {
+          "streamTitle": "Awesome Live Stream",
+          "game": "Just Chatting",
+          "startedAtRelative": "just now"
+        },
+        "youtube": {
+          "channel": "Channel Name",
+          "videoTitle": "Awesome New Upload",
+          "publishedAtRelative": "just now",
+          "memberOnly": " (Members Only)"
+        }
+      }
+    },
+    "common": {
+      "announcement": "Announcement",
+      "select": "Select…",
+      "mentionTargets": "Mention Targets",
+      "mentionHelper": "Press Enter to add • Backspace to delete • Order is preserved",
+      "intervalSec": "Interval (seconds)",
+      "embeds": "Embed",
+      "plain": "Plain",
+      "placeholders": "Placeholders",
+      "resolving": "Processing...",
+      "namePlaceholder": "Name",
+      "clearOverrides": "Clear Overrides",
+      "configuration": "Configuration",
+      "announcementsEnabled": "Announcements enabled",
+      "announcementsDisabled": "Announcements disabled",
+      "integrationNotConfigured": "integration not yet configured.",
+      "plannedFeatures": "Planned features",
+      "needSooner": "If you need this sooner, let us know.",
+      "remove": "Remove",
+      "loadingConfig": "Loading {{service}} configuration…",
+      "mentionInputPlaceholder": "Add @everyone, @here, or a role…",
+      "meta": {
+        "role": "role",
+        "meta": "meta"
+      },
+      "noTemplate": "No template yet.",
+      "preview": "Preview"
+    },
+    "youtube": {
+      "fields": {
+        "uploadAnnounceChannel": "Upload Announcement Channel",
+        "liveAnnounceChannel": "Live Announcement Channel",
+        "upload": "Upload",
+        "live": "Live"
+      },
+      "sections": {
+        "regularTemplate": "Regular Template",
+        "memberTemplate": "Member Template",
+        "memberUpload": "Member Upload",
+        "memberLive": "Member Live",
+        "regularPreview": "Regular Template Preview",
+        "memberPreview": "Member Template Preview"
+      },
+      "channels": {
+        "addLabel": "Add Channel (URL)",
+        "addPlaceholder": "https://youtube.com/@handle",
+        "empty": "No channels added yet.",
+        "editTitle": "Edit per-channel template",
+        "fetchTitle": "Fetch channel name",
+        "uploadTemplate": "Upload Template",
+        "memberUploadTemplate": "Member Upload Template",
+        "liveTemplate": "Live Template",
+        "memberLiveTemplate": "Member Live Template"
+      },
+      "toasts": {
+        "alreadyWatching": "Channel {{id}} is already being watched",
+        "extracted": "Extracted channel ID: {{id}}",
+        "extractedWithName": "Successfully fetched {{name}} ({{id}})",
+        "added": "Channel {{name}} has been added",
+        "addFailed": "Failed to add channel"
+      }
+    },
+    "twitch": {
+      "fields": {
+        "announceChannel": "Announcement Channel",
+        "liveStream": "Live Stream"
+      },
+      "sections": {
+        "globalTemplate": "Global Template",
+        "templatePreview": "Template Preview"
+      },
+      "streamers": {
+        "addLabel": "Add Streamer (username / URL)",
+        "addPlaceholder": "username, https://twitch.tv/username",
+        "empty": "No streamers added yet.",
+        "editTitle": "Edit per-streamer template",
+        "fetchTitle": "Fetch streamer name",
+        "liveTemplate": "Live Template"
+      },
+      "toasts": {
+        "resolvedTo": "Successfully changed to {{username}}",
+        "resolveFailed": "Couldn't connect to the streamer"
+      }
+    },
+    "leveling": "XP & Leveling",
+    "economy": "Economy System",
+    "socialFeatures": "Social Features",
+    "miniGames": "Mini Games"
+  },
+  "welcome": {
+    "title": "Welcome System",
+    "subtitle": "Configure welcome messages and new member settings",
+    "enabled": "Welcome message enabled",
+    "channel": "Welcome Channel",
+    "message": "Welcome Message",
+    "roles": "Auto Roles",
+    "toasts": {
+      "saved": "Welcome settings saved",
+      "saveFailed": "Saving failed",
+      "enabled": "Welcome message enabled",
+      "disabled": "Welcome message disabled",
+      "toggleFailed": "Couldn't update changes"
+    }
+  }
+}

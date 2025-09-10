@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { FormField, SwitchToggle } from '../../components/SharedComponents';
 import DeleteConfirmationModal from '../../components/DeleteConfirmationModal';
 import useResponsiveTable from '../../../../hooks/useResponsiveTable';
+import { useI18n } from '../../../../i18n';
 
 // Slash Command Roles Configuration Component
 export default function SlashCommandRolesConfig({ config, updateConfig, channels, roles, guildId, showToast }) {
@@ -23,6 +24,7 @@ export default function SlashCommandRolesConfig({ config, updateConfig, channels
     allowedRoles: [],
     status: true
   });
+  const { t } = useI18n();
 
   // Use responsive table hook
   const tableRef = useResponsiveTable();
@@ -46,7 +48,7 @@ export default function SlashCommandRolesConfig({ config, updateConfig, channels
       }
     } catch (error) {
       console.error('Error fetching slash command roles:', error);
-      showToast('error', 'Failed to fetch slash command roles');
+  showToast('error', t('moderation.features.roles.slash.toasts.fetchFailed'));
     }
     setLoading(false);
   };
@@ -111,7 +113,9 @@ export default function SlashCommandRolesConfig({ config, updateConfig, channels
         setEditingCommand(null);
         resetForm();
         fetchSlashRoles();
-        showToast('success', `Slash command role ${isEditing ? 'updated' : 'created'} successfully!`);
+        showToast('success', isEditing 
+          ? t('moderation.features.roles.slash.toasts.updated')
+          : t('moderation.features.roles.slash.toasts.created'));
       } else {
         const errorData = await response.json().catch(() => ({ message: `HTTP ${response.status}: ${response.statusText}` }));
         console.error('Failed to save slash command:', {
@@ -122,11 +126,11 @@ export default function SlashCommandRolesConfig({ config, updateConfig, channels
           payload,
           errorData
         });
-        showToast('error', errorData.message || `Failed to ${isEditing ? 'update' : 'create'} slash command role`);
+        showToast('error', errorData.message || t('common.error'));
       }
     } catch (error) {
       console.error('Error saving slash command role:', error);
-      showToast('error', `Failed to ${editingCommand ? 'update' : 'create'} slash command role`);
+      showToast('error', t('common.error'));
     }
     setSaving(false);
   };
@@ -151,15 +155,17 @@ export default function SlashCommandRolesConfig({ config, updateConfig, channels
             ? { ...command, status: !currentStatus ? 1 : 0 }
             : command
         ));
-        showToast('success', `Slash command ${!currentStatus ? 'enabled' : 'disabled'}`);
+        showToast('success', !currentStatus 
+          ? t('moderation.features.roles.slash.toasts.statusEnabled')
+          : t('moderation.features.roles.slash.toasts.statusDisabled'));
       } else {
         const errorData = await response.json().catch(() => ({ message: `HTTP ${response.status}` }));
         console.error('Toggle failed:', errorData);
-        showToast('error', errorData.message || 'Failed to toggle command status');
+        showToast('error', errorData.message || t('moderation.features.roles.slash.toasts.toggleFailed'));
       }
     } catch (error) {
       console.error('Error toggling command status:', error);
-      showToast('error', 'Failed to toggle command status');
+      showToast('error', t('moderation.features.roles.slash.toasts.toggleFailed'));
     } finally {
       setUpdatingStatus(prev => ({ ...prev, [commandName]: false }));
     }
@@ -177,14 +183,14 @@ export default function SlashCommandRolesConfig({ config, updateConfig, channels
 
       if (response.ok) {
         fetchSlashRoles();
-        showToast('success', 'Slash command deleted successfully');
+        showToast('success', t('moderation.features.roles.slash.toasts.deleteSuccess'));
       } else {
         const errorData = await response.json();
-        showToast('error', errorData.message || 'Failed to delete command');
+        showToast('error', errorData.message || t('moderation.features.roles.slash.toasts.deleteFailed'));
       }
     } catch (error) {
       console.error('Error deleting command:', error);
-      showToast('error', 'Failed to delete command');
+      showToast('error', t('moderation.features.roles.slash.toasts.deleteFailed'));
     } finally {
       setDeleting(false);
       setShowDeleteConfirm(false);
@@ -236,7 +242,7 @@ export default function SlashCommandRolesConfig({ config, updateConfig, channels
 
   const getChannelName = (channelId) => {
     const channel = channels.find(ch => ch.id === channelId);
-    return channel ? `#${channel.name}` : 'Unknown Channel';
+  return channel ? `#${channel.name}` : t('common.unknown');
   };
 
   const availableRoles = roles.filter(role => 
@@ -250,10 +256,8 @@ export default function SlashCommandRolesConfig({ config, updateConfig, channels
       <div className="mb-4">
         <div className="d-flex justify-content-between align-items-center mb-2">
           <div>
-            <h6 className="mb-1">Slash Command Roles</h6>
-            <p className="text-muted small mb-0">
-              Configure custom slash commands for role management
-            </p>
+            <h6 className="mb-1">{t('moderation.features.roles.slash.header')}</h6>
+            <p className="text-muted small mb-0">{t('moderation.features.roles.slash.subtitle')}</p>
           </div>
           <button 
             type="button" 
@@ -265,7 +269,7 @@ export default function SlashCommandRolesConfig({ config, updateConfig, channels
             }}
           >
             <i className="fa-solid fa-plus me-1"></i>
-            Add Slash Command
+            {t('moderation.features.roles.slash.buttons.add')}
           </button>
         </div>
 
@@ -274,20 +278,17 @@ export default function SlashCommandRolesConfig({ config, updateConfig, channels
           <div className="mb-4 p-3 bg-dark border rounded">
             <h6 className="mb-2">
               <i className="fa-solid fa-info-circle text-info me-2" />
-              How It Works
+              {t('moderation.features.roles.slash.info.title')}
             </h6>
             <div className="small text-muted">
-              <p className="mb-2">
-                Users can use these custom slash commands to manage their roles. 
-                Each command can be configured with specific roles and behavior.
-              </p>
+              <p className="mb-2">{t('moderation.features.roles.slash.info.description')}</p>
               <div className="mb-2">
-                <strong>Command Types:</strong>
+                <strong>{t('moderation.features.roles.slash.info.types.title')}</strong>
               </div>
               <ul className="mb-0">
-                <li><code>Toggle</code> - Users can add or remove the role</li>
-                <li><code>Add Only</code> - Users can only add the role</li>
-                <li><code>Remove Only</code> - Users can only remove the role</li>
+                <li>{t('moderation.features.roles.slash.info.types.toggle')}</li>
+                <li>{t('moderation.features.roles.slash.info.types.add')}</li>
+                <li>{t('moderation.features.roles.slash.info.types.remove')}</li>
               </ul>
             </div>
           </div>
@@ -297,19 +298,19 @@ export default function SlashCommandRolesConfig({ config, updateConfig, channels
         {loading ? (
           <div className="text-center py-3">
             <i className="fa-solid fa-spinner fa-spin me-2"></i>
-            Loading slash command roles...
+            {t('moderation.features.roles.slash.loading')}
           </div>
         ) : slashRoles.length > 0 ? (
           <div ref={tableRef} className="table-responsive-scroll mb-4">
             <table className="table table-sm">
               <thead>
                 <tr>
-                  <th>Status</th>
-                  <th>Title</th>
-                  <th>Description</th>
-                  <th>Channel</th>
-                  <th>Roles</th>
-                  <th>Actions</th>
+                  <th>{t('moderation.features.roles.table.status')}</th>
+                  <th>{t('moderation.features.roles.table.title')}</th>
+                  <th>{t('common.description')}</th>
+                  <th>{t('moderation.features.roles.table.channel')}</th>
+                  <th>{t('moderation.features.roles.table.roles')}</th>
+                  <th>{t('moderation.features.roles.table.actions')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -336,7 +337,7 @@ export default function SlashCommandRolesConfig({ config, updateConfig, channels
                     </td>
                     <td>
                       <span className="mobile-truncate text-black">
-                        {command.channelId ? getChannelName(command.channelId) : 'Any Channel'}
+                        {command.channelId ? getChannelName(command.channelId) : t('moderation.features.roles.slash.anyChannel')}
                       </span>
                     </td>
                     <td>
@@ -361,7 +362,7 @@ export default function SlashCommandRolesConfig({ config, updateConfig, channels
                           type="button" 
                           className="btn btn-outline-info btn-sm"
                           onClick={() => handleEditCommand(command)}
-                          title="Edit"
+                          title={t('common.edit')}
                         >
                           <i className="fa-solid fa-edit"></i>
                         </button>
@@ -369,7 +370,7 @@ export default function SlashCommandRolesConfig({ config, updateConfig, channels
                           type="button" 
                           className="btn btn-outline-danger btn-sm"
                           onClick={() => confirmDelete(command)}
-                          title="Delete"
+                          title={t('common.delete')}
                         >
                           <i className="fa-solid fa-trash"></i>
                         </button>
@@ -383,7 +384,7 @@ export default function SlashCommandRolesConfig({ config, updateConfig, channels
         ) : (
           <div className="text-center py-4 text-muted mb-4">
             <i className="fa-solid fa-terminal fa-2x mb-3 d-block opacity-50" />
-            <p>No slash command roles configured. Click "Add Slash Command" to get started.</p>
+            <p>{t('moderation.features.roles.slash.empty')}</p>
           </div>
         )}
 
@@ -412,9 +413,7 @@ export default function SlashCommandRolesConfig({ config, updateConfig, channels
             )}
 
             <div className="card-header d-flex justify-content-between align-items-center">
-              <h6 className="mb-0">
-                {editingCommand ? 'Edit Slash Command' : 'Add New Slash Command'}
-              </h6>
+              <h6 className="mb-0">{editingCommand ? t('moderation.features.roles.slash.form.editTitle') : t('moderation.features.roles.slash.form.addTitle')}</h6>
               <button 
                 type="button" 
                 className="btn-close btn-close-white"
@@ -428,35 +427,35 @@ export default function SlashCommandRolesConfig({ config, updateConfig, channels
             <div className="card-body">
               <div className="row">
                 <div className="col-md-6 mb-3">
-                  <label className="form-label small fw-semibold">Title</label>
+                  <label className="form-label small fw-semibold">{t('moderation.features.roles.slash.form.title')}</label>
                   <input 
                     type="text" 
                     className="form-control form-control-sm"
                     value={formData.commandName}
                     onChange={(e) => setFormData(prev => ({ ...prev, commandName: e.target.value }))}
-                    placeholder="e.g. assign-role"
+                    placeholder={t('moderation.features.roles.slash.form.titlePlaceholder')}
                   />
                 </div>
                 <div className="col-md-6 mb-3">
-                  <label className="form-label small fw-semibold">Description</label>
+                  <label className="form-label small fw-semibold">{t('moderation.features.roles.slash.form.description')}</label>
                   <input 
                     type="text" 
                     className="form-control form-control-sm"
                     value={formData.description}
                     onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                    placeholder="Command description"
+                    placeholder={t('moderation.features.roles.slash.form.descriptionPlaceholder')}
                   />
                 </div>
               </div>
 
               <div className="mb-3">
-                <label className="form-label small fw-semibold">Channel (Optional)</label>
+                <label className="form-label small fw-semibold">{t('moderation.features.roles.slash.form.channel')}</label>
                 <select 
                   className="form-select form-select-sm"
                   value={formData.channelId}
                   onChange={(e) => setFormData(prev => ({ ...prev, channelId: e.target.value }))}
                 >
-                  <option value="">Any Channel</option>
+                  <option value="">{t('moderation.features.roles.slash.form.channelPlaceholder')}</option>
                   {channels.filter(ch => ch.type === 0).map(channel => (
                     <option key={channel.id} value={channel.id}>#{channel.name}</option>
                   ))}
@@ -465,14 +464,14 @@ export default function SlashCommandRolesConfig({ config, updateConfig, channels
 
               <div className="mb-3">
                 <div className="d-flex justify-content-between align-items-center mb-2">
-                  <label className="form-label small fw-semibold mb-0">Roles</label>
+                  <label className="form-label small fw-semibold mb-0">{t('moderation.features.roles.slash.form.roles')}</label>
                   <button 
                     type="button" 
                     className="btn btn-outline-light btn-sm"
                     onClick={addRole}
                   >
                     <i className="fa-solid fa-plus me-1"></i>
-                    Add Role
+                    {t('moderation.features.roles.slash.buttons.addRole')}
                   </button>
                 </div>
                 
@@ -483,7 +482,7 @@ export default function SlashCommandRolesConfig({ config, updateConfig, channels
                       value={role.roleId}
                       onChange={(e) => updateRole(index, 'roleId', e.target.value)}
                     >
-                      <option value="">Select a role...</option>
+                      <option value="">{t('moderation.features.roles.slash.form.selectRole')}</option>
                       {availableRoles.map(r => (
                         <option key={r.id} value={r.id}>{r.name}</option>
                       ))}
@@ -493,9 +492,9 @@ export default function SlashCommandRolesConfig({ config, updateConfig, channels
                       value={role.type}
                       onChange={(e) => updateRole(index, 'type', e.target.value)}
                     >
-                      <option value="toggle">Toggle</option>
-                      <option value="add">Add Only</option>
-                      <option value="remove">Remove Only</option>
+                      <option value="toggle">{t('moderation.features.roles.slash.form.typeOptions.toggle')}</option>
+                      <option value="add">{t('moderation.features.roles.slash.form.typeOptions.add')}</option>
+                      <option value="remove">{t('moderation.features.roles.slash.form.typeOptions.remove')}</option>
                     </select>
                     <button 
                       type="button" 
@@ -519,7 +518,7 @@ export default function SlashCommandRolesConfig({ config, updateConfig, channels
                     id="require-permission"
                   />
                   <label className="form-check-label small fw-semibold" htmlFor="require-permission">
-                    Require Permission
+                    {t('moderation.features.roles.slash.form.requirePermission')}
                   </label>
                 </div>
               </div>
@@ -532,7 +531,7 @@ export default function SlashCommandRolesConfig({ config, updateConfig, channels
                     onClick={() => resetForm()}
                   >
                     <i className="fa-solid fa-rotate-left me-1"></i>
-                    Reset
+                    {t('common.reset')}
                   </button>
                 )}
                 <button 
@@ -545,7 +544,7 @@ export default function SlashCommandRolesConfig({ config, updateConfig, channels
                   }}
                 >
                   <i className="fa-solid fa-times me-1"></i>
-                  Cancel
+                  {t('common.cancel')}
                 </button>
                 <button 
                   type="button" 
@@ -556,14 +555,14 @@ export default function SlashCommandRolesConfig({ config, updateConfig, channels
                   {saving ? (
                     <>
                       <div className="spinner-border spinner-border-sm me-2" role="status">
-                        <span className="visually-hidden">Loading...</span>
+                        <span className="visually-hidden">{t('common.loading')}</span>
                       </div>
-                      {editingCommand ? 'Updating...' : 'Creating...'}
+                      {editingCommand ? t('common.updating') : t('common.creating')}
                     </>
                   ) : (
                     <>
                       <i className="fa-solid fa-save me-1"></i>
-                      {editingCommand ? 'Update Command' : 'Create Command'}
+                      {editingCommand ? t('moderation.features.roles.slash.form.updateCommand') : t('moderation.features.roles.slash.form.createCommand')}
                     </>
                   )}
                 </button>
@@ -582,31 +581,31 @@ export default function SlashCommandRolesConfig({ config, updateConfig, channels
         }}
         onConfirm={() => handleDeleteCommand(deleteTarget?.commandName)}
         isDeleting={deleting}
-        title="Delete Slash Command"
-        message={`Are you sure you want to delete the slash command "${deleteTarget?.commandName}"?`}
-        warningMessage="This will permanently remove the command and all its configurations. Users will no longer be able to use this command."
+    title={t('moderation.features.roles.slash.delete.title')}
+    message={t('moderation.features.roles.slash.delete.message', { name: deleteTarget?.commandName || t('common.unknown') })}
+    warningMessage={t('moderation.features.roles.slash.delete.warning')}
         itemDetails={deleteTarget && (
           <div>
             <div className="d-flex justify-content-between align-items-center mb-2">
-              <span className="text-muted">Title:</span>
+      <span className="text-muted">{t('moderation.features.roles.table.title')}:</span>
               <code className="fw-semibold">{deleteTarget.commandName}</code>
             </div>
             <div className="d-flex justify-content-between align-items-center mb-2">
-              <span className="text-muted">Description:</span>
+      <span className="text-muted">{t('common.description')}:</span>
               <span>{deleteTarget.description}</span>
             </div>
             <div className="d-flex justify-content-between align-items-center mb-2">
-              <span className="text-muted">Channel:</span>
-              <span>{deleteTarget.channelId ? getChannelName(deleteTarget.channelId) : 'Any Channel'}</span>
+      <span className="text-muted">{t('moderation.features.roles.table.channel')}:</span>
+      <span>{deleteTarget.channelId ? getChannelName(deleteTarget.channelId) : t('moderation.features.roles.slash.anyChannel')}</span>
             </div>
             <div className="d-flex justify-content-between align-items-center">
-              <span className="text-muted">Roles:</span>
+      <span className="text-muted">{t('moderation.features.roles.table.roles')}:</span>
               <span className="badge bg-info">{deleteTarget.roles?.length || 0}</span>
             </div>
           </div>
         )}
-        confirmButtonText="Delete Command"
-        cancelButtonText="Cancel"
+    confirmButtonText={t('moderation.features.roles.slash.delete.confirm')}
+    cancelButtonText={t('common.cancel')}
       />
     </div>
   );

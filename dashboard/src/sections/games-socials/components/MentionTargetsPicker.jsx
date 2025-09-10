@@ -1,9 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useI18n } from '../../../i18n';
 
 /**
  * MentionTargetsPicker - Component for selecting mention targets (roles, @everyone, @here)
  */
 export default function MentionTargetsPicker({ value, onChange, roles }) {
+  const { t } = useI18n();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
   const boxRef = useRef(null);
@@ -92,7 +94,7 @@ export default function MentionTargetsPicker({ value, onChange, roles }) {
         <input 
           ref={inputRef} 
           value={query} 
-          placeholder={list.length ? '' : 'Add @everyone, @here or role…'} 
+          placeholder={list.length ? '' : t('gamesSocials.common.mentionInputPlaceholder')} 
           onFocus={() => setOpen(true)} 
           onChange={e => { 
             setQuery(e.target.value); 
@@ -113,7 +115,7 @@ export default function MentionTargetsPicker({ value, onChange, roles }) {
               onClick={() => add(o.id)}
             >
               {o.label}
-              <span className="meta">{o.type}</span>
+              <span className="meta">{o.type === 'role' ? t('gamesSocials.common.meta.role') : t('gamesSocials.common.meta.meta')}</span>
             </button>
           ))}
         </div>
@@ -122,7 +124,7 @@ export default function MentionTargetsPicker({ value, onChange, roles }) {
       {open && filtered.length === 0 && (
         <div className="mention-targets-suggestions">
           <div className="text-muted small p-2" style={{fontSize: '.55rem'}}>
-            No matches
+            {t('common.noMatches')}
           </div>
         </div>
       )}

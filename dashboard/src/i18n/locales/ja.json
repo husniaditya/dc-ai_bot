@@ -1,0 +1,1824 @@
+{
+  "common": {
+    "save": "保存",
+    "reset": "リセット",
+    "cancel": "キャンセル",
+    "delete": "削除",
+    "edit": "編集",
+    "add": "追加",
+    "loading": "読み込み中...",
+    "lastLoad": "最終更新",
+    "saving": "保存中...",
+    "success": "成功",
+    "error": "エラー",
+    "warning": "警告",
+    "info": "情報",
+    "yes": "はい",
+    "no": "いいえ",
+    "enabled": "有効",
+    "disabled": "無効",
+    "name": "名前",
+    "description": "説明",
+    "actions": "操作",
+    "settings": "設定",
+    "search": "検索",
+    "filter": "フィルター",
+    "clear": "クリア",
+    "apply": "適用",
+    "close": "閉じる",
+    "back": "戻る",
+    "next": "次へ",
+    "previous": "前へ",
+    "unsaved": "未保存",
+    "notAvailable": "N/A",
+    "refresh": "分析を更新",
+    "na": "N/A",
+    "none": "なし",
+    "noMatches": "一致なし",
+    "invalidData": "無効なデータ",
+    "unknown": "不明",
+    "update": "更新",
+    "editRule": "ルールを編集",
+    "deleteRule": "ルールを削除",
+    "editWord": "ワードを編集",
+    "deleteWord": "ワードを削除",
+    "editPattern": "パターンを編集",
+    "deletePattern": "パターンを削除"
+  },
+  "navigation": {
+    "dashboard": "ダッシュボード",
+    "changeServer": "サーバーを変更",
+    "selectServer": "サーバーを選択",
+    "overview": "概要",
+    "autos": "自動返信",
+    "commands": "コマンド",
+    "personal": "ボットのパーソナライズ",
+    "moderation": "モデレーション",
+    "games": "ゲーム & ソーシャル",
+    "settings": "設定",
+    "logout": "ログアウト",
+    "signOut": "サインアウト",
+    "collapseSidebar": "サイドバーを折りたたむ",
+    "expandSidebar": "サイドバーを展開",
+    "toggleTheme": "ライト/ダーク切替",
+    "openMenu": "メニューを開く"
+  },
+  "settings": {
+    "title": "サーバー設定",
+    "subtitle": "サーバーの設定と動作を構成します",
+    "loadingTitle": "サーバー設定を読み込み中",
+    "loadingMessage": "サーバーの構成と設定を取得しています...",
+    "selectServerFirst": "まずサーバーを選択してください。",
+    "autoReply": {
+      "enabled": "自動返信を有効化",
+      "cooldown": "自動返信のクールダウン (ms)",
+      "cooldownHelp": "自動返信の最小間隔（ミリ秒）"
+    },
+    "language": {
+      "label": "言語",
+      "help": "ボット返信の既定の言語",
+      "saved": "言語設定を保存しました",
+      "saveFailed": "言語設定の保存に失敗しました",
+      "changedTo": "言語を{{language}}に変更しました"
+    },
+    "timezone": {
+      "label": "タイムゾーン",
+      "placeholder": "検索して選択（例：Tokyo, UTC+09）",
+      "help": "入力してフィルタリング。保存済み: {{value}}",
+      "searchHelp": "タイムゾーンを検索"
+    },
+    "hourFormat": {
+      "label": "時間形式",
+      "24hour": "24時間",
+      "12hour": "12時間"
+    },
+    "slashCommands": {
+      "enabled": "スラッシュコマンドを有効化",
+      "help": "ユーザーがスラッシュコマンドを使用できるようにする"
+    },
+    "preview": {
+      "title": "プレビュー",
+      "sampleTimestamp": "サンプル時刻: {{timestamp}}",
+      "help": "設定を調整して保存してください。将来のAI返信は言語とローカル時刻を尊重できます。"
+    },
+    "messages": {
+      "saved": "設定を保存しました",
+      "saveFailed": "保存に失敗しました",
+      "resetConfirm": "すべての変更をリセットしますか？",
+      "unsavedChanges": "未保存の変更があります。本当に移動しますか？"
+    }
+  },
+  "auth": {
+    "login": "ログイン",
+    "logout": "ログアウト",
+    "loginWithDiscord": "Discordでログイン",
+    "loggingIn": "ログイン中...",
+    "welcomeBack": "おかえりなさい！",
+    "loginRequired": "続行するにはログインしてください",
+    "sessionExpired": "セッションの有効期限が切れました。再度ログインしてください。"
+  },
+  "errors": {
+    "general": "エラーが発生しました。もう一度お試しください。",
+    "network": "ネットワークエラー。接続を確認してください。",
+    "unauthorized": "この操作を行う権限がありません。",
+    "forbidden": "アクセスが拒否されました。",
+    "notFound": "リソースが見つかりません。",
+    "serverError": "サーバーエラー。後でもう一度お試しください。",
+    "validationFailed": "検証に失敗しました。入力を確認してください。",
+    "timeout": "タイムアウトしました。もう一度お試しください。"
+  },
+  "loading": {
+    "pleaseWait": "少々お待ちください...",
+    "fetchingData": "データ取得中...",
+    "processing": "処理中...",
+    "almostDone": "もう少しで完了..."
+  },
+  "languages": {
+    "en": "English",
+    "id": "Bahasa Indonesia",
+    "es": "Español",
+    "fr": "Français",
+    "de": "Deutsch",
+    "ja": "日本語",
+    "cn": "Chinese (Traditional)"
+  },
+  "overview": {
+    "title": "サーバー概要",
+    "subtitle": "ダッシュボード概要とサーバー統計",
+    "activityDashboardTitle": "アクティビティ ダッシュボード",
+    "serverInfo": "サーバー情報",
+    "botStatus": "ボットの状態",
+    "quickActions": "クイック操作",
+    "quickStats": "クイック統計",
+    "autosEnabled": "自動返信 有効",
+    "commandsEnabled": "コマンド 有効",
+    "guildMembers": "サーバーメンバー",
+    "commandsToday": "本日のコマンド",
+    "totalAutos": "自動返信 合計",
+    "enabled": "有効",
+    "disabled": "無効",
+    "featureStatus": "機能の状態",
+    "coreFeatures": "コア機能",
+    "advancedFeatures": "高度な機能",
+    "welcomeSystem": "ウェルカムシステム",
+    "roleManagement": "ロール管理",
+    "xpLeveling": "XP・レベル",
+    "scheduler": "スケジューラー",
+    "autoModeration": "自動モデレーション",
+    "antiRaid": "アンチレイド",
+    "auditLogging": "監査ログ",
+    "active": "アクティブ",
+    "partial": "部分的",
+    "unknown": "不明",
+    "status": {
+      "enabled": "有効",
+      "disabled": "無効",
+      "active": "アクティブ",
+      "partial": "部分的",
+      "unknown": "不明"
+    },
+    "apiStatus": {
+      "geminiAi": "Gemini AI",
+      "discord": "Discord",
+      "database": "データベース",
+      "uptime": "稼働時間",
+      "memory": "メモリ",
+      "errorsHour": "エラー/時",
+      "cacheHit": "キャッシュヒット",
+      "ready": "準備完了",
+      "down": "停止",
+      "on": "オン",
+      "off": "オフ",
+      "lastHour": "直近1時間",
+      "entries": "件",
+      "used": "使用"
+    },
+    "charts": {
+      "loadingCharts": "チャートを読み込み中…",
+      "stackedBarDescription": "スタックバーは、Autos と Commands の有効/無効を比較します。",
+      "count": "件数",
+      "categories": {
+        "autos": "自動返信",
+        "commands": "コマンド"
+      },
+      "days": {
+        "sun": "日",
+        "mon": "月",
+        "tue": "火",
+        "wed": "水",
+        "thu": "木",
+        "fri": "金",
+        "sat": "土"
+      },
+      "commandActivity": "コマンドのアクティビティ (7日)",
+      "noData": "データがありません"
+    },
+    "loadingAnalytics": "分析を読み込み中…",
+    "of": "／",
+    "serverInformation": "サーバー情報",
+    "activityStreamTitle": "最近のアクティビティ",
+    "topCommands24h": "上位コマンド（24時間）",
+    "total": "合計",
+    "executions": "実行",
+    "avg": "平均",
+    "topCommandsEmpty": "過去24時間に実行されたコマンドはありません。",
+    "systemStatusTitle": "システムステータス",
+    "antiRaidProtectionTitle": "アンチレイド保護",
+    "last24Hours": "直近24時間",
+    "joinPatternLast6Hours": "参加パターン（直近6時間）",
+    "securityTrendsTitle": "セキュリティ動向とメンバー安全性",
+    "badges": {
+      "todayCount": "本日{{count}}件"
+    },
+    "time": {
+      "hoursAgo": "{{count}}時間前",
+      "now": "今",
+      "secondsShort": "秒",
+      "days": "日"
+    },
+    "performanceMetrics": "パフォーマンス指標",
+    "guildInfo": {
+      "members": "メンバー",
+      "online": "オンライン",
+      "today": "今日",
+      "roles": "ロール",
+      "newMembersToday": "+{count}"
+    },
+    "metrics": {
+      "apiResponse": "API応答",
+      "excellent": "非常に良い",
+      "good": "良好",
+      "slow": "遅い",
+      "commandUsage": "コマンド利用",
+      "highActivity": "高い活動",
+      "moderateActivity": "適度な活動",
+      "lowActivity": "低い活動",
+      "errorRate": "エラー率",
+      "systemHealth": "システム健全性",
+      "optimal": "最適",
+      "degraded": "低下",
+      "critical": "危機的",
+      "successRate": "成功率",
+      "cpuUsage": "CPU使用率",
+      "improvement": "改善",
+      "normalLoad": "通常負荷",
+      "yesterdayChange": "昨日比 -12ms",
+      "newToday": "本日新規"
+    },
+    "activeUsers": "アクティブユーザー",
+    "recentActivityStream": "最近のアクティビティ",
+    "systemHealth": {
+      "botOnline": "ボットオンライン",
+      "database": "データベース",
+      "aiServices": "AIサービス",
+      "cacheSystem": "キャッシュシステム",
+      "systemHealthScore": "システム健全性スコア",
+      "status": {
+        "active": "アクティブ",
+        "connected": "接続済み",
+        "operational": "稼働中",
+        "warming": "ウォームアップ中"
+      }
+    },
+    "security": {
+      "protectionStatus": "保護状況",
+      "raidsBlocked": "ブロックしたレイド",
+      "suspicious": "不審",
+      "legitimate": "正常",
+      "filterEffectiveness": "フィルター効果",
+      "filters": {
+        "spam": "スパム",
+        "links": "リンク",
+        "caps": "大文字",
+        "profanity": "不適切語",
+        "invites": "招待",
+        "mentions": "メンション"
+      },
+      "actionsTaken": "実施したアクション",
+      "securityScore": "セキュリティスコア",
+      "cleanMembers": "健全なメンバー",
+      "warnedUsers": "警告したユーザー",
+      "bannedToday": "本日BAN",
+      "newMembers": "新規メンバー",
+      "joins": "参加",
+      "joinRateLimit": "参加レート制限",
+      "minAccountAgeLabel": "アカウント最低年齢",
+      "violationsCaught": "検知した違反",
+      "violationsCaught24h": "検知した違反（24時間）",
+      "securityEventsLast7d": "セキュリティイベント（直近7日）",
+      "excellentProtection": "優れた保護",
+      "actions": {
+        "actions": "アクション",
+        "delete": "削除",
+        "warn": "警告",
+        "mute": "ミュート",
+        "kick": "キック",
+        "ban": "BAN"
+      },
+      "thisWeek": "今週",
+      "noDataThisWeek": "今週のデータはありません"
+    },
+    "activityStream": {
+      "noActivityMessage": "最近のアクティビティはありません。コマンドが実行されるとここに表示されます。",
+      "recent": "最近",
+      "discordServer": "Discordサーバー",
+      "unknownGuild": "不明なサーバー",
+      "byUser": "{{user}} により",
+      "now": "今"
+    },
+    "sampleActivity": {
+      "schedulerUsed": "/scheduler を使用",
+      "autoReplyTriggered": "自動返信がトリガーされました",
+      "pingExecuted": "/ping を実行",
+      "welcomeMessageSent": "ウェルカムメッセージを送信",
+      "helpRequested": "/help をリクエスト"
+    }
+  },
+  "autosSection": {
+    "loadingTitle": "自動返信を読み込み中",
+    "loadingMessage": "サーバーの自動返信テンプレートと設定を取得しています...",
+    "regexTester": {
+      "open": "正規表現テスター",
+      "close": "テスターを閉じる",
+      "pattern": "パターン",
+      "flags": "フラグ",
+      "sampleLabel": "サンプルテキスト（複数行）",
+      "samplePlaceholder": "hello world\nやあ",
+      "run": "実行",
+      "empty": "空",
+      "error": "正規表現エラー: {{error}}"
+    },
+    "bulk": {
+      "selectedCount": "選択: {{count}}",
+      "enable": "有効化",
+      "disable": "無効化",
+      "enableSelected": "選択項目を有効化",
+      "disableSelected": "選択項目を無効化",
+      "deleteSelected": "選択項目を削除",
+      "clearSelection": "選択をクリア",
+      "selectAllFiltered": "（フィルタ済）すべて選択",
+      "rows": "行"
+    },
+    "columns": {
+      "select": "選択",
+      "key": "キー",
+      "pattern": "パターン",
+      "flags": "フラグ",
+      "replies": "返信",
+      "enabled": "有効"
+    },
+    "pagination": {
+      "rows": "行",
+      "prevPage": "前のページ",
+      "nextPage": "次のページ",
+      "page": "{{page}} / {{total}} ページ",
+      "showing": "{{count}} 件表示（フィルタ {{filtered}} 件／合計 {{total}} 件）"
+    },
+    "empty": "検索条件に一致する自動返信はありません。",
+    "confirm": {
+      "deleteSelected": "選択した {{count}} 件を削除しますか？",
+      "deleteOne": "{{key}} を削除しますか？"
+    },
+    "toasts": {
+      "bulkEnabled": "選択を有効化しました",
+      "bulkDisabled": "選択を無効化しました",
+      "bulkDeleted": "選択を削除しました",
+      "deleted": "削除しました",
+      "saved": "自動返信を保存しました"
+    },
+    "modal": {
+      "titleAdd": "自動返信を追加",
+      "titleEdit": "自動返信を編集",
+      "key": "キー",
+      "keyHelpUnique": "一意のID",
+      "keyPlaceholder": "greet",
+      "keyNoSpaces": "スペースは使用できません",
+      "pattern": "正規表現パターン",
+      "patternPlaceholder": "^hello|hi",
+      "flags": "フラグ",
+      "flagsPlaceholder": "i",
+      "replies": "返信",
+      "repliesHelp": "1行につき1件",
+      "repliesPlaceholder": "Hello!\nHi!",
+      "enabled": "有効",
+      "footerNote": "ボットはランダムに返信を選びます。"
+    }
+  },
+  "commands": {
+    "title": "コマンド",
+    "subtitle": "ボットのコマンドと権限を管理",
+    "slashCommands": "スラッシュコマンド",
+    "prefixCommands": "プレフィックスコマンド",
+    "permissions": "コマンド権限",
+    "enableAll": "すべて有効",
+    "disableAll": "すべて無効",
+    "section": {
+      "commandOne": "1件のコマンド",
+      "commandMany": "{{count}}件のコマンド",
+      "requiresManage": "サーバー管理権限が必要",
+      "alwaysActive": "常に有効",
+      "updatedBy": "{{user}} により更新",
+      "readOnly": "読み取り専用",
+      "passive": "パッシブ",
+      "bottomNote": "一部のコマンドは常に有効、または特定の権限が必要です。",
+      "unknownUser": "不明"
+    },
+    "groups": {
+      "core": {
+        "title": "コア"
+      },
+      "ai": {
+        "title": "AI・言語"
+      },
+      "polls": {
+        "title": "投票"
+      },
+      "utilities": {
+        "title": "ユーティリティ"
+      },
+      "xp": {
+        "title": "XP・レベル"
+      },
+      "roles": {
+        "title": "ロール・自動付与"
+      },
+      "moderation": {
+        "title": "モデレーション・セキュリティ"
+      },
+      "passive": {
+        "title": "パッシブ / 自動化"
+      },
+      "scheduler": {
+        "title": "スケジューラー"
+      },
+      "streaming": {
+        "title": "ストリーミング連携"
+      }
+    },
+    "toasts": {
+      "enabled": "コマンド \"{{name}}\" を有効化",
+      "disabled": "コマンド \"{{name}}\" を無効化",
+      "toggleFailed": "{{name}} の更新に失敗しました"
+    },
+    "items": {
+      "ping": {
+        "usage": "/ping",
+        "desc": "ステータス確認 — Pongで応答。"
+      },
+      "uptime": {
+        "usage": "/uptime",
+        "desc": "ボットの稼働時間を表示。"
+      },
+      "whoami": {
+        "usage": "/whoami",
+        "desc": "あなたのタグとユーザーIDを表示。"
+      },
+      "echo": {
+        "usage": "/echo <text>",
+        "desc": "同じテキストで返信。"
+      },
+      "help": {
+        "usage": "/help",
+        "desc": "カテゴリ別のインタラクティブなヘルプメニュー。"
+      },
+      "ask": {
+        "usage": "/ask prompt:<text>",
+        "desc": "AIに質問（3分キャッシュ）。"
+      },
+      "askfollow": {
+        "usage": "/askfollow prompt:<text>",
+        "desc": "直近の会話コンテキストを使って追加入力。"
+      },
+      "explain_image": {
+        "usage": "/explain_image image(1-3) [prompt]",
+        "desc": "最大3枚の画像を説明（プロンプト任意）。"
+      },
+      "summarize": {
+        "usage": "/summarize [count]",
+        "desc": "直近のメッセージを要約（既定30）。"
+      },
+      "translate": {
+        "usage": "/translate text target",
+        "desc": "テキストを対象言語に翻訳。"
+      },
+      "poll create": {
+        "usage": "/poll create question options",
+        "desc": "投票を作成（最大5択）。"
+      },
+      "poll results": {
+        "usage": "/poll results id",
+        "desc": "投票結果を表示（id）。"
+      },
+      "math": {
+        "usage": "/math add|sub|mul|div a b",
+        "desc": "基本的な計算。"
+      },
+      "user info": {
+        "usage": "/user info [target]",
+        "desc": "Discordユーザー情報を取得。"
+      },
+      "remind": {
+        "usage": "/remind minutes text",
+        "desc": "DMまたはチャンネルでリマインダーを予約。"
+      },
+      "meme": {
+        "usage": "/meme",
+        "desc": "meme-api.comからランダムなミーム画像。"
+      },
+      "level": {
+        "usage": "/level [user]",
+        "desc": "自分または他人のレベルを確認。"
+      },
+      "xp": {
+        "usage": "/xp check|leaderboard [user]",
+        "desc": "XP確認やサーバーランキングを表示。"
+      },
+      "rank": {
+        "usage": "/rank [user]",
+        "desc": "サーバーでのランクを確認。"
+      },
+      "leaderboard": {
+        "usage": "/leaderboard [limit]",
+        "desc": "サーバーのXPランキング。"
+      },
+      "xpadmin": {
+        "usage": "/xpadmin give|remove|set <user> <amount>",
+        "desc": "ユーザーのXPを管理（サーバー管理権限）。"
+      },
+      "role list": {
+        "usage": "/role list",
+        "desc": "利用可能な自動付与ロールを表示。"
+      },
+      "role menu": {
+        "usage": "/role menu",
+        "desc": "インタラクティブなロール選択メニュー（エフェメラル）。"
+      },
+      "role add": {
+        "usage": "/role add <role> [user]",
+        "desc": "自分または他者に自動付与ロールを追加。"
+      },
+      "role remove": {
+        "usage": "/role remove <role> [user]",
+        "desc": "自分または他者から自動付与ロールを削除。"
+      },
+      "role setup": {
+        "usage": "/role setup <action> <role> [options]",
+        "desc": "自動付与ロールを設定（ロール管理権限）。"
+      },
+      "role toggle": {
+        "usage": "/role toggle <command_name>",
+        "desc": "ロールコマンドの有効/無効（ロール管理権限）。"
+      },
+      "automod list": {
+        "usage": "/automod list",
+        "desc": "設定済みのオートモデレーションルール一覧。"
+      },
+      "automod info": {
+        "usage": "/automod info <id>",
+        "desc": "特定のAutomodルールの詳細を表示。"
+      },
+      "automod toggle": {
+        "usage": "/automod toggle <id> <enabled>",
+        "desc": "Automodルールの有効/無効（サーバー管理権限）。"
+      },
+      "antiraid status": {
+        "usage": "/antiraid status",
+        "desc": "現在のアンチレイド状態を表示。"
+      },
+      "antiraid toggle": {
+        "usage": "/antiraid toggle <enabled>",
+        "desc": "アンチレイドの有効/無効（サーバー管理権限）。"
+      },
+      "audit recent": {
+        "usage": "/audit recent",
+        "desc": "最近のモデレーションアクション（サーバー管理権限）。"
+      },
+      "autoreply": {
+        "usage": "(パッシブ)",
+        "desc": "設定したパターンに基づいて自動返信。"
+      },
+      "welcome preview": {
+        "usage": "/welcome preview",
+        "desc": "現在のウェルカム設定をプレビュー。"
+      },
+      "welcome toggle": {
+        "usage": "/welcome toggle <enabled>",
+        "desc": "ウェルカム機能の有効/無効（サーバー管理権限）。"
+      },
+      "automod": {
+        "usage": "(パッシブ)",
+        "desc": "スパム・大文字・リンク・不適切語を自動モデレート。"
+      },
+      "audit logs": {
+        "usage": "(パッシブ)",
+        "desc": "すべてのモデレーション操作とサーバー変更を記録。"
+      },
+      "anti-raid": {
+        "usage": "(パッシブ)",
+        "desc": "レイドや大量参加から保護。"
+      },
+      "scheduler list": {
+        "usage": "/scheduler list",
+        "desc": "すべての予約メッセージを一覧。"
+      },
+      "scheduler info": {
+        "usage": "/scheduler info <id>",
+        "desc": "予約メッセージの詳細を表示。"
+      },
+      "scheduler enable": {
+        "usage": "/scheduler enable <id>",
+        "desc": "予約メッセージを有効化（サーバー管理権限）。"
+      },
+      "scheduler disable": {
+        "usage": "/scheduler disable <id>",
+        "desc": "予約メッセージを無効化（サーバー管理権限）。"
+      },
+      "scheduler run": {
+        "usage": "/scheduler run <id>",
+        "desc": "予約メッセージを今すぐ実行（サーバー管理権限）。"
+      },
+      "ytwatch": {
+        "usage": "/ytwatch action:<enable|disable|addchannel|removechannel|announcechannel|mentionrole|interval|status>",
+        "desc": "YouTube通知を管理（サーバー管理権限）。"
+      },
+      "ytstats": {
+        "usage": "/ytstats",
+        "desc": "YouTubeウォッチャーのキャッシュとクォータ統計。"
+      },
+      "ytdebug": {
+        "usage": "/ytdebug",
+        "desc": "YouTubeウォッチャーの最近のデバッグイベント（サーバー管理権限）。"
+      },
+      "twitchstats": {
+        "usage": "/twitchstats",
+        "desc": "TwitchウォッチャーのキャッシュとAPI統計。"
+      },
+      "twitchdebug": {
+        "usage": "/twitchdebug action:<config|status|test|resolve>",
+        "desc": "Twitch連携のデバッグと通知テスト。"
+      }
+    }
+  },
+  "personalization": {
+    "title": "ボットのパーソナライズ",
+    "subtitle": "ボットの見た目と動作をカスタマイズ",
+    "fields": {
+      "nickname": "ボットのニックネーム（サーバーのみ）",
+      "nicknamePlaceholder": "空欄で現状維持",
+      "activityType": "アクティビティの種類",
+      "activityText": "アクティビティのテキスト",
+      "activityTextPlaceholder": "例：あなたのメッセージと",
+      "status": "ステータス",
+      "avatar": "アバター画像",
+      "preview": "ライブプレビュー",
+      "permissionsNote": "ニックネームとアバターはボット権限が必要。アクティビティは実装時にシャード単位でグローバル適用。",
+      "currentBotName": "現在のボット名",
+      "defaultStatus": "既定のステータス",
+      "noActivity": "アクティビティ未設定",
+      "previewNote": "未保存の変更は即時にプレビューへ反映されます。"
+    },
+    "activityTypes": {
+      "none": "（なし）",
+      "playing": "プレイ中",
+      "listening": "リスニング",
+      "watching": "視聴中",
+      "competing": "対戦中"
+    },
+    "statuses": {
+      "default": "（既定）",
+      "online": "オンライン",
+      "idle": "退席中",
+      "dnd": "取り込み中",
+      "invisible": "オフライン表示"
+    },
+    "toasts": {
+      "saved": "ボットのパーソナライズを保存しました",
+      "saveFailed": "保存に失敗しました"
+    },
+    "avatar": "ボットのアバター",
+    "nickname": "ボットのニックネーム",
+    "status": "ボットのステータス",
+    "embedColor": "埋め込みカラー",
+    "prefix": "コマンドプレフィックス"
+  },
+  "moderation": {
+    "title": "モデレーション",
+    "subtitle": "モデレーション機能と設定を構成",
+    "loading": {
+      "title": "モデレーションを読み込み中",
+      "message": "モデレーションの機能と設定を取得しています..."
+    },
+    "badge": {
+      "enabledOfTotal": "{{total}} 件中 {{enabled}} 件が有効"
+    },
+    "overview": {
+      "title": "モデレーション概要",
+      "desc": "コミュニティの保護機能を有効にし、設定を構成します。より強力な保護には追加の設定が必要になる場合があります。",
+      "protectionLevel": "保護レベル",
+      "complete": "完了"
+    },
+    "common": {
+      "enabled": "{{feature}} を有効化しました",
+      "disabled": "{{feature}} を無効化しました",
+      "enableFailed": "機能の有効化に失敗しました",
+      "disableFailed": "機能の無効化に失敗しました",
+      "loadFailedGeneric": "モデレーションデータの読み込みに失敗しました",
+      "loadFailed": "{{feature}} の設定を読み込めませんでした",
+      "saveSuccess": "{{feature}} の設定を保存しました",
+      "saveFailed": "{{feature}} の設定の保存に失敗しました"
+    },
+    "modal": {
+      "title": "{{feature}} の設定",
+      "loading": "設定を読み込み中...",
+      "loadingHelp": "この機能の現在の設定を取得しています",
+      "saving": "変更を保存中...",
+      "savingHelp": "変更を適用してサーバー設定を更新しています",
+      "savingShort": "保存中...",
+      "saveChanges": "変更を保存"
+    },
+    "features": {
+      "roles": {
+        "header": "ロール管理",
+        "badge": "セルフ割り当て",
+        "tabs": {
+          "reaction": "リアクションロール",
+          "slash": "スラッシュコマンド"
+        },
+        "table": {
+          "status": "ステータス",
+          "title": "タイトル",
+          "channel": "チャンネル",
+          "message": "メッセージ",
+          "reactions": "リアクション",
+          "roles": "ロール",
+          "actions": "操作"
+        },
+        "reaction": {
+          "header": "リアクションロールの設定",
+          "loading": "リアクションロールを読み込み中...",
+          "empty": "リアクションロールはまだありません。",
+          "labels": {
+            "botMessage": "ボットメッセージ",
+            "userMessage": "ユーザーメッセージ"
+          },
+          "info": {
+            "title": "仕組み",
+            "description": "リアクションロールでは、ユーザーがメッセージにリアクションすることで自分でロールを取得できます。設定された絵文字でリアクションすると、対応するロールを追加または削除できます。",
+            "types": {
+              "title": "リアクションの種類:",
+              "toggle": "トグル - リアクションでロールを追加/削除できます",
+              "addOnly": "追加のみ - ロールの追加のみ可能。リアクションを外してもロールは削除されません",
+              "removeOnly": "削除のみ - リアクションでロールの削除のみ可能"
+            }
+          },
+          "form": {
+            "status": "リアクションロールを有効化",
+            "title": "タイトル",
+            "titlePlaceholder": "このリアクションロールのタイトルを入力",
+            "titleHelp": "このリアクションロールを識別するための説明的なタイトル",
+            "channel": "チャンネル",
+            "channelPlaceholder": "チャンネルを選択...",
+            "messageId": "メッセージID",
+            "messageIdReadOnly": "編集時はメッセージIDは読み取り専用です",
+            "messageIdTooltip": "編集時にメッセージIDは変更できません",
+            "customMessage": "カスタムメッセージ",
+            "customMessagePlaceholder": "ロールを取得するにはリアクションしてください！",
+            "customMessageHelp": {
+              "editing": "このリアクションロール用のメッセージ内容",
+              "creating": "ボットが投稿するメッセージ内容"
+            },
+            "reactions": "リアクション",
+            "emoji": "絵文字",
+            "emojiPlaceholder": "🎮 または :custom_emoji:",
+            "role": "ロール",
+            "rolePlaceholder": "ロールを選択...",
+            "type": "タイプ",
+            "typeOptions": {
+              "toggle": "トグル",
+              "add_only": "追加のみ",
+              "remove_only": "削除のみ"
+            },
+            "previewSelectRole": "ロールを選択"
+          },
+          "buttons": {
+            "add": "リアクションロールを追加",
+            "addReaction": "リアクションを追加",
+            "removeReaction": "リアクションを削除",
+            "removeReactionDisabled": "最後のリアクションは削除できません"
+          },
+          "emojiPicker": {
+            "title": "絵文字を選択",
+            "serverEmojis": "サーバー絵文字",
+            "commonEmojis": "よく使う絵文字"
+          },
+          "delete": {
+            "title": "リアクションロールメッセージを削除",
+            "message": "リアクションロール \"{{title}}\" のメッセージを削除しますか？",
+            "warning": "関連するすべてのリアクションが削除され、元に戻せません。",
+            "confirm": "メッセージを削除"
+          },
+          "toasts": {
+            "created": "リアクションロール \"{{title}}\" を作成しました！",
+            "updated": "リアクションロール \"{{title}}\" を更新しました！",
+            "deleteSuccess": "リアクションロールのメッセージを削除しました",
+            "deleteFailed": "リアクションロールのメッセージの削除に失敗しました",
+            "statusEnabled": "リアクションロールを有効化しました",
+            "statusDisabled": "リアクションロールを無効化しました",
+            "statusFailed": "リアクションロールのステータス更新に失敗しました",
+            "loadFailed": "リアクションロールの読み込みに失敗しました"
+          }
+        },
+        "slash": {
+          "header": "スラッシュコマンドロール",
+          "subtitle": "ロール管理用のカスタムスラッシュコマンドを設定",
+          "loading": "スラッシュコマンドロールを読み込み中...",
+          "empty": "スラッシュコマンドロールはまだありません。",
+          "anyChannel": "任意のチャンネル",
+          "info": {
+            "title": "仕組み",
+            "description": "ユーザーはこれらのカスタムスラッシュコマンドを使って自分のロールを管理できます。各コマンドには特定のロールや動作を設定できます。",
+            "types": {
+              "title": "コマンドの種類:",
+              "toggle": "トグル - ロールを追加/削除できます",
+              "add": "追加のみ - ロールの追加のみ可能",
+              "remove": "削除のみ - ロールの削除のみ可能"
+            }
+          },
+          "buttons": {
+            "add": "スラッシュコマンドを追加",
+            "addRole": "ロールを追加"
+          },
+          "form": {
+            "addTitle": "新しいスラッシュコマンドを追加",
+            "editTitle": "スラッシュコマンドを編集",
+            "title": "タイトル",
+            "titlePlaceholder": "例: assign-role",
+            "description": "説明",
+            "descriptionPlaceholder": "コマンドの説明",
+            "channel": "チャンネル (任意)",
+            "channelPlaceholder": "任意のチャンネル",
+            "roles": "ロール",
+            "selectRole": "ロールを選択...",
+            "type": "タイプ",
+            "typeOptions": {
+              "toggle": "トグル",
+              "add": "追加のみ",
+              "remove": "削除のみ"
+            },
+            "requirePermission": "権限が必要",
+            "updateCommand": "コマンドを更新",
+            "createCommand": "コマンドを作成"
+          },
+          "delete": {
+            "title": "スラッシュコマンドを削除",
+            "message": "スラッシュコマンド \"{{name}}\" を削除しますか？",
+            "warning": "コマンドとその設定が完全に削除されます。ユーザーは使用できなくなります。",
+            "confirm": "コマンドを削除"
+          },
+          "toasts": {
+            "created": "スラッシュコマンドロールを作成しました！",
+            "updated": "スラッシュコマンドロールを更新しました！",
+            "statusEnabled": "スラッシュコマンドを有効化しました",
+            "statusDisabled": "スラッシュコマンドを無効化しました",
+            "deleteSuccess": "スラッシュコマンドを削除しました",
+            "deleteFailed": "コマンドの削除に失敗しました",
+            "fetchFailed": "スラッシュコマンドロールの取得に失敗しました",
+            "toggleFailed": "コマンドの状態切り替えに失敗しました"
+          }
+        }
+      },
+      "logging": {
+        "header": "監査ログ",
+        "badge": "ロギング",
+        "info": {
+          "description": "モデレーションやサーバー変更のログを送信するチャンネルを設定します。"
+        },
+        "fields": {
+          "globalChannel": {
+            "label": "グローバルログチャンネル",
+            "desc": "各カテゴリでチャンネルが未設定の場合に使われるデフォルトのチャンネル",
+            "placeholder": "ログ用チャンネルを選択（任意）"
+          },
+          "includeBots": {
+            "label": "ボットを含める",
+            "desc": "ボットによるアクションも記録します"
+          },
+          "enhancedDetails": {
+            "label": "詳細情報を拡張",
+            "desc": "ログに追加のコンテキストとメタデータを含めます"
+          },
+          "channels": {
+            "message": {
+              "label": "メッセージ",
+              "desc": "メッセージ関連のログを送る場所"
+            },
+            "member": {
+              "label": "メンバー",
+              "desc": "メンバー関連のログを送る場所"
+            },
+            "channel": {
+              "label": "チャンネル",
+              "desc": "チャンネル関連のログを送る場所"
+            },
+            "role": {
+              "label": "ロール",
+              "desc": "ロール関連のログを送る場所"
+            },
+            "server": {
+              "label": "サーバー",
+              "desc": "サーバー関連のログを送る場所"
+            },
+            "voice": {
+              "label": "ボイス",
+              "desc": "ボイス関連のログを送る場所"
+            }
+          }
+        },
+        "placeholders": {
+          "noLogging": "ロギングなし",
+          "selectChannel": "チャンネルを選択"
+        },
+        "buttons": {
+          "applyGlobal": "グローバルに適用",
+          "reset": "リセット",
+          "save": "保存",
+          "cancel": "キャンセル"
+        },
+        "modal": {
+          "title": "監査ログの設定",
+          "saving": "変更を保存中...",
+          "saved": "設定を保存しました"
+        },
+        "toasts": {
+          "saved": "監査ログの設定を保存しました",
+          "saveFailed": "監査ログの設定の保存に失敗しました",
+          "updatedGlobal": "グローバルログチャンネルを更新しました",
+          "copiedToEmpty": "空のカテゴリにグローバルチャンネルを適用しました",
+          "validationRequired": "少なくとも1つのチャンネルを選択するか、グローバルチャンネルを設定してください"
+        }
+      },
+      "antiraid": {
+        "header": "アンチレイド保護",
+        "badge": "セキュリティ",
+        "info": {
+          "description": "参加レート制限、アカウント年齢チェック、自動応答、コンテンツ保護でレイドを検知・防止します。"
+        },
+        "features": {
+          "joinRate": {
+            "title": "参加レート監視",
+            "items": {
+              "trackPatterns": "急増や不審な参加パターンを追跡",
+              "detectAttacks": "レイド試行をリアルタイム検知",
+              "thresholds": "保護を発動するしきい値を設定可能"
+            }
+          },
+          "accountAnalysis": {
+            "title": "アカウント分析",
+            "items": {
+              "age": "最小アカウント年齢の要件",
+              "patterns": "Bot的なパターンを検出",
+              "avatarUsername": "アバター/ユーザー名の特徴を考慮"
+            }
+          },
+          "automatedResponse": {
+            "title": "自動対応",
+            "items": {
+              "lockdown": "チャンネルのロックダウン/スローモード",
+              "verification": "高い認証レベルを要求",
+              "removal": "不審なアカウントのキック/バン/タイムアウト"
+            }
+          },
+          "contentFiltering": {
+            "title": "コンテンツ保護",
+            "items": {
+              "inviteSpam": "新規アカウントによる招待スパムを低減",
+              "massMention": "大量メンションスパムの抑制",
+              "newMember": "新規メンバー向けの追加フィルター"
+            }
+          }
+        },
+        "warning": {
+          "title": "注意:",
+          "message": "アンチレイドの動作は厳格になる場合があります。混雑時に正当なメンバーへ影響しないよう、しきい値を調整してください。"
+        },
+        "fields": {
+          "joinRate": {
+            "label": "参加レート",
+            "desc": "時間窓内で許可する最大参加数"
+          },
+          "joinWindow": {
+            "label": "時間窓(秒)",
+            "desc": "参加レート判定に使用する間隔"
+          },
+          "accountAge": {
+            "label": "最小アカウント年齢(日)",
+            "desc": "この日数より新しいアカウントをブロック"
+          },
+          "raidAction": {
+            "label": "レイド検知時の対応",
+            "desc": "レイド検知時に実行する主なアクション"
+          },
+          "raidActionDuration": {
+            "label": "アクション時間(分)",
+            "desc": "タイムアウト/ロックダウンの時間",
+            "notApplicable": "Kick/Ban/Alert には該当なし"
+          },
+          "alertChannel": {
+            "label": "アラートチャンネル",
+            "desc": "アンチレイドのアラートやサマリーの送信先"
+          },
+          "autoKick": {
+            "label": "不審アカウントの自動キック",
+            "desc": "チェックに失敗したアカウントを自動でキック"
+          },
+          "gracePeriod": {
+            "label": "延長期間(分)",
+            "desc": "検知後も強化保護を維持する時間"
+          },
+          "whitelistRoles": {
+            "label": "例外ロール",
+            "desc": "これらのロールを持つメンバーはアンチレイドを免除"
+          }
+        },
+        "actions": {
+          "lockdown": "ロックダウン",
+          "kick": "キック",
+          "ban": "BAN",
+          "timeout": "タイムアウト",
+          "alert": "アラートのみ"
+        },
+        "verification": {
+          "label": "必要な認証レベル",
+          "levels": {
+            "none": "なし",
+            "low": "低",
+            "medium": "中",
+            "high": "高",
+            "highest": "最高"
+          }
+        },
+        "placeholders": {
+          "noAlerts": "アラートチャンネルなし"
+        },
+        "roles": {
+          "placeholder": "免除ロールを追加...",
+          "meta": {
+            "role": "ロール"
+          },
+          "noMatches": "一致するロールはありません。",
+          "allAdded": "すべてのロールが追加されています"
+        },
+        "modal": {
+          "title": "アンチレイド設定",
+          "saving": "アンチレイド設定を保存中...",
+          "saved": "アンチレイド設定を保存しました"
+        },
+        "toasts": {
+          "saved": "アンチレイド設定を保存しました",
+          "saveFailed": "アンチレイド設定の保存に失敗しました"
+        }
+      },
+      "xp": {
+        "header": "XP・レベルの設定",
+        "badge": "メンバーエンゲージメント",
+        "info": {
+          "description": "メンバーの活動をXPポイントとレベル進行で報酬化します。XPレート、クールダウン、特別メンバー向けの倍率ロール、XPを獲得しない除外チャンネルを設定できます。"
+        },
+        "placeholders": {
+          "sameChannel": "同じチャンネル",
+          "addChannelToExclude": "除外するチャンネルを追加",
+          "addRoleToExclude": "除外するロールを追加...",
+          "selectRole": "ロールを選択...",
+          "multiplier": "例: 1.5"
+        },
+        "aria": {
+          "removeItem": "{{name}} を削除"
+        },
+        "fields": {
+          "xpPerMessage": {
+            "label": "メッセージ毎のXP",
+            "desc": "メッセージ1件あたりのXP"
+          },
+          "cooldownSeconds": {
+            "label": "XPクールダウン（秒）",
+            "desc": "XP獲得の間に待機する時間"
+          },
+          "levelUpChannel": {
+            "label": "レベルアップ通知チャンネル",
+            "desc": "レベルアップメッセージの送信先（同一チャンネルは空欄）"
+          },
+          "excludedChannels": {
+            "label": "除外チャンネル",
+            "desc": "XPを獲得しないチャンネル"
+          },
+          "excludedRoles": {
+            "label": "除外ロール",
+            "desc": "XPを獲得しないロール"
+          },
+          "levelUpMessages": {
+            "label": "レベルアップメッセージ",
+            "desc": "ユーザーがレベルアップした時にメッセージを送信"
+          }
+        },
+        "multipliers": {
+          "label": "XP倍率ロール",
+          "desc": "特別メンバー向けにXP倍率を持つロールを設定",
+          "roleLabel": "ロール",
+          "multiplierLabel": "倍率",
+          "multiplierSuffix": "×",
+          "remove": "削除",
+          "note": "倍率はメッセージ毎XPとクールダウンに加算的に適用されます。"
+        },
+        "toasts": {
+          "addedExcludedChannel": "除外にチャンネル {{name}} を追加しました",
+          "removedExcludedChannel": "除外からチャンネル {{name}} を削除しました",
+          "addedExcludedRole": "除外にロール {{name}} を追加しました",
+          "removedExcludedRole": "除外からロール {{name}} を削除しました",
+          "multiplierAdded": "{{name}} に倍率 {{value}}× を追加しました",
+          "multiplierRemoved": "{{name}} の倍率を削除しました",
+          "invalidMultiplier": "有効なロールと倍率（例: 1.5）を入力してください"
+        }
+      },
+      "automod": {
+        "header": "オートモデレーション",
+        "badge": "保護",
+        "info": {
+          "pre": "スパム、リンク、悪意のあるURLのグローバル検出は、次のようなサードパーティのレピュテーションソースと統合されています:"
+        },
+        "globalLog": {
+          "label": "グローバルログチャンネル",
+          "desc": "ルールでチャンネルが指定されていない場合にAutoModログを送信するデフォルトのチャンネル",
+          "placeholder": "ログチャンネルを選択（任意）"
+        },
+        "placeholders": {
+          "addChannels": "チャンネルを追加",
+          "addRoles": "ロールを追加"
+        },
+        "meta": {
+          "channel": "チャンネル",
+          "role": "ロール"
+        },
+        "rules": {
+          "header": "ルール",
+          "subheader": "スパム、全角、リンク、不適切な表現などを検出するルールを作成します。",
+          "add": "ルールを追加",
+          "loading": "ルールを読み込み中...",
+          "empty": "まだルールはありません",
+          "emptyCta": "最初のルールを作成するには「ルールを追加」をクリックしてください。",
+          "editTitle": "オートモデレーションルールを編集",
+          "createTitle": "新しいオートモデレーションルールを作成",
+          "creating": "ルールを作成中...",
+          "updating": "ルールを更新中...",
+          "creatingShort": "作成中...",
+          "updatingShort": "更新中...",
+          "createBtn": "ルールを作成",
+          "updateBtn": "ルールを更新",
+          "form": {
+            "name": "ルール名",
+            "namePlaceholder": "例: スパム対策",
+            "trigger": "トリガータイプ",
+            "action": "アクションタイプ",
+            "threshold": "警告しきい値",
+            "thresholdPlaceholder": "5",
+            "thresholdHelp": "アクション前の違反回数（ユーザーに警告）",
+            "duration": "期間（分）",
+            "durationPlaceholder": "10",
+            "durationHelp": "ミュート/BANの期間（永久の場合は空）",
+            "logChannel": "ログチャンネル",
+            "logChannelPlaceholder": "グローバルログチャンネルを使用",
+            "messageAction": "メッセージアクション",
+            "messageActionHelp": "違反メッセージに適用するアクション",
+            "whitelistChannels": "許可チャンネル",
+            "whitelistChannelsHelp": "このルールを適用しないチャンネル",
+            "whitelistRoles": "許可ロール",
+            "whitelistRolesHelp": "このルールを回避できるロール"
+          }
+        },
+        "triggers": {
+          "spam": {
+            "label": "スパム検出",
+            "description": "繰り返しメッセージやスパムのパターンを検出"
+          },
+          "caps": {
+            "label": "大文字の過剰使用",
+            "description": "大文字が多すぎるメッセージをフィルタ"
+          },
+          "links": {
+            "label": "リンクフィルター",
+            "description": "悪意のあるリンク/URLをスキャンしてブロック"
+          },
+          "invite_links": {
+            "label": "招待リンク",
+            "description": "悪意のあるDiscord招待リンクをスキャンしてブロック"
+          },
+          "profanity": {
+            "label": "不適切語フィルター",
+            "description": "不適切な言葉をフィルタリング"
+          },
+          "mention_spam": {
+            "label": "メンションスパム",
+            "description": "ユーザー/ロールの過剰メンションを防止"
+          }
+        },
+        "actions": {
+          "warn": {
+            "label": "ユーザーに警告",
+            "description": "ユーザーに警告を送信"
+          },
+          "delete": {
+            "label": "メッセージを削除",
+            "description": "違反メッセージを削除"
+          },
+          "mute": {
+            "label": "一時ミュート",
+            "description": "指定時間ユーザーをミュート"
+          },
+          "kick": {
+            "label": "ユーザーをキック",
+            "description": "ユーザーをサーバーから退出させる"
+          },
+          "ban": {
+            "label": "ユーザーをBAN",
+            "description": "ユーザーを永久BAN"
+          }
+        },
+        "messageAction": {
+          "keep": "メッセージを保持",
+          "delete": "メッセージを削除"
+        },
+        "table": {
+          "status": "有効",
+          "name": "名前",
+          "trigger": "トリガー",
+          "action": "アクション",
+          "threshold": "しきい値",
+          "channelWhitelist": "チャンネル許可",
+          "roleWhitelist": "ロール許可",
+          "actions": "操作",
+          "logsTo": "{{channel}} にログ",
+          "minutes": "{{count}} 分"
+        },
+        "tip": "ヒント:",
+        "profanity": {
+          "manageTip": "フィルタリングを微調整するには、「不適切表現の管理」でワードとパターンを管理してください。",
+          "header": "不適切表現の管理",
+          "subheader": "不適切な表現を検出するためのワードと正規表現パターンを定義します。",
+          "loading": "不適切表現データを読み込み中...",
+          "words": {
+            "header": "ワード",
+            "add": "ワードを追加",
+            "searchPlaceholder": "ワードを検索",
+            "noMatches": "検索に一致するワードがありません。",
+            "empty": "まだ不適切表現ワードは設定されていません。",
+            "emptyCta": "最初のエントリを作成するには「ワードを追加」をクリックしてください。",
+            "tryDifferent": "別の検索をお試しください。",
+            "table": {
+              "word": "ワード",
+              "severity": "重大度",
+              "status": "ステータス",
+              "actions": "操作"
+            },
+            "wholeWord": "完全一致",
+            "partial": "部分一致",
+            "caseSensitive": "大文字小文字を区別",
+            "caseInsensitive": "大文字小文字を区別しない",
+            "modal": {
+              "editTitle": "不適切表現ワードを編集",
+              "addTitle": "不適切表現ワードを追加",
+              "wordLabel": "ワード",
+              "wordPlaceholder": "ブロックするワードを入力",
+              "caseSensitive": "大文字小文字を区別",
+              "wholeWordOnly": "完全一致のみ"
+            },
+            "delete": {
+              "title": "ワードの削除を確認",
+              "message": "この不適切表現ワードを削除してもよろしいですか？",
+              "warning": "この操作は元に戻せません。",
+              "confirm": "ワードを削除"
+            }
+          },
+          "patterns": {
+            "header": "パターン",
+            "add": "パターンを追加",
+            "searchPlaceholder": "パターンを検索",
+            "noMatches": "検索に一致するパターンがありません。",
+            "empty": "まだ不適切表現パターンは設定されていません。",
+            "emptyCta": "最初のエントリを作成するには「パターンを追加」をクリックしてください。",
+            "tryDifferent": "別の検索をお試しください。",
+            "table": {
+              "pattern": "パターン",
+              "severity": "重大度",
+              "status": "ステータス",
+              "actions": "操作"
+            },
+            "modal": {
+              "editTitle": "不適切表現パターンを編集",
+              "addTitle": "不適切表現パターンを追加",
+              "patternLabel": "正規表現パターン",
+              "patternPlaceholder": "b+a+d+w+o+r+d+",
+              "flagsLabel": "フラグ",
+              "flagsPlaceholder": "gi",
+              "testHeader": "パターンをテスト",
+              "preview": "プレビュー",
+              "status": "ステータス",
+              "valid": "有効",
+              "invalid": "無効",
+              "descriptionPlaceholder": "簡単な説明（任意）"
+            },
+            "delete": {
+              "title": "パターンの削除を確認",
+              "message": "この不適切表現パターンを削除してもよろしいですか？",
+              "warning": "この操作は元に戻せません。",
+              "confirm": "パターンを削除"
+            }
+          }
+        },
+        "common": {
+          "severity": "重大度",
+          "language": "言語",
+          "description": "説明",
+          "word": "ワード",
+          "pattern": "パターン"
+        },
+        "severity": {
+          "low": "低",
+          "medium": "中",
+          "high": "高",
+          "extreme": "極高"
+        },
+        "deleteRule": {
+          "title": "削除の確認",
+          "message": "オートモデレーションのルールを削除してもよろしいですか？",
+          "warning": "この操作は元に戻せません。",
+          "confirm": "ルールを削除"
+        },
+        "toasts": {
+          "ruleCreated": "オートモデレーションのルール「{{name}}」を作成しました。",
+          "ruleUpdated": "オートモデレーションのルール「{{name}}」を更新しました。",
+          "ruleDeleted": "オートモデレーションのルール「{{name}}」を削除しました。",
+          "ruleCreateFailed": "オートモデレーションのルール「{{name}}」の作成に失敗しました。もう一度お試しください。",
+          "ruleUpdateFailed": "オートモデレーションのルール「{{name}}」の更新に失敗しました。もう一度お試しください。",
+          "ruleDeleteFailed": "オートモデレーションのルール「{{name}}」の削除に失敗しました。もう一度お試しください。",
+          "ruleEnabled": "オートモデレーションのルール「{{name}}」を有効化しました。",
+          "ruleDisabled": "オートモデレーションのルール「{{name}}」を無効化しました。",
+          "ruleToggleFailed": "オートモデレーションのルール「{{name}}」の{{action}}に失敗しました。もう一度お試しください。",
+          "wordAdded": "不適切表現ワード「{{word}}」を追加しました。",
+          "wordUpdated": "不適切表現ワード「{{word}}」を更新しました。",
+          "wordDeleted": "不適切表現ワード「{{word}}」を削除しました。",
+          "wordSaveFailed": "不適切表現ワードの保存に失敗しました。{{error}}",
+          "wordDeleteFailed": "不適切表現ワードの削除に失敗しました。{{error}}",
+          "wordToggleEnabled": "不適切表現ワードを有効化しました。",
+          "wordToggleDisabled": "不適切表現ワードを無効化しました。",
+          "wordToggleFailed": "不適切表現ワードの有効・無効の切り替えに失敗しました。{{error}}",
+          "patternAdded": "不適切表現パターンを追加しました。",
+          "patternUpdated": "不適切表現パターンを更新しました。",
+          "patternDeleted": "不適切表現パターン {{description}} を削除しました。",
+          "patternSaveFailed": "パターンの保存に失敗しました。{{error}}",
+          "patternDeleteFailed": "パターンの削除に失敗しました。{{error}}",
+          "patternToggleEnabled": "不適切表現パターンを有効化しました。",
+          "patternToggleDisabled": "不適切表現パターンを無効化しました。",
+          "patternToggleFailed": "パターンの有効・無効の切り替えに失敗しました。{{error}}",
+          "invalidRegex": "無効な正規表現パターン: {{error}}"
+        }
+      },
+      "welcome": {
+        "header": "ウェルカムメッセージ",
+        "badge": "新規メンバー",
+        "info": "新規メンバー向けのウェルカムメッセージを構成します。{user} や {server} などのプレースホルダーが使えます。チャンネルを設定し、必要に応じてDM送信や自動ロール付与も可能です。",
+        "defaults": {
+          "messageText": "{server} へようこそ、{user} さん！",
+          "dmMessage": "{server} へようこそ！参加ありがとうございます。"
+        },
+        "fields": {
+          "channel": {
+            "label": "ウェルカムチャンネル",
+            "desc": "ウェルカムメッセージを送信するチャンネルを選択",
+            "placeholder": "チャンネルを選択"
+          },
+          "type": {
+            "label": "メッセージ形式",
+            "options": {
+              "text": "テキスト",
+              "embed": "埋め込み"
+            }
+          },
+          "message": {
+            "label": "ウェルカムメッセージ",
+            "desc": "プレースホルダー対応: {user}, {server}",
+            "placeholder": "ウェルカムメッセージを入力（{user}, {server} 対応）"
+          },
+          "card": {
+            "label": "ウェルカムカードを含める",
+            "desc": "シンプルな画像カードをメッセージに添付"
+          },
+          "role": {
+            "label": "自動ロール付与",
+            "desc": "新規メンバーにロールを自動で付与（任意）",
+            "placeholder": "ロールを選択"
+          },
+          "dm": {
+            "label": "DM を送信",
+            "desc": "ユーザーにプライベートのウェルカムメッセージも送信"
+          },
+          "dmMessage": {
+            "label": "DM メッセージ",
+            "desc": "有効時にプライベートメッセージとして送信",
+            "placeholder": "DM メッセージを入力"
+          }
+        }
+      },
+      "scheduler": {
+        "header": "予約メッセージシステム",
+        "badge": "自動アナウンス",
+        "info": {
+          "description": "特定の時間や間隔で送信される自動メッセージを設定します。告知、リマインダー、定期投稿に最適です。"
+        },
+        "list": {
+          "title": "予約メッセージ（{{count}}）",
+          "emptyTitle": "予約メッセージはまだありません",
+          "emptyCta": "\"メッセージを追加\"をクリックして最初の予約メッセージを作成しましょう"
+        },
+        "unknownChannel": "不明なチャンネル",
+        "badges": {
+          "embed": "Embed",
+          "active": "有効",
+          "inactive": "無効",
+          "type": "{{type}}"
+        },
+        "labels": {
+          "schedule": "スケジュール: {{value}}"
+        },
+        "buttons": {
+          "add": "メッセージを追加",
+          "edit": "編集",
+          "delete": "削除",
+          "cancel": "キャンセル",
+          "reset": "リセット",
+          "saveAdd": "メッセージを追加",
+          "saveUpdate": "メッセージを更新"
+        },
+        "delete": {
+          "title": "削除の確認",
+          "message": "予約メッセージ\"{{title}}\"を削除してもよろしいですか？ この操作は元に戻せません。",
+          "confirm": "削除",
+          "cancel": "キャンセル"
+        },
+        "form": {
+          "addTitle": "予約メッセージを追加",
+          "editTitle": "予約メッセージを編集",
+          "fields": {
+            "title": {
+              "label": "メッセージのタイトル",
+              "placeholder": "メッセージのタイトルを入力"
+            },
+            "channel": {
+              "label": "チャンネル",
+              "placeholder": "チャンネルを選択"
+            },
+            "scheduleType": {
+              "label": "スケジュールの種類"
+            },
+            "timeDisplay": {
+              "label": "時刻表示",
+              "option24": "24時間",
+              "option12": "12時間 (AM/PM)"
+            },
+            "scheduleValue": {
+              "label": "スケジュール値",
+              "placeholder": "0 9 * * *"
+            },
+            "message": {
+              "label": "メッセージ内容",
+              "placeholder": "メッセージ内容を入力..."
+            },
+            "useEmbed": {
+              "label": "Discord Embed を使用"
+            },
+            "embed": {
+              "header": "Embed 設定",
+              "title": {
+                "label": "Embed タイトル",
+                "placeholder": "Embed タイトル"
+              },
+              "color": {
+                "label": "カラー"
+              },
+              "description": {
+                "label": "説明",
+                "placeholder": "Embed の説明"
+              },
+              "footer": {
+                "label": "フッターテキスト",
+                "placeholder": "フッターテキスト"
+              },
+              "thumbnail": {
+                "label": "サムネイル URL",
+                "placeholder": "https://example.com/image.png"
+              },
+              "image": {
+                "label": "画像 URL",
+                "placeholder": "https://example.com/image.png"
+              }
+            }
+          },
+          "scheduleTypes": {
+            "once": "一度のみ（タイムスタンプ）",
+            "daily": "毎日",
+            "weekly": "毎週",
+            "monthly": "毎月",
+            "cron": "カスタム（Cron）"
+          },
+          "pickers": {
+            "once": {
+              "placeholder": "日付と時刻を選択"
+            },
+            "daily": {
+              "timeCaption": "時刻",
+              "placeholder": "時刻を選択",
+              "help": "HH:MM（24時間）で保存されます。"
+            },
+            "weekly": {
+              "placeholder": "曜日と時刻を選択",
+              "help": "任意の日付を選択；曜日と時刻のみ D|HH:MM として保存（0=日）。"
+            },
+            "monthly": {
+              "placeholder": "日付と時刻を選択",
+              "help": "任意の月を選択；DD|HH:MM として保存。"
+            },
+            "cron": {
+              "presetsTitle": "一般的なプリセット:",
+              "placeholders": {
+                "expression": "0 9 * * *"
+              },
+              "presets": {
+                "everyHour": "毎時",
+                "everyDay9": "毎日 午前9時",
+                "everyMonday9": "毎週月曜 午前9時",
+                "everySunday9": "毎週（日曜 午前9時）",
+                "everyMonthFirst9": "毎月（1日 午前9時）",
+                "every6Hours": "6時間ごと",
+                "everyWeekday8": "平日 午前8時"
+              }
+            }
+          }
+        },
+        "toasts": {
+          "savedAdded": "メッセージを追加しました",
+          "savedUpdated": "メッセージを更新しました",
+          "saveFailed": "メッセージの保存に失敗しました",
+          "deleted": "予約メッセージを削除しました",
+          "deleteFailed": "メッセージの削除に失敗しました",
+          "validationRequired": "必須項目をすべて入力してください"
+        }
+      }
+    },
+    "cards": {
+      "common": {
+        "features": "機能:",
+        "configure": "設定",
+        "updating": "更新中..."
+      },
+      "welcome": {
+        "label": "ウェルカムメッセージ",
+        "desc": "新規メンバーをカスタムメッセージやカードで歓迎。",
+        "features": {
+          "customMessages": "カスタムメッセージ",
+          "welcomeCards": "ウェルカムカード",
+          "roleAssignment": "ロール付与",
+          "channelSelection": "チャンネル選択"
+        }
+      },
+      "automod": {
+        "label": "自動モデレーション",
+        "desc": "スパム・過度な大文字・不適切な内容を自動検出・対応。",
+        "features": {
+          "spamDetection": "スパム検出",
+          "capsLockFilter": "大文字フィルター",
+          "linkFiltering": "リンクフィルター",
+          "profanityFilter": "不適切語フィルター"
+        }
+      },
+      "roles": {
+        "label": "ロール管理",
+        "desc": "リアクションロールやロールメニューでロールを管理。",
+        "features": {
+          "reactionRoles": "リアクションロール",
+          "roleMenus": "ロールメニュー",
+          "permissionSync": "権限同期",
+          "customMessages": "カスタムメッセージ"
+        }
+      },
+      "xp": {
+        "label": "XP・レベル",
+        "desc": "アクティブなメンバーにXPポイントとレベル進行を付与。",
+        "features": {
+          "xpTracking": "XPトラッキング",
+          "levelRewards": "レベル報酬",
+          "leaderboards": "ランキング",
+          "customMultipliers": "カスタム倍率"
+        }
+      },
+      "scheduler": {
+        "label": "予約メッセージ",
+        "desc": "お知らせや定期メッセージをサーバーにスケジュール。",
+        "features": {
+          "scheduledPosts": "予約投稿",
+          "recurringMessages": "定期メッセージ",
+          "eventReminders": "イベントリマインダー",
+          "autoAnnouncements": "自動アナウンス"
+        }
+      },
+      "logging": {
+        "label": "監査ログ",
+        "desc": "すべてのモデレーション操作とサーバー変更を追跡。",
+        "features": {
+          "messageLogs": "メッセージログ",
+          "memberLogs": "メンバーログ",
+          "channelLogs": "チャンネルログ",
+          "roleLogs": "ロールログ"
+        }
+      },
+      "antiraid": {
+        "label": "アンチレイド保護",
+        "desc": "レイドや大量参加からサーバーを保護。",
+        "features": {
+          "joinRateLimiting": "参加レート制限",
+          "accountAgeFilter": "アカウント年齢フィルター",
+          "autoLockdown": "自動ロックダウン",
+          "verificationSystem": "認証システム"
+        }
+      }
+    }
+  },
+  "gamesSocials": {
+    "title": "ゲームとソーシャル",
+    "subtitle": "ゲーム関連・ソーシャル機能の設定",
+    "loading": {
+      "title": "連携設定を読み込み中",
+      "message": "統合設定とサーバーデータを取得しています…"
+    },
+    "toasts": {
+      "serviceEnabled": "{{service}}が有効化されました",
+      "serviceDisabled": "{{service}}が無効化されました",
+      "toggleFailed": "切り替えの更新に失敗しました",
+      "saved": "{{service}}の設定を保存しました",
+      "saveFailed": "保存に失敗しました"
+    },
+    "services": {
+      "youtube": {
+        "label": "YouTube",
+        "desc": "選択したチャンネルの新しい動画・ライブ配信を告知します"
+      },
+      "twitch": {
+        "label": "Twitch",
+        "desc": "お気に入りの配信者がライブ配信を開始したら告知します"
+      },
+      "pubg": {
+        "label": "PUBG",
+        "desc": "プレイヤーの統計、試合要約、お知らせ（予定）"
+      },
+      "valorant": {
+        "label": "Valorant",
+        "desc": "試合アップデート、ハイライト、お知らせ（予定）"
+      },
+      "apex": {
+        "label": "Apex Legends",
+        "desc": "試合アップデート、ハイライト、お知らせ（予定）"
+      },
+      "mobilelegends": {
+        "label": "Mobile Legends",
+        "desc": "チームの更新＆試合のお知らせ（予定）"
+      },
+      "clashofclans": {
+        "label": "Clash of Clans",
+        "desc": "クラン戦の更新、進捗状況（予定）"
+      },
+      "fortnite": {
+        "label": "Fortnite",
+        "desc": "試合アップデート＆イベントのお知らせ（予定）"
+      },
+      "genshin": {
+        "label": "Genshin Impact",
+        "desc": "イベント情報＆ニュース（予定）"
+      }
+    },
+    "preview": {
+      "samples": {
+        "twitch": {
+          "streamTitle": "最高のライブ配信",
+          "game": "雑談配信",
+          "startedAtRelative": "たった今"
+        },
+        "youtube": {
+          "channel": "チャンネル名",
+          "videoTitle": "素晴らしい新作アップロード",
+          "publishedAtRelative": "たった今",
+          "memberOnly": "（メンバー限定）"
+        }
+      }
+    },
+    "common": {
+      "announcement": "お知らせ",
+      "select": "選択…",
+      "mentionTargets": "メンション対象",
+      "mentionHelper": "Enterで追加 • Backspaceで削除 • 順序は保持されます",
+      "intervalSec": "間隔（秒）",
+      "embeds": "埋め込み",
+      "plain": "プレーン",
+      "placeholders": "プレースホルダー",
+      "resolving": "解決中...",
+      "namePlaceholder": "名前",
+      "clearOverrides": "上書きをクリア",
+      "configuration": "構成",
+      "announcementsEnabled": "お知らせが有効になっています",
+      "announcementsDisabled": "お知らせが無効になっています",
+      "integrationNotConfigured": "統合はまだ設定されていません。",
+      "plannedFeatures": "今後予定されている機能",
+      "needSooner": "お急ぎの場合はご連絡ください。",
+      "remove": "削除",
+      "loadingConfig": "{{service}}の設定を読み込み中…",
+      "mentionInputPlaceholder": "@everyone, @here またはロールを追加…",
+      "meta": {
+        "role": "ロール",
+        "meta": "メタ"
+      },
+      "noTemplate": "テンプレートが設定されていません。",
+      "preview": "プレビュー"
+    },
+    "youtube": {
+      "fields": {
+        "uploadAnnounceChannel": "アップロード告知チャンネル",
+        "liveAnnounceChannel": "ライブ告知チャンネル",
+        "upload": "アップロード",
+        "live": "ライブ"
+      },
+      "sections": {
+        "regularTemplate": "通常テンプレート",
+        "memberTemplate": "メンバーテンプレート",
+        "memberUpload": "メンバー限定アップロード",
+        "memberLive": "メンバー限定ライブ",
+        "regularPreview": "通常テンプレートプレビュー",
+        "memberPreview": "メンバーテンプレートプレビュー"
+      },
+      "channels": {
+        "addLabel": "チャンネル追加（URL）",
+        "addPlaceholder": "https://youtube.com/@handle",
+        "empty": "チャンネルはまだ追加されていません。",
+        "editTitle": "チャンネルごとのテンプレート編集",
+        "fetchTitle": "チャンネル名を取得",
+        "uploadTemplate": "アップロードテンプレート",
+        "memberUploadTemplate": "メンバー限定アップロードテンプレート",
+        "liveTemplate": "ライブテンプレート",
+        "memberLiveTemplate": "メンバー限定ライブテンプレート"
+      },
+      "toasts": {
+        "alreadyWatching": "すでにチャンネル{{id}}を監視しています",
+        "extracted": "チャンネルIDを抽出: {{id}}",
+        "extractedWithName": "{{name}}（{{id}}）を抽出しました",
+        "added": "チャンネル{{name}}を追加しました",
+        "addFailed": "チャンネルの追加に失敗しました"
+      }
+    },
+    "twitch": {
+      "fields": {
+        "announceChannel": "告知チャンネル",
+        "liveStream": "ライブ配信"
+      },
+      "sections": {
+        "globalTemplate": "グローバルテンプレート",
+        "templatePreview": "テンプレートプレビュー"
+      },
+      "streamers": {
+        "addLabel": "配信者追加（ユーザー名/URL）",
+        "addPlaceholder": "ユーザー名, https://twitch.tv/username",
+        "empty": "配信者はまだ追加されていません。",
+        "editTitle": "配信者ごとのテンプレート編集",
+        "fetchTitle": "配信者名を取得",
+        "liveTemplate": "ライブテンプレート"
+      },
+      "toasts": {
+        "resolvedTo": "{{username}}に解決されました",
+        "resolveFailed": "配信者を解決できませんでした"
+      }
+    },
+    "leveling": "XPとレベルアップ",
+    "economy": "経済システム",
+    "socialFeatures": "ソーシャル機能",
+    "miniGames": "ミニゲーム"
+  },
+  "welcome": {
+    "title": "ウェルカムシステム",
+    "subtitle": "ウェルカムメッセージや新メンバー設定の構成",
+    "enabled": "ウェルカムメッセージが有効です",
+    "channel": "ウェルカムチャンネル",
+    "message": "ウェルカムメッセージ",
+    "roles": "自動ロール",
+    "toasts": {
+      "saved": "ウェルカム設定が保存されました",
+      "saveFailed": "保存に失敗しました",
+      "enabled": "ウェルカムメッセージが有効になりました",
+      "disabled": "ウェルカムメッセージが無効になりました",
+      "toggleFailed": "トグルの更新に失敗しました"
+    }
+  }
+}

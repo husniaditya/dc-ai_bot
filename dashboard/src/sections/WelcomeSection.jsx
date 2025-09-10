@@ -1,7 +1,10 @@
 import React from 'react';
 import LoadingSection from '../components/LoadingSection';
+import { useI18n } from '../i18n';
 
 export default function WelcomeSection({ welcomeCfg, welcomeChannels, welcomeDirty, resetWelcome, saveWelcome, welcomeLoading, resolvedGuildName, setWelcomeCfg, toggleWelcomeEnabled }) {
+  const { t } = useI18n();
+  
   function substitutedPreview() {
     const sampleUser='@NewUser';
     const guildName = resolvedGuildName || '{server}';
@@ -12,13 +15,13 @@ export default function WelcomeSection({ welcomeCfg, welcomeChannels, welcomeDir
   return (
     <LoadingSection
       loading={welcomeLoading}
-      title="Loading Welcome Settings"
-      message="Fetching welcome message configuration..."
+      title={t('welcome.title')}
+      message={t('welcome.subtitle')}
       className="fade-in-soft welcome-section-wrapper position-relative"
     >
       <div className="d-flex align-items-center gap-2 mb-3">
-        <h5 className="mb-0">Welcome Messages</h5>
-        {welcomeDirty() && <span className="dirty-badge">Unsaved</span>}
+        <h5 className="mb-0">{t('welcome.title')}</h5>
+        {welcomeDirty() && <span className="dirty-badge">{t('common.unsaved')}</span>}
       </div>
     {welcomeCfg && <div className={"row g-4 "+(welcomeCfg.enabled===false? 'welcome-config-disabled':'') }>
       <div className="col-lg-7">

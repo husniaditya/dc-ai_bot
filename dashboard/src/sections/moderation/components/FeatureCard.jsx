@@ -1,4 +1,5 @@
 import React from 'react';
+import { useI18n } from '../../../i18n';
 
 export default function FeatureCard({ 
   feature, 
@@ -7,8 +8,11 @@ export default function FeatureCard({
   onConfigure, 
   saving 
 }) {
+  const { t } = useI18n();
   const isEnabled = featureConfig?.enabled || false;
   const isSaving = saving[feature.key];
+  const label = feature.labelKey ? t(feature.labelKey) : feature.label;
+  const desc = feature.descKey ? t(feature.descKey) : feature.desc;
 
   return (
     <div className="col-md-6 col-lg-4">
@@ -56,28 +60,28 @@ export default function FeatureCard({
             />
           </div>
           <div className="flex-grow-1">
-            <h6 className="mb-1 fw-semibold">{feature.label}</h6>
+            <h6 className="mb-1 fw-semibold">{label}</h6>
             <div className={`status-badge moderation-status-badge ${isEnabled ? 'enabled' : 'disabled'}`}>
-              {isSaving ? 'Updating...' : (isEnabled ? 'Enabled' : 'Disabled')}
+              {isSaving ? t('moderation.cards.common.updating') : (isEnabled ? t('common.enabled') : t('common.disabled'))}
             </div>
           </div>
         </div>
         
         {/* Feature Description */}
         <p className="text-muted small mb-3" style={{ fontSize: '0.8rem', lineHeight: 1.4 }}>
-          {feature.desc}
+          {desc}
         </p>
         
         <div className="mb-3">
-          <div className="small text-muted mb-2 fw-semibold">Features:</div>
+          <div className="small text-muted mb-2 fw-semibold">{t('moderation.cards.common.features')}</div>
           <ul className="list-unstyled small mb-0" style={{ opacity: isEnabled ? 1 : 0.9 }}>
-            {feature.features.map((feat, idx) => (
+            {(feature.featuresKeys || feature.features).map((feat, idx) => (
               <li key={idx} className="d-flex align-items-center gap-2 mb-1">
                 <i className="fa-solid fa-circle-check" style={{ 
                   fontSize: '0.7rem', 
                   color: isEnabled ? '#10b981' : '#9ca3af'
                 }} />
-                <span>{feat}</span>
+                <span>{feature.featuresKeys ? t(feat) : feat}</span>
               </li>
             ))}
           </ul>
@@ -123,14 +127,14 @@ export default function FeatureCard({
               {isSaving ? (
                 <>
                   <div className="spinner-border spinner-border-sm" role="status">
-                    <span className="visually-hidden">Loading...</span>
+                    <span className="visually-hidden">{t('common.loading')}</span>
                   </div>
-                  <span>Updating...</span>
+                  <span>{t('moderation.cards.common.updating')}</span>
                 </>
               ) : (
                 <>
                   <i className="fa-solid fa-cog" />
-                  <span>Configure</span>
+                  <span>{t('moderation.cards.common.configure')}</span>
                 </>
               )}
             </button>

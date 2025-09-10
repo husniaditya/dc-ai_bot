@@ -12,6 +12,15 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import './theme.css';
 import './styles/responsive-tables.css';
 import '@fortawesome/fontawesome-free/css/all.min.css';
+// Internationalization
+import { I18nProvider } from './i18n';
+// Lightweight i18n helper for toasts in this file (runs outside Provider)
+import en from './i18n/locales/en.json';
+import id from './i18n/locales/id.json';
+import es from './i18n/locales/es.json';
+import fr from './i18n/locales/fr.json';
+import de from './i18n/locales/de.json';
+import ja from './i18n/locales/ja.json';
 // Layout & structural components
 import Sidebar from './components/Sidebar.jsx';
 import AutoResponseModal from './components/AutoResponseModal.jsx';
@@ -20,6 +29,7 @@ import Navbar from './components/Navbar.jsx';
 import LoginView from './components/LoginView.jsx';
 import GuildSelectionView from './components/GuildSelectionView.jsx';
 import Toasts from './components/Toasts.jsx';
+import LanguageSyncHandler from './components/LanguageSyncHandler.jsx';
 // Highcharts libs will be loaded dynamically (not via React.lazy because they export objects, not components)
 // We'll load them when the Overview section is first viewed
 // Option B: removed DataTables – using pure React table implementation
@@ -27,6 +37,28 @@ import { login, getSettings, updateSettings, listAuto, upsertAuto, deleteAuto, g
 const API_BASE = getApiBase();
 
 export default function App(){
+  // Minimal translator for toasts (reads current language from localStorage; falls back to English)
+  const translations = { en, id, es, fr, de, ja };
+  function getNested(obj, path, fallback) {
+    return path.split('.').reduce((acc, k) => (acc && acc[k] !== undefined ? acc[k] : undefined), obj) ?? fallback;
+  }
+  function tGlobal(key, interpolations = {}) {
+    let lang = 'en';
+    try {
+      const stored = localStorage.getItem('dashboard_language');
+      if (stored && translations[stored]) lang = stored;
+      else {
+        const browserLang = (navigator.language || 'en').split('-')[0];
+        if (translations[browserLang]) lang = browserLang;
+      }
+    } catch {}
+    let str = getNested(translations[lang], key, undefined);
+    if (str === undefined) str = getNested(en, key, key);
+    if (typeof str === 'string' && Object.keys(interpolations).length > 0) {
+      str = str.replace(/\{\{(\w+)\}\}/g, (m, p1) => (interpolations[p1] ?? m));
+    }
+    return str;
+  }
   const [token, setToken] = useState(localStorage.getItem('token'));
   const [loginForm, setLoginForm] = useState({ username:'', password:'' });
   const [settings, setSettings] = useState(null);
@@ -38,6 +70,7 @@ export default function App(){
   const [error, setError] = useState('');
   const [info, setInfo] = useState('');
   const [toasts, setToasts] = useState([]); // {id,type,message}
+  const lastToastRef = useRef({ type: '', message: '', at: 0 });
   const [loading, setLoading] = useState(false);
   const [loginLoading, setLoginLoading] = useState(false); // Loading state for login button
   const [oauthMode, setOauthMode] = useState(true); // new flag
@@ -786,7 +819,7 @@ export default function App(){
       setSettings(optimistic);
   const updated = await updateSettings(optimistic, selectedGuild);
       setSettings(updated);
-  pushToast('success','Settings saved');
+  pushToast('success', tGlobal('settings.messages.saved'));
     } catch(e){ setError(e.message); }
   }
 
@@ -802,20 +835,26 @@ export default function App(){
     });
     try {
   await upsertAuto(entry, selectedGuild);
-  pushToast('success','Auto response saved');
+  pushToast('success', tGlobal('autosSection.toasts.saved'));
       closeAutoModal();
     } catch(e){ setError(e.message); refresh(); }
   }
 
   async function removeAuto(key){
-    if(!window.confirm('Delete '+key+'?')) return;
+    if(!window.confirm(tGlobal('autosSection.confirm.deleteOne', { key }))) return;
     // optimistic removal
     const prev = autos;
     setAutos(autos.filter(a=>a.key!==key));
-  try { await deleteAuto(key, selectedGuild); pushToast('success','Deleted'); } catch(e){ setError(e.message); setAutos(prev); }
+  try { await deleteAuto(key, selectedGuild); pushToast('success', tGlobal('autosSection.toasts.deleted')); } catch(e){ setError(e.message); setAutos(prev); }
   }
 
   function pushToast(type,message){
+    const now = Date.now();
+    const last = lastToastRef.current;
+    if (last && last.type === type && last.message === message && (now - last.at) < 1000) {
+      return; // suppress duplicate toast fired within 1s
+    }
+    lastToastRef.current = { type, message, at: now };
     const id = Math.random().toString(36).slice(2);
     setToasts(t => [...t, { id, type, message }]);
     setTimeout(()=> setToasts(t => t.filter(x=>x.id!==id)), 3500);
@@ -972,8 +1011,11 @@ export default function App(){
       return { ...prev, [name]: enabled };
     });
     setCommandToggle(name, enabled, selectedGuild).then(()=>{
-      // Show toast with appropriate style
-      pushToast(enabled ? 'success' : 'info', `Command "${name}" ${enabled ? 'enabled' : 'disabled'} successfully`);
+      // Show toast with appropriate style (localized)
+      const msg = enabled
+        ? tGlobal('commands.toasts.enabled', { name })
+        : tGlobal('commands.toasts.disabled', { name });
+      pushToast(enabled ? 'success' : 'info', msg);
       // fetch authoritative analytics snapshot
       refreshAnalytics();
     }).catch(()=>{
@@ -999,7 +1041,7 @@ export default function App(){
         }
         return prev;
       });
-      pushToast('error', 'Failed to update '+name);
+  pushToast('error', tGlobal('commands.toasts.toggleFailed', { name }));
     });
   }
 
@@ -1038,35 +1080,39 @@ export default function App(){
   // Login view
   if(view==='login' && !token){
     if(typeof document!=='undefined'){ document.body.classList.add('login-mode'); }
-    return <>
-      <Navbar />
-      <LoginView
-        error={error}
-        authProcessing={authProcessing}
-        loginLoading={loginLoading}
-        startDiscordLogin={startDiscordLogin}
-      />
-      <Footer />
-    </>;
+    return (
+      <I18nProvider>
+        <Navbar guildId={selectedGuild} pushToast={pushToast} />
+        <LoginView
+          error={error}
+          authProcessing={authProcessing}
+          loginLoading={loginLoading}
+          startDiscordLogin={startDiscordLogin}
+        />
+        <Footer />
+      </I18nProvider>
+    );
   } else if(typeof document!=='undefined'){ document.body.classList.remove('login-mode'); }
 
   // Guild selection view
   if(view==='guild'){
-    return <>
-      <Navbar />
-      <GuildSelectionView
-        guilds={guilds}
-        guildSearch={guildSearch}
-        setGuildSearch={setGuildSearch}
-        selectedGuild={selectedGuild}
-        setSelectedGuild={setSelectedGuild}
-        error={error}
-        saveSelectedGuild={saveSelectedGuild}
-        doLogout={doLogout}
-        refreshGuilds={refreshGuilds}
-      />
-      <Footer />
-    </>;
+    return (
+      <I18nProvider>
+        <Navbar guildId={selectedGuild} pushToast={pushToast} />
+        <GuildSelectionView
+          guilds={guilds}
+          guildSearch={guildSearch}
+          setGuildSearch={setGuildSearch}
+          selectedGuild={selectedGuild}
+          setSelectedGuild={setSelectedGuild}
+          error={error}
+          saveSelectedGuild={saveSelectedGuild}
+          doLogout={doLogout}
+          refreshGuilds={refreshGuilds}
+        />
+        <Footer />
+      </I18nProvider>
+    );
   }
 
   // Dashboard view --------------------------------------------------
@@ -1078,7 +1124,7 @@ export default function App(){
   // --- Section contents ---
   const overviewContent = <OverviewSection analytics={analytics} apiStatus={apiStatus} autos={autos} totalEnabled={totalEnabled} totalDisabled={totalDisabled} error={error} info={info} loading={loading} dashSection={dashSection} chartsReady={chartsReady} Highcharts={Highcharts} HighchartsReact={HighchartsReact} refreshAnalytics={refreshAnalytics} />;
 
-  const autosContent = <React.Suspense fallback={<div className="text-muted small p-3">Loading auto responses…</div>}>
+  const autosContent = <React.Suspense fallback={<div className="text-muted small p-3">{tGlobal('autosSection.loadingTitle')}</div>}>
     <AutosSectionLazy
     autos={autos}
     setAutos={setAutos}
@@ -1214,7 +1260,14 @@ export default function App(){
   }
   async function savePersonalization(){
     if(!personalization) return;
-    try { const res = await updatePersonalization(personalization, selectedGuild); setPersonalization(res); setPersonalizationOriginal(res); pushToast('success','Bot personalization saved'); } catch(e){ pushToast('error','Save failed'); }
+    try {
+      const res = await updatePersonalization(personalization, selectedGuild);
+      setPersonalization(res);
+      setPersonalizationOriginal(res);
+      pushToast('success', tGlobal('personalization.toasts.saved'));
+    } catch(e){
+      pushToast('error', tGlobal('personalization.toasts.saveFailed'));
+    }
   }
   function personalizationDirty(){
     if(!personalization || !personalizationOriginal) return false;
@@ -1231,7 +1284,14 @@ export default function App(){
   function resetWelcome(){ if(welcomeOriginal) setWelcomeCfg(welcomeOriginal); }
   async function saveWelcome(){
     if(!welcomeCfg) return;
-    try { const res = await updateWelcome(welcomeCfg, selectedGuild); setWelcomeCfg(res); setWelcomeOriginal(res); pushToast('success','Welcome settings saved'); } catch(e){ pushToast('error','Save failed'); }
+    try {
+      const res = await updateWelcome(welcomeCfg, selectedGuild);
+      setWelcomeCfg(res);
+      setWelcomeOriginal(res);
+      pushToast('success', tGlobal('welcome.toasts.saved'));
+    } catch(e){
+      pushToast('error', tGlobal('welcome.toasts.saveFailed'));
+    }
   }
   async function toggleWelcomeEnabled(on){
     if(!welcomeCfg) return;
@@ -1240,9 +1300,9 @@ export default function App(){
     setWelcomeOriginal(o => o ? { ...o, enabled: on } : o);
     try {
       await updateWelcome({ enabled: on }, selectedGuild);
-      pushToast('success', 'Welcome messages ' + (on? 'enabled':'disabled'));
+      pushToast('success', on ? tGlobal('welcome.toasts.enabled') : tGlobal('welcome.toasts.disabled'));
     } catch(e){
-      pushToast('error','Failed to update toggle');
+      pushToast('error', tGlobal('welcome.toasts.toggleFailed'));
       // revert
       setWelcomeCfg(c => ({ ...(c||{}), enabled: !on }));
       setWelcomeOriginal(o => o ? { ...o, enabled: !on } : o);
@@ -1258,14 +1318,14 @@ export default function App(){
 
   // saveWelcome redefined above with dirty tracking
   // Channel selection placeholder (requires channel list API future). For now free text.
-  const moderationContent = <React.Suspense fallback={<div className="text-muted small p-3">Loading Moderation…</div>}>
+  const moderationContent = <React.Suspense>
     <ModerationSection guildId={selectedGuild} pushToast={pushToast} />
   </React.Suspense>;
 
-  const settingsContent = <React.Suspense fallback={<div className="text-muted small p-3">Loading settings…</div>}>
+  const settingsContent = <React.Suspense fallback={<div className="text-muted small p-3">{tGlobal('settings.loadingTitle')}</div>}>
     <SettingsSection guildId={selectedGuild} pushToast={pushToast} />
   </React.Suspense>;
-  const gamesContent = <React.Suspense fallback={<div className="text-muted small p-3">Loading Games & Socials…</div>}>
+  const gamesContent = <React.Suspense >
     <GamesSocialsSection guildId={selectedGuild} pushToast={pushToast} />
   </React.Suspense>;
   const sectionMap = { overview: overviewContent, autos: autosContent, commands: commandsContent, personal: personalizationContent, moderation: moderationContent, games: gamesContent, settings: settingsContent };
@@ -1308,13 +1368,13 @@ export default function App(){
         sidebarRef={sidebarRef}
       />
       <main className="dash-main">
-        <React.Suspense fallback={<div className="p-4 text-muted small">Loading section…</div>}>
+  <React.Suspense fallback={<div className="p-4 text-muted small">{tGlobal('loading.pleaseWait')}</div>}>
           {sectionMap[dashSection]}
         </React.Suspense>
       </main>
     </div>
     {/* Floating action button & backdrop for mobile */}
-    {!sidebarOpen && <button type="button" className="fab-toggle d-lg-none" onClick={()=>setSidebarOpen(true)} aria-label="Open menu">
+  {!sidebarOpen && <button type="button" className="fab-toggle d-lg-none" onClick={()=>setSidebarOpen(true)} aria-label={tGlobal('navigation.openMenu')}>
       <span className="fab-ripple"></span>
       <i className="fa-solid fa-bars"></i>
     </button>}
@@ -1330,13 +1390,16 @@ export default function App(){
     />
   </div>;
   // Toasts container
-  const header = <Navbar />;
-  return <>
-  {header}
-    {content}
-    <Footer />
-    <Toasts toasts={toasts} setToasts={setToasts} />
-  </>;
+  const header = <Navbar guildId={selectedGuild} pushToast={pushToast} />;
+  return (
+    <I18nProvider>
+      <LanguageSyncHandler guildId={selectedGuild} enabled={view === 'dashboard'} />
+      {header}
+      {content}
+      <Footer />
+      <Toasts toasts={toasts} setToasts={setToasts} />
+    </I18nProvider>
+  );
 }
 
 // Self-mount when imported directly as entry (allows removal of main.jsx)

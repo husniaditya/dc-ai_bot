@@ -1,10 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { ChannelSelector, FormField, SwitchToggle } from '../components/SharedComponents';
+import { useI18n } from '../../../i18n';
 
 /**
  * WhitelistRolesPicker - Component for selecting whitelist roles similar to MentionTargetsPicker
  */
 function WhitelistRolesPicker({ value, onChange, roles }) {
+  const { t } = useI18n();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
   const boxRef = useRef(null);
@@ -87,7 +89,7 @@ function WhitelistRolesPicker({ value, onChange, roles }) {
         <input 
           ref={inputRef} 
           value={query} 
-          placeholder={list.length ? '' : 'Add roles to whitelist…'} 
+          placeholder={list.length ? '' : t('moderation.features.antiraid.roles.placeholder')} 
           onFocus={() => setOpen(true)} 
           onChange={e => { 
             setQuery(e.target.value); 
@@ -108,7 +110,7 @@ function WhitelistRolesPicker({ value, onChange, roles }) {
               onClick={() => add(role.id)}
             >
               {role.name}
-              <span className="meta">role</span>
+              <span className="meta">{t('moderation.features.antiraid.roles.meta.role')}</span>
             </button>
           ))}
         </div>
@@ -117,7 +119,7 @@ function WhitelistRolesPicker({ value, onChange, roles }) {
       {open && filtered.length === 0 && (
         <div className="mention-targets-suggestions">
           <div className="text-muted small p-2" style={{fontSize: '.55rem'}}>
-            {query ? 'No matching roles' : 'All roles already added'}
+            {query ? t('moderation.features.antiraid.roles.noMatches') : t('moderation.features.antiraid.roles.allAdded')}
           </div>
         </div>
       )}
@@ -127,12 +129,13 @@ function WhitelistRolesPicker({ value, onChange, roles }) {
 
 // Anti-Raid Protection Configuration
 export default function AntiRaidConfigForm({ config, updateConfig, channels, roles }) {
+  const { t } = useI18n();
   const verificationLevels = [
-    { value: 'none', label: 'None - No restrictions' },
-    { value: 'low', label: 'Low - Verified email required' },
-    { value: 'medium', label: 'Medium - Registered for 5+ minutes' },
-    { value: 'high', label: 'High - Member for 10+ minutes' },
-    { value: 'highest', label: 'Highest - Verified phone required' }
+    { value: 'none', label: t('moderation.features.antiraid.verification.levels.none') },
+    { value: 'low', label: t('moderation.features.antiraid.verification.levels.low') },
+    { value: 'medium', label: t('moderation.features.antiraid.verification.levels.medium') },
+    { value: 'high', label: t('moderation.features.antiraid.verification.levels.high') },
+    { value: 'highest', label: t('moderation.features.antiraid.verification.levels.highest') }
   ];
 
   return (
@@ -140,57 +143,56 @@ export default function AntiRaidConfigForm({ config, updateConfig, channels, rol
       {/* Information Section */}
       <div className="mb-4">
         <div className="d-flex align-items-center gap-3 mb-3">
-          <h6 className="mb-0 fw-bold">Anti-Raid Protection System</h6>
+          <h6 className="mb-0 fw-bold">{t('moderation.features.antiraid.header')}</h6>
           <span className="badge badge-soft">
             <i className="fa-solid fa-shield-halved me-1"></i>
-            Advanced Server Security
+            {t('moderation.features.antiraid.badge')}
           </span>
         </div>
         <p className="text-muted small mb-0" style={{ fontSize: '0.85rem', lineHeight: 1.4 }}>
-          Protect your server from coordinated attacks, mass joins, and suspicious activities with intelligent monitoring, 
-          automated responses, and configurable security thresholds. Monitor join patterns and account characteristics.
+          {t('moderation.features.antiraid.info.description')}
         </p>
       </div>
 
       <div className="mb-4 p-3 bg-dark border rounded">
         <h6 className="mb-2">
           <i className="fa-solid fa-shield text-success me-2" />
-          Protection Features
+          {t('moderation.cards.common.features')}
         </h6>
         <div className="row small text-muted">
           <div className="col-md-6">
             <div className="mb-2">
-              <strong>Join Rate Monitoring:</strong>
+              <strong>{t('moderation.features.antiraid.features.joinRate.title')}</strong>
               <ul className="mb-0 mt-1">
-                <li>Track member join patterns</li>
-                <li>Detect coordinated attacks</li>
-                <li>Configurable thresholds</li>
+                <li>{t('moderation.features.antiraid.features.joinRate.items.trackPatterns')}</li>
+                <li>{t('moderation.features.antiraid.features.joinRate.items.detectAttacks')}</li>
+                <li>{t('moderation.features.antiraid.features.joinRate.items.thresholds')}</li>
               </ul>
             </div>
             <div className="mb-2">
-              <strong>Account Analysis:</strong>
+              <strong>{t('moderation.features.antiraid.features.accountAnalysis.title')}</strong>
               <ul className="mb-0 mt-1">
-                <li>Account age verification</li>
-                <li>Suspicious pattern detection</li>
-                <li>Avatar and username analysis</li>
+                <li>{t('moderation.features.antiraid.features.accountAnalysis.items.age')}</li>
+                <li>{t('moderation.features.antiraid.features.accountAnalysis.items.patterns')}</li>
+                <li>{t('moderation.features.antiraid.features.accountAnalysis.items.avatarUsername')}</li>
               </ul>
             </div>
           </div>
           <div className="col-md-6">
             <div className="mb-2">
-              <strong>Automated Response:</strong>
+              <strong>{t('moderation.features.antiraid.features.automatedResponse.title')}</strong>
               <ul className="mb-0 mt-1">
-                <li>Server lockdown capabilities</li>
-                <li>Automatic verification changes</li>
-                <li>Member removal options</li>
+                <li>{t('moderation.features.antiraid.features.automatedResponse.items.lockdown')}</li>
+                <li>{t('moderation.features.antiraid.features.automatedResponse.items.verification')}</li>
+                <li>{t('moderation.features.antiraid.features.automatedResponse.items.removal')}</li>
               </ul>
             </div>
             <div className="mb-2">
-              <strong>Content Filtering:</strong>
+              <strong>{t('moderation.features.antiraid.features.contentFiltering.title')}</strong>
               <ul className="mb-0 mt-1">
-                <li>Invite spam detection</li>
-                <li>Mass mention protection</li>
-                <li>New member monitoring</li>
+                <li>{t('moderation.features.antiraid.features.contentFiltering.items.inviteSpam')}</li>
+                <li>{t('moderation.features.antiraid.features.contentFiltering.items.massMention')}</li>
+                <li>{t('moderation.features.antiraid.features.contentFiltering.items.newMember')}</li>
               </ul>
             </div>
           </div>
@@ -201,8 +203,7 @@ export default function AntiRaidConfigForm({ config, updateConfig, channels, rol
         <div className="d-flex align-items-start gap-2">
           <i className="fa-solid fa-exclamation-triangle text-warning mt-1" />
           <div className="small">
-            <strong className="text-warning">Important:</strong> Anti-raid protection uses advanced heuristics and may occasionally flag legitimate users. 
-            Monitor your alert channel regularly and adjust settings based on your server's needs.
+            <strong className="text-warning">{t('moderation.features.antiraid.warning.title')}</strong> {t('moderation.features.antiraid.warning.message')}
           </div>
         </div>
       </div>
@@ -211,8 +212,8 @@ export default function AntiRaidConfigForm({ config, updateConfig, channels, rol
       <div className="row">
         <div className="col-md-6">
           <FormField 
-            label="Join Rate Limit"
-            description="Maximum members allowed to join per time window"
+            label={t('moderation.features.antiraid.fields.joinRate.label')}
+            description={t('moderation.features.antiraid.fields.joinRate.desc')}
           >
             <input 
               type="number"
@@ -226,8 +227,8 @@ export default function AntiRaidConfigForm({ config, updateConfig, channels, rol
         </div>
         <div className="col-md-6">
           <FormField 
-            label="Time Window (seconds)"
-            description="Time period for join rate limit"
+            label={t('moderation.features.antiraid.fields.joinWindow.label')}
+            description={t('moderation.features.antiraid.fields.joinWindow.desc')}
           >
             <input 
               type="number"
@@ -242,8 +243,8 @@ export default function AntiRaidConfigForm({ config, updateConfig, channels, rol
       </div>
 
       <FormField 
-        label="Minimum Account Age (days)"
-        description="Accounts younger than this will be flagged as suspicious"
+        label={t('moderation.features.antiraid.fields.accountAge.label')}
+        description={t('moderation.features.antiraid.fields.accountAge.desc')}
       >
         <input 
           type="number"
@@ -258,26 +259,26 @@ export default function AntiRaidConfigForm({ config, updateConfig, channels, rol
       <div className="row">
         <div className="col-md-6">
           <FormField 
-            label="Raid Action"
-            description="Action to take when a raid is detected"
+            label={t('moderation.features.antiraid.fields.raidAction.label')}
+            description={t('moderation.features.antiraid.fields.raidAction.desc')}
           >
             <select 
               className="form-select form-select-sm custom-dropdown"
               value={config.raidAction || 'lockdown'}
               onChange={(e) => updateConfig('raidAction', e.target.value)}
             >
-              <option value="lockdown">Lockdown Server</option>
-              <option value="kick">Kick Suspicious Members</option>
-              <option value="ban">Ban Suspicious Members</option>
-              <option value="timeout">Timeout Suspicious Members</option>
-              <option value="alert">Alert Only</option>
+              <option value="lockdown">{t('moderation.features.antiraid.actions.lockdown')}</option>
+              <option value="kick">{t('moderation.features.antiraid.actions.kick')}</option>
+              <option value="ban">{t('moderation.features.antiraid.actions.ban')}</option>
+              <option value="timeout">{t('moderation.features.antiraid.actions.timeout')}</option>
+              <option value="alert">{t('moderation.features.antiraid.actions.alert')}</option>
             </select>
           </FormField>
         </div>
         <div className="col-md-6">
           <FormField 
-            label="Action Duration (minutes)"
-            description="Duration for temporary actions (timeout/lockdown)"
+            label={t('moderation.features.antiraid.fields.raidActionDuration.label')}
+            description={t('moderation.features.antiraid.fields.raidActionDuration.desc')}
           >
             <input 
               type="number"
@@ -289,13 +290,13 @@ export default function AntiRaidConfigForm({ config, updateConfig, channels, rol
               disabled={config.raidAction === 'kick' || config.raidAction === 'ban' || config.raidAction === 'alert'}
             />
             {(config.raidAction === 'kick' || config.raidAction === 'ban' || config.raidAction === 'alert') && (
-              <small className="text-muted">Duration not applicable for this action</small>
+              <small className="text-muted">{t('moderation.features.antiraid.fields.raidActionDuration.notApplicable')}</small>
             )}
           </FormField>
         </div>
       </div>
 
-      <FormField label="Verification Level During Lockdown">
+      <FormField label={t('moderation.features.antiraid.verification.label')}>
         <select 
           className="form-select form-select-sm custom-dropdown"
           value={config.verificationLevel || 'medium'}
@@ -310,28 +311,28 @@ export default function AntiRaidConfigForm({ config, updateConfig, channels, rol
       </FormField>
 
       <FormField 
-        label="Alert Channel"
-        description="Channel to send raid alerts and notifications"
+        label={t('moderation.features.antiraid.fields.alertChannel.label')}
+        description={t('moderation.features.antiraid.fields.alertChannel.desc')}
       >
         <ChannelSelector
           value={config.alertChannel}
           onChange={(value) => updateConfig('alertChannel', value)}
           channels={channels}
-          placeholder="No alerts"
+          placeholder={t('moderation.features.antiraid.placeholders.noAlerts')}
         />
       </FormField>
 
       <SwitchToggle
         id="antiraid-auto-kick"
-        label="Auto-Kick Suspicious Accounts"
+        label={t('moderation.features.antiraid.fields.autoKick.label')}
         checked={config.autoKick || false}
         onChange={(checked) => updateConfig('autoKick', checked)}
-        description="Automatically kick accounts that meet suspicious criteria"
+        description={t('moderation.features.antiraid.fields.autoKick.desc')}
       />
 
       <FormField 
-        label="New Member Grace Period (minutes)"
-        description="How long to monitor new members for suspicious activity"
+        label={t('moderation.features.antiraid.fields.gracePeriod.label')}
+        description={t('moderation.features.antiraid.fields.gracePeriod.desc')}
       >
         <input 
           type="number"
@@ -344,8 +345,8 @@ export default function AntiRaidConfigForm({ config, updateConfig, channels, rol
       </FormField>
 
       <FormField 
-        label="Whitelist Roles"
-        description="Members with these roles will bypass anti-raid protection"
+        label={t('moderation.features.antiraid.fields.whitelistRoles.label')}
+        description={t('moderation.features.antiraid.fields.whitelistRoles.desc')}
       >
         <WhitelistRolesPicker
           value={config.bypassRoles || []}
