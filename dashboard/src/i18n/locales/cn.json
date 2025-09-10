@@ -1,0 +1,1834 @@
+{
+  "common": {
+    "save": "儲存",
+    "reset": "重設",
+    "cancel": "取消",
+    "create": "建立",
+    "delete": "刪除",
+    "edit": "編輯",
+    "add": "新增",
+    "loading": "載入中...",
+    "lastLoad": "最後更新",
+    "saving": "儲存中...",
+    "creating": "建立中...",
+    "updating": "更新中...",
+    "success": "成功",
+    "error": "錯誤",
+    "warning": "警告",
+    "info": "資訊",
+    "yes": "是",
+    "no": "否",
+    "enabled": "已啟用",
+    "disabled": "已停用",
+    "name": "名稱",
+    "description": "描述",
+    "actions": "操作",
+    "settings": "設定",
+    "search": "搜尋",
+    "filter": "篩選",
+    "clear": "清除",
+    "apply": "套用",
+    "close": "關閉",
+    "back": "返回",
+    "next": "下一步",
+    "previous": "上一頁",
+    "unsaved": "尚未儲存",
+    "unsavedChanges": "尚未儲存的變更",
+    "notAvailable": "無資料",
+    "refresh": "刷新分析",
+    "na": "無資料",
+    "none": "無",
+    "noMatches": "無符合項目",
+    "invalidData": "資料無效",
+    "unknown": "未知",
+    "update": "更新",
+    "editRule": "編輯規則",
+    "deleteRule": "刪除規則",
+    "editWord": "編輯單字",
+    "deleteWord": "刪除單字",
+    "editPattern": "編輯模式",
+    "deletePattern": "刪除模式"
+  },
+  "navigation": {
+    "dashboard": "儀表板",
+    "changeServer": "更換伺服器",
+    "selectServer": "選擇伺服器",
+    "overview": "總覽",
+    "autos": "自動回覆",
+    "commands": "指令",
+    "personal": "機器人個性化",
+    "moderation": "管理",
+    "games": "遊戲與社群",
+    "settings": "設定",
+    "logout": "登出",
+    "signOut": "登出",
+    "collapseSidebar": "收合側邊欄",
+    "expandSidebar": "展開側邊欄",
+    "toggleTheme": "切換明暗主題",
+    "openMenu": "開啟選單"
+  },
+  "settings": {
+    "title": "伺服器設定",
+    "subtitle": "設定您的伺服器偏好與行為",
+    "loadingTitle": "載入伺服器設定",
+    "loadingMessage": "正在取得您的伺服器設定與偏好...",
+    "selectServerFirst": "請先選擇伺服器。",
+    "autoReply": {
+      "enabled": "自動回覆已啟用",
+      "cooldown": "自動回覆冷卻時間（毫秒）",
+      "cooldownHelp": "自動回覆間隔時間（毫秒）"
+    },
+    "language": {
+      "label": "語言",
+      "help": "機器人回應及儀表板介面的預設語言",
+      "changeNote": "儀表板語言將於儲存後變更",
+      "saved": "語言設定已成功儲存",
+      "saveFailed": "語言設定儲存失敗",
+      "changedTo": "語言已切換為{{language}}"
+    },
+    "timezone": {
+      "label": "時區",
+      "placeholder": "輸入搜尋（如 Jakarta、UTC+07）",
+      "help": "輸入以篩選。已儲存值：{{value}}",
+      "searchHelp": "輸入以搜尋您的時區"
+    },
+    "hourFormat": {
+      "label": "時間格式",
+      "24hour": "24 小時制",
+      "12hour": "12 小時制"
+    },
+    "slashCommands": {
+      "enabled": "啟用斜線指令",
+      "help": "允許用戶使用斜線指令"
+    },
+    "preview": {
+      "title": "預覽",
+      "sampleTimestamp": "範例時間戳記：{{timestamp}}",
+      "help": "請調整設定後儲存。未來 AI 回應可能會依語言及地區時間顯示。"
+    },
+    "messages": {
+      "saved": "設定已儲存",
+      "saveFailed": "儲存失敗",
+      "resetConfirm": "確定要重設全部變更嗎？",
+      "unsavedChanges": "您有尚未儲存的變更，確定要離開嗎？"
+    }
+  },
+  "auth": {
+    "login": "登入",
+    "logout": "登出",
+    "loginWithDiscord": "使用 Discord 登入",
+    "loggingIn": "登入中...",
+    "welcomeBack": "歡迎回來！",
+    "loginRequired": "請先登入以繼續",
+    "sessionExpired": "您的登入已過期，請重新登入。"
+  },
+  "errors": {
+    "general": "發生錯誤，請重試。",
+    "network": "網路錯誤，請檢查您的連線。",
+    "unauthorized": "您沒有操作權限。",
+    "forbidden": "存取被拒。",
+    "notFound": "找不到相關資源。",
+    "serverError": "伺服器錯誤，請稍候再試。",
+    "validationFailed": "驗證失敗，請檢查您的輸入內容。",
+    "timeout": "請求逾時，請重試。"
+  },
+  "loading": {
+    "pleaseWait": "請稍候...",
+    "fetchingData": "正在取得資料...",
+    "processing": "處理中...",
+    "almostDone": "快完成了..."
+  },
+  "languages": {
+    "en": "英文",
+    "id": "Indonesian",
+    "es": "西班牙文",
+    "fr": "法文",
+    "de": "德文",
+    "ja": "日文",
+    "cn": "中文（繁體）"
+  },
+  "overview": {
+    "title": "伺服器總覽",
+    "subtitle": "儀表板總覽與伺服器統計",
+    "activityDashboardTitle": "活動儀表板",
+    "serverInfo": "伺服器資訊",
+    "botStatus": "機器人狀態",
+    "quickActions": "快速操作",
+    "quickStats": "快速統計",
+    "autosEnabled": "自動回覆已啟用",
+    "commandsEnabled": "指令已啟用",
+    "guildMembers": "公會成員",
+    "commandsToday": "今日指令",
+    "totalAutos": "自動回覆總數",
+    "enabled": "已啟用",
+    "disabled": "已停用",
+    "featureStatus": "功能狀態",
+    "coreFeatures": "核心功能",
+    "advancedFeatures": "進階功能",
+    "welcomeSystem": "歡迎系統",
+    "roleManagement": "身分組管理",
+    "xpLeveling": "經驗值與等級",
+    "scheduler": "排程器",
+    "autoModeration": "自動管理",
+    "antiRaid": "Anti-Raid",
+    "auditLogging": "稽核記錄",
+    "active": "活躍",
+    "partial": "部分活躍",
+    "unknown": "未知",
+    "status": {
+      "enabled": "已啟用",
+      "disabled": "已停用",
+      "active": "活動中",
+      "partial": "部分",
+      "unknown": "未知"
+    },
+    "apiStatus": {
+      "geminiAi": "Gemini AI",
+      "discord": "Discord",
+      "database": "資料庫",
+      "uptime": "運作時間",
+      "memory": "記憶體",
+      "errorsHour": "錯誤／每小時",
+      "cacheHit": "快取命中",
+      "ready": "就緒",
+      "down": "離線",
+      "on": "開啟",
+      "off": "關閉",
+      "lastHour": "過去一小時",
+      "entries": "筆數",
+      "used": "已使用"
+    },
+    "charts": {
+      "loadingCharts": "正在載入圖表…",
+      "stackedBarDescription": "堆疊長條圖比較自動功能與指令的啟用／停用情況。",
+      "count": "數量",
+      "categories": {
+        "autos": "自動功能",
+        "commands": "指令"
+      },
+      "days": {
+        "sun": "週日",
+        "mon": "週一",
+        "tue": "週二",
+        "wed": "週三",
+        "thu": "週四",
+        "fri": "週五",
+        "sat": "週六"
+      },
+      "commandActivity": "指令活動（7日）",
+      "noData": "沒有可用資料"
+    },
+    "loadingAnalytics": "正在載入分析…",
+    "of": "／",
+    "serverInformation": "伺服器資訊",
+    "activityStreamTitle": "近期活動串流",
+    "topCommands24h": "熱門指令（24小時）",
+    "total": "總共",
+    "executions": "執行次數",
+    "avg": "平均",
+    "topCommandsEmpty": "過去 24 小時內沒有指令被執行。",
+    "systemStatusTitle": "系統狀態",
+    "antiRaidProtectionTitle": "反洗版保護",
+    "last24Hours": "過去 24 小時",
+    "joinPatternLast6Hours": "加入模式（過去 6 小時）",
+    "securityTrendsTitle": "安全趨勢與成員保護",
+    "badges": {
+      "todayCount": "{{count}} 人今日"
+    },
+    "time": {
+      "hoursAgo": "{{count}} 小時前",
+      "now": "現在",
+      "secondsShort": "秒",
+      "days": "天"
+    },
+    "performanceMetrics": "效能指標",
+    "guildInfo": {
+      "members": "成員",
+      "online": "線上",
+      "today": "今日",
+      "roles": "身分組",
+      "newMembersToday": "+{{count}}"
+    },
+    "metrics": {
+      "apiResponse": "API 回應",
+      "excellent": "極佳",
+      "good": "良好",
+      "slow": "較慢",
+      "commandUsage": "指令使用",
+      "highActivity": "高活動",
+      "moderateActivity": "中等活動",
+      "lowActivity": "低活動",
+      "errorRate": "錯誤率",
+      "systemHealth": "系統健康度",
+      "optimal": "最佳",
+      "degraded": "已降級",
+      "critical": "危急",
+      "successRate": "成功率",
+      "cpuUsage": "CPU 使用率",
+      "improvement": "改善",
+      "normalLoad": "正常負載",
+      "yesterdayChange": "比昨天快 12 毫秒",
+      "newToday": "今日新增"
+    },
+    "activeUsers": "活躍使用者",
+    "recentActivityStream": "近期活動串流",
+    "systemHealth": {
+      "botOnline": "機器人已上線",
+      "database": "資料庫",
+      "aiServices": "AI 服務",
+      "cacheSystem": "快取系統",
+      "systemHealthScore": "系統健康分數",
+      "status": {
+        "active": "運作中",
+        "connected": "已連線",
+        "operational": "運作正常",
+        "warming": "啟動中"
+      }
+    },
+    "security": {
+      "protectionStatus": "保護狀態",
+      "raidsBlocked": "已阻擋洗版",
+      "suspicious": "疑似",
+      "legitimate": "正當",
+      "filterEffectiveness": "過濾成效",
+      "filters": {
+        "spam": "洗版",
+        "links": "連結",
+        "caps": "大寫",
+        "profanity": "不雅字詞",
+        "invites": "邀請連結",
+        "mentions": "標註"
+      },
+      "actionsTaken": "已採取動作",
+      "securityScore": "安全分數",
+      "cleanMembers": "乾淨成員",
+      "warnedUsers": "已警告用戶",
+      "bannedToday": "今日封禁",
+      "newMembers": "新進成員",
+      "joins": "加入",
+      "joinRateLimit": "加入速率限制",
+      "minAccountAgeLabel": "最低帳號年齡",
+      "violationsCaught": "捕捉違規",
+      "violationsCaught24h": "捕捉違規（24小時）",
+      "securityEventsLast7d": "安全事件（近 7 天）",
+      "excellentProtection": "極佳保護",
+      "actions": {
+        "actions": "動作",
+        "delete": "移除",
+        "warn": "警告",
+        "mute": "靜音",
+        "kick": "踢除",
+        "ban": "封鎖"
+      },
+      "thisWeek": "本週",
+      "noDataThisWeek": "本週無資料"
+    },
+    "activityStream": {
+      "noActivityMessage": "查無近期活動，指令執行後將顯示於此。",
+      "recent": "最近",
+      "discordServer": "Discord 伺服器",
+      "unknownGuild": "未知伺服器",
+      "byUser": "由 {{user}}",
+      "now": "現在"
+    },
+    "sampleActivity": {
+      "schedulerUsed": "/scheduler 已使用",
+      "autoReplyTriggered": "自動回覆已觸發",
+      "pingExecuted": "/ping 已執行",
+      "welcomeMessageSent": "歡迎訊息已發送",
+      "helpRequested": "/help 已請求"
+    }
+  },
+  "autoResponses": {
+    "title": "自動回覆",
+    "subtitle": "管理機器人的自動回覆",
+    "enabled": "自動回覆已啟用",
+    "disabled": "自動回覆已停用",
+    "cooldown": "回覆冷卻時間",
+    "addResponse": "新增回覆",
+    "editResponse": "編輯回覆",
+    "deleteResponse": "刪除回覆"
+  },
+  "autosSection": {
+    "loadingTitle": "正在載入自動回覆",
+    "loadingMessage": "正在擷取您的伺服器自動回覆模式與設定…",
+    "regexTester": {
+      "open": "正則測試工具",
+      "close": "關閉測試工具",
+      "pattern": "模式",
+      "flags": "標記",
+      "sampleLabel": "範例文字（多行）",
+      "samplePlaceholder": "hello world\nHi there",
+      "run": "執行",
+      "empty": "空白",
+      "error": "正則錯誤：{{error}}"
+    },
+    "bulk": {
+      "selectedCount": "已選取：{{count}}",
+      "enable": "啟用",
+      "disable": "停用",
+      "enableSelected": "啟用所選",
+      "disableSelected": "停用所選",
+      "deleteSelected": "刪除所選",
+      "clearSelection": "清除選取",
+      "selectAllFiltered": "選取全部已篩選",
+      "rows": "列"
+    },
+    "columns": {
+      "select": "選取",
+      "key": "鍵值",
+      "pattern": "模式",
+      "flags": "標記",
+      "replies": "回覆",
+      "enabled": "啟用"
+    },
+    "pagination": {
+      "rows": "列",
+      "prevPage": "上一頁",
+      "nextPage": "下一頁",
+      "page": "第 {{page}} 頁 / 共 {{total}} 頁",
+      "showing": "顯示 {{count}} 筆，共已篩選 {{filtered}} 筆（全部 {{total}} 筆）"
+    },
+    "empty": "沒有符合搜尋條件的自動回覆。",
+    "confirm": {
+      "deleteSelected": "確定要刪除已選取的 {{count}} 筆嗎？",
+      "deleteOne": "確定要刪除 {{key}} 嗎？"
+    },
+    "toasts": {
+      "bulkEnabled": "已啟用所選項目",
+      "bulkDisabled": "已停用所選項目",
+      "bulkDeleted": "已刪除所選項目",
+      "deleted": "已刪除",
+      "saved": "自動回覆已儲存"
+    },
+    "modal": {
+      "titleAdd": "新增自動回覆",
+      "titleEdit": "編輯自動回覆",
+      "key": "鍵值",
+      "keyHelpUnique": "唯一識別碼",
+      "keyPlaceholder": "greet",
+      "keyNoSpaces": "不可有空白。",
+      "pattern": "正則模式",
+      "patternPlaceholder": "^hello|hi",
+      "flags": "標記",
+      "flagsPlaceholder": "i",
+      "replies": "回覆內容",
+      "repliesHelp": "每行一筆",
+      "repliesPlaceholder": "Hello there!\nHi!",
+      "enabled": "啟用",
+      "footerNote": "機器人會隨機挑選一則回覆。"
+    }
+  },
+  "commands": {
+    "title": "指令",
+    "subtitle": "管理機器人指令與權限",
+    "slashCommands": "斜線指令",
+    "prefixCommands": "前置字串指令",
+    "permissions": "指令權限",
+    "enableAll": "全部啟用",
+    "disableAll": "全部停用",
+    "section": {
+      "commandOne": "1 條指令",
+      "commandMany": "{{count}} 條指令",
+      "requiresManage": "需要伺服器管理權限",
+      "alwaysActive": "永遠啟用",
+      "updatedBy": "由 {{user}} 更新",
+      "readOnly": "唯讀",
+      "passive": "被動",
+      "bottomNote": "部分指令為永遠啟用或需特定權限才能切換。",
+      "unknownUser": "未知"
+    },
+    "groups": {
+      "core": {
+        "title": "核心"
+      },
+      "ai": {
+        "title": "AI 與語言"
+      },
+      "polls": {
+        "title": "投票"
+      },
+      "utilities": {
+        "title": "工具"
+      },
+      "xp": {
+        "title": "經驗值與等級"
+      },
+      "roles": {
+        "title": "身分組與自助分配"
+      },
+      "moderation": {
+        "title": "管理與安全"
+      },
+      "passive": {
+        "title": "被動 / 自動化"
+      },
+      "scheduler": {
+        "title": "排程器"
+      },
+      "streaming": {
+        "title": "串流整合"
+      }
+    },
+    "toasts": {
+      "enabled": "指令「{{name}}」已啟用",
+      "disabled": "指令「{{name}}」已停用",
+      "toggleFailed": "更新 {{name}} 失敗"
+    },
+    "items": {
+      "ping": {
+        "usage": "/ping",
+        "desc": "健康檢查 — 回 Pong。"
+      },
+      "uptime": {
+        "usage": "/uptime",
+        "desc": "顯示機器人程序運行時間。"
+      },
+      "whoami": {
+        "usage": "/whoami",
+        "desc": "顯示您的用戶標籤與 ID。"
+      },
+      "echo": {
+        "usage": "/echo <text>",
+        "desc": "以相同文字回覆。"
+      },
+      "help": {
+        "usage": "/help",
+        "desc": "互動式分類說明選單。"
+      },
+      "ask": {
+        "usage": "/ask prompt:<text>",
+        "desc": "詢問 AI 問題（快取 3 分鐘）。"
+      },
+      "askfollow": {
+        "usage": "/askfollow prompt:<text>",
+        "desc": "依據最近對話內容追問。"
+      },
+      "explain_image": {
+        "usage": "/explain_image image(1-3) [prompt]",
+        "desc": "可選提示，解說最多 3 張圖片。"
+      },
+      "summarize": {
+        "usage": "/summarize [count]",
+        "desc": "摘要最近訊息（預設 30 筆）。"
+      },
+      "translate": {
+        "usage": "/translate text target",
+        "desc": "將文字翻譯成目標語言。"
+      },
+      "poll create": {
+        "usage": "/poll create question options",
+        "desc": "建立投票（最多可選 5 個選項）。"
+      },
+      "poll results": {
+        "usage": "/poll results id",
+        "desc": "顯示指定投票 id 的結果。"
+      },
+      "math": {
+        "usage": "/math add|sub|mul|div a b",
+        "desc": "基本算術運算。"
+      },
+      "user info": {
+        "usage": "/user info [target]",
+        "desc": "查詢 Discord 使用者資訊。"
+      },
+      "remind": {
+        "usage": "/remind 分鐘 文字",
+        "desc": "預約提醒，將透過私訊或頻道傳送。"
+      },
+      "meme": {
+        "usage": "/meme",
+        "desc": "隨機獲取 meme-api.com 的迷因圖片。"
+      },
+      "level": {
+        "usage": "/level [user]",
+        "desc": "查詢你的等級或他人的 XP 等級。"
+      },
+      "xp": {
+        "usage": "/xp check|leaderboard [user]",
+        "desc": "查詢 XP 或瀏覽伺服器排行榜。"
+      },
+      "rank": {
+        "usage": "/rank [user]",
+        "desc": "查詢你在伺服器裡的排名。"
+      },
+      "leaderboard": {
+        "usage": "/leaderboard [限制]",
+        "desc": "顯示伺服器 XP 排行榜。"
+      },
+      "xpadmin": {
+        "usage": "/xpadmin give|remove|set <user> <amount>",
+        "desc": "管理使用者 XP（需伺服器管理權限）。"
+      },
+      "role list": {
+        "usage": "/role list",
+        "desc": "顯示所有可自行分配的身分組。"
+      },
+      "role menu": {
+        "usage": "/role menu",
+        "desc": "互動式身分組選單（僅限自己顯示）。"
+      },
+      "role add": {
+        "usage": "/role add <role> [user]",
+        "desc": "將可分配的身分組加入給自己或他人。"
+      },
+      "role remove": {
+        "usage": "/role remove <role> [user]",
+        "desc": "將可分配的身分組從自己或他人移除。"
+      },
+      "role setup": {
+        "usage": "/role setup <action> <role> [options]",
+        "desc": "設定可分配身分組（需身分組管理權限）。"
+      },
+      "role toggle": {
+        "usage": "/role toggle <command_name>",
+        "desc": "啟用／停用身分組指令（需身分組管理權限）。"
+      },
+      "automod list": {
+        "usage": "/automod list",
+        "desc": "顯示所有已設定的自動管控規則。"
+      },
+      "automod info": {
+        "usage": "/automod info <id>",
+        "desc": "檢視自動管控規則的詳細資訊。"
+      },
+      "automod toggle": {
+        "usage": "/automod toggle <id> <enabled>",
+        "desc": "啟用／停用自動管控規則（需伺服器管理權限）。"
+      },
+      "antiraid status": {
+        "usage": "/antiraid status",
+        "desc": "檢視目前防禦刷頻設定狀態。"
+      },
+      "antiraid toggle": {
+        "usage": "/antiraid toggle <enabled>",
+        "desc": "啟用／停用防刷頻保護（需伺服器管理權限）。"
+      },
+      "audit recent": {
+        "usage": "/audit recent",
+        "desc": "檢視最近的管理行為紀錄（需伺服器管理權限）。"
+      },
+      "autoreply": {
+        "usage": "(被動)",
+        "desc": "依照已設定的模式自動回覆訊息。"
+      },
+      "welcome preview": {
+        "usage": "/welcome preview",
+        "desc": "預覽目前的歡迎訊息設定。"
+      },
+      "welcome toggle": {
+        "usage": "/welcome toggle <enabled>",
+        "desc": "啟用／停用歡迎系統（需伺服器管理權限）。"
+      },
+      "automod": {
+        "usage": "(被動)",
+        "desc": "自動管控垃圾訊息、過度字母、連結及不雅字詞。"
+      },
+      "audit logs": {
+        "usage": "(被動)",
+        "desc": "追蹤所有管理行為及伺服器變更。"
+      },
+      "anti-raid": {
+        "usage": "(被動)",
+        "desc": "防範刷頻與大量加入攻擊。"
+      },
+      "scheduler list": {
+        "usage": "/scheduler list",
+        "desc": "列出所有已預約的訊息。"
+      },
+      "scheduler info": {
+        "usage": "/scheduler info <id>",
+        "desc": "檢視預約訊息的詳細資訊。"
+      },
+      "scheduler enable": {
+        "usage": "/scheduler enable <id>",
+        "desc": "啟用預約訊息（需伺服器管理權限）。"
+      },
+      "scheduler disable": {
+        "usage": "/scheduler disable <id>",
+        "desc": "停用預約訊息（需伺服器管理權限）。"
+      },
+      "scheduler run": {
+        "usage": "/scheduler run <id>",
+        "desc": "立即手動觸發預約訊息（需伺服器管理權限）。"
+      },
+      "ytwatch": {
+        "usage": "/ytwatch action:<enable|disable|addchannel|removechannel|announcechannel|mentionrole|interval|status>",
+        "desc": "管理 YouTube 通知（需伺服器管理權限）。"
+      },
+      "ytstats": {
+        "usage": "/ytstats",
+        "desc": "顯示 YouTube watcher 快取及額度統計。"
+      },
+      "ytdebug": {
+        "usage": "/ytdebug",
+        "desc": "顯示近期 YouTube watcher 除錯事件（需伺服器管理權限）。"
+      },
+      "twitchstats": {
+        "usage": "/twitchstats",
+        "desc": "顯示 Twitch watcher 快取及 API 統計資料。"
+      },
+      "twitchdebug": {
+        "usage": "/twitchdebug action:<config|status|test|resolve>",
+        "desc": "除錯 Twitch 整合並測試通知。"
+      }
+    }
+  },
+  "personalization": {
+    "title": "機器人個人化",
+    "subtitle": "自訂機器人的外觀與行為",
+    "fields": {
+      "nickname": "機器人暱稱（僅限伺服器）",
+      "nicknamePlaceholder": "留空則維持現有暱稱",
+      "activityType": "狀態類型",
+      "activityText": "狀態文字",
+      "activityTextPlaceholder": "例如：和你的訊息一起",
+      "status": "狀態",
+      "avatar": "頭像圖片",
+      "preview": "即時預覽",
+      "permissionsNote": "暱稱和頭像需要機器人權限；活動如果實作會全分片適用。",
+      "currentBotName": "目前機器人名稱",
+      "defaultStatus": "預設狀態",
+      "noActivity": "尚未設定活動",
+      "previewNote": "本預覽會即時反映您尚未儲存的變更。"
+    },
+    "activityTypes": {
+      "none": "(無)",
+      "playing": "遊玩中",
+      "listening": "收聽中",
+      "watching": "觀看中",
+      "competing": "競賽中"
+    },
+    "statuses": {
+      "default": "(預設)",
+      "online": "在線上",
+      "idle": "閒置中",
+      "dnd": "請勿打擾",
+      "invisible": "隱身中"
+    },
+    "toasts": {
+      "saved": "機器人個人化已儲存",
+      "saveFailed": "儲存失敗"
+    },
+    "avatar": "機器人頭像",
+    "nickname": "機器人暱稱",
+    "status": "機器人狀態",
+    "embedColor": "嵌入色彩",
+    "prefix": "指令前綴"
+  },
+  "moderation": {
+    "title": "管理",
+    "subtitle": "設定管理工具與選項",
+    "automod": "自動管理",
+    "warnings": "警告系統",
+    "roles": "身分組管理",
+    "logging": "稽核紀錄",
+    "loading": {
+      "title": "載入管理設定",
+      "message": "正在取得管理功能與設定..."
+    },
+    "badge": {
+      "enabledOfTotal": "{{enabled}} 項已啟用，全部共 {{total}} 項"
+    },
+    "overview": {
+      "title": "管理總覽",
+      "desc": "切換防護功能並設定社群專屬選項。較嚴格的保護可能需要較多設定。",
+      "protectionLevel": "防護等級",
+      "complete": "已設定完成"
+    },
+    "common": {
+      "enabled": "{{feature}} 已啟用",
+      "disabled": "{{feature}} 已停用",
+      "enableFailed": "啟用功能失敗",
+      "disableFailed": "停用功能失敗",
+      "loadFailedGeneric": "管理資料載入失敗",
+      "loadFailed": "{{feature}} 設定載入失敗",
+      "saveSuccess": "{{feature}} 設定已儲存",
+      "saveFailed": "{{feature}} 設定儲存失敗"
+    },
+    "modal": {
+      "title": "{{feature}} 設定",
+      "loading": "載入組態中...",
+      "loadingHelp": "取得此功能目前設定",
+      "saving": "儲存變更中...",
+      "savingHelp": "套用變更並更新伺服器組態",
+      "savingShort": "儲存中...",
+      "saveChanges": "儲存變更"
+    },
+    "features": {
+      "roles": {
+        "header": "身分組管理",
+        "badge": "自助領取",
+        "tabs": {
+          "reaction": "反應身分組",
+          "slash": "斜線指令"
+        },
+        "table": {
+          "status": "狀態",
+          "title": "標題",
+          "channel": "頻道",
+          "message": "訊息",
+          "reactions": "反應",
+          "roles": "身分組",
+          "actions": "操作"
+        },
+        "reaction": {
+          "header": "反應身分組設定",
+          "loading": "載入反應身分組中...",
+          "empty": "尚未設定反應身分組。",
+          "labels": {
+            "botMessage": "機器人訊息",
+            "userMessage": "使用者訊息"
+          },
+          "info": {
+            "title": "運作方式",
+            "description": "反應身分組讓使用者能以訊息反應自助領取身分組。只要反應指定表情符號就能取得或移除相對應身分組。",
+            "types": {
+              "title": "反應類型：",
+              "toggle": "切換制－使用者反應可取得或移除身分組",
+              "addOnly": "僅新增－只能取得身分組，移除反應不會移除身分組",
+              "removeOnly": "僅移除－只能藉由反應移除身分組"
+            }
+          },
+          "form": {
+            "status": "啟用反應身分組",
+            "title": "標題",
+            "titlePlaceholder": "請輸入此反應身分組標題",
+            "titleHelp": "方便識別此反應身分組的描述性標題",
+            "channel": "頻道",
+            "channelPlaceholder": "請選擇頻道...",
+            "messageId": "Message ID",
+            "messageIdReadOnly": "編輯時訊息 ID 僅供查看",
+            "messageIdTooltip": "編輯時訊息 ID 不可變更",
+            "customMessage": "自訂訊息",
+            "customMessagePlaceholder": "反應表情領取您的身分組！",
+            "customMessageHelp": {
+              "editing": "此反應身分組的訊息內容",
+              "creating": "此訊息內容將由機器人發送"
+            },
+            "reactions": "反應",
+            "emoji": "表情符號",
+            "emojiPlaceholder": "\u001f3AE 或 :custom_emoji:",
+            "role": "身分組",
+            "rolePlaceholder": "選擇身分組…",
+            "type": "類型",
+            "typeOptions": {
+              "toggle": "切換",
+              "add_only": "只新增",
+              "remove_only": "只移除"
+            },
+            "previewSelectRole": "選擇身分組"
+          },
+          "buttons": {
+            "add": "新增反應身分組",
+            "addReaction": "新增反應",
+            "removeReaction": "移除反應",
+            "removeReactionDisabled": "無法移除最後一個反應"
+          },
+          "emojiPicker": {
+            "title": "選擇表情符號",
+            "serverEmojis": "伺服器表情符號",
+            "commonEmojis": "常用表情符號"
+          },
+          "delete": {
+            "title": "刪除反應身分組訊息",
+            "message": "確定要刪除反應身分組訊息「{{title}}」嗎？",
+            "warning": "這將移除所有相關反應且無法復原。",
+            "confirm": "刪除訊息"
+          },
+          "toasts": {
+            "created": "反應身分組「{{title}}」已成功建立！",
+            "updated": "反應身分組「{{title}}」已成功更新！",
+            "deleteSuccess": "已成功刪除反應身分組訊息",
+            "deleteFailed": "刪除反應身分組訊息失敗",
+            "statusEnabled": "反應身分組已啟用",
+            "statusDisabled": "反應身分組已停用",
+            "statusFailed": "更新反應身分組狀態失敗",
+            "loadFailed": "載入反應身分組失敗"
+          }
+        },
+        "slash": {
+          "header": "斜線指令身分組",
+          "subtitle": "設定自訂斜線指令以管理身分組",
+          "loading": "正在載入斜線指令身分組…",
+          "empty": "尚未設定斜線指令身分組。",
+          "anyChannel": "不限頻道",
+          "info": {
+            "title": "運作方式",
+            "description": "使用者可利用這些自訂斜線指令管理自己的身分組。每個指令都能設定特定身分組及行為。",
+            "types": {
+              "title": "指令類型：",
+              "toggle": "切換 - 使用者可新增或移除身分組",
+              "add": "只新增 - 使用者只能新增身分組",
+              "remove": "只移除 - 使用者只能移除身分組"
+            }
+          },
+          "buttons": {
+            "add": "新增斜線指令",
+            "addRole": "新增身分組"
+          },
+          "form": {
+            "addTitle": "新增斜線指令",
+            "editTitle": "編輯斜線指令",
+            "title": "標題",
+            "titlePlaceholder": "例如 assign-role",
+            "description": "描述",
+            "descriptionPlaceholder": "指令描述",
+            "channel": "頻道（選填）",
+            "channelPlaceholder": "不限頻道",
+            "roles": "身分組",
+            "selectRole": "選擇身分組…",
+            "type": "類型",
+            "typeOptions": {
+              "toggle": "切換",
+              "add": "只新增",
+              "remove": "只移除"
+            },
+            "requirePermission": "需要權限",
+            "updateCommand": "更新指令",
+            "createCommand": "建立指令"
+          },
+          "delete": {
+            "title": "刪除斜線指令",
+            "message": "確定要刪除斜線指令「{{name}}」嗎？",
+            "warning": "這將永久移除指令及所有設定。使用者將無法再使用此指令。",
+            "confirm": "刪除指令"
+          },
+          "toasts": {
+            "created": "斜線指令身分組已成功建立！",
+            "updated": "斜線指令身分組已成功更新！",
+            "statusEnabled": "斜線指令已啟用",
+            "statusDisabled": "斜線指令已停用",
+            "deleteSuccess": "已成功刪除斜線指令",
+            "deleteFailed": "刪除指令失敗",
+            "fetchFailed": "取得斜線指令身分組失敗",
+            "toggleFailed": "切換指令狀態失敗"
+          }
+        }
+      },
+      "automod": {
+        "header": "自動管理",
+        "badge": "保護",
+        "info": {
+          "pre": "全球垃圾訊息、連結及惡意網址偵測可與第三方信譽來源整合，例如"
+        },
+        "globalLog": {
+          "label": "全球日誌頻道",
+          "desc": "當規則未指定頻道時，預設頻道用於傳送 AutoMod 日誌",
+          "placeholder": "選擇日誌頻道（選填）"
+        },
+        "placeholders": {
+          "addChannels": "新增頻道",
+          "addRoles": "新增身分組"
+        },
+        "meta": {
+          "channel": "頻道",
+          "role": "身分組"
+        },
+        "rules": {
+          "header": "規則",
+          "subheader": "建立規則偵測垃圾訊息、大寫字母、連結、髒話等更多內容。",
+          "add": "新增規則",
+          "loading": "正在載入規則…",
+          "empty": "尚未有規則",
+          "emptyCta": "點擊新增規則來建立你的第一個規則。",
+          "editTitle": "編輯自動管理規則",
+          "createTitle": "建立新自動管理規則",
+          "creating": "正在建立規則…",
+          "updating": "正在更新規則…",
+          "creatingShort": "建立中…",
+          "updatingShort": "更新中…",
+          "createBtn": "建立規則",
+          "updateBtn": "更新規則",
+          "form": {
+            "name": "規則名稱",
+            "namePlaceholder": "例如，垃圾訊息防護",
+            "trigger": "觸發類型",
+            "action": "動作類型",
+            "threshold": "警告門檻值",
+            "thresholdPlaceholder": "5",
+            "thresholdHelp": "達到違規次數後才會執行動作（警告用戶）",
+            "duration": "時長（分鐘）",
+            "durationPlaceholder": "10",
+            "durationHelp": "封鎖／停權時長（若留空則為永久）",
+            "logChannel": "日誌頻道",
+            "logChannelPlaceholder": "使用全域日誌頻道",
+            "messageAction": "訊息動作",
+            "messageActionHelp": "對違規訊息執行的動作",
+            "whitelistChannels": "免規則頻道",
+            "whitelistChannelsHelp": "此規則不會套用於這些頻道",
+            "whitelistRoles": "免規則身分組",
+            "whitelistRolesHelp": "這些身分組可跳過此規則"
+          }
+        },
+        "triggers": {
+          "spam": {
+            "label": "垃圾訊息偵測",
+            "description": "偵測重複訊息及垃圾訊息模式"
+          },
+          "caps": {
+            "label": "過多大寫",
+            "description": "過多大寫字母的訊息會被過濾"
+          },
+          "links": {
+            "label": "連結過濾",
+            "description": "掃描並阻擋惡意連結與網址"
+          },
+          "invite_links": {
+            "label": "邀請連結",
+            "description": "掃描並阻擋惡意 Discord 邀請連結"
+          },
+          "profanity": {
+            "label": "髒話過濾",
+            "description": "過濾不適當用語"
+          },
+          "mention_spam": {
+            "label": "標註洗版",
+            "description": "防止過多用戶／身分組標註"
+          }
+        },
+        "actions": {
+          "warn": {
+            "label": "警告用戶",
+            "description": "傳送警告給用戶"
+          },
+          "delete": {
+            "label": "刪除訊息",
+            "description": "移除違規訊息"
+          },
+          "mute": {
+            "label": "暫時停權",
+            "description": "用戶會被停權指定時長"
+          },
+          "kick": {
+            "label": "踢除用戶",
+            "description": "將用戶移出伺服器"
+          },
+          "ban": {
+            "label": "永久停權",
+            "description": "永久禁止用戶加入"
+          }
+        },
+        "messageAction": {
+          "keep": "保留訊息",
+          "delete": "刪除訊息"
+        },
+        "table": {
+          "status": "啟用",
+          "name": "名稱",
+          "trigger": "觸發",
+          "action": "動作",
+          "threshold": "門檻",
+          "channelWhitelist": "頻道免規則",
+          "roleWhitelist": "身分組免規則",
+          "actions": "操作",
+          "logsTo": "日誌儲存於 {{channel}}",
+          "minutes": "{{count}} 分鐘"
+        },
+        "tip": "提示：",
+        "profanity": {
+          "manageTip": "請在上方「髒話管理」區段自訂要過濾的髒話與規則。",
+          "header": "髒話管理",
+          "subheader": "自訂偵測不適當用語的文字與正規表示式規則。",
+          "loading": "正在載入髒話資料…",
+          "words": {
+            "header": "髒話清單",
+            "add": "新增字詞",
+            "searchPlaceholder": "搜尋字詞",
+            "noMatches": "沒有符合您搜尋的字詞。",
+            "empty": "尚未設定不雅字詞。",
+            "emptyCta": "點選「新增字詞」來建立第一筆項目。",
+            "tryDifferent": "請嘗試不同的搜尋方式。",
+            "table": {
+              "word": "字詞",
+              "severity": "嚴重程度",
+              "status": "狀態",
+              "actions": "操作"
+            },
+            "wholeWord": "完整字詞",
+            "partial": "部分字詞",
+            "caseSensitive": "區分大小寫",
+            "caseInsensitive": "不區分大小寫",
+            "modal": {
+              "editTitle": "編輯不雅字詞",
+              "addTitle": "新增不雅字詞",
+              "wordLabel": "字詞",
+              "wordPlaceholder": "輸入要封鎖的字詞",
+              "caseSensitive": "區分大小寫",
+              "wholeWordOnly": "僅完整字詞"
+            },
+            "delete": {
+              "title": "確認刪除字詞",
+              "message": "您確定要刪除此不雅字詞嗎？",
+              "warning": "此動作無法復原。",
+              "confirm": "刪除字詞"
+            }
+          },
+          "patterns": {
+            "header": "樣式",
+            "add": "新增樣式",
+            "searchPlaceholder": "搜尋樣式",
+            "noMatches": "沒有符合您搜尋的樣式。",
+            "empty": "尚未設定不雅樣式。",
+            "emptyCta": "點選「新增樣式」來建立第一筆項目。",
+            "tryDifferent": "請嘗試不同的搜尋方式。",
+            "table": {
+              "pattern": "樣式",
+              "severity": "嚴重程度",
+              "status": "狀態",
+              "actions": "操作"
+            },
+            "modal": {
+              "editTitle": "編輯不雅樣式",
+              "addTitle": "新增不雅樣式",
+              "patternLabel": "正則樣式",
+              "patternPlaceholder": "b+a+d+w+o+r+d+",
+              "flagsLabel": "標誌",
+              "flagsPlaceholder": "gi",
+              "testHeader": "樣式測試",
+              "preview": "預覽",
+              "status": "狀態",
+              "valid": "Valid",
+              "invalid": "Invalid",
+              "descriptionPlaceholder": "簡短描述（可選）"
+            },
+            "delete": {
+              "title": "確認刪除樣式",
+              "message": "您確定要刪除此不雅樣式嗎？",
+              "warning": "此動作無法復原。",
+              "confirm": "刪除樣式"
+            }
+          }
+        },
+        "common": {
+          "severity": "嚴重程度",
+          "language": "語言",
+          "description": "描述",
+          "word": "字詞",
+          "pattern": "樣式"
+        },
+        "severity": {
+          "low": "低",
+          "medium": "中",
+          "high": "高",
+          "extreme": "極高"
+        },
+        "deleteRule": {
+          "title": "確認刪除",
+          "message": "您確定要刪除此自動檢查規則嗎？",
+          "warning": "此動作無法復原。",
+          "confirm": "刪除規則"
+        },
+        "toasts": {
+          "ruleCreated": "自動檢查規則「{{name}}」建立成功！",
+          "ruleUpdated": "自動檢查規則「{{name}}」更新成功！",
+          "ruleDeleted": "自動檢查規則「{{name}}」刪除成功！",
+          "ruleCreateFailed": "建立自動檢查規則「{{name}}」失敗，請再試一次。",
+          "ruleUpdateFailed": "更新自動檢查規則「{{name}}」失敗，請再試一次。",
+          "ruleDeleteFailed": "刪除自動檢查規則「{{name}}」失敗，請再試一次。",
+          "ruleEnabled": "自動檢查規則「{{name}}」已成功啟用！",
+          "ruleDisabled": "自動檢查規則「{{name}}」已成功停用！",
+          "ruleToggleFailed": "自動管理規則「{{name}}」{{action}}失敗。請再試一次。",
+          "wordAdded": "髒話詞「{{word}}」已成功新增！",
+          "wordUpdated": "髒話詞「{{word}}」已成功更新！",
+          "wordDeleted": "髒話詞「{{word}}」已成功刪除！",
+          "wordSaveFailed": "儲存髒話詞失敗。{{error}}",
+          "wordDeleteFailed": "刪除髒話詞失敗。{{error}}",
+          "wordToggleEnabled": "髒話詞已成功啟用！",
+          "wordToggleDisabled": "髒話詞已成功停用！",
+          "wordToggleFailed": "切換髒話詞狀態失敗。{{error}}",
+          "patternAdded": "髒話模式已成功新增！",
+          "patternUpdated": "髒話模式已成功更新！",
+          "patternDeleted": "髒話模式 {{description}} 已成功刪除！",
+          "patternSaveFailed": "儲存髒話模式失敗。{{error}}",
+          "patternDeleteFailed": "刪除髒話模式失敗。{{error}}",
+          "patternToggleEnabled": "髒話模式已成功啟用！",
+          "patternToggleDisabled": "髒話模式已成功停用！",
+          "patternToggleFailed": "切換髒話模式狀態失敗。{{error}}",
+          "invalidRegex": "不合法的正則表達式模式：{{error}}"
+        }
+      },
+      "logging": {
+        "header": "稽核日誌",
+        "badge": "監控",
+        "info": {
+          "description": "追蹤訊息編輯/刪除、成員更新、頻道和身分組變更，以及伺服器事件。可設定全域頻道或各類頻道分開記錄。"
+        },
+        "fields": {
+          "globalChannel": {
+            "label": "全域日誌頻道（選填）",
+            "desc": "將所有未設定頻道設為此頻道",
+            "placeholder": "將所有未設定頻道設為此"
+          },
+          "includeBots": {
+            "label": "包含機器人動作",
+            "desc": "記錄機器人及整合服務所執行的動作"
+          },
+          "enhancedDetails": {
+            "label": "詳細資訊加強",
+            "desc": "在日誌中包含更多上下文及資料"
+          },
+          "channels": {
+            "message": {
+              "label": "訊息日誌",
+              "desc": "記錄訊息的編輯、刪除與批量刪除"
+            },
+            "member": {
+              "label": "成員日誌",
+              "desc": "記錄成員進入、離開、踢出及停權"
+            },
+            "channel": {
+              "label": "頻道日誌",
+              "desc": "記錄頻道建立、刪除及變更"
+            },
+            "role": {
+              "label": "身分組日誌",
+              "desc": "記錄身分組建立、刪除與權限更改"
+            },
+            "server": {
+              "label": "伺服器日誌",
+              "desc": "記錄伺服器設定變更及貼圖更新"
+            },
+            "voice": {
+              "label": "語音日誌",
+              "desc": "記錄語音頻道進入、離開與移動"
+            }
+          }
+        },
+        "placeholders": {
+          "noLogging": "未記錄",
+          "selectChannel": "請選擇頻道"
+        },
+        "buttons": {
+          "applyGlobal": "套用全域",
+          "reset": "重設",
+          "save": "儲存變更",
+          "cancel": "取消"
+        },
+        "modal": {
+          "title": "稽核日誌設定",
+          "saving": "儲存日誌設定中...",
+          "saved": "日誌設定已儲存"
+        },
+        "toasts": {
+          "saved": "稽核日誌設定已儲存",
+          "saveFailed": "儲存稽核日誌設定失敗",
+          "updatedGlobal": "全域日誌頻道已更新",
+          "copiedToEmpty": "已將全域頻道複製到未設定類別",
+          "validationRequired": "請至少選擇一個日誌頻道或設定全域頻道"
+        }
+      },
+      "antiraid": {
+        "header": "防刷頻保護",
+        "badge": "安全",
+        "info": {
+          "description": "透過入群速率限制、帳號年齡檢查、自動回應和內容把關，偵測並阻擋刷頻行為。"
+        },
+        "features": {
+          "joinRate": {
+            "title": "入群速率監控",
+            "items": {
+              "trackPatterns": "偵測突發成長與可疑入群模式",
+              "detectAttacks": "即時偵測協同刷頻攻擊",
+              "thresholds": "可自訂保護啟動門檻"
+            }
+          },
+          "accountAnalysis": {
+            "title": "帳號分析",
+            "items": {
+              "age": "最低帳號年齡限制",
+              "patterns": "偵測機器人化名稱及行為模式",
+              "avatarUsername": "考慮頭像／用戶名稱特徵"
+            }
+          },
+          "automatedResponse": {
+            "title": "自動回應",
+            "items": {
+              "lockdown": "自動封鎖頻道或開啟慢速模式",
+              "verification": "要求更高驗證等級",
+              "removal": "踢出／封鎖或暫停可疑帳號"
+            }
+          },
+          "contentFiltering": {
+            "title": "內容防護",
+            "items": {
+              "inviteSpam": "減少新帳號的邀請垃圾訊息",
+              "massMention": "防止大量標註垃圾訊息",
+              "newMember": "對新成員加強過濾"
+            }
+          }
+        },
+        "warning": {
+          "title": "注意：",
+          "message": "防突襲措施可能很嚴格。請調整門檻，避免在繁忙時影響真正的成員。"
+        },
+        "fields": {
+          "joinRate": {
+            "label": "加入速率",
+            "desc": "在時間區間內允許的最大加入人數"
+          },
+          "joinWindow": {
+            "label": "時間區間（秒）",
+            "desc": "用於加入速率檢查的間隔"
+          },
+          "accountAge": {
+            "label": "最低帳號年齡（日）",
+            "desc": "阻擋比此年齡還新的帳號"
+          },
+          "raidAction": {
+            "label": "偵測突襲時",
+            "desc": "偵測到突襲時的主要處理方式"
+          },
+          "raidActionDuration": {
+            "label": "動作持續時間（分鐘）",
+            "desc": "暫停／封鎖等動作的時間",
+            "notApplicable": "不適用於踢出／封鎖／僅警示"
+          },
+          "alertChannel": {
+            "label": "警示頻道",
+            "desc": "發送防突襲警示和摘要的位置"
+          },
+          "autoKick": {
+            "label": "自動踢出可疑帳號",
+            "desc": "自動踢出檢查未通過的帳號"
+          },
+          "gracePeriod": {
+            "label": "保護緩衝期（分鐘）",
+            "desc": "偵測後保持強化防護的時間"
+          },
+          "whitelistRoles": {
+            "label": "免除身分組",
+            "desc": "擁有這些身分組的成員可免除防突襲檢查"
+          }
+        },
+        "actions": {
+          "lockdown": "封鎖",
+          "kick": "踢出",
+          "ban": "封鎖",
+          "timeout": "暫停",
+          "alert": "僅警示"
+        },
+        "verification": {
+          "label": "要求驗證等級",
+          "levels": {
+            "none": "無",
+            "low": "低",
+            "medium": "中",
+            "high": "高",
+            "highest": "最高"
+          }
+        },
+        "placeholders": {
+          "noAlerts": "尚未設定警示頻道"
+        },
+        "roles": {
+          "placeholder": "新增身分組以免除...",
+          "meta": {
+            "role": "身分組"
+          },
+          "noMatches": "找不到符合您搜尋的身分組。",
+          "allAdded": "所有身分組皆已新增"
+        },
+        "modal": {
+          "title": "防突襲設定",
+          "saving": "正在儲存防突襲設定...",
+          "saved": "防突襲設定已儲存"
+        },
+        "toasts": {
+          "saved": "防突襲設定已儲存",
+          "saveFailed": "防突襲設定儲存失敗"
+        }
+      },"scheduler": {
+        "header": "定時訊息系統",
+        "badge": "自動公告",
+        "info": {
+          "description": "設定在指定時間或間隔自動發送訊息。非常適合用於公告、提醒事項或重複發布內容。"
+        },
+        "list": {
+          "title": "定時訊息（{{count}}則）",
+          "emptyTitle": "尚未設定定時訊息",
+          "emptyCta": "點擊「新增訊息」以建立第一則定時訊息"
+        },
+        "unknownChannel": "未知頻道",
+        "badges": {
+          "embed": "嵌入",
+          "active": "啟用中",
+          "inactive": "未啟用",
+          "type": "{{type}}"
+        },
+        "labels": {
+          "schedule": "排程：{{value}}",
+          "nextRun": "下次執行時間：{{time}}",
+          "lastRun": "上次執行時間：{{time}}"
+        },
+        "buttons": {
+          "add": "新增訊息",
+          "edit": "編輯",
+          "delete": "刪除",
+          "cancel": "取消",
+          "reset": "重設",
+          "saveAdd": "新增訊息",
+          "saveUpdate": "更新訊息"
+        },
+        "delete": {
+          "title": "確認刪除",
+          "message": "確定要刪除定時訊息「{{title}}」嗎？此操作無法還原。",
+          "confirm": "刪除",
+          "cancel": "取消"
+        },
+        "form": {
+          "addTitle": "新增定時訊息",
+          "editTitle": "編輯定時訊息",
+          "fields": {
+            "title": {
+              "label": "訊息標題",
+              "placeholder": "請輸入訊息標題"
+            },
+            "channel": {
+              "label": "頻道",
+              "placeholder": "請選擇頻道"
+            },
+            "scheduleType": {
+              "label": "排程類型"
+            },
+            "timeDisplay": {
+              "label": "時間顯示方式",
+              "option24": "24小時制",
+              "option12": "12小時制（AM/PM）"
+            },
+            "scheduleValue": {
+              "label": "排程設定值",
+              "placeholder": "0 9 * * *"
+            },
+            "message": {
+              "label": "訊息內容",
+              "placeholder": "請輸入您的訊息內容…"
+            },
+            "useEmbed": {
+              "label": "使用 Discord 嵌入"
+            },
+            "embed": {
+              "header": "嵌入設定",
+              "title": {
+                "label": "嵌入標題",
+                "placeholder": "嵌入標題"
+              },
+              "color": {
+                "label": "顏色"
+              },
+              "description": {
+                "label": "說明",
+                "placeholder": "嵌入說明"
+              },
+              "footer": {
+                "label": "頁尾文字",
+                "placeholder": "頁尾文字"
+              },
+              "thumbnail": {
+                "label": "縮圖 URL",
+                "placeholder": "https://example.com/image.png"
+              },
+              "image": {
+                "label": "圖片 URL",
+                "placeholder": "https://example.com/image.png"
+              }
+            }
+          },
+          "scheduleTypes": {
+            "once": "單次（時間戳）",
+            "daily": "每天",
+            "weekly": "每週",
+            "monthly": "每月",
+            "cron": "自訂（Cron）"
+          },
+          "pickers": {
+            "once": {
+              "placeholder": "選擇日期與時間"
+            },
+            "daily": {
+              "timeCaption": "時間",
+              "placeholder": "選擇時間",
+              "help": "以 HH:MM（24 小時制）儲存。"
+            },
+            "weekly": {
+              "placeholder": "選擇星期與時間",
+              "help": "可撿任一天，僅儲存星期+時間為 D|HH:MM（0=星期日）。"
+            },
+            "monthly": {
+              "placeholder": "選擇日期與時間",
+              "help": "可撿任一月份，儲存為 DD|HH:MM。"
+            },
+            "cron": {
+              "presetsTitle": "常用預設：",
+              "placeholders": {
+                "expression": "0 9 * * *"
+              },
+              "presets": {
+                "everyHour": "每小時一次",
+                "everyDay9": "每日上午 9:00",
+                "everyMonday9": "每周一上午 9:00",
+                "everySunday9": "每週（星期日上午 9:00）",
+                "everyMonthFirst9": "每月（1 號上午 9:00）",
+                "every6Hours": "每 6 小時一次",
+                "everyWeekday8": "每個工作日上午 8:00"
+              }
+            }
+          }
+        },
+        "toasts": {
+          "savedAdded": "訊息新增成功",
+          "savedUpdated": "訊息更新成功",
+          "saveFailed": "儲存訊息失敗",
+          "deleted": "已成功刪除預排訊息",
+          "deleteFailed": "刪除訊息失敗",
+          "validationRequired": "請填寫所有必填欄位"
+        }
+      },
+      "welcome": {
+        "header": "歡迎訊息",
+        "badge": "新成員",
+        "info": "設定新成員的歡迎訊息。可使用如 {user} 與 {server} 的占位符。請設定頻道，也可選擇發送私訊並自動分配身分組。",
+        "defaults": {
+          "messageText": "歡迎加入 {server}，{user}！",
+          "dmMessage": "歡迎加入 {server}！感謝您的加入。"
+        },
+        "fields": {
+          "channel": {
+            "label": "歡迎頻道",
+            "desc": "選擇用來發送歡迎訊息的頻道",
+            "placeholder": "請選擇頻道"
+          },
+          "type": {
+            "label": "訊息類型",
+            "options": {
+              "text": "文字",
+              "embed": "嵌入"
+            }
+          },
+          "message": {
+            "label": "歡迎訊息",
+            "desc": "支援占位符：{user}，{server}",
+            "placeholder": "請輸入歡迎訊息（支援 {user}，{server}）"
+          },
+          "card": {
+            "label": "包含歡迎卡片",
+            "desc": "附加簡單圖片卡片於訊息"
+          },
+          "role": {
+            "label": "自動分配身分組",
+            "desc": "可選擇分配身分組給新成員",
+            "placeholder": "請選擇身分組"
+          },
+          "dm": {
+            "label": "發送私訊",
+            "desc": "同時傳送私人歡迎訊息給使用者"
+          },
+          "dmMessage": {
+            "label": "私人訊息",
+            "desc": "啟用時，將以私人訊息方式傳送",
+            "placeholder": "請輸入私人訊息內容"
+          }
+        }
+      },
+      "xp": {
+        "header": "經驗值與等級系統",
+        "badge": "成員互動",
+        "info": {
+          "description": "以經驗值與等級提升獎勵成員活動。可設定經驗值獲取率、冷卻時間、特殊成員加成角色，以及不獲得經驗值的頻道。"
+        },
+        "placeholders": {
+          "sameChannel": "與訊息相同的頻道",
+          "addChannelToExclude": "新增排除頻道",
+          "addRoleToExclude": "新增排除角色...",
+          "selectRole": "選擇角色...",
+          "multiplier": "1.5"
+        },
+        "aria": {
+          "removeItem": "移除{{name}}"
+        },
+        "fields": {
+          "xpPerMessage": {
+            "label": "每則訊息經驗值",
+            "desc": "每則訊息獲得的經驗值"
+          },
+          "cooldownSeconds": {
+            "label": "經驗值冷卻時間（秒）",
+            "desc": "用戶獲得經驗值後需等待的時間"
+          },
+          "levelUpChannel": {
+            "label": "升級訊息頻道",
+            "desc": "升級訊息要發送的頻道（留空則發送到同一頻道）"
+          },
+          "excludedChannels": {
+            "label": "排除頻道",
+            "desc": "使用者不會獲得經驗值的頻道"
+          },
+          "excludedRoles": {
+            "label": "排除角色",
+            "desc": "不會獲得經驗值的角色"
+          },
+          "levelUpMessages": {
+            "label": "升級訊息",
+            "desc": "用戶升級時傳送訊息"
+          }
+        },
+        "multipliers": {
+          "label": "經驗值加成角色",
+          "desc": "擁有加成經驗值的角色",
+          "roleLabel": "角色",
+          "multiplierLabel": "加成倍率",
+          "multiplierSuffix": "倍加成",
+          "remove": "移除加成倍率",
+          "note": "同時擁有多個加成角色的成員將獲得最高倍率。"
+        },
+        "toasts": {
+          "addedExcludedChannel": "已新增排除頻道：#{{name}}",
+          "removedExcludedChannel": "已移除排除頻道：#{{name}}",
+          "addedExcludedRole": "已新增排除角色：@{{name}}",
+          "removedExcludedRole": "已移除排除角色：@{{name}}",
+          "multiplierAdded": "已為 @{{name}} 新增加成倍率 {{value}}x",
+          "multiplierRemoved": "已移除 @{{name}} 的加成倍率",
+          "invalidMultiplier": "請選擇一個角色並輸入有效的倍率"
+        }
+      }
+    },
+    "cards": {
+      "common": {
+        "features": "功能：",
+        "configure": "設定",
+        "updating": "更新中…"
+      },
+      "welcome": {
+        "label": "歡迎訊息",
+        "desc": "以可自訂的歡迎訊息與歡迎卡迎接新成員。",
+        "features": {
+          "customMessages": "自訂訊息",
+          "welcomeCards": "歡迎卡",
+          "roleAssignment": "身分組分配",
+          "channelSelection": "頻道選擇"
+        }
+      },
+      "automod": {
+        "label": "自動管理",
+        "desc": "自動偵測並處理垃圾訊息、過多大寫字母與不當內容。",
+        "features": {
+          "spamDetection": "垃圾訊息偵測",
+          "capsLockFilter": "大寫過濾",
+          "linkFiltering": "連結過濾",
+          "profanityFilter": "髒話過濾"
+        }
+      },
+      "roles": {
+        "label": "身分組管理",
+        "desc": "可透過反應身分組及身分組選單管理身分組。",
+        "features": {
+          "reactionRoles": "反應身分組",
+          "roleMenus": "身分組選單",
+          "permissionSync": "權限同步",
+          "customMessages": "自訂訊息"
+        }
+      },
+      "xp": {
+        "label": "經驗值與等級",
+        "desc": "以經驗值與等級制度獎勵活躍成員。",
+        "features": {
+          "xpTracking": "經驗值追蹤",
+          "levelRewards": "等級獎勵",
+          "leaderboards": "排行榜",
+          "customMultipliers": "自訂倍數"
+        }
+      },
+      "logging": {
+        "label": "審核紀錄",
+        "desc": "追蹤所有管理行為與伺服器變更。",
+        "features": {
+          "messageLogs": "訊息紀錄",
+          "memberLogs": "成員紀錄",
+          "channelLogs": "頻道紀錄",
+          "roleLogs": "權限紀錄"
+        }
+      },
+      "antiraid": {
+        "label": "防突襲保護",
+        "desc": "保護您的伺服器不受突襲與大量加入攻擊。",
+        "features": {
+          "joinRateLimiting": "加入速率限制",
+          "accountAgeFilter": "帳號年齡篩選",
+          "autoLockdown": "自動鎖定",
+          "verificationSystem": "驗證系統"
+        }
+      }
+    }
+  },
+  "gamesSocials": {
+    "title": "遊戲與社交",
+    "subtitle": "設定遊戲與社交功能",
+    "loading": {
+      "title": "載入整合設定",
+      "message": "正在取得您的整合設定與伺服器資料…"
+    },
+    "toasts": {
+      "serviceEnabled": "{{service}} 已啟用",
+      "serviceDisabled": "{{service}} 已停用",
+      "toggleFailed": "切換更新失敗",
+      "saved": "{{service}} 設定已儲存",
+      "saveFailed": "儲存失敗"
+    },
+    "services": {
+      "youtube": {
+        "label": "YouTube",
+        "desc": "公告選定頻道的新影片與直播"
+      },
+      "twitch": {
+        "label": "Twitch",
+        "desc": "公告您喜愛的實況主開始直播"
+      },
+      "pubg": {
+        "label": "PUBG",
+        "desc": "玩家統計、賽事摘要與通知（規劃中）"
+      },
+      "valorant": {
+        "label": "Valorant",
+        "desc": "賽事更新、精華與通知（規劃中）"
+      },
+      "apex": {
+        "label": "Apex Legends",
+        "desc": "賽事更新、精華與通知（規劃中）"
+      },
+      "mobilelegends": {
+        "label": "Mobile Legends",
+        "desc": "戰隊更新與賽事通知（規劃中）"
+      },
+      "clashofclans": {
+        "label": "Clash of Clans",
+        "desc": "部落戰更新與進度（規劃中）"
+      },
+      "fortnite": {
+        "label": "Fortnite",
+        "desc": "賽事更新與活動通知（規劃中）"
+      },
+      "genshin": {
+        "label": "原神",
+        "desc": "活動更新與最新消息（規劃中）"
+      }
+    },
+    "preview": {
+      "samples": {
+        "twitch": {
+          "streamTitle": "精彩直播",
+          "game": "閒聊",
+          "startedAtRelative": "剛剛"
+        },
+        "youtube": {
+          "channel": "頻道名稱",
+          "videoTitle": "精彩新上傳",
+          "publishedAtRelative": "剛剛",
+          "memberOnly": "（僅限會員）"
+        }
+      }
+    },
+    "common": {
+      "announcement": "公告",
+      "select": "選擇…",
+      "mentionTargets": "標註目標",
+      "mentionHelper": "Enter新增 • Backspace移除 • 順序保留",
+      "intervalSec": "間隔時間（秒）",
+      "embeds": "嵌入",
+      "plain": "純文字",
+      "placeholders": "佔位符",
+      "resolving": "解析中…",
+      "namePlaceholder": "名稱",
+      "clearOverrides": "清除覆寫",
+      "configuration": "設定",
+      "announcementsEnabled": "公告已啟用",
+      "announcementsDisabled": "公告已停用",
+      "integrationNotConfigured": "尚未設定整合。",
+      "plannedFeatures": "規劃中功能",
+      "needSooner": "如果您需要更快實現，歡迎告訴我們。",
+      "remove": "移除",
+      "loadingConfig": "正在載入 {{service}} 設定…",
+      "mentionInputPlaceholder": "新增@everyone、@here或角色…",
+      "meta": {
+        "role": "角色",
+        "meta": "後設"
+      },
+      "noTemplate": "尚未設定範本。",
+      "preview": "預覽"
+    },
+    "youtube": {
+      "fields": {
+        "uploadAnnounceChannel": "上傳公告頻道",
+        "liveAnnounceChannel": "直播公告頻道",
+        "upload": "上傳",
+        "live": "直播"
+      },
+      "sections": {
+        "regularTemplate": "一般範本",
+        "memberTemplate": "會員範本",
+        "memberUpload": "會員上傳",
+        "memberLive": "會員直播",
+        "regularPreview": "一般範本預覽",
+        "memberPreview": "會員範本預覽"
+      },
+      "channels": {
+        "addLabel": "新增頻道（URL）",
+        "addPlaceholder": "https://youtube.com/@handle",
+        "empty": "尚未新增頻道。",
+        "editTitle": "編輯各頻道範本",
+        "fetchTitle": "取得頻道名稱",
+        "uploadTemplate": "上傳範本",
+        "memberUploadTemplate": "會員上傳範本",
+        "liveTemplate": "直播範本",
+        "memberLiveTemplate": "會員直播範本"
+      },
+      "toasts": {
+        "alreadyWatching": "已在監看頻道 {{id}}",
+        "extracted": "已擷取頻道ID：{{id}}",
+        "extractedWithName": "已擷取 {{name}}（{{id}}）",
+        "added": "已新增頻道 {{name}}",
+        "addFailed": "新增頻道失敗"
+      }
+    },
+    "twitch": {
+      "fields": {
+        "announceChannel": "公告頻道",
+        "liveStream": "直播串流"
+      },
+      "sections": {
+        "globalTemplate": "全域範本",
+        "templatePreview": "範本預覽"
+      },
+      "streamers": {
+        "addLabel": "新增實況主（使用者名稱 / URL）",
+        "addPlaceholder": "使用者名稱, https://twitch.tv/username",
+        "empty": "尚未新增任何實況主。",
+        "editTitle": "編輯各實況主範本",
+        "fetchTitle": "擷取實況主名稱",
+        "liveTemplate": "直播範本"
+      },
+      "toasts": {
+        "resolvedTo": "已解析為 {{username}}",
+        "resolveFailed": "無法解析實況主"
+      }
+    },
+    "leveling": "經驗值與等級系統",
+    "economy": "經濟系統",
+    "socialFeatures": "社交功能",
+    "miniGames": "小遊戲"
+  },
+  "welcome": {
+    "title": "歡迎系統",
+    "subtitle": "設定歡迎訊息與新成員選項",
+    "enabled": "已啟用歡迎訊息",
+    "channel": "歡迎頻道",
+    "message": "歡迎訊息",
+    "roles": "自動身分組",
+    "toasts": {
+      "saved": "歡迎設定已儲存",
+      "saveFailed": "儲存失敗",
+      "enabled": "歡迎訊息已啟用",
+      "disabled": "歡迎訊息已停用",
+      "toggleFailed": "切換更新失敗"
+    }
+  }
+}

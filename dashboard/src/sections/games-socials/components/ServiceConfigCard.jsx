@@ -1,10 +1,12 @@
 import React from 'react';
 import { SERVICES } from '../constants';
+import { useI18n } from '../../../i18n';
 
 /**
  * ServiceConfigCard - Header card for service configuration
  */
 export default function ServiceConfigCard({ serviceKey, isEnabled, hasUnsavedChanges }) {
+  const { t } = useI18n();
   const service = SERVICES.find(s => s.key === serviceKey);
   if (!service) return null;
 
@@ -13,7 +15,7 @@ export default function ServiceConfigCard({ serviceKey, isEnabled, hasUnsavedCha
       {service.image ? (
         <img 
           src={`/images/${service.image}`} 
-          alt={service.label} 
+          alt={t(service.labelKey || '') || service.key} 
           className="app-config-icon" 
         />
       ) : (
@@ -24,11 +26,11 @@ export default function ServiceConfigCard({ serviceKey, isEnabled, hasUnsavedCha
       
       <div className="flex-grow-1">
         <div className="fw-semibold d-flex align-items-center gap-2" style={{fontSize: '.9rem'}}>
-          {service.label} Configuration
-          {hasUnsavedChanges && <span className="dirty-badge">Unsaved</span>}
+          {t(service.labelKey || '') || service.key} {t('gamesSocials.common.configuration')}
+          {hasUnsavedChanges && <span className="dirty-badge">{t('common.unsaved')}</span>}
         </div>
         <div className="small text-muted" style={{fontSize: '.6rem'}}>
-          {isEnabled ? 'Announcements enabled' : 'Announcements disabled'}
+          {isEnabled ? t('gamesSocials.common.announcementsEnabled') : t('gamesSocials.common.announcementsDisabled')}
         </div>
       </div>
       

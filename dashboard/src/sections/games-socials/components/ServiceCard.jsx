@@ -1,5 +1,6 @@
 import React from 'react';
 import { SERVICES } from '../constants';
+import { useI18n } from '../../../i18n';
 
 /**
  * ServiceCard - Represents a service integration card
@@ -13,6 +14,7 @@ export default function ServiceCard({
   canToggle = true,
   isLoading = false 
 }) {
+  const { t } = useI18n();
   const service = SERVICES.find(s => s.key === serviceKey);
   if (!service) return null;
 
@@ -52,7 +54,7 @@ export default function ServiceCard({
         {service.image ? (
           <img 
             src={`/images/${service.image}`} 
-            alt={service.label} 
+            alt={t(service.labelKey || '') || service.key} 
             style={{height: 44, width: 44, objectFit: 'contain', borderRadius: 8}} 
           />
         ) : (
@@ -61,18 +63,18 @@ export default function ServiceCard({
           </span>
         )}
         <span className="fw-semibold" style={{fontSize: '0.85rem'}}>
-          {service.label}
+          {t(service.labelKey || '') || service.key}
         </span>
       </div>
       
       <div className="small text-muted" style={{fontSize: '0.65rem', lineHeight: 1.1}}>
-        {service.desc}
+        {t(service.descKey || '')}
       </div>
       
       {isLoading && (
         <div className="position-absolute top-50 start-50 translate-middle">
           <div className="spinner-border spinner-border-sm" role="status">
-            <span className="visually-hidden">Loading...</span>
+            <span className="visually-hidden">{t('common.loading')}</span>
           </div>
         </div>
       )}

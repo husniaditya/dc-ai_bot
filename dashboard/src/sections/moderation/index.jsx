@@ -4,8 +4,10 @@ import { MODERATION_FEATURES } from './constants';
 import FeatureCard from './components/FeatureCard';
 import ConfigurationModal from './components/ConfigurationModal';
 import LoadingSection from '../../components/LoadingSection';
+import { useI18n } from '../../i18n';
 
-export default function ModerationSection({ guildId, pushToast }) {
+export default function ModerationSection({ guildId, pushToast, settings }) {
+  const { t } = useI18n();
   const [features, setFeatures] = useState({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState({});
@@ -73,7 +75,7 @@ export default function ModerationSection({ guildId, pushToast }) {
           };
         });
         setFeatures(defaultConfig);
-        showToast('error', 'Failed to load moderation settings');
+  showToast('error', t('moderation.common.loadFailedGeneric'));
       } finally {
         setLoading(false);
       }
@@ -113,7 +115,10 @@ export default function ModerationSection({ guildId, pushToast }) {
         [featureKey]: data
       }));
 
-      showToast('success', `${MODERATION_FEATURES.find(f => f.key === featureKey)?.label} ${enabled ? 'enabled' : 'disabled'}`);
+  const found = MODERATION_FEATURES.find(f => f.key === featureKey);
+  const label = found?.labelKey ? t(found.labelKey) : found?.label;
+  const msg = enabled ? t('moderation.common.enabled', { feature: label }) : t('moderation.common.disabled', { feature: label });
+  showToast('success', msg);
     } catch (error) {
       console.error('Failed to toggle feature:', error);
       // Revert optimistic update
@@ -121,7 +126,7 @@ export default function ModerationSection({ guildId, pushToast }) {
         ...prev,
         [featureKey]: { ...(prev[featureKey] || {}), enabled: !enabled }
       }));
-      showToast('error', `Failed to ${enabled ? 'enable' : 'disable'} feature`);
+  showToast('error', enabled ? t('moderation.common.enableFailed') : t('moderation.common.disableFailed'));
     } finally {
       setSaving(prev => ({ ...prev, [featureKey]: false }));
     }
@@ -240,18 +245,26 @@ export default function ModerationSection({ guildId, pushToast }) {
     }
   };
 
+  // Compute counts based only on declared features
+  const total = MODERATION_FEATURES.length;
+  const enabledCount = MODERATION_FEATURES.reduce(
+    (n, f) => n + (features?.[f.key]?.enabled ? 1 : 0),
+    0
+  );
+  const pct = Math.round((enabledCount / total) * 100);
+
   return (
     <LoadingSection
       loading={loading}
-      title="Loading Moderation Settings"
-      message="Fetching your server configuration and permissions..."
+  title={t('moderation.loading.title')}
+  message={t('moderation.loading.message')}
       className="moderation-section fade-in-soft position-relative"
       style={{ minHeight: '600px' }}
     >
       <div className="d-flex align-items-center gap-2 mb-3">
-        <h5 className="mb-0">Moderation</h5>
+        <h5 className="mb-0">{t('moderation.title')}</h5>
         <span className="badge badge-soft">
-          {Object.values(features).filter(f => f.enabled).length} of {MODERATION_FEATURES.length} enabled
+          {t('moderation.badge.enabledOfTotal', { enabled: enabledCount, total })}
         </span>
       </div>
       
@@ -271,30 +284,31 @@ export default function ModerationSection({ guildId, pushToast }) {
       <div className="mt-4 pt-4 border-top border-secondary border-opacity-25">
         <div className="row">
           <div className="col-md-8">
-            <h6 className="mb-2">Moderation Overview</h6>
+            <h6 className="mb-2">{t('moderation.overview.title')}</h6>
             <p className="text-muted small mb-0">
-              Configure automated moderation tools to keep your server safe and organized. 
-              Each feature can be enabled independently and customized to fit your community's needs.
+              {t('moderation.overview.desc')}
             </p>
           </div>
           <div className="col-md-4">
             <div className="text-end">
-              <div className="small text-muted mb-1">Protection Level</div>
+              <div className="small text-muted mb-1">{t('moderation.overview.protectionLevel')}</div>
               <div className="progress" style={{ height: 8 }}>
                 <div 
                   className="progress-bar bg-primary"
                   style={{ 
-                    width: `${(Object.values(features).filter(f => f.enabled).length / MODERATION_FEATURES.length) * 100}%`
+                    width: `${(enabledCount / total) * 100}%`
                   }}
                 />
               </div>
               <div className="small text-muted mt-1">
-                {Math.round((Object.values(features).filter(f => f.enabled).length / MODERATION_FEATURES.length) * 100)}% Complete
+                {pct}% {t('moderation.overview.complete')}
               </div>
             </div>
           </div>
         </div>
-      </div>
+
+  </div>
+
 
       {/* Configuration Modal */}
       {showConfigModal && activeFeature && (
@@ -303,6 +317,7 @@ export default function ModerationSection({ guildId, pushToast }) {
           channels={channels}
           roles={roles}
           guildId={guildId}
+          settings={settings}
           onSave={saveFeatureConfig}
           onClose={closeConfigModal}
           showToast={showToast}

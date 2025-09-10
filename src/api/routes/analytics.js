@@ -140,8 +140,8 @@ function createAnalyticsRoutes(client, store, startTimestamp, commandMap) {
             const date = new Date(today);
             date.setDate(date.getDate() - i);
             
-            // Format date string for comparison (YYYY-MM-DD)
-            const dateStr = date.toISOString().split('T')[0];
+            // Format date string for comparison (YYYY-MM-DD) in local timezone
+            const dateStr = date.toLocaleDateString('en-CA');
             
             const dayData = weeklyRows.find(row => {
               // Convert database date to local date string for comparison
@@ -169,6 +169,18 @@ function createAnalyticsRoutes(client, store, startTimestamp, commandMap) {
       if (guildId && client.guilds.cache.has(guildId)) {
         const guild = client.guilds.cache.get(guildId);
         
+        // Optionally refresh guild data to reflect the latest features/state
+        try {
+          const refreshParam = String(req.query.refresh || '').toLowerCase();
+          if (refreshParam === '1' || refreshParam === 'true') {
+            if (typeof guild.fetch === 'function') {
+              await guild.fetch();
+            }
+          }
+        } catch (_) {
+          // Best-effort; ignore refresh errors
+        }
+
         // Fetch additional guild data
         let onlineMembers = 0;
         let totalRoles = 0;
@@ -209,6 +221,38 @@ function createAnalyticsRoutes(client, store, startTimestamp, commandMap) {
           console.warn('Could not fetch detailed guild data:', discordError.message);
         }
         
+        // Some discord.js getters (e.g., guild.verified) rely on features.includes; guard against undefined
+        const featuresArr = Array.isArray(guild?.features) ? guild.features : [];
+        // Build a normalized feature map that automatically reflects any present (and future) Discord feature strings
+        const featureFlags = featuresArr.reduce((acc, f) => {
+          if (typeof f === 'string' && f.length) acc[f] = true;
+          return acc;
+        }, {});
+        // Convenience booleans maintained for backwards-compatibility
+        const isVerified = featuresArr.includes('VERIFIED');
+        const isPartnered = featuresArr.includes('PARTNERED');
+        if (featureFlags.VERIFIED === undefined) featureFlags.VERIFIED = isVerified;
+        if (featureFlags.PARTNERED === undefined) featureFlags.PARTNERED = isPartnered;
+        // Common alias flags (populate if missing) — keeps UI readable while still future-proof via normalized map above
+        [
+          'COMMUNITY',
+          'WELCOME_SCREEN_ENABLED',
+          'NEWS',
+          'DISCOVERABLE',
+          'INVITE_SPLASH',
+          'ANIMATED_ICON',
+          'BANNER',
+          'MEMBER_VERIFICATION_GATE_ENABLED',
+          'VANITY_URL',
+          'ANIMATED_BANNER',
+          'ROLE_ICONS',
+          'PREVIEW_ENABLED',
+          'MONETIZATION_ENABLED',
+          'CREATOR_MONETIZATION_ENABLED'
+        ].forEach(k => {
+          if (featureFlags[k] === undefined) featureFlags[k] = featuresArr.includes(k);
+        });
+
         guildStats = {
           members: guild.memberCount || 0,
           name: guild.name || 'Unknown Guild',
@@ -220,9 +264,12 @@ function createAnalyticsRoutes(client, store, startTimestamp, commandMap) {
           description: guild.description,
           ownerId: guild.ownerId,
           createdAt: guild.createdAt,
-          verified: guild.verified,
-          partnered: guild.partnered
+          verified: isVerified,
+          partnered: isPartnered
         };
+        // Attach raw features and flags for API consumers
+        guildStats.discordFeatures = featuresArr;
+        guildStats.discordFeatureFlags = featureFlags;
       }
       
       // Get recent activity from command logs
@@ -410,7 +457,7 @@ function createAnalyticsRoutes(client, store, startTimestamp, commandMap) {
             }
           });
           
-          // Actions taken (last 24 hours)
+          // Actions taken breakdown (last 24 hours - for pie chart only)
           const [actionRows] = await store.sqlPool.query(`
             SELECT action_taken, COUNT(*) as count 
             FROM guild_user_violations 
@@ -423,6 +470,15 @@ function createAnalyticsRoutes(client, store, startTimestamp, commandMap) {
               violationData.byAction[row.action_taken] = row.count;
             }
           });
+          
+          // Actions taken (last 7 days) - for effectiveness calculation
+          const [actions7dRows] = await store.sqlPool.query(`
+            SELECT COUNT(*) as count 
+            FROM guild_user_violations 
+            WHERE guild_id = ? 
+              AND created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)
+              AND action_taken IS NOT NULL
+          `, [guildId]);
           
           // Weekly trend (last 7 days)
           const [trendRows] = await store.sqlPool.query(`
@@ -439,7 +495,8 @@ function createAnalyticsRoutes(client, store, startTimestamp, commandMap) {
             const today = new Date();
             const date = new Date(today);
             date.setDate(date.getDate() - i);
-            const dateStr = date.toISOString().split('T')[0];
+            // Use local timezone to match database grouping
+            const dateStr = date.toLocaleDateString('en-CA');
             
             const dayData = trendRows.find(row => {
               let dbDateStr;
@@ -454,10 +511,12 @@ function createAnalyticsRoutes(client, store, startTimestamp, commandMap) {
           }
           violationData.weeklyTrend = weeklyData;
           
-          // Calculate effectiveness (successful auto-mod actions vs total violations)
-          const totalViolations = violationData.weeklyTotal;
-          const autoModActions = actionRows.reduce((sum, row) => sum + row.count, 0);
-          violationData.effectiveness = totalViolations > 0 ? Math.round((autoModActions / totalViolations) * 100) : 100;
+          // Calculate effectiveness (this week): percentage of violations with any action taken
+          const totalViolations = violationData.weeklyTotal; // last 7 days
+          const actions7dCount = actions7dRows[0]?.count || 0; // last 7 days, non-null action
+          const effectiveness = totalViolations > 0 ? Math.round((actions7dCount / totalViolations) * 100) : 100;
+          // Clamp to [0,100]
+          violationData.effectiveness = Math.max(0, Math.min(100, effectiveness));
           
           // Calculate effectiveness improvement (this week vs previous week)
           let effectivenessImprovement = 0;
@@ -490,6 +549,52 @@ function createAnalyticsRoutes(client, store, startTimestamp, commandMap) {
           }
           
           violationData.effectivenessImprovement = effectivenessImprovement;
+
+          // Member and score calculations
+          // Warned users in last 7 days (distinct users)
+          const [warned7dRows] = await store.sqlPool.query(`
+            SELECT COUNT(DISTINCT user_id) as count 
+            FROM guild_user_violations 
+            WHERE guild_id = ? 
+              AND created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)
+              AND action_taken = 'warn'
+          `, [guildId]);
+
+          // Banned users today (distinct users)
+          const [bannedTodayRows] = await store.sqlPool.query(`
+            SELECT COUNT(DISTINCT user_id) as count 
+            FROM guild_user_violations 
+            WHERE guild_id = ? 
+              AND DATE(created_at) = CURDATE()
+              AND action_taken = 'ban'
+          `, [guildId]);
+
+          // Compute security score (0-100)
+          const baseScore = 70;
+          const antiRaidScore = antiRaidData.enabled ? 10 : -10;
+          const effectivenessScore = Math.round(violationData.effectiveness * 0.2); // up to +20
+          const weeklyPenalty = Math.min(Math.round((violationData.weeklyTotal || 0) / 10), 20); // up to -20
+          const securityScore = Math.max(0, Math.min(100, baseScore + antiRaidScore + effectivenessScore - weeklyPenalty));
+
+          const warned7d = warned7dRows[0]?.count || 0;
+          const bannedToday = bannedTodayRows[0]?.count || 0;
+          const memberTotal = guildStats.members || 0;
+          // Cap warned+banned to memberTotal to avoid negative
+          const actedCount = Math.min(memberTotal, (warned7d + bannedToday));
+          const cleanMembersPct = memberTotal > 0 
+            ? Math.max(0, Math.min(100, Math.round(((memberTotal - actedCount) / memberTotal) * 100)))
+            : 100;
+
+          // Attach computed values for response
+          violationData.securityScore = securityScore;
+          violationData.memberStats = {
+            warned: warned7d,
+            banned: bannedToday,
+            newToday: guildStats.newMembersToday || 0,
+            cleanMembersPercentage: cleanMembersPct
+          };
+          // Also provide on guild for UI convenience
+          guildStats.cleanMembersPercentage = cleanMembersPct;
           
         } catch (dbError) {
           console.warn('Failed to fetch violation data from database:', dbError.message);
@@ -520,6 +625,9 @@ function createAnalyticsRoutes(client, store, startTimestamp, commandMap) {
           onlineMembers: guildStats.onlineMembers || 0,
           totalRoles: guildStats.totalRoles || 0,
           newMembersToday: guildStats.newMembersToday || 0,
+          cleanMembersPercentage: guildStats.cleanMembersPercentage || undefined,
+          discordFeatures: guildStats.discordFeatures || [],
+          discordFeatureFlags: guildStats.discordFeatureFlags || {},
           iconURL: guildStats.iconURL,
           description: guildStats.description,
           ownerId: guildStats.ownerId,
@@ -554,7 +662,9 @@ function createAnalyticsRoutes(client, store, startTimestamp, commandMap) {
           },
           violationsToday: violationData.todayTotal,
           violationsWeek: violationData.weeklyTotal,
-          violationTrend: violationData.weeklyTrend
+          violationTrend: violationData.weeklyTrend,
+          score: violationData.securityScore,
+          members: violationData.memberStats
         },
         system: {
           memory: {

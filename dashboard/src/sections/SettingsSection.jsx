@@ -1,22 +1,61 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { getSettings, updateSettings } from '../api';
 import LoadingSection from '../components/LoadingSection';
+import { useI18n } from '../i18n';
+// For showing toasts in the newly selected language immediately
+import en from '../i18n/locales/en.json';
+import id from '../i18n/locales/id.json';
+import es from '../i18n/locales/es.json';
+import fr from '../i18n/locales/fr.json';
+import de from '../i18n/locales/de.json';
+import ja from '../i18n/locales/ja.json';
+import cn from '../i18n/locales/cn.json';
+
+const localeMap = { en, id, es, fr, de, ja, cn };
+function getNested(obj, path, fallback){
+  return path.split('.').reduce((acc,k)=> (acc && acc[k]!==undefined ? acc[k] : undefined), obj) ?? fallback;
+}
+function tIn(langCode, key, interpolations = {}){
+  const dict = localeMap[langCode] || en;
+  const fallback = getNested(en, key, key);
+  const template = getNested(dict, key, fallback);
+  if (typeof template !== 'string') return template;
+  return template.replace(/\{\{(\w+)\}\}/g, (m, p1) => (interpolations && interpolations[p1] != null ? interpolations[p1] : m));
+}
 
 export default function SettingsSection({ guildId, pushToast }){
+  const { t, changeLanguage, currentLanguage } = useI18n();
   const [settings, setSettings] = useState(null);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [original, setOriginal] = useState(null);
+  const hasInitializedLanguage = useRef(false);
+  const isLanguageChanging = useRef(false);
 
   useEffect(()=>{
     if(!guildId) return;
     setLoading(true);
+    hasInitializedLanguage.current = false; // Reset language sync flag
     getSettings(guildId)
-      .then(s => { setSettings(s); setOriginal(s); })
+      .then(s => { 
+        setSettings(s); 
+        setOriginal(s);
+        
+        // Sync language immediately after loading settings, only once
+        if (s.language && s.language !== currentLanguage && !hasInitializedLanguage.current) {
+          isLanguageChanging.current = true;
+          changeLanguage(s.language);
+          hasInitializedLanguage.current = true;
+          // Reset the flag after a brief delay
+          setTimeout(() => {
+            isLanguageChanging.current = false;
+          }, 200);
+        }
+      })
       .catch(e => setError(e.message))
       .finally(()=> setLoading(false));
-  }, [guildId]);
+  }, [guildId, changeLanguage, currentLanguage]);
 
   function dirty(){
     if(!settings || !original) return false;
@@ -30,26 +69,49 @@ export default function SettingsSection({ guildId, pushToast }){
     setSaving(true);
     try {
       const updated = await updateSettings(settings, guildId);
-      setSettings(updated); setOriginal(updated);
-      pushToast && pushToast('success','Settings saved');
-    } catch(e){ setError(e.message); pushToast && pushToast('error','Save failed'); }
+      setSettings(updated); 
+      setOriginal(updated);
+      
+      // Update dashboard language only if it's actually different and we haven't already synced it
+      if (settings.language && settings.language !== currentLanguage) {
+        isLanguageChanging.current = true;
+        // Show toast immediately in the target language, then update UI language after a tiny delay
+        if (pushToast) {
+          const msg = tIn(settings.language, 'settings.messages.saved');
+          pushToast('success', msg);
+        }
+        // Use setTimeout to prevent the blinking effect by updating language after the UI has updated
+        setTimeout(() => {
+          changeLanguage(settings.language);
+          setTimeout(() => {
+            isLanguageChanging.current = false;
+          }, 200);
+        }, 100);
+      } else {
+        // Language unchanged: use current translator
+        pushToast && pushToast('success', t('settings.messages.saved'));
+      }
+    } catch(e){ 
+      setError(e.message); 
+      pushToast && pushToast('error', t('settings.messages.saveFailed')); 
+    }
     finally { setSaving(false); }
   }
 
-  if(!guildId) return <div className="text-muted small">Select a server first.</div>;
+  if(!guildId) return <div className="text-muted small">{t('settings.selectServerFirst')}</div>;
   
   const showOverlay = loading && !settings;
   return (
     <LoadingSection
       loading={showOverlay}
-      title="Loading Server Settings"
-      message="Fetching your server configuration and preferences..."
-      className="settings-section-wrapper fade-in-soft position-relative"
+      title={t('settings.loadingTitle')}
+      message={t('settings.loadingMessage')}
+      className={`settings-section-wrapper fade-in-soft position-relative ${isLanguageChanging.current ? 'language-changing' : ''}`}
       style={{ minHeight: showOverlay ? '500px' : 'auto' }}
     >
     <div className="d-flex align-items-center gap-2 mb-3">
-      <h5 className="mb-0">Server Settings</h5>
-      {dirty() && <span className="dirty-badge">Unsaved</span>}
+      <h5 className="mb-0">{t('settings.title')}</h5>
+      {dirty() && <span className="dirty-badge">{t('common.unsaved')}</span>}
     </div>
     {error && <div className="alert alert-danger py-2 mb-3">{error}</div>}
     {settings && <div className="row g-4">
@@ -57,62 +119,56 @@ export default function SettingsSection({ guildId, pushToast }){
         <div className="card card-glass shadow-sm"><div className="card-body vstack gap-3">
           <div className="form-check form-switch">
             <input className="form-check-input" type="checkbox" id="autoReplyEnabled" checked={settings.autoReplyEnabled} onChange={e=>setSettings(s=>({...s,autoReplyEnabled:e.target.checked}))} />
-            <label className="form-check-label" htmlFor="autoReplyEnabled">Auto Reply Enabled</label>
+            <label className="form-check-label" htmlFor="autoReplyEnabled">{t('settings.autoReply.enabled')}</label>
           </div>
           <div>
-            <label className="form-label mb-1">Auto Reply Cooldown (ms)</label>
+            <label className="form-label mb-1">{t('settings.autoReply.cooldown')}</label>
             <input type="number" className="form-control" value={settings.autoReplyCooldownMs} onChange={e=>setSettings(s=>({...s,autoReplyCooldownMs:e.target.value}))} />
           </div>
           <div className="row g-3">
             <div className="col-6">
-              <label className="form-label mb-1">Language</label>
+              <label className="form-label mb-1">{t('settings.language.label')}</label>
               <select className="form-select" value={settings.language||'en'} onChange={e=>setSettings(s=>({...s,language:e.target.value}))}>
-                <option value="en">English</option>
-                <option value="id">Indonesian</option>
-                <option value="es">Spanish</option>
-                <option value="fr">French</option>
-                <option value="de">German</option>
-                <option value="ja">Japanese</option>
+                <option value="en">{t('languages.en')}</option>
+                <option value="id">{t('languages.id')}</option>
+                <option value="es">{t('languages.es')}</option>
+                <option value="fr">{t('languages.fr')}</option>
+                <option value="de">{t('languages.de')}</option>
+                <option value="ja">{t('languages.ja')}</option>
+                <option value="cn">{t('languages.cn')}</option>
               </select>
             </div>
             <div className="col-6">
-              <label className="form-label mb-1">Hour Format</label>
+              <label className="form-label mb-1">{t('settings.hourFormat.label')}</label>
               <select className="form-select" value={settings.hourFormat||24} onChange={e=>setSettings(s=>({...s,hourFormat:parseInt(e.target.value,10)}))}>
-                <option value={24}>24 Hour</option>
-                <option value={12}>12 Hour</option>
+                <option value={24}>{t('settings.hourFormat.24hour')}</option>
+                <option value={12}>{t('settings.hourFormat.12hour')}</option>
               </select>
             </div>
           </div>
             <TimezoneSelect value={settings.timezone||'UTC'} onChange={tz=>setSettings(s=>({...s, timezone: tz}))} />
-          <div>
-            <label className="form-label mb-1">Embed Color</label>
-            <div className="d-flex gap-2">
-              <input className="form-control" value={settings.embedColor||''} onChange={e=>setSettings(s=>({...s,embedColor:e.target.value}))} placeholder="#5865F2" />
-              <input type="color" className="form-control form-control-color" value={/^#?[0-9a-fA-F]{6}$/i.test(settings.embedColor||'')? (settings.embedColor.startsWith('#')? settings.embedColor : '#'+settings.embedColor.replace('#','')) : '#5865F2'} onChange={e=>setSettings(s=>({...s,embedColor:e.target.value}))} title="Pick color" />
-            </div>
-          </div>
-          <div>
-            <label className="form-label mb-1">Command Prefix</label>
-            <input className="form-control" maxLength={16} value={settings.prefix||''} onChange={e=>setSettings(s=>({...s,prefix:e.target.value}))} placeholder="!" />
-          </div>
           <div className="form-check form-switch">
             <input className="form-check-input" type="checkbox" id="slashEnabled" checked={settings.slashCommandsEnabled!==false} onChange={e=>setSettings(s=>({...s,slashCommandsEnabled:e.target.checked}))} />
-            <label className="form-check-label" htmlFor="slashEnabled">Enable Slash Commands</label>
+            <label className="form-check-label" htmlFor="slashEnabled">{t('settings.slashCommands.enabled')}</label>
           </div>
           <div className="d-flex gap-2 justify-content-end">
-            <button type="button" className="btn btn-outline-secondary btn-sm" disabled={!dirty()||saving} onClick={reset}><i className="fa-solid fa-rotate-left me-1"/>Reset</button>
-            <button type="button" className="btn btn-brand" disabled={!dirty()||saving} onClick={save}>{saving? <><span className="spinner-border spinner-border-sm me-2"/>Saving...</> : <><i className="fa-solid fa-floppy-disk me-2"/>Save</>}</button>
+            <button type="button" className="btn btn-outline-secondary btn-sm" disabled={!dirty()||saving} onClick={reset}><i className="fa-solid fa-rotate-left me-1"/>{t('common.reset')}</button>
+            <button type="button" className="btn btn-brand" disabled={!dirty()||saving} onClick={save}>{saving? <><span className="spinner-border spinner-border-sm me-2"/>{t('common.saving')}</> : <><i className="fa-solid fa-floppy-disk me-2"/>{t('common.save')}</>}</button>
           </div>
-          <div className="small text-muted">Language, timezone & 12/24h format can be used by commands for localized responses in the future.</div>
+          <div className="small text-muted">{t('settings.language.help')}</div>
+          {settings.language !== currentLanguage && (
+            <div className="alert alert-info py-2 mt-2 mb-0">
+              <i className="fa-solid fa-info-circle me-2"></i>
+              {t('settings.language.changeNote')}
+            </div>
+          )}
         </div></div>
       </div>
       <div className="col-lg-6">
         <div className="card card-glass shadow-sm h-100"><div className="card-body small d-flex flex-column">
-          <h6 className="text-muted mb-2" style={{letterSpacing:'.5px'}}>Preview</h6>
-          <div className="mb-2">Example timestamp: {formatSampleDate(settings)}</div>
-          <div className="mb-2">Embed color swatch: <span style={{display:'inline-block',width:40,height:16,background:settings.embedColor||'#5865F2',borderRadius:4,border:'1px solid rgba(255,255,255,0.2)'}}></span></div>
-          <div className="mb-2">Prefix example: <code>{(settings.prefix||'!')}help</code></div>
-          <div className="mt-auto text-muted" style={{opacity:.75}}>Adjust settings then save. Future AI responses may honor language & local time.</div>
+          <h6 className="text-muted mb-2" style={{letterSpacing:'.5px'}}>{t('settings.preview.title')}</h6>
+          <div className="mb-2">{t('settings.preview.sampleTimestamp', { timestamp: formatSampleDate(settings) })}</div>
+          <div className="mt-auto text-muted" style={{opacity:.75}}>{t('settings.preview.help')}</div>
         </div></div>
       </div>
     </div>}
@@ -130,6 +186,7 @@ function formatSampleDate(s){
 }
 
 function TimezoneSelect({ value, onChange }){
+  const { t } = useI18n();
   const zones = useMemo(()=>{
     let list = [];
     try { if (Intl.supportedValuesOf) list = Intl.supportedValuesOf('timeZone'); } catch {}
@@ -183,18 +240,18 @@ function TimezoneSelect({ value, onChange }){
     return it ? `[${it.offsetLabel}] ${it.zone} (${it.gmtShort})` : value || '';
   })();
   return <div>
-    <label className="form-label mb-1">Timezone</label>
+    <label className="form-label mb-1">{t('settings.timezone.label')}</label>
     <input
       list={datalistId}
       className="form-control"
       defaultValue={value}
-      placeholder="Type to search (e.g. Jakarta, UTC+07)"
+      placeholder={t('settings.timezone.placeholder')}
       onChange={handleInput}
       onBlur={handleInput}
     />
     <datalist id={datalistId}>
       {items.map(it => <option key={it.zone} value={it.zone} label={`[${it.offsetLabel}] ${it.zone} (${it.gmtShort})`}>{`[${it.offsetLabel}] ${it.zone} (${it.gmtShort})`}</option>)}
     </datalist>
-    <div className="form-text">Type to filter. Saved value: {currentLabel}</div>
+    <div className="form-text">{t('settings.timezone.help', { value: currentLabel })}</div>
   </div>;
 }

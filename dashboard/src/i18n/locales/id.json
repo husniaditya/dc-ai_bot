@@ -1,0 +1,1536 @@
+{
+  "common": {
+    "save": "Simpan",
+    "reset": "Reset",
+    "cancel": "Batal",
+    "delete": "Hapus",
+    "edit": "Edit",
+    "add": "Tambah",
+    "loading": "Memuat...",
+    "lastLoad": "Terakhir diperbarui",
+    "saving": "Menyimpan...",
+    "success": "Berhasil",
+    "error": "Error",
+    "warning": "Peringatan",
+    "info": "Info",
+    "yes": "Ya",
+    "no": "Tidak",
+    "enabled": "Aktif",
+    "disabled": "Nonaktif",
+    "name": "Nama",
+    "description": "Deskripsi",
+    "actions": "Aksi",
+    "settings": "Pengaturan",
+    "search": "Cari",
+    "filter": "Filter",
+    "clear": "Bersihkan",
+    "apply": "Terapkan",
+    "close": "Tutup",
+    "back": "Kembali",
+    "next": "Selanjutnya",
+    "previous": "Sebelumnya",
+    "unsaved": "Belum disimpan",
+  "notAvailable": "Tidak tersedia",
+  "refresh": "Segarkan analitik",
+  "na": "Tidak tersedia",
+  "none": "Tidak ada",
+  "noMatches": "Tidak ada yang cocok",
+  "invalidData": "Data tidak valid",
+  "unknown": "Tidak diketahui",
+  "update": "Perbarui",
+  "editRule": "Edit Aturan",
+  "deleteRule": "Hapus Aturan",
+  "editWord": "Edit Kata",
+  "deleteWord": "Hapus Kata",
+  "editPattern": "Edit Pola",
+  "deletePattern": "Hapus Pola"
+  },
+  "navigation": {
+    "dashboard": "Dashboard",
+    "changeServer": "Ganti server",
+    "selectServer": "Pilih server",
+    "overview": "Gambaran umum",
+    "autos": "Respons otomatis",
+    "commands": "Perintah",
+    "personal": "Personalisasi bot",
+    "moderation": "Moderasi",
+    "games": "Game & sosial",
+    "settings": "Pengaturan",
+    "logout": "Keluar",
+    "signOut": "Keluar",
+    "collapseSidebar": "Ciutkan sidebar",
+    "expandSidebar": "Perluas sidebar",
+    "toggleTheme": "Alihkan tema terang / gelap",
+    "openMenu": "Buka menu"
+  },
+  "settings": {
+    "title": "Pengaturan Server",
+    "subtitle": "Atur preferensi dan perilaku server Anda",
+    "loadingTitle": "Memuat Pengaturan Server",
+    "loadingMessage": "Mengambil konfigurasi dan preferensi server Anda...",
+    "selectServerFirst": "Pilih server terlebih dahulu.",
+    "autoReply": {
+      "enabled": "Balas Otomatis Diaktifkan",
+      "cooldown": "Jeda Waktu Balas Otomatis (ms)",
+      "cooldownHelp": "Waktu minimum antar balasan otomatis dalam milidetik"
+    },
+    "language": {
+      "label": "Bahasa",
+      "help": "Bahasa default untuk respons bot dan antarmuka dasbor",
+      "changeNote": "Bahasa dasbor akan berubah setelah menyimpan pengaturan",
+      "saved": "Pengaturan bahasa berhasil disimpan",
+      "saveFailed": "Gagal menyimpan pengaturan bahasa",
+      "changedTo": "Bahasa diubah ke {{language}}"
+    },
+    "timezone": {
+      "label": "Zona Waktu",
+      "placeholder": "Ketik untuk mencari (misal. Jakarta, UTC+07)",
+      "help": "Ketik untuk memfilter. Nilai tersimpan: {{value}}",
+      "searchHelp": "Ketik untuk mencari zona waktu Anda"
+    },
+    "hourFormat": {
+      "label": "Format Jam",
+      "24hour": "24 Jam",
+      "12hour": "12 Jam"
+    },
+    "slashCommands": {
+      "enabled": "Aktifkan Slash Command",
+      "help": "Izinkan pengguna menggunakan slash command"
+    },
+    "preview": {
+      "title": "Pratinjau",
+      "sampleTimestamp": "Contoh stempel waktu: {{timestamp}}",
+      "help": "Sesuaikan pengaturan lalu simpan. Respons AI ke depannya dapat menyesuaikan bahasa & waktu lokal."
+    },
+    "messages": {
+      "saved": "Pengaturan berhasil disimpan",
+      "saveFailed": "Gagal menyimpan",
+      "resetConfirm": "Anda yakin ingin mengatur ulang semua perubahan?",
+      "unsavedChanges": "Anda memiliki perubahan yang belum disimpan. Yakin ingin keluar?"
+    }
+  },
+  "auth": {
+    "login": "Masuk",
+    "logout": "Keluar",
+    "loginWithDiscord": "Masuk dengan Discord",
+    "loggingIn": "Sedang masuk...",
+    "welcomeBack": "Selamat datang kembali!",
+    "loginRequired": "Silakan masuk untuk melanjutkan",
+    "sessionExpired": "Sesi Anda telah kedaluwarsa. Silakan masuk lagi."
+  },
+  "errors": {
+    "general": "Terjadi kesalahan. Silakan coba lagi.",
+    "network": "Kesalahan jaringan. Silakan periksa koneksi Anda.",
+    "unauthorized": "Anda tidak diizinkan untuk melakukan tindakan ini.",
+    "forbidden": "Akses ditolak.",
+    "notFound": "Sumber daya yang diminta tidak ditemukan.",
+    "serverError": "Kesalahan server. Silakan coba lagi nanti.",
+    "validationFailed": "Validasi gagal. Silakan periksa input Anda.",
+    "timeout": "Timeout permintaan. Silakan coba lagi."
+  },
+  "loading": {
+    "pleaseWait": "Mohon tunggu...",
+    "fetchingData": "Mengambil data...",
+    "processing": "Memproses...",
+    "almostDone": "Hampir selesai..."
+  },
+  "languages": {
+    "en": "Bahasa Inggris",
+    "id": "Bahasa Indonesia",
+    "es": "Bahasa Spanyol",
+    "fr": "Bahasa Prancis",
+    "de": "Bahasa Jerman",
+    "ja": "Bahasa Jepang",
+    "cn": "Chinese (Traditional)"
+  },
+  "overview": {
+    "title": "Ikhtisar Server",
+    "subtitle": "Ikhtisar dasbor dan statistik server",
+    "activityDashboardTitle": "Dasbor Aktivitas",
+    "serverInfo": "Informasi Server",
+    "botStatus": "Status Bot",
+    "quickActions": "Aksi Cepat",
+    "quickStats": "Statistik Cepat",
+    "autosEnabled": "Autos Aktif",
+    "commandsEnabled": "Perintah Aktif",
+    "guildMembers": "Anggota Guild",
+    "commandsToday": "Perintah Hari Ini",
+    "totalAutos": "Total Autos",
+    "enabled": "Aktif",
+    "disabled": "Nonaktif",
+    "featureStatus": "Status Fitur",
+    "coreFeatures": "Fitur Inti",
+    "advancedFeatures": "Fitur Lanjutan",
+    "welcomeSystem": "Sistem Sambutan",
+    "roleManagement": "Manajemen Peran",
+    "xpLeveling": "XP & Level",
+    "scheduler": "Penjadwalan",
+    "autoModeration": "Moderasi Otomatis",
+    "antiRaid": "Anti-Raid",
+    "auditLogging": "Pencatatan Audit",
+    "active": "Aktif",
+    "partial": "Sebagian",
+    "unknown": "Tidak Diketahui",
+    "status": {
+      "enabled": "Diaktifkan",
+      "disabled": "Dinonaktifkan",
+      "active": "Aktif",
+      "partial": "Sebagian",
+      "unknown": "Tidak Diketahui"
+    },
+    "apiStatus": {
+      "geminiAi": "Gemini AI",
+      "discord": "Discord",
+      "database": "Database",
+      "uptime": "Uptime",
+      "memory": "Memori",
+      "errorsHour": "Kesalahan/Jam",
+      "cacheHit": "Cache Hit",
+      "ready": "Siap",
+      "down": "Turun",
+      "on": "Nyala",
+      "off": "Mati",
+      "lastHour": "jam terakhir",
+      "entries": "entri",
+      "used": "digunakan"
+    },
+    "charts": {
+      "loadingCharts": "Memuat grafik…",
+      "stackedBarDescription": "Batang bertumpuk membandingkan yang diaktifkan vs dinonaktifkan untuk autos dan perintah.",
+      "count": "Jumlah",
+      "categories": {
+        "autos": "Autos",
+        "commands": "Perintah"
+      },
+      "days": {
+        "sun": "Minggu",
+        "mon": "Senin",
+        "tue": "Selasa",
+        "wed": "Rabu",
+        "thu": "Kamis",
+        "fri": "Jumat",
+        "sat": "Sabtu"
+      },
+      "commandActivity": "Aktivitas Perintah (7 hari)",
+      "noData": "Data tidak tersedia"
+    },
+    "loadingAnalytics": "Memuat analitik…",
+    "of": "dari",
+    "serverInformation": "Informasi Server",
+    "activityStreamTitle": "Alur Aktivitas Terbaru",
+    "topCommands24h": "Perintah Teratas (24 jam)",
+    "total": "total",
+    "executions": "eksekusi",
+    "avg": "rata-rata",
+    "topCommandsEmpty": "Tidak ada perintah yang dijalankan dalam 24 jam terakhir.",
+    "systemStatusTitle": "Status Sistem",
+    "antiRaidProtectionTitle": "Perlindungan Anti-Raid",
+    "last24Hours": "24 Jam Terakhir",
+    "joinPatternLast6Hours": "Pola Bergabung (6 Jam Terakhir)",
+    "securityTrendsTitle": "Tren Keamanan & Keamanan Anggota",
+    "badges": {
+      "todayCount": "{{count}} hari ini"
+    },
+    "time": {
+      "hoursAgo": "{{count}}j yang lalu",
+      "now": "Sekarang",
+      "secondsShort": "d",
+      "days": "hari"
+    },
+    "performanceMetrics": "Metrik Performa",
+    "guildInfo": {
+      "members": "anggota",
+      "online": "Online",
+      "today": "Hari Ini",
+      "roles": "Peran",
+      "newMembersToday": "+{count}"
+    },
+    "metrics": {
+      "apiResponse": "Respons API",
+      "excellent": "Sangat bagus",
+      "good": "Bagus",
+      "slow": "Lambat",
+      "commandUsage": "Penggunaan Perintah",
+      "highActivity": "Aktivitas tinggi",
+      "moderateActivity": "Aktivitas sedang",
+      "lowActivity": "Aktivitas rendah",
+      "errorRate": "Tingkat Kesalahan",
+      "systemHealth": "Kesehatan Sistem",
+      "optimal": "Optimal",
+      "degraded": "Menurun",
+      "critical": "Kritis",
+      "successRate": "Tingkat Keberhasilan",
+      "cpuUsage": "Penggunaan CPU",
+      "improvement": "perbaikan",
+      "normalLoad": "Beban normal",
+      "yesterdayChange": "-12ms dari kemarin",
+      "newToday": "baru hari ini"
+    },
+    "activeUsers": "Pengguna Aktif",
+    "recentActivityStream": "Alur Aktivitas Terbaru",
+    "systemHealth": {
+      "botOnline": "Bot Online",
+      "database": "Database",
+      "aiServices": "Layanan AI",
+      "cacheSystem": "Sistem Cache",
+      "systemHealthScore": "Skor Kesehatan Sistem",
+      "status": {
+        "active": "Aktif",
+        "connected": "Terhubung",
+        "operational": "Operasional",
+        "warming": "Pemanasan"
+      }
+    },
+    "security": {
+      "protectionStatus": "Status Perlindungan",
+      "raidsBlocked": "Raid Diblokir",
+      "suspicious": "Mencurigakan",
+      "legitimate": "Sah",
+      "filterEffectiveness": "Efektivitas Filter",
+      "filters": {
+        "spam": "Spam",
+        "links": "Tautan",
+        "caps": "Huruf Kapital",
+        "profanity": "Kata Kasar",
+        "invites": "Undangan",
+        "mentions": "Mention"
+      },
+      "actionsTaken": "Tindakan yang Diambil",
+      "securityScore": "Skor Keamanan",
+      "cleanMembers": "Anggota Bersih",
+      "warnedUsers": "Pengguna yang Diperingatkan",
+      "bannedToday": "Diblokir Hari Ini",
+      "newMembers": "Anggota Baru",
+      "joins": "Bergabung",
+      "joinRateLimit": "Batas Tingkat Bergabung",
+      "minAccountAgeLabel": "Usia Akun Minimum",
+      "violationsCaught": "Pelanggaran Terdeteksi",
+      "violationsCaught24h": "Pelanggaran Terdeteksi (24 jam)",
+      "securityEventsLast7d": "Peristiwa Keamanan (7 Hari Terakhir)",
+      "excellentProtection": "Perlindungan Sangat Baik",
+      "actions": {
+        "actions": "Tindakan",
+        "delete": "Hapus",
+        "warn": "Peringatkan",
+        "mute": "Bisukan",
+        "kick": "Keluarkan",
+        "ban": "Blokir"
+      },
+      "thisWeek": "minggu ini",
+      "noDataThisWeek": "Tidak ada data minggu ini"
+    },
+    "activityStream": {
+      "noActivityMessage": "Tidak ditemukan aktivitas terbaru. Perintah akan muncul di sini saat dijalankan.",
+      "recent": "terbaru",
+      "discordServer": "Server Discord",
+      "unknownGuild": "Guild Tidak Dikenal",
+      "byUser": "oleh {{user}}",
+      "now": "Sekarang"
+    },
+    "sampleActivity": {
+      "schedulerUsed": "/scheduler digunakan",
+      "autoReplyTriggered": "Balasan otomatis diaktifkan",
+      "pingExecuted": "/ping dijalankan",
+      "welcomeMessageSent": "Pesan selamat datang dikirim",
+      "helpRequested": "/help diminta"
+    }
+  },
+  "autoResponses": {
+    "title": "Respons Otomatis",
+    "subtitle": "Kelola respons otomatis bot",
+    "enabled": "Respons otomatis diaktifkan",
+    "disabled": "Respons otomatis dinonaktifkan",
+    "cooldown": "Cooldown respons",
+    "addResponse": "Tambah Respons",
+    "editResponse": "Edit Respons",
+    "deleteResponse": "Hapus Respons"
+  },
+  "commands": {
+    "title": "Perintah",
+    "subtitle": "Kelola perintah bot dan izin",
+    "slashCommands": "Perintah Slash",
+    "prefixCommands": "Perintah Prefix",
+    "permissions": "Izin Perintah",
+    "enableAll": "Aktifkan Semua",
+    "disableAll": "Nonaktifkan Semua",
+    "section": {
+      "commandOne": "1 perintah",
+      "commandMany": "{{count}} perintah",
+      "requiresManage": "Memerlukan izin Kelola Server",
+      "alwaysActive": "Selalu Aktif",
+      "updatedBy": "Diperbarui oleh {{user}}",
+      "readOnly": "Hanya baca",
+      "passive": "Pasif",
+      "bottomNote": "Beberapa perintah selalu aktif atau membutuhkan izin khusus untuk diubah.",
+      "unknownUser": "Tidak diketahui"
+    },
+    "groups": {
+      "core": { "title": "Inti" },
+      "ai": { "title": "AI & Bahasa" },
+      "polls": { "title": "Jajak Pendapat" },
+      "utilities": { "title": "Utilitas" },
+      "xp": { "title": "XP & Leveling" },
+      "roles": { "title": "Peran & Self-Assign" },
+      "moderation": { "title": "Moderasi & Keamanan" },
+      "passive": { "title": "Pasif / Otomatisasi" },
+      "scheduler": { "title": "Penjadwal" },
+      "streaming": { "title": "Integrasi Streaming" }
+    },
+    "toasts": {
+      "enabled": "Perintah \"{{name}}\" diaktifkan",
+      "disabled": "Perintah \"{{name}}\" dinonaktifkan",
+      "toggleFailed": "Gagal memperbarui {{name}}"
+    },
+    "items": {
+      "ping": { "usage": "/ping", "desc": "Pemeriksaan kesehatan — membalas dengan Pong." },
+      "uptime": { "usage": "/uptime", "desc": "Menampilkan waktu aktif proses bot." },
+      "whoami": { "usage": "/whoami", "desc": "Menampilkan tag & id pengguna Anda." },
+      "echo": { "usage": "/echo <text>", "desc": "Membalas dengan teks yang sama." },
+      "help": { "usage": "/help", "desc": "Menu bantuan kategori interaktif." },
+
+      "ask": { "usage": "/ask prompt:<text>", "desc": "Tanya AI sebuah pertanyaan (disimpan 3 menit)." },
+      "askfollow": { "usage": "/askfollow prompt:<text>", "desc": "Tindak lanjut menggunakan konteks percakapan terbaru." },
+      "explain_image": { "usage": "/explain_image image(1-3) [prompt]", "desc": "Jelaskan hingga 3 gambar dengan prompt opsional." },
+      "summarize": { "usage": "/summarize [count]", "desc": "Ringkas pesan terakhir (default 30)." },
+      "translate": { "usage": "/translate text target", "desc": "Terjemahkan teks ke bahasa target." },
+
+      "poll create": { "usage": "/poll create question options", "desc": "Buat jajak pendapat (maks 5 opsi)." },
+      "poll results": { "usage": "/poll results id", "desc": "Tampilkan hasil untuk id jajak pendapat." },
+
+      "math": { "usage": "/math add|sub|mul|div a b", "desc": "Operasi aritmetika dasar." },
+      "user info": { "usage": "/user info [target]", "desc": "Lihat info pengguna Discord." },
+      "remind": { "usage": "/remind minutes text", "desc": "Jadwalkan pengingat DM atau channel." },
+      "meme": { "usage": "/meme", "desc": "Gambar meme acak dari meme-api.com." },
+
+      "level": { "usage": "/level [user]", "desc": "Cek level Anda atau level XP orang lain." },
+      "xp": { "usage": "/xp check|leaderboard [user]", "desc": "Cek XP atau lihat papan peringkat server." },
+      "rank": { "usage": "/rank [user]", "desc": "Cek peringkat Anda di server." },
+      "leaderboard": { "usage": "/leaderboard [limit]", "desc": "Tampilkan papan peringkat XP server." },
+      "xpadmin": { "usage": "/xpadmin give|remove|set <user> <amount>", "desc": "Kelola XP pengguna (butuh Kelola Server)." },
+
+      "role list": { "usage": "/role list", "desc": "Tampilkan semua peran yang bisa dipilih sendiri." },
+      "role menu": { "usage": "/role menu", "desc": "Menu pemilihan peran interaktif (sementara)." },
+      "role add": { "usage": "/role add <role> [user]", "desc": "Tambah peran ke diri sendiri atau pengguna lain." },
+      "role remove": { "usage": "/role remove <role> [user]", "desc": "Hapus peran dari diri sendiri atau pengguna lain." },
+      "role setup": { "usage": "/role setup <action> <role> [options]", "desc": "Konfigurasikan peran yang bisa dipilih (butuh Kelola Peran)." },
+      "role toggle": { "usage": "/role toggle <command_name>", "desc": "Aktif/nonaktifkan perintah peran (butuh Kelola Peran)." },
+
+      "automod list": { "usage": "/automod list", "desc": "Tampilkan semua aturan automod yang dikonfigurasi." },
+      "automod info": { "usage": "/automod info <id>", "desc": "Lihat info detail untuk aturan automod." },
+      "automod toggle": { "usage": "/automod toggle <id> <enabled>", "desc": "Aktif/nonaktifkan aturan automod (butuh Kelola Server)." },
+      "antiraid status": { "usage": "/antiraid status", "desc": "Lihat status perlindungan anti-raid saat ini." },
+      "antiraid toggle": { "usage": "/antiraid toggle <enabled>", "desc": "Aktif/nonaktifkan perlindungan anti-raid (butuh Kelola Server)." },
+      "audit recent": { "usage": "/audit recent", "desc": "Lihat tindakan moderasi terbaru (butuh Kelola Server)." },
+
+      "autoreply": { "usage": "(passive)", "desc": "Balasan otomatis berdasarkan pola yang dikonfigurasi." },
+      "welcome preview": { "usage": "/welcome preview", "desc": "Pratinjau konfigurasi pesan sambutan saat ini." },
+      "welcome toggle": { "usage": "/welcome toggle <enabled>", "desc": "Aktif/nonaktifkan sistem sambutan (butuh Kelola Server)." },
+      "automod": { "usage": "(passive)", "desc": "Moderasi otomatis untuk spam, caps, tautan, dan kata kasar." },
+      "audit logs": { "usage": "(passive)", "desc": "Lacak semua tindakan moderasi dan perubahan server." },
+      "anti-raid": { "usage": "(passive)", "desc": "Perlindungan terhadap raid dan serangan mass join." },
+
+      "scheduler list": { "usage": "/scheduler list", "desc": "Daftar semua pesan terjadwal." },
+      "scheduler info": { "usage": "/scheduler info <id>", "desc": "Lihat info detail untuk pesan terjadwal." },
+      "scheduler enable": { "usage": "/scheduler enable <id>", "desc": "Aktifkan pesan terjadwal (butuh Kelola Server)." },
+      "scheduler disable": { "usage": "/scheduler disable <id>", "desc": "Nonaktifkan pesan terjadwal (butuh Kelola Server)." },
+      "scheduler run": { "usage": "/scheduler run <id>", "desc": "Jalankan pesan terjadwal sekarang (butuh Kelola Server)." },
+
+      "ytwatch": { "usage": "/ytwatch action:<enable|disable|addchannel|removechannel|announcechannel|mentionrole|interval|status>", "desc": "Kelola notifikasi YouTube (butuh Kelola Server)." },
+      "ytstats": { "usage": "/ytstats", "desc": "Tampilkan cache & statistik kuota YouTube watcher." },
+      "ytdebug": { "usage": "/ytdebug", "desc": "Tampilkan event debug YouTube watcher terbaru (butuh Kelola Server)." },
+      "twitchstats": { "usage": "/twitchstats", "desc": "Tampilkan cache & statistik API Twitch watcher." },
+      "twitchdebug": { "usage": "/twitchdebug action:<config|status|test|resolve>", "desc": "Debug integrasi Twitch dan uji notifikasi." }
+    }
+  },
+  "autosSection": {
+    "loadingTitle": "Memuat Respons Otomatis",
+    "loadingMessage": "Mengambil pola dan pengaturan respons otomatis server Anda...",
+    "regexTester": {
+      "open": "Penguji Regex",
+      "close": "Tutup Penguji",
+      "pattern": "Pola",
+      "flags": "Bendera",
+      "sampleLabel": "Teks Contoh (multi-baris)",
+      "samplePlaceholder": "halo dunia\nHai",
+      "run": "Jalankan",
+      "empty": "kosong",
+      "error": "Kesalahan regex: {{error}}"
+    },
+    "bulk": {
+      "selectedCount": "Dipilih: {{count}}",
+      "enable": "Aktifkan",
+      "disable": "Nonaktifkan",
+      "enableSelected": "Aktifkan yang dipilih",
+      "disableSelected": "Nonaktifkan yang dipilih",
+      "deleteSelected": "Hapus yang dipilih",
+      "clearSelection": "Bersihkan pilihan",
+      "selectAllFiltered": "Pilih semua hasil",
+      "rows": "Baris"
+    },
+    "columns": {
+      "select": "Pilih",
+      "key": "Kunci",
+      "pattern": "Pola",
+      "flags": "Bendera",
+      "replies": "Balasan",
+      "enabled": "Nyala"
+    },
+    "pagination": {
+      "rows": "Baris",
+      "prevPage": "Halaman sebelumnya",
+      "nextPage": "Halaman berikutnya",
+      "page": "Halaman {{page}} / {{total}}",
+      "showing": "Menampilkan {{count}} dari {{filtered}} difilter (total {{total}})"
+    },
+    "empty": "Tidak ada respons otomatis yang cocok dengan pencarian Anda.",
+    "confirm": {
+      "deleteSelected": "Hapus {{count}} yang dipilih?",
+      "deleteOne": "Hapus {{key}}?"
+    },
+    "toasts": {
+      "bulkEnabled": "Berhasil diaktifkan",
+      "bulkDisabled": "Berhasil dinonaktifkan",
+  "bulkDeleted": "Berhasil dihapus",
+  "deleted": "Dihapus",
+  "saved": "Respons otomatis tersimpan"
+    },
+    "modal": {
+      "titleAdd": "Tambah Respons Otomatis",
+      "titleEdit": "Edit Respons Otomatis",
+      "key": "Kunci",
+      "keyHelpUnique": "id unik",
+      "keyPlaceholder": "salam",
+      "keyNoSpaces": "Tanpa spasi.",
+      "pattern": "Pola Regex",
+      "patternPlaceholder": "^halo|hai",
+      "flags": "Bendera",
+      "flagsPlaceholder": "i",
+      "replies": "Balasan",
+      "repliesHelp": "satu per baris",
+      "repliesPlaceholder": "Halo!\nHai!",
+      "enabled": "Aktif",
+      "footerNote": "Bot memilih satu balasan secara acak."
+    }
+  },
+  "personalization": {
+    "title": "Personalisasi Bot",
+    "subtitle": "Sesuaikan tampilan dan perilaku bot",
+    "fields": {
+      "nickname": "Nama Panggilan Bot (khusus server)",
+      "nicknamePlaceholder": "Kosongkan untuk tetap menggunakan yang sekarang",
+      "activityType": "Jenis Aktivitas",
+      "activityText": "Teks Aktivitas",
+      "activityTextPlaceholder": "contoh: dengan pesan Anda",
+      "status": "Status",
+      "avatar": "Gambar Avatar",
+      "preview": "Pratinjau Langsung",
+      "permissionsNote": "Nama panggilan & avatar memerlukan izin bot; aktivitas berlaku global per shard jika diimplementasikan.",
+      "currentBotName": "Nama Bot Saat Ini",
+      "defaultStatus": "Status default",
+      "noActivity": "Tidak ada aktivitas",
+      "previewNote": "Pratinjau ini akan diperbarui langsung sesuai perubahan Anda."
+    },
+    "activityTypes": {
+      "none": "(tidak ada)",
+      "playing": "Bermain",
+      "listening": "Mendengarkan",
+      "watching": "Menonton",
+      "competing": "Bertanding"
+    },
+    "statuses": {
+      "default": "(default)",
+      "online": "Online",
+      "idle": "Idle",
+      "dnd": "Jangan Ganggu",
+      "invisible": "Tak Terlihat"
+    },
+    "toasts": {
+      "saved": "Personalisasi bot tersimpan",
+      "saveFailed": "Gagal menyimpan"
+    }
+  },
+  "moderation": {
+    "title": "Moderasi",
+    "subtitle": "Konfigurasi alat dan pengaturan moderasi",
+    "automod": "Moderasi Otomatis",
+    "warnings": "Sistem Peringatan",
+    "roles": "Manajemen Peran",
+    "logging": "Log Audit",
+    "loading": {
+      "title": "Memuat Moderasi",
+      "message": "Mengambil fitur moderasi dan konfigurasi..."
+    },
+    "badge": {
+      "enabledOfTotal": "{{enabled}} dari {{total}} aktif"
+    },
+    "overview": {
+      "title": "Ringkasan Moderasi",
+      "desc": "Aktifkan fitur perlindungan dan atur pengaturan untuk komunitas Anda. Perlindungan yang lebih kuat mungkin memerlukan konfigurasi tambahan.",
+      "protectionLevel": "Tingkat Perlindungan",
+      "complete": "selesai"
+    },
+    "common": {
+      "enabled": "{{feature}} diaktifkan",
+      "disabled": "{{feature}} dinonaktifkan",
+      "enableFailed": "Gagal mengaktifkan fitur",
+      "disableFailed": "Gagal menonaktifkan fitur",
+      "loadFailedGeneric": "Gagal memuat data moderasi",
+      "loadFailed": "Gagal memuat pengaturan {{feature}}",
+      "saveSuccess": "Pengaturan {{feature}} tersimpan",
+      "saveFailed": "Gagal menyimpan pengaturan {{feature}}"
+    },
+    "modal": {
+      "title": "Pengaturan {{feature}}",
+      "loading": "Memuat konfigurasi...",
+      "loadingHelp": "Mengambil pengaturan saat ini untuk fitur ini",
+      "saving": "Menyimpan perubahan...",
+      "savingHelp": "Menerapkan perubahan dan memperbarui konfigurasi server",
+      "savingShort": "Menyimpan...",
+      "saveChanges": "Simpan Perubahan"
+    },
+    "features": {
+      "roles": {
+        "header": "Manajemen Peran",
+        "badge": "Pilih sendiri",
+        "tabs": {
+          "reaction": "Peran Reaksi",
+          "slash": "Perintah Slash"
+        },
+        "table": {
+          "status": "Status",
+          "title": "Judul",
+          "channel": "Channel",
+          "message": "Pesan",
+          "reactions": "Reaksi",
+          "roles": "Peran",
+          "actions": "Aksi"
+        },
+        "reaction": {
+          "header": "Konfigurasi Peran Reaksi",
+          "loading": "Memuat peran reaksi...",
+          "empty": "Belum ada peran reaksi.",
+          "labels": {
+            "botMessage": "Pesan Bot",
+            "userMessage": "Pesan Pengguna"
+          },
+          "info": {
+            "title": "Cara Kerja",
+            "description": "Peran reaksi memungkinkan pengguna memilih peran sendiri dengan bereaksi pada pesan. Pengguna dapat bereaksi dengan emoji yang dikonfigurasi untuk menambah atau menghapus peran terkait.",
+            "types": {
+              "title": "Jenis Reaksi:",
+              "toggle": "Toggle - Pengguna dapat menambah atau menghapus peran dengan bereaksi",
+              "addOnly": "Hanya Tambah - Pengguna hanya dapat menambah peran; menghapus reaksi tidak menghapus peran",
+              "removeOnly": "Hanya Hapus - Pengguna hanya dapat menghapus peran dengan bereaksi"
+            }
+          },
+          "form": {
+            "status": "Aktifkan Peran Reaksi",
+            "title": "Judul",
+            "titlePlaceholder": "Masukkan judul untuk peran reaksi ini",
+            "titleHelp": "Judul deskriptif untuk mengidentifikasi peran reaksi ini",
+            "channel": "Channel",
+            "channelPlaceholder": "Pilih channel...",
+            "messageId": "ID Pesan",
+            "messageIdReadOnly": "ID Pesan hanya-baca saat mengedit",
+            "messageIdTooltip": "ID Pesan tidak dapat diubah saat mengedit",
+            "customMessage": "Pesan Kustom",
+            "customMessagePlaceholder": "React untuk mendapatkan peranmu!",
+            "customMessageHelp": {
+              "editing": "Konten pesan untuk peran reaksi ini",
+              "creating": "Konten pesan yang akan diposting oleh bot"
+            },
+            "reactions": "Reaksi",
+            "emoji": "Emoji",
+            "emojiPlaceholder": "🎮 atau :custom_emoji:",
+            "role": "Peran",
+            "rolePlaceholder": "Pilih peran...",
+            "type": "Tipe",
+            "typeOptions": {
+              "toggle": "Toggle",
+              "add_only": "Hanya Tambah",
+              "remove_only": "Hanya Hapus"
+            },
+            "previewSelectRole": "Pilih peran"
+          },
+          "buttons": {
+            "add": "Tambah Peran Reaksi",
+            "addReaction": "Tambah Reaksi",
+            "removeReaction": "Hapus reaksi",
+            "removeReactionDisabled": "Tidak bisa menghapus reaksi terakhir"
+          },
+          "emojiPicker": {
+            "title": "Pilih Emoji",
+            "serverEmojis": "Emoji Server",
+            "commonEmojis": "Emoji Umum"
+          },
+          "delete": {
+            "title": "Hapus Pesan Peran Reaksi",
+            "message": "Yakin ingin menghapus pesan peran reaksi \"{{title}}\"?",
+            "warning": "Ini akan menghapus semua reaksi terkait dan tidak bisa dibatalkan.",
+            "confirm": "Hapus Pesan"
+          },
+          "toasts": {
+            "created": "Peran reaksi \"{{title}}\" berhasil dibuat!",
+            "updated": "Peran reaksi \"{{title}}\" berhasil diperbarui!",
+            "deleteSuccess": "Pesan peran reaksi berhasil dihapus",
+            "deleteFailed": "Gagal menghapus pesan peran reaksi",
+            "statusEnabled": "Peran reaksi diaktifkan",
+            "statusDisabled": "Peran reaksi dinonaktifkan",
+            "statusFailed": "Gagal memperbarui status peran reaksi",
+            "loadFailed": "Gagal memuat peran reaksi"
+          }
+        },
+        "slash": {
+          "header": "Peran Perintah Slash",
+          "subtitle": "Konfigurasikan perintah slash kustom untuk manajemen peran",
+          "loading": "Memuat peran perintah slash...",
+          "empty": "Belum ada peran perintah slash.",
+          "anyChannel": "Saluran Apa Pun",
+          "info": {
+            "title": "Cara Kerja",
+            "description": "Pengguna dapat menggunakan perintah slash kustom ini untuk mengelola peran mereka. Setiap perintah dapat dikonfigurasi dengan peran dan perilaku tertentu.",
+            "types": {
+              "title": "Jenis Perintah:",
+              "toggle": "Toggle - Pengguna dapat menambah atau menghapus peran",
+              "add": "Hanya Tambah - Pengguna hanya dapat menambah peran",
+              "remove": "Hanya Hapus - Pengguna hanya dapat menghapus peran"
+            }
+          },
+          "buttons": {
+            "add": "Tambah Perintah Slash",
+            "addRole": "Tambah Peran"
+          },
+          "form": {
+            "addTitle": "Tambah Perintah Slash Baru",
+            "editTitle": "Edit Perintah Slash",
+            "title": "Judul",
+            "titlePlaceholder": "mis. assign-role",
+            "description": "Deskripsi",
+            "descriptionPlaceholder": "Deskripsi perintah",
+            "channel": "Channel (Opsional)",
+            "channelPlaceholder": "Saluran Apa Pun",
+            "roles": "Peran",
+            "selectRole": "Pilih peran...",
+            "type": "Tipe",
+            "typeOptions": {
+              "toggle": "Toggle",
+              "add": "Hanya Tambah",
+              "remove": "Hanya Hapus"
+            },
+            "requirePermission": "Butuhkan Izin",
+            "updateCommand": "Perbarui Perintah",
+            "createCommand": "Buat Perintah"
+          },
+          "delete": {
+            "title": "Hapus Perintah Slash",
+            "message": "Yakin ingin menghapus perintah slash \"{{name}}\"?",
+            "warning": "Ini akan menghapus permanen perintah beserta konfigurasinya. Pengguna tidak lagi dapat memakai perintah ini.",
+            "confirm": "Hapus Perintah"
+          },
+          "toasts": {
+            "created": "Peran perintah slash berhasil dibuat!",
+            "updated": "Peran perintah slash berhasil diperbarui!",
+            "statusEnabled": "Perintah slash diaktifkan",
+            "statusDisabled": "Perintah slash dinonaktifkan",
+            "deleteSuccess": "Perintah slash berhasil dihapus",
+            "deleteFailed": "Gagal menghapus perintah",
+            "fetchFailed": "Gagal mengambil peran perintah slash",
+            "toggleFailed": "Gagal mengubah status perintah"
+          }
+        }
+      },
+      "logging": {
+        "header": "Log Audit",
+        "badge": "Logging",
+        "info": {
+          "description": "Atur channel tujuan untuk mengirim log tindakan dan perubahan server."
+        },
+        "fields": {
+          "globalChannel": {
+            "label": "Channel log global",
+            "desc": "Channel default untuk mengirim log saat kategori tidak menentukan channel",
+            "placeholder": "Pilih channel log (opsional)"
+          },
+          "includeBots": {
+            "label": "Sertakan bot",
+            "desc": "Sertakan aksi yang dilakukan oleh bot"
+          },
+          "enhancedDetails": {
+            "label": "Detail lanjutan",
+            "desc": "Sertakan konteks dan metadata tambahan di log"
+          },
+          "channels": {
+            "message": { "label": "Pesan", "desc": "Ke mana mengirim log pesan" },
+            "member": { "label": "Anggota", "desc": "Ke mana mengirim log anggota" },
+            "channel": { "label": "Channel", "desc": "Ke mana mengirim log channel" },
+            "role": { "label": "Peran", "desc": "Ke mana mengirim log peran" },
+            "server": { "label": "Server", "desc": "Ke mana mengirim log server" },
+            "voice": { "label": "Suara", "desc": "Ke mana mengirim log voice" }
+          }
+        },
+        "placeholders": {
+          "noLogging": "Tidak ada logging",
+          "selectChannel": "Pilih channel"
+        },
+        "buttons": {
+          "applyGlobal": "Terapkan global",
+          "reset": "Reset",
+          "save": "Simpan",
+          "cancel": "Batal"
+        },
+        "modal": {
+          "title": "Pengaturan Log Audit",
+          "saving": "Menyimpan perubahan...",
+          "saved": "Pengaturan tersimpan"
+        },
+        "toasts": {
+          "saved": "Pengaturan log audit tersimpan",
+          "saveFailed": "Gagal menyimpan pengaturan log audit",
+          "updatedGlobal": "Channel log global diperbarui",
+          "copiedToEmpty": "Channel global disalin ke kategori yang kosong",
+          "validationRequired": "Pilih minimal satu channel atau atur channel global"
+        }
+      },
+      "antiraid": {
+        "header": "Perlindungan Anti-Raid",
+        "badge": "Keamanan",
+        "info": { "description": "Deteksi dan blokir percobaan raid dengan batas laju bergabung, usia akun minimum, respons otomatis, dan perlindungan konten." },
+        "features": {
+          "joinRate": { "title": "Pemantauan laju bergabung", "items": { "trackPatterns": "Lacak lonjakan & pola bergabung yang mencurigakan", "detectAttacks": "Deteksi raid secara real-time", "thresholds": "Ambang yang bisa dikonfigurasi" } },
+          "accountAnalysis": { "title": "Analisis akun", "items": { "age": "Syarat usia akun minimum", "patterns": "Deteksi pola mirip bot", "avatarUsername": "Pertimbangkan avatar/nama pengguna" } },
+          "automatedResponse": { "title": "Respons otomatis", "items": { "lockdown": "Kunci otomatis atau mode lambat", "verification": "Wajibkan level verifikasi lebih tinggi", "removal": "Kick/ban atau timeout akun mencurigakan" } },
+          "contentFiltering": { "title": "Perlindungan konten", "items": { "inviteSpam": "Kurangi spam undangan dari akun baru", "massMention": "Kurangi spam mention massal", "newMember": "Filter ekstra untuk anggota baru" } }
+        },
+        "warning": { "title": "Catatan:", "message": "Tindakan anti-raid bisa ketat. Sesuaikan ambang agar tidak mengganggu anggota sah saat ramai." },
+        "fields": {
+          "joinRate": { "label": "Laju Bergabung", "desc": "Maks bergabung dalam jendela waktu" },
+          "joinWindow": { "label": "Jendela Waktu (detik)", "desc": "Interval untuk pemeriksaan laju" },
+          "accountAge": { "label": "Usia Akun Minimum (hari)", "desc": "Blokir akun yang lebih baru dari ini" },
+          "raidAction": { "label": "Saat Raid Terdeteksi", "desc": "Aksi utama saat raid terdeteksi" },
+          "raidActionDuration": { "label": "Durasi Aksi (menit)", "desc": "Durasi untuk timeout/lockdown", "notApplicable": "Tidak berlaku untuk kick/ban/alert" },
+          "alertChannel": { "label": "Channel Peringatan", "desc": "Tempat mengirim peringatan & ringkasan anti-raid" },
+          "autoKick": { "label": "Kick Otomatis yang Mencurigakan", "desc": "Otomatis kick akun yang gagal pemeriksaan" },
+          "gracePeriod": { "label": "Periode Bertahan (menit)", "desc": "Waktu mempertahankan perlindungan tinggi setelah deteksi" },
+          "whitelistRoles": { "label": "Peran Pengecualian", "desc": "Anggota dengan peran ini melewati pemeriksaan anti-raid" }
+        },
+        "actions": { "lockdown": "Lockdown", "kick": "Kick", "ban": "Ban", "timeout": "Timeout", "alert": "Hanya Peringatan" },
+        "verification": { "label": "Level Verifikasi Wajib", "levels": { "none": "Tidak Ada", "low": "Rendah", "medium": "Sedang", "high": "Tinggi", "highest": "Tertinggi" } },
+        "placeholders": { "noAlerts": "Tidak ada channel peringatan" },
+        "roles": { "placeholder": "Tambah peran untuk dikecualikan...", "meta": { "role": "peran" }, "noMatches": "Tidak ada peran yang cocok.", "allAdded": "Semua peran sudah ditambahkan" },
+        "modal": { "title": "Pengaturan Anti-Raid", "saving": "Menyimpan pengaturan anti-raid...", "saved": "Pengaturan anti-raid disimpan" },
+        "toasts": { "saved": "Pengaturan anti-raid disimpan", "saveFailed": "Gagal menyimpan pengaturan anti-raid" }
+      },
+
+      "automod": {
+        "header": "Moderasi Otomatis",
+        "badge": "Perlindungan",
+        "info": {
+          "pre": "Deteksi spam, tautan, dan URL berbahaya global terintegrasi dengan sumber reputasi pihak ketiga seperti"
+        },
+        "globalLog": {
+          "label": "Channel Log Global",
+          "desc": "Channel default untuk mengirim log AutoMod saat aturan tidak menentukan channel",
+          "placeholder": "Pilih channel log (opsional)"
+        },
+        "placeholders": {
+          "addChannels": "Tambah channel",
+          "addRoles": "Tambah peran"
+        },
+        "meta": {
+          "channel": "channel",
+          "role": "peran"
+        },
+        "rules": {
+          "header": "Aturan",
+          "subheader": "Buat aturan untuk mendeteksi spam, caps, tautan, kata kasar, dan lainnya.",
+          "add": "Tambah Aturan",
+          "loading": "Memuat aturan...",
+          "empty": "Belum ada aturan",
+          "emptyCta": "Klik Tambah Aturan untuk membuat aturan pertama.",
+          "editTitle": "Edit Aturan Moderasi Otomatis",
+          "createTitle": "Buat Aturan Moderasi Otomatis",
+          "creating": "Membuat aturan...",
+          "updating": "Memperbarui aturan...",
+          "creatingShort": "Membuat...",
+          "updatingShort": "Memperbarui...",
+          "createBtn": "Buat Aturan",
+          "updateBtn": "Perbarui Aturan",
+          "form": {
+            "name": "Nama Aturan",
+            "namePlaceholder": "mis., Perlindungan Spam",
+            "trigger": "Jenis Pemicu",
+            "action": "Jenis Aksi",
+            "threshold": "Nilai Ambang Peringatan",
+            "thresholdPlaceholder": "5",
+            "thresholdHelp": "Jumlah pelanggaran sebelum aksi diambil (Peringatkan pengguna)",
+            "duration": "Durasi (menit)",
+            "durationPlaceholder": "10",
+            "durationHelp": "Durasi untuk aksi bisu/ban (kosongkan untuk permanen)",
+            "logChannel": "Channel Log",
+            "logChannelPlaceholder": "Gunakan channel log global",
+            "messageAction": "Aksi Pesan",
+            "messageActionHelp": "Aksi pada pesan yang melanggar",
+            "whitelistChannels": "Whitelist Channel",
+            "whitelistChannelsHelp": "Channel yang tidak terkena aturan ini",
+            "whitelistRoles": "Whitelist Peran",
+            "whitelistRolesHelp": "Peran yang melewati aturan ini"
+          }
+        },
+        "triggers": {
+          "spam": { "label": "Deteksi Spam", "description": "Deteksi pesan berulang dan pola spam" },
+          "caps": { "label": "Huruf Besar Berlebihan", "description": "Saring pesan dengan huruf besar berlebihan" },
+          "links": { "label": "Filter Tautan", "description": "Pindai dan blokir tautan/URL berbahaya" },
+          "invite_links": { "label": "Tautan Undangan", "description": "Pindai dan blokir tautan undangan Discord berbahaya" },
+          "profanity": { "label": "Filter Kata Kasar", "description": "Saring bahasa yang tidak pantas" },
+          "mention_spam": { "label": "Spam Mention", "description": "Cegah mention pengguna/peran berlebihan" }
+        },
+        "actions": {
+          "warn": { "label": "Peringatkan Pengguna", "description": "Kirim peringatan ke pengguna" },
+          "delete": { "label": "Hapus Pesan", "description": "Hapus pesan yang melanggar" },
+          "mute": { "label": "Bisukan Sementara", "description": "Bisukan pengguna untuk durasi tertentu" },
+          "kick": { "label": "Keluarkan Pengguna", "description": "Keluarkan pengguna dari server" },
+          "ban": { "label": "Ban Pengguna", "description": "Ban pengguna secara permanen" }
+        },
+        "messageAction": {
+          "keep": "Biarkan Pesan",
+          "delete": "Hapus Pesan"
+        },
+        "table": {
+          "status": "Nyala",
+          "name": "Nama",
+          "trigger": "Pemicu",
+          "action": "Aksi",
+          "threshold": "Ambang",
+          "channelWhitelist": "Whitelist Channel",
+          "roleWhitelist": "Whitelist Peran",
+          "actions": "Aksi",
+          "logsTo": "log ke {{channel}}",
+          "minutes": "{{count}} mnt"
+        },
+        "tip": "Tips:",
+        "profanity": {
+          "manageTip": "Kelola kata dan pola kata kasar di bagian \"Manajemen Kata Kasar\" di atas untuk menyesuaikan konten yang difilter.",
+          "header": "Manajemen Kata Kasar",
+          "subheader": "Tentukan kata dan pola regex untuk mendeteksi bahasa yang tidak pantas.",
+          "loading": "Memuat data kata kasar...",
+          "words": {
+            "header": "Kata",
+            "add": "Tambah Kata",
+            "searchPlaceholder": "Cari kata",
+            "noMatches": "Tidak ada kata yang cocok dengan pencarian Anda.",
+            "empty": "Belum ada kata kasar yang dikonfigurasi.",
+            "emptyCta": "Klik Tambah Kata untuk membuat entri pertama.",
+            "tryDifferent": "Coba pencarian lain.",
+            "table": {
+              "word": "Kata",
+              "severity": "Tingkat",
+              "status": "Status",
+              "actions": "Aksi"
+            },
+            "wholeWord": "kata utuh",
+            "partial": "parsial",
+            "caseSensitive": "sensitif huruf besar/kecil",
+            "caseInsensitive": "tidak sensitif huruf besar/kecil",
+            "modal": {
+              "editTitle": "Edit Kata Kasar",
+              "addTitle": "Tambah Kata Kasar",
+              "wordLabel": "Kata",
+              "wordPlaceholder": "Tulis kata yang diblokir",
+              "caseSensitive": "Sensitif huruf besar/kecil",
+              "wholeWordOnly": "Hanya kata utuh"
+            },
+            "delete": {
+              "title": "Konfirmasi Hapus Kata",
+              "message": "Apakah Anda yakin ingin menghapus kata kasar ini?",
+              "warning": "Tindakan ini tidak bisa dibatalkan.",
+              "confirm": "Hapus Kata"
+            }
+          },
+          "patterns": {
+            "header": "Pola",
+            "add": "Tambah Pola",
+            "searchPlaceholder": "Cari pola",
+            "noMatches": "Tidak ada pola yang cocok dengan pencarian Anda.",
+            "empty": "Belum ada pola kata kasar yang dikonfigurasi.",
+            "emptyCta": "Klik Tambah Pola untuk membuat entri pertama.",
+            "tryDifferent": "Coba pencarian lain.",
+            "table": {
+              "pattern": "Pola",
+              "severity": "Tingkat",
+              "status": "Status",
+              "actions": "Aksi"
+            },
+            "modal": {
+              "editTitle": "Edit Pola Kata Kasar",
+              "addTitle": "Tambah Pola Kata Kasar",
+              "patternLabel": "Pola Regex",
+              "patternPlaceholder": "b+a+d+w+o+r+d+",
+              "flagsLabel": "Bendera",
+              "flagsPlaceholder": "gi",
+              "testHeader": "Uji Pola",
+              "preview": "Pratinjau",
+              "status": "Status",
+              "valid": "Valid",
+              "invalid": "Tidak valid",
+              "descriptionPlaceholder": "Deskripsi singkat (opsional)"
+            },
+            "delete": {
+              "title": "Konfirmasi Hapus Pola",
+              "message": "Apakah Anda yakin ingin menghapus pola kata kasar ini?",
+              "warning": "Tindakan ini tidak bisa dibatalkan.",
+              "confirm": "Hapus Pola"
+            }
+          }
+        },
+        "common": {
+          "severity": "Tingkat",
+          "language": "Bahasa",
+          "description": "Deskripsi",
+          "word": "Kata",
+          "pattern": "Pola"
+        },
+        "severity": {
+          "low": "Rendah",
+          "medium": "Sedang",
+          "high": "Tinggi",
+          "extreme": "Ekstrem"
+        },
+        "deleteRule": {
+          "title": "Konfirmasi Hapus",
+          "message": "Apakah Anda yakin ingin menghapus aturan automod?",
+          "warning": "Tindakan ini tidak bisa dibatalkan.",
+          "confirm": "Hapus Aturan"
+        },
+        "toasts": {
+          "ruleCreated": "Aturan automod \"{{name}}\" berhasil dibuat!",
+          "ruleUpdated": "Aturan automod \"{{name}}\" berhasil diperbarui!",
+          "ruleDeleted": "Aturan automod \"{{name}}\" berhasil dihapus!",
+          "ruleCreateFailed": "Gagal membuat aturan automod \"{{name}}\". Silakan coba lagi.",
+          "ruleUpdateFailed": "Gagal memperbarui aturan automod \"{{name}}\". Silakan coba lagi.",
+          "ruleDeleteFailed": "Gagal menghapus aturan automod \"{{name}}\". Silakan coba lagi.",
+          "ruleEnabled": "Aturan automod \"{{name}}\" berhasil diaktifkan!",
+          "ruleDisabled": "Aturan automod \"{{name}}\" berhasil dinonaktifkan!",
+          "ruleToggleFailed": "Gagal {{action}} aturan automod \"{{name}}\". Silakan coba lagi.",
+          "wordAdded": "Kata kasar \"{{word}}\" berhasil ditambahkan!",
+          "wordUpdated": "Kata kasar \"{{word}}\" berhasil diperbarui!",
+          "wordDeleted": "Kata kasar \"{{word}}\" berhasil dihapus!",
+          "wordSaveFailed": "Gagal menyimpan kata kasar. {{error}}",
+          "wordDeleteFailed": "Gagal menghapus kata kasar. {{error}}",
+          "wordToggleEnabled": "Kata kasar berhasil diaktifkan!",
+          "wordToggleDisabled": "Kata kasar berhasil dinonaktifkan!",
+          "wordToggleFailed": "Gagal mengganti status kata kasar. {{error}}",
+          "patternAdded": "Pola kata kasar berhasil ditambahkan!",
+          "patternUpdated": "Pola kata kasar berhasil diperbarui!",
+          "patternDeleted": "Pola kata kasar {{description}} berhasil dihapus!",
+          "patternSaveFailed": "Gagal menyimpan pola kata kasar. {{error}}",
+          "patternDeleteFailed": "Gagal menghapus pola kata kasar. {{error}}",
+          "patternToggleEnabled": "Pola kata kasar berhasil diaktifkan!",
+          "patternToggleDisabled": "Pola kata kasar berhasil dinonaktifkan!",
+          "patternToggleFailed": "Gagal mengganti status pola kata kasar. {{error}}",
+          "invalidRegex": "Pola regex tidak valid: {{error}}"
+        }
+      },
+      "welcome": {
+        "header": "Pesan Sambutan",
+        "badge": "Anggota baru",
+        "info": "Konfigurasikan pesan sambutan untuk anggota baru. Gunakan placeholder seperti {user} dan {server}. Atur channel dan opsional kirim DM serta tetapkan peran otomatis.",
+        "defaults": {
+          "messageText": "Selamat datang di {server}, {user}!",
+          "dmMessage": "Selamat datang di {server}! Terima kasih telah bergabung."
+        },
+        "fields": {
+          "channel": {
+            "label": "Channel Sambutan",
+            "desc": "Pilih channel untuk mengirim pesan sambutan",
+            "placeholder": "Pilih channel"
+          },
+          "type": {
+            "label": "Jenis Pesan",
+            "options": {
+              "text": "Teks",
+              "embed": "Embed"
+            }
+          },
+          "message": {
+            "label": "Pesan Sambutan",
+            "desc": "Mendukung placeholder: {user}, {server}",
+            "placeholder": "Tulis pesan sambutan (mendukung {user}, {server})"
+          },
+          "card": {
+            "label": "Sertakan Kartu Sambutan",
+            "desc": "Lampirkan gambar kartu sederhana dengan pesan"
+          },
+          "role": {
+            "label": "Tetapkan Peran Otomatis",
+            "desc": "Opsional tetapkan peran ke anggota baru",
+            "placeholder": "Pilih peran"
+          },
+          "dm": {
+            "label": "Kirim DM",
+            "desc": "Juga kirim pesan sambutan pribadi ke pengguna"
+          },
+          "dmMessage": {
+            "label": "Pesan DM",
+            "desc": "Dikirim sebagai pesan pribadi jika diaktifkan",
+            "placeholder": "Tulis pesan DM"
+          }
+        }
+      },
+      "xp": {
+        "header": "Sistem XP & Leveling",
+        "badge": "Keterlibatan Anggota",
+        "info": {
+          "description": "Hadiahkan aktivitas anggota dengan poin pengalaman dan progres level. Atur nilai XP, jeda (cooldown), peran pengali untuk anggota khusus, dan kanal yang dikecualikan agar tidak mendapat XP."
+        },
+        "placeholders": {
+          "sameChannel": "Kanal yang sama dengan pesan",
+          "addChannelToExclude": "Tambah kanal untuk dikecualikan",
+          "addRoleToExclude": "Tambah peran untuk dikecualikan...",
+          "selectRole": "Pilih peran...",
+          "multiplier": "1.5"
+        },
+        "aria": {
+          "removeItem": "Hapus {{name}}"
+        },
+        "fields": {
+          "xpPerMessage": {
+            "label": "XP per Pesan",
+            "desc": "XP yang didapat per pesan"
+          },
+          "cooldownSeconds": {
+            "label": "Cooldown XP (detik)",
+            "desc": "Waktu tunggu antar perolehan XP"
+          },
+          "levelUpChannel": {
+            "label": "Kanal Level Up",
+            "desc": "Tempat mengirim pesan level up (kosongkan untuk kanal yang sama)"
+          },
+          "excludedChannels": {
+            "label": "Kanal Dikecualikan",
+            "desc": "Kanal di mana pengguna tidak mendapat XP"
+          },
+          "excludedRoles": {
+            "label": "Peran Dikecualikan",
+            "desc": "Peran yang tidak mendapat XP"
+          },
+          "levelUpMessages": {
+            "label": "Pesan Level Up",
+            "desc": "Kirim pesan saat pengguna naik level"
+          }
+        },
+        "multipliers": {
+          "label": "Peran Pengali XP",
+          "desc": "Peran yang mendapatkan pengali XP",
+          "roleLabel": "Peran",
+          "multiplierLabel": "Pengali",
+          "multiplierSuffix": "x pengali",
+          "remove": "Hapus pengali",
+          "note": "Anggota dengan beberapa peran pengali akan mendapat nilai pengali tertinggi."
+        },
+        "toasts": {
+          "addedExcludedChannel": "Kanal dikecualikan ditambahkan: #{{name}}",
+          "removedExcludedChannel": "Kanal dikecualikan dihapus: #{{name}}",
+          "addedExcludedRole": "Peran dikecualikan ditambahkan: @{{name}}",
+          "removedExcludedRole": "Peran dikecualikan dihapus: @{{name}}",
+          "multiplierAdded": "Pengali {{value}}x ditambahkan untuk @{{name}}",
+          "multiplierRemoved": "Pengali dihapus untuk @{{name}}",
+          "invalidMultiplier": "Pilih peran dan masukkan nilai pengali yang valid"
+        }
+      },
+      "scheduler": {
+        "header": "Sistem Pesan Terjadwal",
+        "badge": "Pengumuman Otomatis",
+        "info": {
+          "description": "Atur pesan otomatis untuk dikirim pada waktu atau interval tertentu. Cocok untuk pengumuman, pengingat, dan posting berulang."
+        },
+        "list": {
+          "title": "Pesan Terjadwal ({{count}})",
+          "emptyTitle": "Belum ada pesan terjadwal",
+          "emptyCta": "Klik \"Tambah Pesan\" untuk membuat pesan terjadwal pertama Anda"
+        },
+        "unknownChannel": "Channel Tidak Dikenal",
+        "badges": {
+          "embed": "Embed",
+          "active": "Aktif",
+          "inactive": "Nonaktif",
+          "type": "{{type}}"
+        },
+        "labels": {
+          "schedule": "Jadwal: {{value}}",
+          "nextRun": "Jalankan berikutnya: {{time}}",
+          "lastRun": "Terakhir dijalankan: {{time}}"
+        },
+        "buttons": {
+          "add": "Tambah Pesan",
+          "edit": "Edit",
+          "delete": "Hapus",
+          "cancel": "Batal",
+          "reset": "Reset",
+          "saveAdd": "Tambah Pesan",
+          "saveUpdate": "Perbarui Pesan"
+        },
+        "delete": {
+          "title": "Konfirmasi Hapus",
+          "message": "Yakin ingin menghapus pesan terjadwal \"{{title}}\"? Tindakan ini tidak bisa dibatalkan.",
+          "confirm": "Hapus",
+          "cancel": "Batal"
+        },
+        "form": {
+          "addTitle": "Tambah Pesan Terjadwal",
+          "editTitle": "Edit Pesan Terjadwal",
+          "fields": {
+            "title": {
+              "label": "Judul Pesan",
+              "placeholder": "Masukkan judul pesan"
+            },
+            "channel": {
+              "label": "Channel",
+              "placeholder": "Pilih channel"
+            },
+            "scheduleType": {
+              "label": "Jenis Jadwal"
+            },
+            "timeDisplay": {
+              "label": "Tampilan Waktu",
+              "option24": "24 jam",
+              "option12": "12 jam (AM/PM)"
+            },
+            "scheduleValue": {
+              "label": "Nilai Jadwal",
+              "placeholder": "0 9 * * *"
+            },
+            "message": {
+              "label": "Isi Pesan",
+              "placeholder": "Masukkan isi pesan Anda..."
+            },
+            "useEmbed": {
+              "label": "Gunakan Discord Embed"
+            },
+            "embed": {
+              "header": "Konfigurasi Embed",
+              "title": {
+                "label": "Judul Embed",
+                "placeholder": "Judul embed"
+              },
+              "color": {
+                "label": "Warna"
+              },
+              "description": {
+                "label": "Deskripsi",
+                "placeholder": "Deskripsi embed"
+              },
+              "footer": {
+                "label": "Teks Footer",
+                "placeholder": "Teks footer"
+              },
+              "thumbnail": {
+                "label": "URL Thumbnail",
+                "placeholder": "https://example.com/image.png"
+              },
+              "image": {
+                "label": "URL Gambar",
+                "placeholder": "https://example.com/image.png"
+              }
+            }
+          },
+          "scheduleTypes": {
+            "once": "Sekali (timestamp)",
+            "daily": "Harian",
+            "weekly": "Mingguan",
+            "monthly": "Bulanan",
+            "cron": "Kustom (Cron)"
+          },
+          "pickers": {
+            "once": {
+              "placeholder": "Pilih tanggal & waktu"
+            },
+            "daily": {
+              "timeCaption": "Waktu",
+              "placeholder": "Pilih waktu",
+              "help": "Disimpan sebagai HH:MM (24j)."
+            },
+            "weekly": {
+              "placeholder": "Pilih hari & waktu",
+              "help": "Pilih tanggal apa pun; hanya hari & waktu disimpan sebagai D|HH:MM (0=Minggu)."
+            },
+            "monthly": {
+              "placeholder": "Pilih tanggal & waktu",
+              "help": "Pilih bulan apa pun; disimpan sebagai DD|HH:MM."
+            },
+            "cron": {
+              "presetsTitle": "Preset umum:",
+              "placeholders": {
+                "expression": "0 9 * * *"
+              },
+              "presets": {
+                "everyHour": "Setiap jam",
+                "everyDay9": "Setiap hari pukul 9 pagi",
+                "everyMonday9": "Setiap Senin pukul 9 pagi",
+                "everySunday9": "Setiap minggu (Minggu 9 pagi)",
+                "everyMonthFirst9": "Setiap bulan (tgl 1 pukul 9 pagi)",
+                "every6Hours": "Setiap 6 jam",
+                "everyWeekday8": "Setiap hari kerja pukul 8 pagi"
+              }
+            }
+          }
+        },
+        "toasts": {
+          "savedAdded": "Pesan berhasil ditambahkan",
+          "savedUpdated": "Pesan berhasil diperbarui",
+          "saveFailed": "Gagal menyimpan pesan",
+          "deleted": "Pesan terjadwal berhasil dihapus",
+          "deleteFailed": "Gagal menghapus pesan",
+          "validationRequired": "Harap isi semua field yang wajib"
+        }
+      }
+    },
+    "cards": {
+      "common": {
+        "features": "Fitur:",
+        "configure": "Konfigurasi",
+        "updating": "Memperbarui..."
+      },
+      "welcome": {
+        "label": "Pesan Sambutan",
+        "desc": "Sambut anggota baru dengan pesan dan kartu sambutan yang dapat dikustomisasi.",
+        "features": {
+          "customMessages": "Pesan Kustom",
+          "welcomeCards": "Kartu Sambutan",
+          "roleAssignment": "Penetapan Peran",
+          "channelSelection": "Pemilihan Channel"
+        }
+      },
+      "automod": {
+        "label": "Moderasi Otomatis",
+        "desc": "Deteksi dan tangani spam, huruf besar berlebihan, dan konten yang tidak pantas secara otomatis.",
+        "features": {
+          "spamDetection": "Deteksi Spam",
+          "capsLockFilter": "Filter Huruf Besar",
+          "linkFiltering": "Filter Tautan",
+          "profanityFilter": "Filter Kata Kasar"
+        }
+      },
+      "roles": {
+        "label": "Manajemen Peran",
+        "desc": "Kelola peran dengan reaction roles dan menu peran.",
+        "features": {
+          "reactionRoles": "Reaction Roles",
+          "roleMenus": "Menu Peran",
+          "permissionSync": "Sinkronisasi Izin",
+          "customMessages": "Pesan Kustom"
+        }
+      },
+      "xp": {
+        "label": "XP & Leveling",
+        "desc": "Hadiahkan anggota aktif dengan XP dan progres level.",
+        "features": {
+          "xpTracking": "Pelacakan XP",
+          "levelRewards": "Hadiah Level",
+          "leaderboards": "Papan Peringkat",
+          "customMultipliers": "Pengali Kustom"
+        }
+      },
+      "scheduler": {
+        "label": "Pesan Terjadwal",
+        "desc": "Jadwalkan pengumuman dan pesan berulang untuk server Anda.",
+        "features": {
+          "scheduledPosts": "Posting Terjadwal",
+          "recurringMessages": "Pesan Berulang",
+          "eventReminders": "Pengingat Acara",
+          "autoAnnouncements": "Pengumuman Otomatis"
+        }
+      },
+      "logging": {
+        "label": "Log Audit",
+        "desc": "Lacak semua tindakan moderasi dan perubahan server.",
+        "features": {
+          "messageLogs": "Log Pesan",
+          "memberLogs": "Log Anggota",
+          "channelLogs": "Log Channel",
+          "roleLogs": "Log Peran"
+        }
+      },
+      "antiraid": {
+        "label": "Perlindungan Anti-Raid",
+        "desc": "Lindungi server Anda dari raid dan serangan mass join.",
+        "features": {
+          "joinRateLimiting": "Batas Laju Bergabung",
+          "accountAgeFilter": "Filter Usia Akun",
+          "autoLockdown": "Kunci Otomatis",
+          "verificationSystem": "Sistem Verifikasi"
+        }
+      }
+    }
+  },
+  "gamesSocials": {
+    "title": "Game & Sosial",
+    "subtitle": "Konfigurasi fitur game dan sosial",
+    "loading": {
+      "title": "Memuat Pengaturan Integrasi",
+      "message": "Mengambil data konfigurasi integrasi dan server Anda..."
+    },
+    "toasts": {
+      "serviceEnabled": "{{service}} diaktifkan",
+      "serviceDisabled": "{{service}} dinonaktifkan",
+      "toggleFailed": "Gagal memperbarui toggle",
+      "saved": "Pengaturan {{service}} telah disimpan",
+      "saveFailed": "Gagal menyimpan"
+    },
+    "services": {
+      "youtube": {
+        "label": "YouTube",
+        "desc": "Umumkan unggahan baru dan live stream dari channel yang dipilih"
+      },
+      "twitch": {
+        "label": "Twitch",
+        "desc": "Umumkan ketika streamer favorit Anda sedang live"
+      },
+      "pubg": {
+        "label": "PUBG",
+        "desc": "Statistik pemain, ringkasan pertandingan, dan notifikasi (direncanakan)"
+      },
+      "valorant": {
+        "label": "Valorant",
+        "desc": "Update pertandingan, sorotan, dan notifikasi (direncanakan)"
+      },
+      "apex": {
+        "label": "Apex Legends",
+        "desc": "Update pertandingan, sorotan, dan notifikasi (direncanakan)"
+      },
+      "mobilelegends": {
+        "label": "Mobile Legends",
+        "desc": "Update tim dan notifikasi pertandingan (direncanakan)"
+      },
+      "clashofclans": {
+        "label": "Clash of Clans",
+        "desc": "Update perang clan dan kemajuan (direncanakan)"
+      },
+      "fortnite": {
+        "label": "Fortnite",
+        "desc": "Update pertandingan dan notifikasi acara (direncanakan)"
+      },
+      "genshin": {
+        "label": "Genshin Impact",
+        "desc": "Update acara dan berita (direncanakan)"
+      }
+    },
+    "preview": {
+      "samples": {
+        "twitch": {
+          "streamTitle": "Live Stream Menakjubkan",
+          "game": "Just Chatting",
+          "startedAtRelative": "baru saja"
+        },
+        "youtube": {
+          "channel": "Nama Channel",
+          "videoTitle": "Unggahan Baru yang Menakjubkan",
+          "publishedAtRelative": "baru saja",
+          "memberOnly": " (Hanya Member)"
+        }
+      }
+    },
+    "common": {
+      "announcement": "Pengumuman",
+      "select": "Pilih…",
+      "mentionTargets": "Target Mention",
+      "mentionHelper": "Enter untuk menambah • Backspace untuk menghapus • Urutan tetap",
+      "intervalSec": "Interval (detik)",
+      "embeds": "Embed",
+      "plain": "Tanpa Format",
+      "placeholders": "Placeholder",
+      "resolving": "Memproses...",
+      "namePlaceholder": "Nama",
+      "clearOverrides": "Bersihkan Override",
+      "configuration": "Konfigurasi",
+      "announcementsEnabled": "Pengumuman diaktifkan",
+      "announcementsDisabled": "Pengumuman dinonaktifkan",
+      "integrationNotConfigured": "integrasi belum dikonfigurasi.",
+      "plannedFeatures": "Fitur yang direncanakan",
+      "needSooner": "Kalau Anda membutuhkan ini lebih cepat, hubungi kami.",
+      "remove": "Hapus",
+      "loadingConfig": "Memuat konfigurasi {{service}}…",
+      "mentionInputPlaceholder": "Tambahkan @everyone, @here atau peran…",
+      "meta": {
+        "role": "peran",
+        "meta": "meta"
+      },
+      "noTemplate": "Belum ada template.",
+      "preview": "Pratinjau"
+    },
+    "youtube": {
+      "fields": {
+        "uploadAnnounceChannel": "Channel Pengumuman Upload",
+        "liveAnnounceChannel": "Channel Pengumuman Live",
+        "upload": "Upload",
+        "live": "Live"
+      },
+      "sections": {
+        "regularTemplate": "Template Reguler",
+        "memberTemplate": "Template Member",
+        "memberUpload": "Upload Member",
+        "memberLive": "Live Member",
+        "regularPreview": "Pratinjau Template Reguler",
+        "memberPreview": "Pratinjau Template Member"
+      },
+      "channels": {
+        "addLabel": "Tambah Channel (URL)",
+        "addPlaceholder": "https://youtube.com/@handle",
+        "empty": "Belum ada channel yang ditambahkan.",
+        "editTitle": "Edit template per-channel",
+        "fetchTitle": "Ambil nama channel",
+        "uploadTemplate": "Template Upload",
+        "memberUploadTemplate": "Template Upload Member",
+        "liveTemplate": "Template Live",
+        "memberLiveTemplate": "Template Live Member"
+      },
+      "toasts": {
+        "alreadyWatching": "Sudah memantau channel {{id}}",
+        "extracted": "ID channel yang diambil: {{id}}",
+        "extractedWithName": "Berhasil mengambil {{name}} ({{id}})",
+        "added": "Channel {{name}} telah ditambahkan",
+        "addFailed": "Gagal menambah channel"
+      }
+    },
+    "twitch": {
+      "fields": {
+        "announceChannel": "Channel Pengumuman",
+        "liveStream": "Live Stream"
+      },
+      "sections": {
+        "globalTemplate": "Template Global",
+        "templatePreview": "Pratinjau Template"
+      },
+      "streamers": {
+        "addLabel": "Tambah Streamer (username / URL)",
+        "addPlaceholder": "username, https://twitch.tv/username",
+        "empty": "Belum ada streamer yang ditambahkan.",
+        "editTitle": "Edit template per-streamer",
+        "fetchTitle": "Ambil nama streamer",
+        "liveTemplate": "Template Live"
+      },
+      "toasts": {
+        "resolvedTo": "Berhasil dihubungkan ke {{username}}",
+        "resolveFailed": "Streamer tidak dapat dihubungkan"
+      }
+    },
+    "leveling": "XP & Level",
+    "economy": "Sistem Ekonomi",
+    "socialFeatures": "Fitur Sosial",
+    "miniGames": "Game Mini"
+  },
+  "welcome": {
+    "title": "Sistem Sambutan",
+    "subtitle": "Atur pesan sambutan dan pengaturan anggota baru",
+    "enabled": "Pesan sambutan diaktifkan",
+    "channel": "Saluran Sambutan",
+    "message": "Pesan Sambutan",
+    "roles": "Peran Otomatis",
+    "toasts": {
+      "saved": "Pengaturan sambutan berhasil disimpan",
+      "saveFailed": "Gagal menyimpan",
+      "enabled": "Pesan sambutan diaktifkan",
+      "disabled": "Pesan sambutan dinonaktifkan",
+      "toggleFailed": "Gagal memperbarui pengaturan"
+    }
+  }
+}

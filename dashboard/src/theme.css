@@ -7,6 +7,7 @@
   --glass-bg: rgba(255,255,255,0.06);
   --glass-border: rgba(255,255,255,0.12);
   --accent: #6366f1;
+  --accent-rgb: 99, 102, 241;
   --accent-glow: 0 0 0 2px rgba(99,102,241,0.35),0 4px 12px -2px rgba(99,102,241,0.55);
   --danger: #ef4444;
   --success: #10b981;
@@ -45,6 +46,247 @@ html:not(.dark) {
   width: 100% !important;
   height: 100% !important;
   z-index: 999 !important;
+}
+
+/* Smooth transitions for language changes */
+.settings-section-wrapper {
+  transition: opacity var(--transition), transform var(--transition);
+}
+
+.settings-section-wrapper.language-changing {
+  opacity: 0.95;
+  transform: translateY(1px);
+}
+
+/* Prevent form blinking during language changes */
+.form-control, .form-select, .form-check-label, .form-label {
+  transition: all var(--transition);
+}
+
+/* Modern Language Selector Styles */
+.language-select {
+  background: var(--glass-bg) !important;
+  border: 1px solid var(--glass-border) !important;
+  color: var(--text-base) !important;
+  border-radius: var(--radius-sm) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.language-select:focus {
+  border-color: var(--accent) !important;
+  box-shadow: var(--accent-glow) !important;
+  background: var(--glass-bg) !important;
+}
+
+.language-select option {
+  background: var(--glass-bg);
+  color: var(--text-base);
+  padding: 0.5rem;
+}
+
+/* Modern Compact Language Dropdown */
+.language-dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.language-dropdown-trigger {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  color: var(--text-base);
+  cursor: pointer;
+  transition: all var(--transition);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  font-size: 0.875rem;
+  font-weight: 500;
+  min-width: 80px;
+}
+
+.language-dropdown-trigger:hover {
+  background: rgba(var(--accent-rgb, 99, 102, 241), 0.1);
+  border-color: var(--accent);
+  transform: translateY(-1px);
+}
+
+.language-dropdown-trigger:focus {
+  outline: none;
+  box-shadow: var(--accent-glow);
+}
+
+.language-dropdown-trigger .language-code {
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.language-dropdown-trigger .chevron {
+  font-size: 0.75rem;
+  transition: transform var(--transition);
+}
+
+.language-dropdown-trigger .chevron.open {
+  transform: rotate(180deg);
+}
+
+.language-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  min-width: 220px;
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2), 0 4px 12px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  overflow: hidden;
+  animation: dropdownFadeIn 0.2s ease-out;
+}
+
+@keyframes dropdownFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.language-dropdown-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: rgba(var(--accent-rgb, 99, 102, 241), 0.1);
+  color: var(--text-base);
+  font-weight: 600;
+  font-size: 0.875rem;
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.language-options {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.language-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: transparent;
+  border: none;
+  color: var(--text-base);
+  cursor: pointer;
+  transition: all var(--transition);
+  text-align: left;
+}
+
+.language-option:hover {
+  background: rgba(var(--accent-rgb, 99, 102, 241), 0.1);
+}
+
+.language-option.active {
+  background: rgba(var(--accent-rgb, 99, 102, 241), 0.15);
+  color: var(--accent);
+}
+
+.language-option.active:hover {
+  background: rgba(var(--accent-rgb, 99, 102, 241), 0.2);
+}
+
+.language-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.language-native {
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+.language-english {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.check-icon {
+  color: var(--success);
+  font-size: 0.875rem;
+}
+
+/* Light theme adjustments */
+html:not(.dark) .language-dropdown-menu {
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1), 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+html:not(.dark) .language-dropdown-trigger {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+html:not(.dark) .language-dropdown-trigger:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Dark theme specific styles */
+html.dark .language-dropdown-menu {
+  background: rgba(31, 37, 71, 0.95);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+html.dark .language-dropdown-header {
+  background: rgba(99, 102, 241, 0.15);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .language-dropdown-menu {
+    right: auto;
+    left: 0;
+    min-width: 200px;
+  }
+  
+  .language-dropdown-trigger {
+    min-width: 70px;
+    padding: 0.4rem 0.6rem;
+  }
+}
+
+/* Dropdown overlay for mobile */
+@media (max-width: 768px) {
+  .language-dropdown.mobile-open::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.1);
+    z-index: 999;
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+  }
+}
+
+/* Language dropdown saving state */
+.language-dropdown-trigger.saving {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.language-dropdown-trigger.saving .fa-spinner {
+  margin-left: 2px;
 }
 
 /* Toast notifications for audit logging */
@@ -1216,6 +1458,78 @@ html:not(.dark) #profanity-patterns-modal .modal-title {
   font-weight: 500;
 }
 .btn-brand:hover { filter: brightness(1.07); }
+
+/* Themed action buttons (Enable/Disable/Regex) */
+.btn-enable { 
+  background: rgba(16,185,129,0.12) !important; 
+  border: 1px solid rgba(16,185,129,0.45) !important; 
+  color: #34d399 !important; 
+}
+.btn-enable:hover { 
+  background: linear-gradient(135deg, rgba(16,185,129,0.32), rgba(16,185,129,0.22)) !important; 
+  color:#ffffff !important; 
+  border-color: rgba(16,185,129,0.65) !important;
+  box-shadow: 0 0 0 2px rgba(16,185,129,0.28);
+}
+.btn-disable { 
+  background: rgba(239,68,68,0.12) !important; 
+  border: 1px solid rgba(239,68,68,0.5) !important; 
+  color: #f87171 !important; 
+}
+.btn-disable:hover { 
+  background: linear-gradient(135deg, rgba(239,68,68,0.28), rgba(239,68,68,0.18)) !important; 
+  color:#ffffff !important; 
+  border-color: rgba(239,68,68,0.7) !important;
+  box-shadow: 0 0 0 2px rgba(239,68,68,0.28);
+}
+.btn-regex { 
+  background: rgba(99,102,241,0.12) !important; 
+  border: 1px solid rgba(99,102,241,0.45) !important; 
+  color: #aab3ff !important; 
+}
+.btn-regex:hover { 
+  background: linear-gradient(135deg, rgba(99,102,241,0.25), rgba(99,102,241,0.16)) !important; 
+  color:#fff !important; 
+  box-shadow: var(--accent-glow);
+}
+
+/* Slash Roles table semantic text colors */
+/* Dark theme: description = soft light, channel = softer light */
+html.dark .desc-text { color: #e5e7eb !important; }
+html.dark .channel-text { color: #cbd5e1 !important; opacity: 0.85; }
+
+/* Light theme: fall back to defaults; adjust slightly for readability */
+html:not(.dark) .desc-text { color: #1f2530 !important; }
+html:not(.dark) .channel-text { color: #374151 !important; }
+
+/* Light theme variants */
+html:not(.dark) .btn-enable { 
+  background: rgba(16,185,129,0.1) !important; 
+  border-color: rgba(16,185,129,0.45) !important; 
+  color: #059669 !important; 
+}
+html:not(.dark) .btn-enable:hover { 
+  background: rgba(16,185,129,0.18) !important; 
+  color: #065f46 !important; /* dark green text for light background */
+}
+html:not(.dark) .btn-disable { 
+  background: rgba(239,68,68,0.1) !important; 
+  border-color: rgba(239,68,68,0.5) !important; 
+  color: #b91c1c !important; 
+}
+html:not(.dark) .btn-disable:hover { 
+  background: rgba(239,68,68,0.18) !important; 
+  color: #991b1b !important; /* dark red text for light background */
+}
+html:not(.dark) .btn-regex {
+  background: rgba(99,102,241,0.12) !important; 
+  border-color: rgba(99,102,241,0.45) !important; 
+  color: #303d66 !important;
+}
+html:not(.dark) .btn-regex:hover { 
+  background: rgba(99,102,241,0.2) !important; 
+  color: #1f2530 !important; 
+}
 
 .badge-soft {
   background: rgba(255,255,255,0.08);
