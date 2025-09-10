@@ -169,6 +169,18 @@ function createAnalyticsRoutes(client, store, startTimestamp, commandMap) {
       if (guildId && client.guilds.cache.has(guildId)) {
         const guild = client.guilds.cache.get(guildId);
         
+        // Optionally refresh guild data to reflect the latest features/state
+        try {
+          const refreshParam = String(req.query.refresh || '').toLowerCase();
+          if (refreshParam === '1' || refreshParam === 'true') {
+            if (typeof guild.fetch === 'function') {
+              await guild.fetch();
+            }
+          }
+        } catch (_) {
+          // Best-effort; ignore refresh errors
+        }
+
         // Fetch additional guild data
         let onlineMembers = 0;
         let totalRoles = 0;
@@ -211,8 +223,35 @@ function createAnalyticsRoutes(client, store, startTimestamp, commandMap) {
         
         // Some discord.js getters (e.g., guild.verified) rely on features.includes; guard against undefined
         const featuresArr = Array.isArray(guild?.features) ? guild.features : [];
+        // Build a normalized feature map that automatically reflects any present (and future) Discord feature strings
+        const featureFlags = featuresArr.reduce((acc, f) => {
+          if (typeof f === 'string' && f.length) acc[f] = true;
+          return acc;
+        }, {});
+        // Convenience booleans maintained for backwards-compatibility
         const isVerified = featuresArr.includes('VERIFIED');
         const isPartnered = featuresArr.includes('PARTNERED');
+        if (featureFlags.VERIFIED === undefined) featureFlags.VERIFIED = isVerified;
+        if (featureFlags.PARTNERED === undefined) featureFlags.PARTNERED = isPartnered;
+        // Common alias flags (populate if missing) — keeps UI readable while still future-proof via normalized map above
+        [
+          'COMMUNITY',
+          'WELCOME_SCREEN_ENABLED',
+          'NEWS',
+          'DISCOVERABLE',
+          'INVITE_SPLASH',
+          'ANIMATED_ICON',
+          'BANNER',
+          'MEMBER_VERIFICATION_GATE_ENABLED',
+          'VANITY_URL',
+          'ANIMATED_BANNER',
+          'ROLE_ICONS',
+          'PREVIEW_ENABLED',
+          'MONETIZATION_ENABLED',
+          'CREATOR_MONETIZATION_ENABLED'
+        ].forEach(k => {
+          if (featureFlags[k] === undefined) featureFlags[k] = featuresArr.includes(k);
+        });
 
         guildStats = {
           members: guild.memberCount || 0,
@@ -228,6 +267,9 @@ function createAnalyticsRoutes(client, store, startTimestamp, commandMap) {
           verified: isVerified,
           partnered: isPartnered
         };
+        // Attach raw features and flags for API consumers
+        guildStats.discordFeatures = featuresArr;
+        guildStats.discordFeatureFlags = featureFlags;
       }
       
       // Get recent activity from command logs
@@ -584,6 +626,8 @@ function createAnalyticsRoutes(client, store, startTimestamp, commandMap) {
           totalRoles: guildStats.totalRoles || 0,
           newMembersToday: guildStats.newMembersToday || 0,
           cleanMembersPercentage: guildStats.cleanMembersPercentage || undefined,
+          discordFeatures: guildStats.discordFeatures || [],
+          discordFeatureFlags: guildStats.discordFeatureFlags || {},
           iconURL: guildStats.iconURL,
           description: guildStats.description,
           ownerId: guildStats.ownerId,
