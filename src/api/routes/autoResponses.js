@@ -22,7 +22,7 @@ function createAutoResponsesRoutes(store) {
 
   // Create/update auto response
   router.post('/', async (req, res) => {
-    const { key, pattern, flags, replies, enabled } = req.body || {};
+    const { key, pattern, flags, replies, enabled, rawText, matchType } = req.body || {};
     if (!key || !pattern) {
       return res.status(400).json({ error: 'key and pattern required' });
     }
@@ -31,22 +31,30 @@ function createAutoResponsesRoutes(store) {
       const guildId = req.query.guildId || (req.user.type === 'discord' ? 
         (await store.getUser(req.user.userId))?.selected_guild_id : null);
       
+      // Prepare the entry with new fields
+      const autoResponseData = { 
+        key, 
+        pattern, 
+        flags, 
+        replies, 
+        enabled,
+        rawText: rawText || pattern, // Use rawText if provided, otherwise use pattern
+        matchType: matchType || 'contains' // Default to 'contains' if not specified
+      };
+      
       let entry;
       if (guildId) {
-        entry = await store.upsertGuildAutoResponse(guildId, { 
-          key, pattern, flags, replies, enabled 
-        });
+        entry = await store.upsertGuildAutoResponse(guildId, autoResponseData);
       } else {
-        entry = await store.upsertAutoResponse({ 
-          key, pattern, flags, replies, enabled 
-        });
+        entry = await store.upsertAutoResponse(autoResponseData);
       }
 
       audit(req, { 
         action: guildId ? 'upsert-guild-auto' : 'upsert-auto', 
         key, 
         guildId, 
-        enabled 
+        enabled,
+        matchType 
       });
       
       res.json(entry);

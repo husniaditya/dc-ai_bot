@@ -471,6 +471,7 @@
       "select": "Pilih",
       "key": "Kunci",
       "pattern": "Pola",
+      "matchType": "Jenis Pencocokan",
       "flags": "Bendera",
       "replies": "Balasan",
       "enabled": "Nyala"
@@ -501,8 +502,15 @@
       "keyHelpUnique": "id unik",
       "keyPlaceholder": "salam",
       "keyNoSpaces": "Tanpa spasi.",
-      "pattern": "Pola Regex",
-      "patternPlaceholder": "^halo|hai",
+      "pattern": "Pola Teks",
+      "patternPlaceholder": "waktu|jam|time",
+      "matchType": "Jenis Pencocokan",
+      "matchTypes": {
+        "exact": "Cocok Persis",
+        "whole": "Cocok Kata Utuh",
+        "contains": "Mengandung (Default)"
+      },
+      "matchTypeHelp": "Pilih bagaimana pola harus mencocokkan teks",
       "flags": "Bendera",
       "flagsPlaceholder": "i",
       "replies": "Balasan",

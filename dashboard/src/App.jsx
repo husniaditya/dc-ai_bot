@@ -64,7 +64,7 @@ export default function App(){
   const [settings, setSettings] = useState(null);
   const [autos, setAutos] = useState([]); // always array
   // Modal editing state
-  const emptyAuto = { key:'', pattern:'', flags:'i', replies:'', enabled:true };
+  const emptyAuto = { key:'', pattern:'', rawText:'', userInput:'', flags:'i', replies:'', enabled:true, matchType:'contains' };
   const [modalAuto, setModalAuto] = useState(emptyAuto);
   const [showAutoModal, setShowAutoModal] = useState(false);
   const [error, setError] = useState('');
@@ -803,7 +803,32 @@ export default function App(){
   }
   function openEditAuto(a){
     const replies = Array.isArray(a.replies)? a.replies.join('\n'): '';
-    setModalAuto({...a, replies });
+    
+    // Use rawText if available (new format), otherwise extract from pattern (legacy)
+    let userInput = a.rawText || a.pattern;
+    let matchType = a.matchType || 'contains';
+    
+    // If no rawText is stored (legacy data), try to extract from pattern
+    if (!a.rawText) {
+      if (a.pattern.startsWith('^(?:') && a.pattern.endsWith(')$')) {
+        userInput = a.pattern.slice(4, -2);
+        matchType = 'exact';
+      } else if (a.pattern.startsWith('\\b(?:') && a.pattern.endsWith(')\\b')) {
+        userInput = a.pattern.slice(5, -3);
+        matchType = 'whole';
+      } else {
+        userInput = a.pattern;
+        matchType = 'contains';
+      }
+    }
+    
+    setModalAuto({
+      ...a, 
+      replies, 
+      userInput: userInput, // User-friendly input for editing
+      rawText: userInput,   // Store the raw text
+      matchType 
+    });
     setShowAutoModal(true);
   }
   function closeAutoModal(){
@@ -824,9 +849,32 @@ export default function App(){
   }
 
   async function addOrUpdateAuto(){
-    if(!modalAuto.key || !modalAuto.pattern) return;
+    if(!modalAuto.key || !modalAuto.userInput) return;
     const replies = modalAuto.replies.split('\n').map(r=>r.trim()).filter(Boolean);
-    const entry = { key:modalAuto.key, pattern:modalAuto.pattern, flags:modalAuto.flags, replies, enabled: modalAuto.enabled };
+    
+    // Store the raw text as entered by user
+    const rawText = modalAuto.userInput;
+    const matchType = modalAuto.matchType || 'contains';
+    
+    // Generate the regex pattern based on match type
+    let processedPattern = rawText;
+    if(matchType === 'exact') {
+      processedPattern = `^(?:${rawText})$`;
+    } else if(matchType === 'whole') {
+      processedPattern = `\\b(?:${rawText})\\b`;
+    }
+    // For 'contains' or default, use the raw text as-is
+    
+    const entry = { 
+      key: modalAuto.key, 
+      pattern: processedPattern,  // Processed regex for bot matching
+      rawText: rawText,          // Original text for editing
+      flags: modalAuto.flags, 
+      replies, 
+      enabled: modalAuto.enabled,
+      matchType: matchType       // Match type for future reference
+    };
+    
     // optimistic update
     setAutos(prev => {
       const idx = prev.findIndex(p=>p.key===entry.key);

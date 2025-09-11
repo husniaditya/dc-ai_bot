@@ -87,7 +87,9 @@ async function initializeTables() {
     pattern TEXT NOT NULL,
     flags VARCHAR(8) NOT NULL DEFAULT 'i',
     replies TEXT NOT NULL,
-    enabled BOOLEAN NOT NULL DEFAULT 1
+    enabled BOOLEAN NOT NULL DEFAULT 1,
+    raw_text TEXT NOT NULL,
+    match_type VARCHAR(20) NOT NULL DEFAULT 'contains'
   ) ENGINE=InnoDB`);
 
   // Guild scoped tables
@@ -111,6 +113,8 @@ async function initializeTables() {
     flags VARCHAR(8) NOT NULL DEFAULT 'i',
     replies TEXT NOT NULL,
     enabled BOOLEAN NOT NULL DEFAULT 1,
+    raw_text TEXT NOT NULL,
+    match_type VARCHAR(20) NOT NULL DEFAULT 'contains',
     PRIMARY KEY (guild_id, \`key\`)
   ) ENGINE=InnoDB`);
 

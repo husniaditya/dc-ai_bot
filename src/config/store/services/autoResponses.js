@@ -17,8 +17,8 @@ async function saveAutoResponse(ar) {
 async function saveGuildAutoResponse(guildId, ar) {
   if (db.mariaAvailable && db.sqlPool) {
     await db.sqlPool.query(
-      'REPLACE INTO guild_auto_responses(guild_id, `key`, pattern, flags, replies, enabled) VALUES (?,?,?,?,?,?)',
-      [guildId, ar.key, ar.pattern, ar.flags, JSON.stringify(ar.replies || []), ar.enabled !== false ? 1 : 0]
+      'REPLACE INTO guild_auto_responses(guild_id, `key`, pattern, flags, replies, enabled, raw_text, match_type) VALUES (?,?,?,?,?,?,?,?)',
+      [guildId, ar.key, ar.pattern, ar.flags, JSON.stringify(ar.replies || []), ar.enabled !== false ? 1 : 0, ar.rawText, ar.matchType]
     );
   }
 }
@@ -58,7 +58,7 @@ async function getGuildAutoResponses(guildId) {
   if (db.mariaAvailable && db.sqlPool) {
     try {
       const [rows] = await db.sqlPool.query(
-        'SELECT `key`, pattern, flags, replies, enabled FROM guild_auto_responses WHERE guild_id=?',
+        'SELECT `key`, pattern, flags, replies, enabled, raw_text, match_type FROM guild_auto_responses WHERE guild_id=?',
         [guildId]
       );
       
@@ -67,7 +67,9 @@ async function getGuildAutoResponses(guildId) {
         pattern: r.pattern,
         flags: r.flags,
         replies: JSON.parse(r.replies || '[]'),
-        enabled: r.enabled !== 0
+        enabled: r.enabled !== 0,
+        rawText: r.raw_text || r.pattern, // Fallback to pattern if raw_text is null
+        matchType: r.match_type || 'contains' // Default to 'contains' if match_type is null
       }));
       
       cacheData.guildAutoResponsesCache.set(guildId, responses);
@@ -114,7 +116,9 @@ async function upsertGuildAutoResponse(guildId, entry) {
     pattern: entry.pattern,
     flags: entry.flags || 'i',
     replies: entry.replies || [],
-    enabled: entry.enabled !== false
+    enabled: entry.enabled !== false,
+    rawText: entry.rawText || entry.pattern, // Store raw text for editing
+    matchType: entry.matchType || 'contains' // Store match type
   };
   
   const cacheData = cache.getCache();
