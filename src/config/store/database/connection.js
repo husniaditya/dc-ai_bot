@@ -440,6 +440,22 @@ async function initializeModerationTables() {
     INDEX idx_guild_status (guild_id, status)
   ) ENGINE=InnoDB`);
 
+  // Profanity Words Detection Master Tables
+  await sqlPool.query(`CREATE TABLE IF NOT EXISTS m_profanity_words (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    word VARCHAR(255) NOT NULL,
+    severity ENUM('low', 'medium', 'high', 'extreme') DEFAULT 'medium',
+    language VARCHAR(10) DEFAULT 'en',
+    case_sensitive BOOLEAN DEFAULT FALSE,
+    whole_word_only BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    created_by VARCHAR(32) NULL,
+    INDEX idx_language_severity (language, severity),
+    INDEX idx_word (word),
+    UNIQUE KEY unique_word_language (word, language)
+  ) ENGINE=InnoDB`);
+
   // Profanity Detection Tables
   await sqlPool.query(`CREATE TABLE IF NOT EXISTS guild_profanity_words (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -456,6 +472,19 @@ async function initializeModerationTables() {
     INDEX idx_guild_enabled (guild_id, enabled),
     INDEX idx_guild_severity (guild_id, severity),
     UNIQUE KEY unique_guild_word (guild_id, word)
+  ) ENGINE=InnoDB`);
+   
+  await sqlPool.query(`CREATE TABLE IF NOT EXISTS m_profanity_patterns (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    pattern TEXT NOT NULL,
+    description VARCHAR(255) NULL,
+    severity ENUM('low', 'medium', 'high', 'extreme') DEFAULT 'medium',
+    flags VARCHAR(10) DEFAULT 'gi',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    created_by VARCHAR(32) NULL,
+    INDEX idx_severity (severity),
+    INDEX idx_flags (flags)
   ) ENGINE=InnoDB`);
 
   await sqlPool.query(`CREATE TABLE IF NOT EXISTS guild_profanity_patterns (

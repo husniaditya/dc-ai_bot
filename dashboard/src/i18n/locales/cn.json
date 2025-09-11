@@ -1145,7 +1145,36 @@
           "patternToggleEnabled": "髒話模式已成功啟用！",
           "patternToggleDisabled": "髒話模式已成功停用！",
           "patternToggleFailed": "切換髒話模式狀態失敗。{{error}}",
-          "invalidRegex": "不合法的正則表達式模式：{{error}}"
+          "invalidRegex": "不合法的正則表達式模式：{{error}}",
+          "addingWord": "正在新增詞彙...",
+          "updatingWord": "正在更新詞彙...",
+          "addingPattern": "正在新增模式...",
+          "updatingPattern": "正在更新模式...",
+          "bulkWordsEnabled": "已成功啟用 {{count}} 個髒話詞彙！",
+          "bulkWordsDisabled": "已成功停用 {{count}} 個髒話詞彙！",
+          "bulkWordsDeleted": "已成功刪除 {{count}} 個髒話詞彙！",
+          "bulkWordsToggleFailed": "{{action}} {{count}} 個髒話詞彙失敗。{{error}}",
+          "bulkWordsDeleteFailed": "刪除 {{count}} 個髒話詞彙失敗。{{error}}",
+          "bulkPatternsEnabled": "已成功啟用 {{count}} 個髒話模式！",
+          "bulkPatternsDisabled": "已成功停用 {{count}} 個髒話模式！",
+          "bulkPatternsDeleted": "已成功刪除 {{count}} 個髒話模式！",
+          "bulkPatternsToggleFailed": "{{action}} {{count}} 個髒話模式失敗。{{error}}",
+          "bulkPatternsDeleteFailed": "刪除 {{count}} 個髒話模式失敗。{{error}}",
+          "processingBulkWords": "正在處理詞彙批量操作...",
+          "processingBulkPatterns": "正在處理模式批量操作..."
+        },
+        "bulk": {
+          "enable": "啟用",
+          "disable": "停用", 
+          "delete": "刪除",
+          "clear": "清除",
+          "processing": "處理中...",
+          "deleting": "刪除中...",
+          "enableSelected": "啟用所選項目",
+          "disableSelected": "停用所選項目",
+          "deleteSelected": "刪除所選項目",
+          "clearSelection": "清除選擇",
+          "selected": "已選擇 {{count}} 項"
         }
       },
       "logging": {
@@ -1597,6 +1626,16 @@
         "features": "功能：",
         "configure": "設定",
         "updating": "更新中…"
+      },
+      "scheduler": {
+        "label": "排程訊息",
+        "desc": "為您的伺服器排程公告和定期訊息。",
+        "features": {
+          "scheduledPosts": "排程貼文",
+          "recurringMessages": "定期訊息",
+          "eventReminders": "活動提醒",
+          "autoAnnouncements": "自動公告"
+        }
       },
       "welcome": {
         "label": "歡迎訊息",

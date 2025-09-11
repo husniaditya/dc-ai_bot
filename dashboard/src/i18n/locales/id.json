@@ -1027,7 +1027,36 @@
           "patternToggleEnabled": "Pola kata kasar berhasil diaktifkan!",
           "patternToggleDisabled": "Pola kata kasar berhasil dinonaktifkan!",
           "patternToggleFailed": "Gagal mengganti status pola kata kasar. {{error}}",
-          "invalidRegex": "Pola regex tidak valid: {{error}}"
+          "invalidRegex": "Pola regex tidak valid: {{error}}",
+          "addingWord": "Menambahkan kata...",
+          "updatingWord": "Memperbarui kata...",
+          "addingPattern": "Menambahkan pola...",
+          "updatingPattern": "Memperbarui pola...",
+          "bulkWordsEnabled": "{{count}} kata kasar berhasil diaktifkan!",
+          "bulkWordsDisabled": "{{count}} kata kasar berhasil dinonaktifkan!",
+          "bulkWordsDeleted": "{{count}} kata kasar berhasil dihapus!",
+          "bulkWordsToggleFailed": "Gagal {{action}} {{count}} kata kasar. {{error}}",
+          "bulkWordsDeleteFailed": "Gagal menghapus {{count}} kata kasar. {{error}}",
+          "bulkPatternsEnabled": "{{count}} pola kata kasar berhasil diaktifkan!",
+          "bulkPatternsDisabled": "{{count}} pola kata kasar berhasil dinonaktifkan!",
+          "bulkPatternsDeleted": "{{count}} pola kata kasar berhasil dihapus!",
+          "bulkPatternsToggleFailed": "Gagal {{action}} {{count}} pola kata kasar. {{error}}",
+          "bulkPatternsDeleteFailed": "Gagal menghapus {{count}} pola kata kasar. {{error}}",
+          "processingBulkWords": "Memproses operasi kata secara massal...",
+          "processingBulkPatterns": "Memproses operasi pola secara massal..."
+        },
+        "bulk": {
+          "enable": "Aktifkan",
+          "disable": "Nonaktifkan",
+          "delete": "Hapus", 
+          "clear": "Bersihkan",
+          "processing": "Memproses...",
+          "deleting": "Menghapus...",
+          "enableSelected": "Aktifkan item terpilih",
+          "disableSelected": "Nonaktifkan item terpilih",
+          "deleteSelected": "Hapus item terpilih",
+          "clearSelection": "Bersihkan pilihan",
+          "selected": "{{count}} terpilih"
         }
       },
       "welcome": {

@@ -1145,7 +1145,36 @@
           "patternToggleEnabled": "Profanity pattern enabled successfully!",
           "patternToggleDisabled": "Profanity pattern disabled successfully!",
           "patternToggleFailed": "Failed to toggle profanity pattern status. {{error}}",
-          "invalidRegex": "Invalid regex pattern: {{error}}"
+          "invalidRegex": "Invalid regex pattern: {{error}}",
+          "addingWord": "Adding word...",
+          "updatingWord": "Updating word...",
+          "addingPattern": "Adding pattern...",
+          "updatingPattern": "Updating pattern...",
+          "bulkWordsEnabled": "{{count}} profanity words enabled successfully!",
+          "bulkWordsDisabled": "{{count}} profanity words disabled successfully!",
+          "bulkWordsDeleted": "{{count}} profanity words deleted successfully!",
+          "bulkWordsToggleFailed": "Failed to {{action}} {{count}} profanity words. {{error}}",
+          "bulkWordsDeleteFailed": "Failed to delete {{count}} profanity words. {{error}}",
+          "bulkPatternsEnabled": "{{count}} profanity patterns enabled successfully!",
+          "bulkPatternsDisabled": "{{count}} profanity patterns disabled successfully!",
+          "bulkPatternsDeleted": "{{count}} profanity patterns deleted successfully!",
+          "bulkPatternsToggleFailed": "Failed to {{action}} {{count}} profanity patterns. {{error}}",
+          "bulkPatternsDeleteFailed": "Failed to delete {{count}} profanity patterns. {{error}}",
+          "processingBulkWords": "Processing bulk words operation...",
+          "processingBulkPatterns": "Processing bulk patterns operation..."
+        },
+        "bulk": {
+          "enable": "Enable",
+          "disable": "Disable", 
+          "delete": "Delete",
+          "clear": "Clear",
+          "processing": "Processing...",
+          "deleting": "Deleting...",
+          "enableSelected": "Enable selected items",
+          "disableSelected": "Disable selected items",
+          "deleteSelected": "Delete selected items",
+          "clearSelection": "Clear selection",
+          "selected": "{{count}} selected"
         }
       },
       "logging": {

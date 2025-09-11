@@ -297,6 +297,18 @@ export default function AutomodConfigForm({ config, updateConfig, channels, role
   const [editingPattern, setEditingPattern] = useState(null);
   const [wordSearchFilter, setWordSearchFilter] = useState('');
   const [patternSearchFilter, setPatternSearchFilter] = useState('');
+  
+  // Bulk selection state for profanity words
+  const [selectedWords, setSelectedWords] = useState(new Set());
+  const [selectedPatterns, setSelectedPatterns] = useState(new Set());
+  
+  // Bulk loading states
+  const [bulkWordsLoading, setBulkWordsLoading] = useState(false);
+  const [bulkPatternsLoading, setBulkPatternsLoading] = useState(false);
+  
+  // Individual save loading states
+  const [savingWord, setSavingWord] = useState(false);
+  const [savingPattern, setSavingPattern] = useState(false);
   const [wordForm, setWordForm] = useState({
     word: '',
     severity: 'medium',
@@ -504,6 +516,7 @@ export default function AutomodConfigForm({ config, updateConfig, channels, role
   };
 
   const saveWord = async () => {
+    setSavingWord(true);
     try {
       if (editingWord) {
         await updateProfanityWord(editingWord.id, wordForm, guildId);
@@ -518,6 +531,8 @@ export default function AutomodConfigForm({ config, updateConfig, channels, role
     } catch (error) {
       console.error('Failed to save profanity word:', error);
       showToast?.('error', t('moderation.features.automod.toasts.wordSaveFailed', { error: error.message || t('errors.general') }));
+    } finally {
+      setSavingWord(false);
     }
   };
 
@@ -617,12 +632,14 @@ export default function AutomodConfigForm({ config, updateConfig, channels, role
   };
 
   const savePattern = async () => {
+    setSavingPattern(true);
     try {
       // Validate regex pattern
       try {
         new RegExp(patternForm.pattern, patternForm.flags);
       } catch (regexError) {
         showToast?.('error', t('moderation.features.automod.toasts.invalidRegex', { error: regexError.message }));
+        setSavingPattern(false);
         return;
       }
 
@@ -639,6 +656,8 @@ export default function AutomodConfigForm({ config, updateConfig, channels, role
     } catch (error) {
       console.error('Failed to save profanity pattern:', error);
       showToast?.('error', t('moderation.features.automod.toasts.patternSaveFailed', { error: error.message || t('errors.general') }));
+    } finally {
+      setSavingPattern(false);
     }
   };
 
@@ -704,6 +723,214 @@ export default function AutomodConfigForm({ config, updateConfig, channels, role
     } catch (error) {
       console.error('Failed to toggle profanity pattern status:', error);
       showToast?.('error', t('moderation.features.automod.toasts.patternToggleFailed', { error: error.message || t('errors.general') }));
+    }
+  };
+
+  // Bulk selection functions for words
+  const handleSelectAllWords = (checked) => {
+    const filteredWords = profanityWords.filter(word => 
+      word.word.toLowerCase().includes(wordSearchFilter.toLowerCase())
+    );
+    
+    if (checked) {
+      setSelectedWords(new Set(filteredWords.map(word => word.id)));
+    } else {
+      setSelectedWords(new Set());
+    }
+  };
+
+  const handleWordSelection = (wordId, checked) => {
+    const newSelection = new Set(selectedWords);
+    if (checked) {
+      newSelection.add(wordId);
+    } else {
+      newSelection.delete(wordId);
+    }
+    setSelectedWords(newSelection);
+  };
+
+  const bulkToggleWords = async (enable) => {
+    if (selectedWords.size === 0) return;
+    
+    setBulkWordsLoading(true);
+    const wordIds = Array.from(selectedWords);
+    const selectedCount = wordIds.length;
+    
+    try {
+      // Get unique words to update (prevent duplicates)
+      const uniqueWordIds = [...new Set(wordIds)];
+      const wordsToUpdate = profanityWords.filter(word => uniqueWordIds.includes(word.id));
+      
+      // Process updates sequentially to prevent race conditions
+      const updatePromises = wordsToUpdate.map(async (word) => {
+        const updatedWord = { ...word, enabled: enable };
+        return await updateProfanityWord(word.id, updatedWord, guildId);
+      });
+      
+      await Promise.all(updatePromises);
+      
+      // Update local state once after all API calls complete
+      setProfanityWords(prev =>
+        prev.map(word =>
+          uniqueWordIds.includes(word.id) ? { ...word, enabled: enable } : word
+        )
+      );
+      
+      // Clear selection and show success toast
+      setSelectedWords(new Set());
+      showToast?.('success', enable 
+        ? t('moderation.features.automod.toasts.bulkWordsEnabled', { count: selectedCount })
+        : t('moderation.features.automod.toasts.bulkWordsDisabled', { count: selectedCount })
+      );
+    } catch (error) {
+      console.error('Failed to bulk toggle words:', error);
+      showToast?.('error', t('moderation.features.automod.toasts.bulkWordsToggleFailed', { 
+        action: enable ? 'enable' : 'disable',
+        count: selectedCount, 
+        error: error.message || t('errors.general') 
+      }));
+    } finally {
+      setBulkWordsLoading(false);
+    }
+  };
+
+  // Bulk selection functions for patterns
+  const handleSelectAllPatterns = (checked) => {
+    const filteredPatterns = profanityPatterns.filter(pattern => 
+      pattern.pattern.toLowerCase().includes(patternSearchFilter.toLowerCase()) ||
+      (pattern.description && pattern.description.toLowerCase().includes(patternSearchFilter.toLowerCase()))
+    );
+    
+    if (checked) {
+      setSelectedPatterns(new Set(filteredPatterns.map(pattern => pattern.id)));
+    } else {
+      setSelectedPatterns(new Set());
+    }
+  };
+
+  const handlePatternSelection = (patternId, checked) => {
+    const newSelection = new Set(selectedPatterns);
+    if (checked) {
+      newSelection.add(patternId);
+    } else {
+      newSelection.delete(patternId);
+    }
+    setSelectedPatterns(newSelection);
+  };
+
+  const bulkTogglePatterns = async (enable) => {
+    if (selectedPatterns.size === 0) return;
+    
+    setBulkPatternsLoading(true);
+    const patternIds = Array.from(selectedPatterns);
+    const selectedCount = patternIds.length;
+    
+    try {
+      // Get unique patterns to update (prevent duplicates)
+      const uniquePatternIds = [...new Set(patternIds)];
+      const patternsToUpdate = profanityPatterns.filter(pattern => uniquePatternIds.includes(pattern.id));
+      
+      // Process updates in parallel to improve performance
+      const updatePromises = patternsToUpdate.map(async (pattern) => {
+        const updatedPattern = { ...pattern, enabled: enable };
+        return await updateProfanityPattern(pattern.id, updatedPattern, guildId);
+      });
+      
+      await Promise.all(updatePromises);
+      
+      // Update local state once after all API calls complete
+      setProfanityPatterns(prev =>
+        prev.map(pattern =>
+          uniquePatternIds.includes(pattern.id) ? { ...pattern, enabled: enable } : pattern
+        )
+      );
+      
+      // Clear selection and show success toast
+      setSelectedPatterns(new Set());
+      showToast?.('success', enable 
+        ? t('moderation.features.automod.toasts.bulkPatternsEnabled', { count: selectedCount })
+        : t('moderation.features.automod.toasts.bulkPatternsDisabled', { count: selectedCount })
+      );
+    } catch (error) {
+      console.error('Failed to bulk toggle patterns:', error);
+      showToast?.('error', t('moderation.features.automod.toasts.bulkPatternsToggleFailed', { 
+        action: enable ? 'enable' : 'disable',
+        count: selectedCount, 
+        error: error.message || t('errors.general') 
+      }));
+    } finally {
+      setBulkPatternsLoading(false);
+    }
+  };
+
+  // Bulk delete functions
+  const bulkDeleteWords = async () => {
+    if (selectedWords.size === 0 || bulkWordsLoading) return;
+    
+    const wordIds = Array.from(selectedWords);
+    const uniqueWordIds = [...new Set(wordIds)]; // Remove duplicates
+    
+    if (!window.confirm(`Are you sure you want to delete ${uniqueWordIds.length} selected word(s)? This action cannot be undone.`)) {
+      return;
+    }
+    
+    setBulkWordsLoading(true);
+    try {
+      // Process deletions in parallel for better performance
+      const deletePromises = uniqueWordIds.map(wordId => 
+        deleteProfanityWord(wordId, guildId)
+      );
+      
+      await Promise.all(deletePromises);
+      
+      // Reload data and clear selection
+      await loadProfanityData();
+      setSelectedWords(new Set());
+      
+      showToast?.('success', t('moderation.features.automod.toasts.bulkWordsDeleted', { count: uniqueWordIds.length }));
+    } catch (error) {
+      console.error('Failed to bulk delete words:', error);
+      showToast?.('error', t('moderation.features.automod.toasts.bulkWordsDeleteFailed', { 
+        count: uniqueWordIds.length, 
+        error: error.message || 'Unknown error' 
+      }));
+    } finally {
+      setBulkWordsLoading(false);
+    }
+  };
+
+  const bulkDeletePatterns = async () => {
+    if (selectedPatterns.size === 0 || bulkPatternsLoading) return;
+    
+    const patternIds = Array.from(selectedPatterns);
+    const uniquePatternIds = [...new Set(patternIds)]; // Remove duplicates
+    
+    if (!window.confirm(`Are you sure you want to delete ${uniquePatternIds.length} selected pattern(s)? This action cannot be undone.`)) {
+      return;
+    }
+    
+    setBulkPatternsLoading(true);
+    try {
+      // Process deletions in parallel for better performance
+      const deletePromises = uniquePatternIds.map(patternId => 
+        deleteProfanityPattern(patternId, guildId)
+      );
+      
+      await Promise.all(deletePromises);
+      
+      // Reload data and clear selection
+      await loadProfanityData();
+      setSelectedPatterns(new Set());
+      
+      showToast?.('success', t('moderation.features.automod.toasts.bulkPatternsDeleted', { count: uniquePatternIds.length }));
+    } catch (error) {
+      console.error('Failed to bulk delete patterns:', error);
+      showToast?.('error', t('moderation.features.automod.toasts.bulkPatternsDeleteFailed', { 
+        count: uniquePatternIds.length, 
+        error: error.message || 'Unknown error' 
+      }));
+    } finally {
+      setBulkPatternsLoading(false);
     }
   };
 
@@ -1164,6 +1391,84 @@ export default function AutomodConfigForm({ config, updateConfig, channels, role
                         </button>
                       )}
                     </div>
+                    
+                    {/* Bulk Actions Bar for Words */}
+                    <div className="bulk-actions-bar mt-2">
+                      <div className="d-flex flex-wrap gap-1 align-items-center">
+                        <button
+                          className="btn btn-success"
+                          type="button"
+                          onClick={() => bulkToggleWords(true)}
+                          disabled={selectedWords.size === 0 || bulkWordsLoading}
+                          title={t('moderation.features.automod.bulk.enableSelected')}
+                        >
+                          {bulkWordsLoading ? (
+                            <>
+                              <i className="fa-solid fa-spinner fa-spin me-1"></i>
+                              {t('moderation.features.automod.bulk.processing')}
+                            </>
+                          ) : (
+                            <>
+                              <i className="fa-solid fa-check me-1"></i>
+                              {t('moderation.features.automod.bulk.enable')}
+                            </>
+                          )}
+                        </button>
+                        <button
+                          className="btn btn-warning"
+                          type="button"
+                          onClick={() => bulkToggleWords(false)}
+                          disabled={selectedWords.size === 0 || bulkWordsLoading}
+                          title={t('moderation.features.automod.bulk.disableSelected')}
+                        >
+                          {bulkWordsLoading ? (
+                            <>
+                              <i className="fa-solid fa-spinner fa-spin me-1"></i>
+                              {t('moderation.features.automod.bulk.processing')}
+                            </>
+                          ) : (
+                            <>
+                              <i className="fa-solid fa-ban me-1"></i>
+                              {t('moderation.features.automod.bulk.disable')}
+                            </>
+                          )}
+                        </button>
+                        <button
+                          className="btn btn-danger"
+                          type="button"
+                          onClick={bulkDeleteWords}
+                          disabled={selectedWords.size === 0 || bulkWordsLoading}
+                          title={t('moderation.features.automod.bulk.deleteSelected')}
+                        >
+                          {bulkWordsLoading ? (
+                            <>
+                              <i className="fa-solid fa-spinner fa-spin me-1"></i>
+                              {t('moderation.features.automod.bulk.deleting')}
+                            </>
+                          ) : (
+                            <>
+                              <i className="fa-solid fa-trash me-1"></i>
+                              {t('moderation.features.automod.bulk.delete')}
+                            </>
+                          )}
+                        </button>
+                        <button
+                          className="btn btn-outline-secondary"
+                          type="button"
+                          onClick={() => setSelectedWords(new Set())}
+                          disabled={selectedWords.size === 0}
+                          title={t('moderation.features.automod.bulk.clearSelection')}
+                        >
+                          <i className="fa-solid fa-times me-1"></i>
+                          {t('moderation.features.automod.bulk.clear')}
+                        </button>
+                        {selectedWords.size > 0 && (
+                          <small className="fw-semibold text-muted ms-2">
+                            {t('moderation.features.automod.bulk.selected', { count: selectedWords.size })}
+                          </small>
+                        )}
+                      </div>
+                    </div>
                   </div>
                   
                   {profanityWords.filter(word => 
@@ -1185,6 +1490,16 @@ export default function AutomodConfigForm({ config, updateConfig, channels, role
                       <table className="table table-sm table-hover mb-0">
                         <thead className="table-dark sticky-top">
                           <tr>
+                            <th style={{ fontSize: '0.75rem', width: '40px' }}>
+                              <input
+                                type="checkbox"
+                                className="form-check-input"
+                                onChange={(e) => handleSelectAllWords(e.target.checked)}
+                                checked={selectedWords.size > 0 && selectedWords.size === profanityWords.filter(word => 
+                                  word.word.toLowerCase().includes(wordSearchFilter.toLowerCase())
+                                ).length}
+                              />
+                            </th>
                             <th style={{ fontSize: '0.75rem' }}>{t('moderation.features.automod.profanity.words.table.word')}</th>
                             <th style={{ fontSize: '0.75rem' }}>{t('moderation.features.automod.profanity.words.table.severity')}</th>
                             <th style={{ fontSize: '0.75rem' }}>{t('moderation.features.automod.profanity.words.table.status')}</th>
@@ -1196,6 +1511,14 @@ export default function AutomodConfigForm({ config, updateConfig, channels, role
                             word.word.toLowerCase().includes(wordSearchFilter.toLowerCase())
                           ).map(word => (
                             <tr key={word.id}>
+                              <td>
+                                <input
+                                  type="checkbox"
+                                  className="form-check-input"
+                                  checked={selectedWords.has(word.id)}
+                                  onChange={(e) => handleWordSelection(word.id, e.target.checked)}
+                                />
+                              </td>
                               <td>
                                 <code className="text-danger" style={{ fontSize: '0.85rem' }}>
                                   {word.word}
@@ -1305,6 +1628,84 @@ export default function AutomodConfigForm({ config, updateConfig, channels, role
                         </button>
                       )}
                     </div>
+                    
+                    {/* Bulk Actions Bar for Patterns */}
+                    <div className="bulk-actions-bar mt-2">
+                      <div className="d-flex flex-wrap gap-1 align-items-center">
+                        <button
+                          className="btn btn-success"
+                          type="button"
+                          onClick={() => bulkTogglePatterns(true)}
+                          disabled={selectedPatterns.size === 0 || bulkPatternsLoading}
+                          title={t('moderation.features.automod.bulk.enableSelected')}
+                        >
+                          {bulkPatternsLoading ? (
+                            <>
+                              <i className="fa-solid fa-spinner fa-spin me-1"></i>
+                              {t('moderation.features.automod.bulk.processing')}
+                            </>
+                          ) : (
+                            <>
+                              <i className="fa-solid fa-check me-1"></i>
+                              {t('moderation.features.automod.bulk.enable')}
+                            </>
+                          )}
+                        </button>
+                        <button
+                          className="btn btn-warning"
+                          type="button"
+                          onClick={() => bulkTogglePatterns(false)}
+                          disabled={selectedPatterns.size === 0 || bulkPatternsLoading}
+                          title={t('moderation.features.automod.bulk.disableSelected')}
+                        >
+                          {bulkPatternsLoading ? (
+                            <>
+                              <i className="fa-solid fa-spinner fa-spin me-1"></i>
+                              {t('moderation.features.automod.bulk.processing')}
+                            </>
+                          ) : (
+                            <>
+                              <i className="fa-solid fa-ban me-1"></i>
+                              {t('moderation.features.automod.bulk.disable')}
+                            </>
+                          )}
+                        </button>
+                        <button
+                          className="btn btn-danger"
+                          type="button"
+                          onClick={bulkDeletePatterns}
+                          disabled={selectedPatterns.size === 0 || bulkPatternsLoading}
+                          title={t('moderation.features.automod.bulk.deleteSelected')}
+                        >
+                          {bulkPatternsLoading ? (
+                            <>
+                              <i className="fa-solid fa-spinner fa-spin me-1"></i>
+                              {t('moderation.features.automod.bulk.deleting')}
+                            </>
+                          ) : (
+                            <>
+                              <i className="fa-solid fa-trash me-1"></i>
+                              {t('moderation.features.automod.bulk.delete')}
+                            </>
+                          )}
+                        </button>
+                        <button
+                          className="btn btn-outline-secondary"
+                          type="button"
+                          onClick={() => setSelectedPatterns(new Set())}
+                          disabled={selectedPatterns.size === 0}
+                          title={t('moderation.features.automod.bulk.clearSelection')}
+                        >
+                          <i className="fa-solid fa-times me-1"></i>
+                          {t('moderation.features.automod.bulk.clear')}
+                        </button>
+                        {selectedPatterns.size > 0 && (
+                          <small className="fw-semibold text-muted ms-2">
+                            {t('moderation.features.automod.bulk.selected', { count: selectedPatterns.size })}
+                          </small>
+                        )}
+                      </div>
+                    </div>
                   </div>
 
                   {profanityPatterns.filter(pattern => 
@@ -1327,6 +1728,17 @@ export default function AutomodConfigForm({ config, updateConfig, channels, role
                       <table className="table table-sm table-hover mb-0">
                         <thead className="table-dark sticky-top">
                           <tr>
+                            <th style={{ fontSize: '0.75rem', width: '40px' }}>
+                              <input
+                                type="checkbox"
+                                className="form-check-input"
+                                onChange={(e) => handleSelectAllPatterns(e.target.checked)}
+                                checked={selectedPatterns.size > 0 && selectedPatterns.size === profanityPatterns.filter(pattern => 
+                                  pattern.pattern.toLowerCase().includes(patternSearchFilter.toLowerCase()) ||
+                                  (pattern.description && pattern.description.toLowerCase().includes(patternSearchFilter.toLowerCase()))
+                                ).length}
+                              />
+                            </th>
                             <th style={{ fontSize: '0.75rem' }}>{t('moderation.features.automod.profanity.patterns.table.pattern')}</th>
                             <th style={{ fontSize: '0.75rem' }}>{t('moderation.features.automod.profanity.patterns.table.severity')}</th>
                             <th style={{ fontSize: '0.75rem' }}>{t('moderation.features.automod.profanity.patterns.table.status')}</th>
@@ -1339,6 +1751,14 @@ export default function AutomodConfigForm({ config, updateConfig, channels, role
                             (pattern.description && pattern.description.toLowerCase().includes(patternSearchFilter.toLowerCase()))
                           ).map(pattern => (
                             <tr key={pattern.id}>
+                              <td>
+                                <input
+                                  type="checkbox"
+                                  className="form-check-input"
+                                  checked={selectedPatterns.has(pattern.id)}
+                                  onChange={(e) => handlePatternSelection(pattern.id, e.target.checked)}
+                                />
+                              </td>
                               <td>
                                 <code className="text-warning" style={{ fontSize: '0.7rem', wordBreak: 'break-all' }}>
                                   /{pattern.pattern}/{pattern.flags}
@@ -1412,7 +1832,24 @@ export default function AutomodConfigForm({ config, updateConfig, channels, role
       {showProfanityWordForm && (
         <div className="modal fade show d-block" id="profanity-words-modal" role="dialog" aria-modal="true" tabIndex="-1" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
           <div className="modal-dialog">
-            <div className="modal-content">
+            <div className="modal-content" style={{ position: 'relative' }}>
+              {/* Loading overlay */}
+              {(savingWord || bulkWordsLoading) && (
+                <div className="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center modal-loading-overlay" 
+                     style={{ zIndex: 1050 }}>
+                  <div className="text-center text-white">
+                    <div className="spinner-border mb-2" role="status">
+                      <span className="visually-hidden">Loading...</span>
+                    </div>
+                    <div>
+                      {bulkWordsLoading 
+                        ? t('moderation.features.automod.toasts.processingBulkWords')
+                        : (editingWord ? t('moderation.features.automod.toasts.updatingWord') : t('moderation.features.automod.toasts.addingWord'))
+                      }
+                    </div>
+                  </div>
+                </div>
+              )}
               <div className="modal-header">
                 <h6 className="modal-title">
                   {editingWord ? t('moderation.features.automod.profanity.words.modal.editTitle') : t('moderation.features.automod.profanity.words.modal.addTitle')}
@@ -1513,10 +1950,21 @@ export default function AutomodConfigForm({ config, updateConfig, channels, role
                   type="button" 
                   className="btn btn-primary btn-sm modal-action-btn" 
                   onClick={saveWord}
-                  disabled={!wordForm.word.trim()}
+                  disabled={!wordForm.word.trim() || savingWord}
                 >
-                  <i className={`fa-solid fa-${editingWord ? 'edit' : 'plus'}`}></i>
-                  {editingWord ? t('common.update') : t('common.add')} {t('moderation.features.automod.common.word')}
+                  {savingWord ? (
+                    <>
+                      <div className="spinner-border spinner-border-sm me-2" role="status">
+                        <span className="visually-hidden">Loading...</span>
+                      </div>
+                      {editingWord ? t('moderation.features.automod.toasts.updatingWord') : t('moderation.features.automod.toasts.addingWord')}
+                    </>
+                  ) : (
+                    <>
+                      <i className={`fa-solid fa-${editingWord ? 'edit' : 'plus'}`}></i>
+                      {editingWord ? t('common.update') : t('common.add')} {t('moderation.features.automod.common.word')}
+                    </>
+                  )}
                 </button>
               </div>
             </div>
@@ -1528,7 +1976,24 @@ export default function AutomodConfigForm({ config, updateConfig, channels, role
       {showProfanityPatternForm && (
         <div className="modal fade show d-block" id="profanity-patterns-modal" role="dialog" aria-modal="true" tabIndex="-1" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
           <div className="modal-dialog modal-lg">
-            <div className="modal-content">
+            <div className="modal-content" style={{ position: 'relative' }}>
+              {/* Loading overlay */}
+              {(savingPattern || bulkPatternsLoading) && (
+                <div className="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center modal-loading-overlay" 
+                     style={{ zIndex: 1050 }}>
+                  <div className="text-center text-white">
+                    <div className="spinner-border mb-2" role="status">
+                      <span className="visually-hidden">Loading...</span>
+                    </div>
+                    <div>
+                      {bulkPatternsLoading 
+                        ? t('moderation.features.automod.toasts.processingBulkPatterns')
+                        : (editingPattern ? t('moderation.features.automod.toasts.updatingPattern') : t('moderation.features.automod.toasts.addingPattern'))
+                      }
+                    </div>
+                  </div>
+                </div>
+              )}
               <div className="modal-header">
                 <h6 className="modal-title">
                   {editingPattern ? t('moderation.features.automod.profanity.patterns.modal.editTitle') : t('moderation.features.automod.profanity.patterns.modal.addTitle')}
@@ -1637,10 +2102,21 @@ export default function AutomodConfigForm({ config, updateConfig, channels, role
                   type="button" 
                   className="btn btn-primary btn-sm modal-action-btn" 
                   onClick={savePattern}
-                  disabled={!patternForm.pattern.trim()}
+                  disabled={!patternForm.pattern.trim() || savingPattern}
                 >
-                  <i className={`fa-solid fa-${editingPattern ? 'edit' : 'plus'}`}></i>
-                  {editingPattern ? t('common.update') : t('common.add')} {t('moderation.features.automod.common.pattern')}
+                  {savingPattern ? (
+                    <>
+                      <div className="spinner-border spinner-border-sm me-2" role="status">
+                        <span className="visually-hidden">Loading...</span>
+                      </div>
+                      {editingPattern ? t('moderation.features.automod.toasts.updatingPattern') : t('moderation.features.automod.toasts.addingPattern')}
+                    </>
+                  ) : (
+                    <>
+                      <i className={`fa-solid fa-${editingPattern ? 'edit' : 'plus'}`}></i>
+                      {editingPattern ? t('common.update') : t('common.add')} {t('moderation.features.automod.common.pattern')}
+                    </>
+                  )}
                 </button>
               </div>
             </div>

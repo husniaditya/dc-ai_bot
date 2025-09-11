@@ -920,7 +920,36 @@
           "patternToggleEnabled": "¡Patrón habilitado!",
           "patternToggleDisabled": "¡Patrón deshabilitado!",
           "patternToggleFailed": "No se pudo cambiar el estado del patrón. {{error}}",
-          "invalidRegex": "Patrón regex no válido: {{error}}"
+          "invalidRegex": "Patrón regex no válido: {{error}}",
+          "addingWord": "Agregando palabra...",
+          "updatingWord": "Actualizando palabra...",
+          "addingPattern": "Agregando patrón...",
+          "updatingPattern": "Actualizando patrón...",
+          "bulkWordsEnabled": "¡{{count}} palabras de profanidad habilitadas exitosamente!",
+          "bulkWordsDisabled": "¡{{count}} palabras de profanidad deshabilitadas exitosamente!",
+          "bulkWordsDeleted": "¡{{count}} palabras de profanidad eliminadas exitosamente!",
+          "bulkWordsToggleFailed": "Error al {{action}} {{count}} palabras de profanidad. {{error}}",
+          "bulkWordsDeleteFailed": "Error al eliminar {{count}} palabras de profanidad. {{error}}",
+          "bulkPatternsEnabled": "¡{{count}} patrones de profanidad habilitados exitosamente!",
+          "bulkPatternsDisabled": "¡{{count}} patrones de profanidad deshabilitados exitosamente!",
+          "bulkPatternsDeleted": "¡{{count}} patrones de profanidad eliminados exitosamente!",
+          "bulkPatternsToggleFailed": "Error al {{action}} {{count}} patrones de profanidad. {{error}}",
+          "bulkPatternsDeleteFailed": "Error al eliminar {{count}} patrones de profanidad. {{error}}",
+          "processingBulkWords": "Procesando operación masiva de palabras...",
+          "processingBulkPatterns": "Procesando operación masiva de patrones..."
+        },
+        "bulk": {
+          "enable": "Habilitar",
+          "disable": "Deshabilitar",
+          "delete": "Eliminar",
+          "clear": "Limpiar", 
+          "processing": "Procesando...",
+          "deleting": "Eliminando...",
+          "enableSelected": "Habilitar elementos seleccionados",
+          "disableSelected": "Deshabilitar elementos seleccionados",
+          "deleteSelected": "Eliminar elementos seleccionados",
+          "clearSelection": "Limpiar selección",
+          "selected": "{{count}} seleccionados"
         }
       },
       "welcome": {

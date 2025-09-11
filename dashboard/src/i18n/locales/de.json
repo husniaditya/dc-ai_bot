@@ -1378,7 +1378,36 @@
           "patternToggleEnabled": "Schimpfwortmuster erfolgreich aktiviert!",
           "patternToggleDisabled": "Schimpfwortmuster erfolgreich deaktiviert!",
           "patternToggleFailed": "Umschalten des Musterstatus fehlgeschlagen. {{error}}",
-          "invalidRegex": "Ungültiges Regex-Muster: {{error}}"
+          "invalidRegex": "Ungültiges Regex-Muster: {{error}}",
+          "addingWord": "Wort hinzufügen...",
+          "updatingWord": "Wort aktualisieren...",
+          "addingPattern": "Muster hinzufügen...",
+          "updatingPattern": "Muster aktualisieren...",
+          "bulkWordsEnabled": "{{count}} Schimpfwörter erfolgreich aktiviert!",
+          "bulkWordsDisabled": "{{count}} Schimpfwörter erfolgreich deaktiviert!",
+          "bulkWordsDeleted": "{{count}} Schimpfwörter erfolgreich gelöscht!",
+          "bulkWordsToggleFailed": "{{action}} von {{count}} Schimpfwörtern fehlgeschlagen. {{error}}",
+          "bulkWordsDeleteFailed": "Löschen von {{count}} Schimpfwörtern fehlgeschlagen. {{error}}",
+          "bulkPatternsEnabled": "{{count}} Schimpfwortmuster erfolgreich aktiviert!",
+          "bulkPatternsDisabled": "{{count}} Schimpfwortmuster erfolgreich deaktiviert!",
+          "bulkPatternsDeleted": "{{count}} Schimpfwortmuster erfolgreich gelöscht!",
+          "bulkPatternsToggleFailed": "{{action}} von {{count}} Schimpfwortmustern fehlgeschlagen. {{error}}",
+          "bulkPatternsDeleteFailed": "Löschen von {{count}} Schimpfwortmustern fehlgeschlagen. {{error}}",
+          "processingBulkWords": "Massenverarbeitung von Wörtern läuft...",
+          "processingBulkPatterns": "Massenverarbeitung von Mustern läuft..."
+        },
+        "bulk": {
+          "enable": "Aktivieren",
+          "disable": "Deaktivieren", 
+          "delete": "Löschen",
+          "clear": "Leeren",
+          "processing": "Verarbeitung...",
+          "deleting": "Lösche...",
+          "enableSelected": "Ausgewählte Elemente aktivieren",
+          "disableSelected": "Ausgewählte Elemente deaktivieren",
+          "deleteSelected": "Ausgewählte Elemente löschen",
+          "clearSelection": "Auswahl leeren",
+          "selected": "{{count}} ausgewählt"
         }
       },
       "welcome": {

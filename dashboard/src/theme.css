@@ -345,6 +345,33 @@ html:not(.dark) .log-type-card:hover {
   background: rgba(0, 0, 0, 0.04);
   border-color: rgba(0, 0, 0, 0.15) !important;
 }
+
+/* Logging information card styling */
+.moderation-config-form .bg-body-secondary {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+  border-color: rgba(255, 255, 255, 0.15) !important;
+}
+
+.moderation-config-form .bg-body-secondary .text-body {
+  color: #ffffff !important;
+}
+
+.moderation-config-form .bg-body-secondary .text-muted {
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
+html:not(.dark) .moderation-config-form .bg-body-secondary {
+  background-color: rgba(0, 0, 0, 0.03) !important;
+  border-color: rgba(0, 0, 0, 0.1) !important;
+}
+
+html:not(.dark) .moderation-config-form .bg-body-secondary .text-body {
+  color: #212529 !important;
+}
+
+html:not(.dark) .moderation-config-form .bg-body-secondary .text-muted {
+  color: #6c757d !important;
+}
 html:not(.dark) body { color: var(--text-base); }
 html:not(.dark) .nav-glass, html:not(.dark) .card-glass, html:not(.dark) .modal-content {
   background: var(--glass-bg) !important;
@@ -1399,6 +1426,55 @@ html:not(.dark) #profanity-patterns-modal .modal-header {
 html:not(.dark) #profanity-words-modal .modal-title,
 html:not(.dark) #profanity-patterns-modal .modal-title {
   color: #1f2937;
+}
+
+/* Bulk Actions Bar Styling */
+.bulk-actions-bar {
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  padding: 0.5rem 0 !important;
+}
+
+.bulk-actions-bar .btn {
+  font-size: 0.75rem !important;
+  padding: 0.25rem 0.5rem !important;
+  border-radius: 0.25rem !important;
+  transition: all 0.2s ease-in-out !important;
+}
+
+.bulk-actions-bar .btn:disabled {
+  opacity: 0.6 !important;
+  cursor: not-allowed !important;
+}
+
+.bulk-actions-bar .fw-semibold {
+  font-size: 0.75rem !important;
+  font-weight: 500 !important;
+}
+
+/* Loading spinner animation */
+.fa-spinner.fa-spin {
+  animation: fa-spin 1s infinite linear !important;
+}
+
+@keyframes fa-spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Modal loading overlay */
+.modal-content .position-absolute {
+  border-radius: inherit !important;
+}
+
+.modal-loading-overlay {
+  background: rgba(0, 0, 0, 0.7) !important;
+  backdrop-filter: blur(2px) !important;
 }
 
 /* Top bar */
@@ -3506,6 +3582,70 @@ html.dark .profanity-table code.text-warning { color: #000 !important; }
 html.dark .profanity-table .form-check.form-switch { display:flex; align-items:center; justify-content:center; }
 html.dark .profanity-table .form-check-input { width: 2.25rem; height: 1.1rem; }
 
+/* Square checkboxes for selection in profanity tables */
+.profanity-table .form-check-input[type="checkbox"]:not(.form-switch .form-check-input) {
+  width: 1.1em !important;
+  height: 1.1em !important;
+  border-radius: 0.25rem !important;
+  margin-top: 0 !important;
+  border-width: 1.5px !important;
+  transition: all 0.15s ease-in-out !important;
+}
+
+/* Light theme checkbox styling */
+html:not(.dark) .profanity-table .form-check-input[type="checkbox"]:not(.form-switch .form-check-input) {
+  border-color: #6c757d !important;
+  background-color: #fff !important;
+}
+
+html:not(.dark) .profanity-table .form-check-input[type="checkbox"]:not(.form-switch .form-check-input):hover {
+  border-color: #495057 !important;
+  box-shadow: 0 0 0 0.2rem rgba(108, 117, 125, 0.15) !important;
+}
+
+html:not(.dark) .profanity-table .form-check-input[type="checkbox"]:checked:not(.form-switch .form-check-input) {
+  background-color: #0d6efd !important;
+  border-color: #0d6efd !important;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%23fff' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='m6 10 3 3 6-6'/%3e%3c/svg%3e") !important;
+  box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25) !important;
+}
+
+/* Dark theme checkbox styling */
+html.dark .profanity-table .form-check-input[type="checkbox"]:not(.form-switch .form-check-input),
+html[data-bs-theme="dark"] .profanity-table .form-check-input[type="checkbox"]:not(.form-switch .form-check-input) {
+  border-color: #6c757d !important;
+  background-color: #343a40 !important;
+}
+
+html.dark .profanity-table .form-check-input[type="checkbox"]:not(.form-switch .form-check-input):hover,
+html[data-bs-theme="dark"] .profanity-table .form-check-input[type="checkbox"]:not(.form-switch .form-check-input):hover {
+  border-color: #adb5bd !important;
+  background-color: #495057 !important;
+  box-shadow: 0 0 0 0.2rem rgba(173, 181, 189, 0.15) !important;
+}
+
+html.dark .profanity-table .form-check-input[type="checkbox"]:checked:not(.form-switch .form-check-input),
+html[data-bs-theme="dark"] .profanity-table .form-check-input[type="checkbox"]:checked:not(.form-switch .form-check-input) {
+  background-color: #0d6efd !important;
+  border-color: #0d6efd !important;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%23fff' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='m6 10 3 3 6-6'/%3e%3c/svg%3e") !important;
+  box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25) !important;
+}
+
+/* Focus states for accessibility */
+.profanity-table .form-check-input[type="checkbox"]:focus:not(.form-switch .form-check-input) {
+  border-color: #86b7fe !important;
+  outline: 0 !important;
+  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25) !important;
+}
+
+/* Indeterminate state (for "select all" functionality) */
+.profanity-table .form-check-input[type="checkbox"]:indeterminate:not(.form-switch .form-check-input) {
+  background-color: #0d6efd !important;
+  border-color: #0d6efd !important;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%23fff' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='M6 10h8'/%3e%3c/svg%3e") !important;
+}
+
 /* Action buttons compact styling */
 html.dark .profanity-table .btn-group .btn { 
   background: rgba(255,255,255,0.06); 
@@ -3653,6 +3793,40 @@ html:not(.dark) .table-sm th,
 html:not(.dark) .table-sm td {
   border-color: #dee2e6;
   color: #495057;
+}
+
+/* Override text colors in table-sm for better contrast */
+html:not(.dark) .table-sm .text-dark {
+  color: #212529 !important;
+}
+
+html:not(.dark) .table-sm .text-primary {
+  color: #0d6efd !important;
+}
+
+/* Dark theme table text color overrides */
+html.dark .table-sm .text-light {
+  color: #f8f9fa !important;
+}
+
+html.dark .table-sm .text-info {
+  color: #17a2b8 !important;
+}
+
+html.dark .table-sm .text-warning {
+  color: #ffc107 !important;
+}
+
+/* Reaction role badges - ensure text is always visible */
+.table-sm .badge {
+  color: #ffffff !important;
+}
+
+/* Ensure moderation form table badges match slash command styling */
+.moderation-config-form .table-sm .badge.bg-secondary {
+  background-color: #6c757d !important;
+  color: #ffffff !important;
+  border: none !important;
 }
 
 /* Dark theme table styling */
