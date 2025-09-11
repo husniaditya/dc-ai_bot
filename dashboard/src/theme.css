@@ -3851,6 +3851,117 @@ html:not(.dark) {
   gap: 1rem;
 }
 
+/* Mobile responsive: 2 columns layout for service cards */
+@media (max-width: 768px) {
+  .services-grid {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+  }
+  
+  .service-card {
+    width: 100% !important;
+    min-height: 140px;
+    min-width: unset !important;
+  }
+}
+
+/* Extra small mobile devices */
+@media (max-width: 480px) {
+  .services-grid {
+    gap: 0.5rem;
+  }
+  
+  .service-card {
+    min-height: 120px;
+    padding: 0.75rem !important;
+  }
+  
+  .service-card .fw-semibold {
+    font-size: 0.8rem !important;
+  }
+  
+  .service-card .small {
+    font-size: 0.6rem !important;
+  }
+}
+
+/* Mobile modal adjustments to prevent footer overlap */
+@media (max-width: 768px) {
+  /* Increase modal z-index to ensure it appears above the fixed footer */
+  .modal {
+    z-index: 1600 !important;
+  }
+  
+  .modal-backdrop {
+    z-index: 1550 !important;
+  }
+  
+  /* Adjust modal dialog positioning and sizing for mobile */
+  .modal-dialog {
+    margin: 1rem 0.5rem !important;
+    max-height: calc(100vh - 2rem) !important;
+  }
+  
+  .modal-content {
+    max-height: calc(100vh - 2rem) !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+  
+  .modal-body {
+    flex: 1 !important;
+    overflow-y: auto !important;
+    max-height: calc(100vh - 200px) !important;
+  }
+  
+  /* Ensure modal footer stays at bottom but doesn't overlap website footer */
+  .modal-footer {
+    flex-shrink: 0 !important;
+    margin-bottom: 0 !important;
+  }
+}
+
+/* Extra mobile safety for very small screens */
+@media (max-width: 480px) {
+  .modal-dialog {
+    margin: 0.5rem !important;
+    max-height: calc(100vh - 1rem) !important;
+  }
+  
+  .modal-content {
+    max-height: calc(100vh - 1rem) !important;
+  }
+  
+  .modal-body {
+    max-height: calc(100vh - 180px) !important;
+  }
+}
+
+/* Prevent sidebar overlay from appearing above modals - MOBILE ONLY */
+@media (max-width: 900px) {
+  /* Hide sidebar and backdrop only on mobile when modal is open */
+  body.modal-open .dash-sidebar,
+  body:has(.modal) .dash-sidebar {
+    transform: translateY(120%) scale(0.9) !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+  }
+  
+  body.modal-open .sidebar-backdrop,
+  body:has(.modal) .sidebar-backdrop {
+    opacity: 0 !important;
+    pointer-events: none !important;
+  }
+  
+  /* Hide FAB toggle on mobile when modal is open */
+  body.modal-open .fab-toggle,
+  body:has(.modal) .fab-toggle {
+    opacity: 0 !important;
+    pointer-events: none !important;
+  }
+}
+
 .service-card {
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.08);
