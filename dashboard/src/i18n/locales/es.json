@@ -390,16 +390,23 @@
       "titleAdd": "Agregar respuesta automática",
       "titleEdit": "Editar respuesta automática",
       "key": "Clave",
-      "keyHelpUnique": "id único",
+      "keyHelpUnique": "identificador único",
       "keyPlaceholder": "saludo",
       "keyNoSpaces": "Sin espacios.",
-      "pattern": "Patrón Regex",
-      "patternPlaceholder": "^hola|buenas",
-      "flags": "Modificadores",
+      "pattern": "Patrón de texto",
+      "patternPlaceholder": "waktu|jam|time",
+      "matchType": "Tipo de coincidencia",
+      "matchTypes": {
+        "exact": "Coincidir mayúsculas y minúsculas",
+        "whole": "Coincidir palabra completa",
+        "contains": "Contiene (Predeterminado)"
+      },
+      "matchTypeHelp": "Elige cómo debe coincidir el patrón con el texto",
+      "flags": "Flags",
       "flagsPlaceholder": "i",
       "replies": "Respuestas",
       "repliesHelp": "una por línea",
-      "repliesPlaceholder": "¡Hola!\nBuenas!",
+      "repliesPlaceholder": "¡Hola!\n¡Hola!",
       "enabled": "Habilitado",
       "footerNote": "El bot elige una respuesta al azar."
     }

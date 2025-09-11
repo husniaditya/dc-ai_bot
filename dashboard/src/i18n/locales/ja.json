@@ -390,18 +390,25 @@
       "titleAdd": "自動返信を追加",
       "titleEdit": "自動返信を編集",
       "key": "キー",
-      "keyHelpUnique": "一意のID",
+      "keyHelpUnique": "ユニークID",
       "keyPlaceholder": "greet",
-      "keyNoSpaces": "スペースは使用できません",
-      "pattern": "正規表現パターン",
-      "patternPlaceholder": "^hello|hi",
+      "keyNoSpaces": "スペースを使用しないでください。",
+      "pattern": "テキストパターン",
+      "patternPlaceholder": "waktu|jam|time",
+      "matchType": "マッチタイプ",
+      "matchTypes": {
+        "exact": "大文字小文字を区別して一致",
+        "whole": "単語全体で一致",
+        "contains": "含む（デフォルト）"
+      },
+      "matchTypeHelp": "パターンをどのようにテキストに一致させるかを選択してください",
       "flags": "フラグ",
       "flagsPlaceholder": "i",
       "replies": "返信",
-      "repliesHelp": "1行につき1件",
-      "repliesPlaceholder": "Hello!\nHi!",
+      "repliesHelp": "1行につき1つ",
+      "repliesPlaceholder": "こんにちは！\nやあ！",
       "enabled": "有効",
-      "footerNote": "ボットはランダムに返信を選びます。"
+      "footerNote": "Botは返信をランダムに選びます。"
     }
   },
   "commands": {

@@ -387,21 +387,28 @@
       "saved": "Auto-Antwort gespeichert"
     },
     "modal": {
-      "titleAdd": "Auto-Antwort hinzufügen",
-      "titleEdit": "Auto-Antwort bearbeiten",
+      "titleAdd": "Automatische Antwort hinzufügen",
+      "titleEdit": "Automatische Antwort bearbeiten",
       "key": "Schlüssel",
-      "keyHelpUnique": "eindeutige id",
-      "keyPlaceholder": "grüßen",
+      "keyHelpUnique": "eindeutige ID",
+      "keyPlaceholder": "begrüßung",
       "keyNoSpaces": "Keine Leerzeichen.",
-      "pattern": "Regex-Muster",
-      "patternPlaceholder": "^hallo|hi",
+      "pattern": "Textmuster",
+      "patternPlaceholder": "waktu|jam|zeit",
+      "matchType": "Übereinstimmungstyp",
+      "matchTypes": {
+        "exact": "Groß-/Kleinschreibung beachten",
+        "whole": "Ganzes Wort übereinstimmen",
+        "contains": "Enthält (Standard)"
+      },
+      "matchTypeHelp": "Wählen Sie, wie das Muster mit dem Text übereinstimmen soll",
       "flags": "Flags",
       "flagsPlaceholder": "i",
       "replies": "Antworten",
       "repliesHelp": "eine pro Zeile",
       "repliesPlaceholder": "Hallo!\nHi!",
       "enabled": "Aktiviert",
-      "footerNote": "Der Bot wählt zufällig eine Antwort."
+      "footerNote": "Der Bot wählt zufällig eine Antwort aus."
     }
   },
   "commands": {
