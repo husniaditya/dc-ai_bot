@@ -21,11 +21,19 @@ export default function AutoResponseModal({ show, modalAuto, autos, setModalAuto
               </div>
               <div className="col-12 col-md-5">
                 <label className="form-label mb-1">{t('autosSection.modal.pattern')}</label>
-                <input className="form-control" placeholder={t('autosSection.modal.patternPlaceholder')} value={modalAuto.pattern} onChange={e=>setModalAuto({...modalAuto, pattern:e.target.value})} />
+                <input className="form-control" placeholder={t('autosSection.modal.patternPlaceholder')} value={modalAuto.userInput || ''} onChange={e=>setModalAuto({...modalAuto, userInput:e.target.value})} />
               </div>
-              <div className="col-6 col-md-2">
+              <div className="col-6 col-md-3">
                 <label className="form-label mb-1">{t('autosSection.modal.flags')}</label>
                 <input className="form-control" placeholder={t('autosSection.modal.flagsPlaceholder')} value={modalAuto.flags} onChange={e=>setModalAuto({...modalAuto, flags:e.target.value})} />
+              </div>
+              <div className="col-12">
+                <label className="form-label mb-1">{t('autosSection.modal.matchType')} <span className="text-muted small">({t('autosSection.modal.matchTypeHelp')})</span></label>
+                <select className="form-select" value={modalAuto.matchType || 'contains'} onChange={e=>setModalAuto({...modalAuto, matchType:e.target.value})}>
+                  <option value="contains">{t('autosSection.modal.matchTypes.contains')}</option>
+                  <option value="exact">{t('autosSection.modal.matchTypes.exact')}</option>
+                  <option value="whole">{t('autosSection.modal.matchTypes.whole')}</option>
+                </select>
               </div>
               <div className="col-12">
                 <label className="form-label mb-1">{t('autosSection.modal.replies')} <span className="text-muted small">({t('autosSection.modal.repliesHelp')})</span></label>

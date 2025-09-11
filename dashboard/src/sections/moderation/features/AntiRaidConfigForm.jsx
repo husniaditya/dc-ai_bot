@@ -154,24 +154,24 @@ export default function AntiRaidConfigForm({ config, updateConfig, channels, rol
         </p>
       </div>
 
-      <div className="mb-4 p-3 bg-dark border rounded">
+      <div className="mb-4 p-3 bg-body-secondary border rounded">
         <h6 className="mb-2">
           <i className="fa-solid fa-shield text-success me-2" />
           {t('moderation.cards.common.features')}
         </h6>
-        <div className="row small text-muted">
+        <div className="row small">
           <div className="col-md-6">
             <div className="mb-2">
-              <strong>{t('moderation.features.antiraid.features.joinRate.title')}</strong>
-              <ul className="mb-0 mt-1">
+              <strong className="text-body">{t('moderation.features.antiraid.features.joinRate.title')}</strong>
+              <ul className="mb-0 mt-1 text-muted">
                 <li>{t('moderation.features.antiraid.features.joinRate.items.trackPatterns')}</li>
                 <li>{t('moderation.features.antiraid.features.joinRate.items.detectAttacks')}</li>
                 <li>{t('moderation.features.antiraid.features.joinRate.items.thresholds')}</li>
               </ul>
             </div>
             <div className="mb-2">
-              <strong>{t('moderation.features.antiraid.features.accountAnalysis.title')}</strong>
-              <ul className="mb-0 mt-1">
+              <strong className="text-body">{t('moderation.features.antiraid.features.accountAnalysis.title')}</strong>
+              <ul className="mb-0 mt-1 text-muted">
                 <li>{t('moderation.features.antiraid.features.accountAnalysis.items.age')}</li>
                 <li>{t('moderation.features.antiraid.features.accountAnalysis.items.patterns')}</li>
                 <li>{t('moderation.features.antiraid.features.accountAnalysis.items.avatarUsername')}</li>
@@ -180,16 +180,16 @@ export default function AntiRaidConfigForm({ config, updateConfig, channels, rol
           </div>
           <div className="col-md-6">
             <div className="mb-2">
-              <strong>{t('moderation.features.antiraid.features.automatedResponse.title')}</strong>
-              <ul className="mb-0 mt-1">
+              <strong className="text-body">{t('moderation.features.antiraid.features.automatedResponse.title')}</strong>
+              <ul className="mb-0 mt-1 text-muted">
                 <li>{t('moderation.features.antiraid.features.automatedResponse.items.lockdown')}</li>
                 <li>{t('moderation.features.antiraid.features.automatedResponse.items.verification')}</li>
                 <li>{t('moderation.features.antiraid.features.automatedResponse.items.removal')}</li>
               </ul>
             </div>
             <div className="mb-2">
-              <strong>{t('moderation.features.antiraid.features.contentFiltering.title')}</strong>
-              <ul className="mb-0 mt-1">
+              <strong className="text-body">{t('moderation.features.antiraid.features.contentFiltering.title')}</strong>
+              <ul className="mb-0 mt-1 text-muted">
                 <li>{t('moderation.features.antiraid.features.contentFiltering.items.inviteSpam')}</li>
                 <li>{t('moderation.features.antiraid.features.contentFiltering.items.massMention')}</li>
                 <li>{t('moderation.features.antiraid.features.contentFiltering.items.newMember')}</li>

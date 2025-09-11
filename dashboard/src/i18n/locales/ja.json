@@ -390,18 +390,25 @@
       "titleAdd": "自動返信を追加",
       "titleEdit": "自動返信を編集",
       "key": "キー",
-      "keyHelpUnique": "一意のID",
+      "keyHelpUnique": "ユニークID",
       "keyPlaceholder": "greet",
-      "keyNoSpaces": "スペースは使用できません",
-      "pattern": "正規表現パターン",
-      "patternPlaceholder": "^hello|hi",
+      "keyNoSpaces": "スペースを使用しないでください。",
+      "pattern": "テキストパターン",
+      "patternPlaceholder": "waktu|jam|time",
+      "matchType": "マッチタイプ",
+      "matchTypes": {
+        "exact": "大文字小文字を区別して一致",
+        "whole": "単語全体で一致",
+        "contains": "含む（デフォルト）"
+      },
+      "matchTypeHelp": "パターンをどのようにテキストに一致させるかを選択してください",
       "flags": "フラグ",
       "flagsPlaceholder": "i",
       "replies": "返信",
-      "repliesHelp": "1行につき1件",
-      "repliesPlaceholder": "Hello!\nHi!",
+      "repliesHelp": "1行につき1つ",
+      "repliesPlaceholder": "こんにちは！\nやあ！",
       "enabled": "有効",
-      "footerNote": "ボットはランダムに返信を選びます。"
+      "footerNote": "Botは返信をランダムに選びます。"
     }
   },
   "commands": {
@@ -1378,7 +1385,36 @@
           "patternToggleEnabled": "不適切表現パターンを有効化しました。",
           "patternToggleDisabled": "不適切表現パターンを無効化しました。",
           "patternToggleFailed": "パターンの有効・無効の切り替えに失敗しました。{{error}}",
-          "invalidRegex": "無効な正規表現パターン: {{error}}"
+          "invalidRegex": "無効な正規表現パターン: {{error}}",
+          "addingWord": "ワードを追加中...",
+          "updatingWord": "ワードを更新中...",
+          "addingPattern": "パターンを追加中...",
+          "updatingPattern": "パターンを更新中...",
+          "bulkWordsEnabled": "{{count}}個の不適切表現ワードを有効化しました！",
+          "bulkWordsDisabled": "{{count}}個の不適切表現ワードを無効化しました！",
+          "bulkWordsDeleted": "{{count}}個の不適切表現ワードを削除しました！",
+          "bulkWordsToggleFailed": "{{count}}個の不適切表現ワードの{{action}}に失敗しました。{{error}}",
+          "bulkWordsDeleteFailed": "{{count}}個の不適切表現ワードの削除に失敗しました。{{error}}",
+          "bulkPatternsEnabled": "{{count}}個の不適切表現パターンを有効化しました！",
+          "bulkPatternsDisabled": "{{count}}個の不適切表現パターンを無効化しました！",
+          "bulkPatternsDeleted": "{{count}}個の不適切表現パターンを削除しました！",
+          "bulkPatternsToggleFailed": "{{count}}個の不適切表現パターンの{{action}}に失敗しました。{{error}}",
+          "bulkPatternsDeleteFailed": "{{count}}個の不適切表現パターンの削除に失敗しました。{{error}}",
+          "processingBulkWords": "ワードの一括処理を実行中...",
+          "processingBulkPatterns": "パターンの一括処理を実行中..."
+        },
+        "bulk": {
+          "enable": "有効化",
+          "disable": "無効化",
+          "delete": "削除",
+          "clear": "クリア",
+          "processing": "処理中...",
+          "deleting": "削除中...",
+          "enableSelected": "選択したアイテムを有効化",
+          "disableSelected": "選択したアイテムを無効化",
+          "deleteSelected": "選択したアイテムを削除", 
+          "clearSelection": "選択をクリア",
+          "selected": "{{count}}個選択中"
         }
       },
       "welcome": {

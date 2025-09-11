@@ -242,6 +242,36 @@ export default function ConfigurationModal({
     return () => document.removeEventListener('keydown', handleEscape);
   }, []);
 
+  // Prevent sidebar overlay on mobile when modal is open
+  useEffect(() => {
+    // Add class to body to indicate modal is open
+    document.body.classList.add('modal-open');
+    
+    // Only handle mobile sidebar (check if we're on mobile)
+    const isMobile = window.innerWidth <= 900;
+    
+    if (isMobile) {
+      // Force close mobile sidebar if it's open
+      const sidebarElement = document.querySelector('.dash-sidebar.open');
+      const sidebarBackdrop = document.querySelector('.sidebar-backdrop');
+      
+      if (sidebarElement) {
+        sidebarElement.classList.remove('open');
+      }
+      if (sidebarBackdrop) {
+        sidebarBackdrop.remove();
+      }
+      
+      // Remove body classes that might interfere on mobile
+      document.body.classList.remove('sidebar-open');
+    }
+    
+    // Clean up on modal close
+    return () => {
+      document.body.classList.remove('modal-open');
+    };
+  }, []);
+
   const handleSave = async () => {
     setSaving(true);
     try {

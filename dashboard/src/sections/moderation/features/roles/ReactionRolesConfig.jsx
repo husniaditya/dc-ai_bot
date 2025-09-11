@@ -459,7 +459,7 @@ export default function ReactionRolesConfig({ config, updateConfig, channels, ro
                       {group.customMessage ? (
                         <div>
                           <span className="badge badge-success mb-1">{t('moderation.features.roles.reaction.labels.botMessage')}</span>
-                          <div className="small tablet-truncate" style={{maxWidth: '150px'}} title={group.customMessage}>
+                          <div className="small tablet-truncate text-muted" style={{maxWidth: '150px'}} title={group.customMessage}>
                             {group.customMessage && group.customMessage.length > 30 
                               ? `${group.customMessage.substring(0, 20)}...` 
                               : group.customMessage}
@@ -468,7 +468,7 @@ export default function ReactionRolesConfig({ config, updateConfig, channels, ro
                       ) : (
                         <div>
                           <span className="badge badge-secondary mb-1">{t('moderation.features.roles.reaction.labels.userMessage')}</span>
-                          <div className="font-monospace small mobile-truncate">{group.messageId}</div>
+                          <div className="font-monospace small mobile-truncate text-danger">{group.messageId}</div>
                         </div>
                       )}
                     </td>

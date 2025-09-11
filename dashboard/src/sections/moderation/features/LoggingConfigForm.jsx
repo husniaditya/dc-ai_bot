@@ -97,25 +97,25 @@ const LoggingConfigForm = forwardRef(({ config, updateConfig, channels, showToas
         </p>
       </div>
 
-      <div className="mt-4 p-3 bg-dark border rounded">
+      <div className="mt-4 p-3 bg-body-secondary border rounded">
         <h6 className="mb-2">
           <i className="fa-solid fa-info-circle text-info me-2" />
           {t('moderation.cards.common.features')}
         </h6>
-        <div className="row small text-muted">
+        <div className="row small">
           <div className="col-md-6">
             {[logTypes[0], logTypes[1], logTypes[2]].map((lt) => (
               <div key={lt.key} className="mb-2">
-                <strong>{lt.label}:</strong>
-                <div className="mb-0 mt-1">{lt.description}</div>
+                <strong className="text-body">{lt.label}:</strong>
+                <div className="mb-0 mt-1 text-muted">{lt.description}</div>
               </div>
             ))}
           </div>
           <div className="col-md-6">
             {[logTypes[3], logTypes[4], logTypes[5]].map((lt) => (
               <div key={lt.key} className="mb-2">
-                <strong>{lt.label}:</strong>
-                <div className="mb-0 mt-1">{lt.description}</div>
+                <strong className="text-body">{lt.label}:</strong>
+                <div className="mb-0 mt-1 text-muted">{lt.description}</div>
               </div>
             ))}
           </div>
