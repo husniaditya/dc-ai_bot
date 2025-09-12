@@ -1362,7 +1362,7 @@ export default function App(){
     const color = map[st] || '#16a34a';
     return <span style={{display:'inline-block',width:10,height:10,borderRadius:'50%',background:color,marginRight:6,boxShadow:'0 0 0 2px rgba(255,255,255,0.1)'}}></span>;
   }
-  const personalizationContent = <PersonalizationSection personalization={personalization} personalizationLoading={personalizationLoading} personalizationDirty={personalizationDirty} resetPersonalization={resetPersonalization} savePersonalization={savePersonalization} handleAvatarFile={handleAvatarFile} renderStatusDot={renderStatusDot} setPersonalization={setPersonalization} />;
+  const personalizationContent = <PersonalizationSection personalization={personalization} personalizationLoading={personalizationLoading} personalizationDirty={personalizationDirty} resetPersonalization={resetPersonalization} savePersonalization={savePersonalization} handleAvatarFile={handleAvatarFile} renderStatusDot={renderStatusDot} setPersonalization={setPersonalization} selectedGuild={selectedGuild} />;
 
   // saveWelcome redefined above with dirty tracking
   // Channel selection placeholder (requires channel list API future). For now free text.

@@ -8,6 +8,7 @@ A comprehensive Discord bot powered by Google's Gemini AI with an elegant React 
 [![Node.js](https://img.shields.io/badge/node.js-16.9.0+-green.svg)](https://nodejs.org/)
 [![React](https://img.shields.io/badge/react-18.3.1-blue.svg)](https://reactjs.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Website](https://img.shields.io/badge/website-chocomaid.xyz-ff69b4.svg)](https://chocomaid.xyz)
 
 </div>
 
@@ -18,6 +19,13 @@ Add the bot to your Discord server using this OAuth2 URL (requires "Manage Serve
 
 ```
 https://discord.com/oauth2/authorize?client_id=951335667756072981&scope=bot%20applications.commands
+```
+
+### Bot Web Dashboard
+Manage the bot through the dashboard:
+
+```
+https://chocomaid.xyz
 ```
 
 ## ✨ Features Overview
@@ -445,16 +453,16 @@ Use `/explain_image` with up to 3 image attachments:
 
 ### Current Features ✅
 - **AI Integration**: Gemini 2.0 Flash with image analysis and conversation context
+- **Dashboard Interface**: Modern web interface for all configurations
 - **Comprehensive Moderation**: Full suite including anti-raid, auto-mod, welcome system
 - **XP & Leveling**: Complete progression system with rewards and leaderboards
 - **Role Management**: Reaction roles and self-assignable systems
 - **Scheduled Messages**: Cron-based automation with variable support
 - **Security Integration**: VirusTotal and Google Safe Browsing APIs
-- **Dashboard Interface**: Modern web interface for all configurations
+- **🌐 Multi-language Support**: Complete internationalization with 7 languages
+- **📊 Enhanced Analytics**: Detailed usage statistics and performance metrics
 
 ### Planned Features 🚧
-- **📊 Enhanced Analytics**: Detailed usage statistics and performance metrics
-- **🌐 Multi-language**: Complete internationalization support
 - **🎮 Game Integration**: Enhanced gaming features and social platform connections
 - **📱 Mobile Dashboard**: Responsive mobile interface improvements
 - **🎨 Custom Themes**: Theme builder and community theme sharing
