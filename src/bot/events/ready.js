@@ -3,6 +3,7 @@ const { ActivityType } = require('discord.js');
 // Services
 const { startYouTubeWatcher } = require('../services/youtube');
 const { startTwitchWatcher } = require('../services/twitch');
+const { startCOCWatcher } = require('../watchers/clashofclans');
 
 function setupReadyHandler(client, store, startTimestamp, commandMap) {
   client.once('ready', () => {
@@ -71,6 +72,13 @@ function setupReadyHandler(client, store, startTimestamp, commandMap) {
       startTwitchWatcher(client);
     } catch(e) { 
       console.warn('Twitch watcher failed to start', e.message); 
+    }
+    
+    // Start COC watcher (announces clan activities if env configured)
+    try {
+      startCOCWatcher(client);
+    } catch(e) { 
+      console.warn('COC watcher failed to start', e.message); 
     }
     
     // Set up daily stats reset (every 24 hours at midnight UTC)
