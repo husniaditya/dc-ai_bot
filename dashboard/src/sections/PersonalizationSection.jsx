@@ -2,9 +2,14 @@ import React from 'react';
 import LoadingSection from '../components/LoadingSection';
 import { useI18n } from '../i18n';
 
-export default function PersonalizationSection({ personalization, personalizationLoading, personalizationDirty, resetPersonalization, savePersonalization, handleAvatarFile, renderStatusDot, setPersonalization }) {
+export default function PersonalizationSection({ personalization, personalizationLoading, personalizationDirty, resetPersonalization, savePersonalization, handleAvatarFile, renderStatusDot, setPersonalization, selectedGuild }) {
   const { t } = useI18n();
   const showOverlay = personalizationLoading;
+  
+  // Enable global settings only for specific guild
+  // selectedGuild is a string (guild ID), not an object
+  const isAdminGuild = selectedGuild === '935480450707759165';
+  
   return (
     <LoadingSection
       loading={showOverlay}
@@ -23,35 +28,39 @@ export default function PersonalizationSection({ personalization, personalizatio
             <label className="form-label mb-1">{t('personalization.fields.nickname')}</label>
             <input className="form-control" value={personalization.nickname||''} onChange={e=>setPersonalization(p=>({...p,nickname:e.target.value}))} placeholder={t('personalization.fields.nicknamePlaceholder')} />
           </div>
-          <div>
-            <label className="form-label mb-1">{t('personalization.fields.activityType')}</label>
-            <select className="form-select" value={personalization.activityType||''} onChange={e=>setPersonalization(p=>({...p,activityType:e.target.value||null}))}>
-              <option value="">{t('personalization.activityTypes.none')}</option>
-              <option value="PLAYING">{t('personalization.activityTypes.playing')}</option>
-              <option value="LISTENING">{t('personalization.activityTypes.listening')}</option>
-              <option value="WATCHING">{t('personalization.activityTypes.watching')}</option>
-              <option value="COMPETING">{t('personalization.activityTypes.competing')}</option>
-            </select>
-          </div>
-          <div>
-            <label className="form-label mb-1">{t('personalization.fields.activityText')}</label>
-            <input className="form-control" value={personalization.activityText||''} onChange={e=>setPersonalization(p=>({...p,activityText:e.target.value}))} placeholder={t('personalization.fields.activityTextPlaceholder')} />
-          </div>
-          <div>
-            <label className="form-label mb-1">{t('personalization.fields.status')}</label>
-            <select className="form-select" value={personalization.status||''} onChange={e=>setPersonalization(p=>({...p,status:e.target.value||null}))}>
-              <option value="">{t('personalization.statuses.default')}</option>
-              <option value="online">{t('personalization.statuses.online')}</option>
-              <option value="idle">{t('personalization.statuses.idle')}</option>
-              <option value="dnd">{t('personalization.statuses.dnd')}</option>
-              <option value="invisible">{t('personalization.statuses.invisible')}</option>
-            </select>
-          </div>
-          <div>
-            <label className="form-label mb-1">{t('personalization.fields.avatar')}</label>
-            <input className="form-control" type="file" accept="image/png,image/jpeg" onChange={handleAvatarFile} />
-            {personalization.avatarBase64 && <div className="mt-2"><img src={personalization.avatarBase64} alt="avatar preview" style={{maxWidth:120,borderRadius:'12px'}} /></div>}
-          </div>
+          {isAdminGuild && (
+            <>
+              <div>
+                <label className="form-label mb-1">{t('personalization.fields.activityType')}</label>
+                <select className="form-select" value={personalization.activityType||''} onChange={e=>setPersonalization(p=>({...p,activityType:e.target.value||null}))}>
+                  <option value="">{t('personalization.activityTypes.none')}</option>
+                  <option value="PLAYING">{t('personalization.activityTypes.playing')}</option>
+                  <option value="LISTENING">{t('personalization.activityTypes.listening')}</option>
+                  <option value="WATCHING">{t('personalization.activityTypes.watching')}</option>
+                  <option value="COMPETING">{t('personalization.activityTypes.competing')}</option>
+                </select>
+              </div>
+              <div>
+                <label className="form-label mb-1">{t('personalization.fields.activityText')}</label>
+                <input className="form-control" value={personalization.activityText||''} onChange={e=>setPersonalization(p=>({...p,activityText:e.target.value}))} placeholder={t('personalization.fields.activityTextPlaceholder')} />
+              </div>
+              <div>
+                <label className="form-label mb-1">{t('personalization.fields.status')}</label>
+                <select className="form-select" value={personalization.status||''} onChange={e=>setPersonalization(p=>({...p,status:e.target.value||null}))}>
+                  <option value="">{t('personalization.statuses.default')}</option>
+                  <option value="online">{t('personalization.statuses.online')}</option>
+                  <option value="idle">{t('personalization.statuses.idle')}</option>
+                  <option value="dnd">{t('personalization.statuses.dnd')}</option>
+                  <option value="invisible">{t('personalization.statuses.invisible')}</option>
+                </select>
+              </div>
+              <div>
+                <label className="form-label mb-1">{t('personalization.fields.avatar')}</label>
+                <input className="form-control" type="file" accept="image/png,image/jpeg" onChange={handleAvatarFile} />
+                {personalization.avatarBase64 && <div className="mt-2"><img src={personalization.avatarBase64} alt="avatar preview" style={{maxWidth:120,borderRadius:'12px'}} /></div>}
+              </div>
+            </>
+          )}
           <div className="d-flex gap-2 justify-content-end">
             {personalizationDirty() && <button type="button" className="btn btn-outline-secondary btn-sm" onClick={resetPersonalization}><i className="fa-solid fa-rotate-left me-1"/>{t('common.reset')}</button>}
             <button className="btn btn-brand" disabled={!personalizationDirty()} onClick={savePersonalization}><i className="fa-solid fa-floppy-disk me-2" />{t('common.save')}</button>

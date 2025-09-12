@@ -3922,7 +3922,306 @@ html:not(.dark) {
   }
 }
 
-/* Extra mobile safety for very small screens */
+/* Auto section mobile responsive enhancements */
+@media (max-width: 768px) {
+  /* Force mobile layout with CSS-only fallback */
+  .table-responsive.table-modern-shell {
+    display: none !important;
+  }
+  
+  .auto-cards-list {
+    display: block !important;
+  }
+  
+  /* Auto section header mobile adjustments */
+  .auto-head {
+    flex-wrap: wrap !important;
+    gap: 0.5rem !important;
+    margin-bottom: 1rem !important;
+  }
+  
+  .auto-head .auto-head-search {
+    order: 1;
+    flex: 1 1 100% !important;
+    min-width: unset !important;
+    margin-bottom: 0.5rem;
+  }
+  
+  .auto-head .auto-head-actions {
+    order: 2;
+    flex: 1 1 auto !important;
+    justify-content: space-between;
+    width: 100%;
+  }
+  
+  .auto-head .auto-head-actions .btn {
+    flex: 1 !important;
+    max-width: calc(50% - 0.25rem);
+    font-size: 0.75rem !important;
+    padding: 0.4rem 0.5rem !important;
+  }
+  
+  /* Stat cards mobile layout */
+  .stat-cards {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr 1fr !important;
+    gap: 0.5rem !important;
+    margin-bottom: 1rem !important;
+  }
+  
+  .stat-card {
+    padding: 0.75rem 0.5rem !important;
+    text-align: center !important;
+  }
+  
+  .stat-card h6 {
+    font-size: 0.65rem !important;
+    margin-bottom: 0.25rem !important;
+  }
+  
+  .stat-card .value {
+    font-size: 1.1rem !important;
+  }
+  
+  /* Bulk bar mobile improvements */
+  .bulk-bar {
+    flex-wrap: wrap !important;
+    gap: 0.4rem !important;
+    padding: 0.5rem !important;
+  }
+  
+  .bulk-bar strong {
+    flex: 1 1 100% !important;
+    margin-bottom: 0.25rem;
+    font-size: 0.75rem !important;
+  }
+  
+  .bulk-bar .d-flex:not(.ms-auto) {
+    flex: 1 1 auto !important;
+    justify-content: space-between;
+    width: 100%;
+  }
+  
+  .bulk-bar .ms-auto {
+    flex: 1 1 100% !important;
+    margin: 0.25rem 0 0 0 !important;
+    justify-content: space-between !important;
+  }
+  
+  /* Mobile sticky bulk bar */
+  .bulk-bar-mobile-sticky {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 100 !important;
+    background: var(--glass-bg) !important;
+    backdrop-filter: blur(10px) !important;
+    border-top: 1px solid var(--glass-border) !important;
+    border-bottom: 1px solid var(--glass-border) !important;
+    margin: 0 -1rem 1rem -1rem !important;
+    padding: 0.75rem 1rem !important;
+  }
+  
+  /* Auto cards mobile enhancements */
+  .auto-cards-list {
+    gap: 0.5rem !important;
+  }
+  
+  .auto-card {
+    padding: 0.75rem !important;
+    margin: 0 !important;
+    min-height: auto !important;
+    overflow: visible !important;
+  }
+  
+  .auto-card-row.top {
+    margin-bottom: 0.5rem !important;
+  }
+  
+  .auto-card-row.pattern {
+    margin-bottom: 0.5rem !important;
+    gap: 0.4rem !important;
+  }
+  
+  .auto-card-row.replies {
+    margin-bottom: 0.6rem !important;
+  }
+  
+  .auto-card-row.pattern .pattern-text {
+    font-size: 0.65rem !important;
+    padding: 0.15rem 0.35rem !important;
+  }
+  
+  .auto-card-row.pattern .match-type-badge {
+    font-size: 0.6rem !important;
+  }
+  
+  .auto-card-row.pattern .flags-badge {
+    font-size: 0.6rem !important;
+    background: rgba(255,255,255,0.1) !important;
+    padding: 0.1rem 0.3rem !important;
+    border-radius: 4px !important;
+  }
+  
+  .auto-card-row.replies {
+    margin-bottom: 0.5rem !important;
+  }
+  
+  .auto-card-row.replies .replies-preview {
+    font-size: 0.7rem !important;
+    line-height: 1.3 !important;
+    color: var(--text-muted) !important;
+  }
+  
+  .auto-card-row.actions {
+    gap: 0.4rem !important;
+    flex-wrap: wrap !important;
+    justify-content: stretch !important;
+    margin-top: 0.6rem !important;
+  }
+  
+  .auto-card-row.actions .btn {
+    flex: 1 1 auto !important;
+    min-width: calc(50% - 0.2rem) !important;
+    max-width: calc(50% - 0.2rem) !important;
+    font-size: 0.65rem !important;
+    padding: 0.3rem 0.4rem !important;
+    text-align: center !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+  
+  /* Bulk bar mobile improvements */
+  .bulk-bar-mobile-sticky {
+    padding: 0.5rem 0.75rem !important;
+    background: rgba(0,0,0,0.85) !important;
+    backdrop-filter: blur(10px) !important;
+    border-bottom: 1px solid rgba(255,255,255,0.1) !important;
+  }
+  
+  .bulk-bar .d-flex {
+    gap: 0.4rem !important;
+    flex-wrap: wrap !important;
+    align-items: center !important;
+  }
+  
+  .bulk-bar .btn {
+    font-size: 0.65rem !important;
+    padding: 0.25rem 0.4rem !important;
+    min-width: auto !important;
+    flex: 0 1 auto !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    max-width: none !important;
+  }
+  
+  /* Make bulk counter more prominent on mobile */
+  .bulk-bar strong.small {
+    font-size: 0.7rem !important;
+    color: var(--accent) !important;
+    flex: 1 1 100% !important;
+    margin-bottom: 0.3rem !important;
+  }
+  
+  .auto-key-btn {
+    background: none !important;
+    border: none !important;
+    color: var(--accent) !important;
+    font-weight: 600 !important;
+    padding: 0 !important;
+    font-size: 0.8rem !important;
+    cursor: pointer !important;
+    text-align: left !important;
+  }
+  
+  /* Pagination mobile improvements */
+  .auto-section .d-flex.small.mt-2 {
+    flex-wrap: wrap !important;
+    gap: 0.5rem !important;
+    font-size: 0.7rem !important;
+  }
+  
+  .auto-section .d-flex.small.mt-2 > div:first-child {
+    flex: 1 1 100% !important;
+    text-align: center !important;
+    margin-bottom: 0.25rem;
+  }
+  
+  .auto-section .d-flex.small.mt-2 .ms-auto {
+    flex: 1 1 auto !important;
+    margin: 0 !important;
+    justify-content: center !important;
+  }
+  
+  /* Regex tester mobile adjustments */
+  .card.card-glass .card-body.row.g-3 {
+    margin: 0 !important;
+  }
+  
+  .card.card-glass .card-body.row.g-3 > div {
+    padding: 0.25rem !important;
+  }
+  
+  .card.card-glass .card-body.row.g-3 .col-md-4,
+  .card.card-glass .card-body.row.g-3 .col-md-2,
+  .card.card-glass .card-body.row.g-3 .col-md-6 {
+    flex: 1 1 100% !important;
+    max-width: 100% !important;
+  }
+  
+  .card.card-glass .card-body.row.g-3 .col-md-2.col-4 {
+    flex: 1 1 50% !important;
+    max-width: 50% !important;
+  }
+  
+  .card.card-glass .card-body.row.g-3 .d-flex.gap-2 {
+    gap: 0.4rem !important;
+    flex-wrap: wrap !important;
+  }
+  
+  .card.card-glass .card-body.row.g-3 .d-flex.gap-2 .btn {
+    flex: 1 !important;
+    min-width: calc(50% - 0.2rem) !important;
+  }
+}
+
+/* Extra small mobile devices */
+@media (max-width: 480px) {
+  .auto-head .auto-head-actions .btn {
+    font-size: 0.7rem !important;
+    padding: 0.35rem 0.4rem !important;
+  }
+  
+  .auto-head .auto-head-actions .btn .fa-solid {
+    margin-right: 0.2rem !important;
+  }
+  
+  .stat-card {
+    padding: 0.5rem 0.25rem !important;
+  }
+  
+  .stat-card h6 {
+    font-size: 0.6rem !important;
+  }
+  
+  .stat-card .value {
+    font-size: 1rem !important;
+  }
+  
+  .auto-card {
+    padding: 0.6rem !important;
+  }
+  
+  .bulk-bar {
+    padding: 0.4rem !important;
+  }
+  
+  .bulk-bar .btn {
+    font-size: 0.65rem !important;
+    padding: 0.3rem 0.4rem !important;
+  }
+}
 @media (max-width: 480px) {
   .modal-dialog {
     margin: 0.5rem !important;
@@ -5504,5 +5803,27 @@ html:not(.dark) .info-label {
   
   .info-label {
     font-size: 0.7rem;
+  }
+}
+
+/* Mobile responsive fallback - Force mobile layout */
+@media (max-width: 768px) {
+  /* Hide desktop table completely */
+  .table-responsive {
+    display: none !important;
+  }
+  
+  /* Show mobile cards */
+  .auto-cards-list {
+    display: block !important;
+  }
+  
+  /* Force visibility override for Bootstrap classes */
+  .auto-cards-list.d-none {
+    display: block !important;
+  }
+  
+  .table-responsive.d-block {
+    display: none !important;
   }
 }

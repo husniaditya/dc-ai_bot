@@ -474,6 +474,9 @@
       "scheduler": {
         "title": "Scheduler"
       },
+      "coc": {
+        "title": "Clash of Clans"
+      },
       "streaming": {
         "title": "Streaming Integration"
       }
@@ -679,6 +682,50 @@
       "twitchdebug": {
         "usage": "/twitchdebug action:<config|status|test|resolve>",
         "desc": "Debug Twitch integration and test notifications."
+      },
+      "coc clan": {
+        "usage": "/coc clan [tag]",
+        "desc": "Get clan information by tag or configured clan."
+      },
+      "coc player": {
+        "usage": "/coc player <tag>",
+        "desc": "Get player profile information."
+      },
+      "coc war": {
+        "usage": "/coc war [tag]",
+        "desc": "Get current war information for a clan."
+      },
+      "coc search": {
+        "usage": "/coc search <type> <query>",
+        "desc": "Search for clans or players."
+      },
+      "coc compare": {
+        "usage": "/coc compare <player1> <player2>",
+        "desc": "Compare two players' statistics."
+      },
+      "coc attacks": {
+        "usage": "/coc attacks <player_tag>",
+        "desc": "Show war attack history for a player."
+      },
+      "coc top": {
+        "usage": "/coc top <type> [limit]",
+        "desc": "Show top players in various categories."
+      },
+      "coc stats": {
+        "usage": "/coc stats [tag]",
+        "desc": "Get detailed clan or player statistics."
+      },
+      "coc warlog": {
+        "usage": "/coc warlog [tag] [limit]",
+        "desc": "Show war log history for a clan."
+      },
+      "coc watch": {
+        "usage": "/coc watch <action> [tag]",
+        "desc": "Manage war watching for clans (requires Manage Server)."
+      },
+      "coc config": {
+        "usage": "/coc config <setting> <value>",
+        "desc": "Configure COC integration settings (requires Manage Server)."
       }
     }
   },
@@ -694,7 +741,8 @@
       "status": "Status",
       "avatar": "Avatar Image",
       "preview": "Live Preview",
-      "permissionsNote": "Nickname & avatar require bot permissions; activity applies globally per shard if implemented.",
+      "permissionsNote": "Only bot nickname can be changed per server. Avatar, status, and activity changes are not supported by Discord.",
+      "globalSettingNote": "This setting affects all servers and can only be changed by bot administrators",
       "currentBotName": "Current Bot Name",
       "defaultStatus": "Default status",
       "noActivity": "No activity set",
@@ -1755,7 +1803,7 @@
       },
       "clashofclans": {
         "label": "Clash of Clans",
-        "desc": "Clan war progress and updates (planned)"
+        "desc": "Clan war progress, member updates, and donation tracking"
       },
       "fortnite": {
         "label": "Fortnite",
@@ -1778,6 +1826,12 @@
           "videoTitle": "Awesome New Upload",
           "publishedAtRelative": "just now",
           "memberOnly": " (Members Only)"
+        },
+        "clashofclans": {
+          "clanName": "Example Clan",
+          "warState": "in war",
+          "warOpponent": "Enemy Clan",
+          "warResult": "Victory"
         }
       }
     },
@@ -1864,6 +1918,57 @@
         "resolvedTo": "Successfully changed to {{username}}",
         "resolveFailed": "Couldn't connect to the streamer"
       }
+    },
+    "clashofclans": {
+      "fields": {
+        "clanTag": "Clan Tag",
+        "clanTagHint": "Enter your clan tag (e.g., #ABC123)",
+        "clanName": "Clan Name", 
+        "clanNameHint": "Enter your clan name (e.g., Elite Warriors)",
+        "warAnnouncements": "War Announcements",
+        "memberAnnouncements": "Member Announcements", 
+        "donationAnnouncements": "Donation Announcements"
+      },
+      "announce": {
+        "war": "War",
+        "member": "Member",
+        "donation": "Donation",
+        "globalMentions": "Global Mention Targets",
+        "globalMentionsHelp": "These roles/users will be mentioned for all Clash of Clans notifications (wars, members, donations)"
+      },
+      "sections": {
+        "clanManagement": "Clan Management",
+        "trackingFeatures": "Tracking Features",
+        "warStartTemplate": "War Start Template",
+        "warEndTemplate": "War End Template",
+        "memberJoinTemplate": "Member Join Template",
+        "donationTemplate": "Donation Template"
+      },
+      "clans": {
+        "addClan": "Add Clan",
+        "clanTagPlaceholder": "Enter clan tag (e.g., 2Y0YRGG0)",
+        "noClans": "No clans added yet."
+      },
+      "tracking": {
+        "trackWars": "Track Clan Wars",
+        "trackMembers": "Track Member Changes", 
+        "trackDonations": "Track Donations",
+        "donationThreshold": "Minimum Donation Threshold",
+        "donationThresholdHint": "Minimum donations per week to trigger announcements"
+      },
+      "templates": {
+        "warStartPlaceholder": "🛡️ War started against {warOpponent}! Preparation ends {warEndTime}. Good luck {roleMention}!",
+        "warEndPlaceholder": "⚔️ War against {warOpponent} ended! Result: {warResult} - {warStars} stars with {warDestructionPercentage}% destruction. Great job {roleMention}!",
+        "memberJoinPlaceholder": "👋 New member joined {clanName}! We now have {memberCount} members. Welcome!",
+        "donationPlaceholder": "💎 Weekly donations summary for {clanName}: Top contributors this week! {roleMention}"
+      },
+      "toasts": {
+        "invalidTag": "Invalid clan tag format",
+        "alreadyTracking": "Already tracking clan {{tag}}",
+        "added": "Added clan {{tag}} to tracking list",
+        "addFailed": "Failed to add clan"
+      },
+      "intervalHint": "How often to check for clan updates (minimum 5 minutes, recommended 1 hour)"
     },
     "leveling": "XP & Leveling",
     "economy": "Economy System",

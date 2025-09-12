@@ -473,6 +473,9 @@
       "scheduler": {
         "title": "排程器"
       },
+      "coc": {
+        "title": "部落衝突"
+      },
       "streaming": {
         "title": "串流整合"
       }
@@ -678,6 +681,50 @@
       "twitchdebug": {
         "usage": "/twitchdebug action:<config|status|test|resolve>",
         "desc": "除錯 Twitch 整合並測試通知。"
+      },
+      "coc clan": {
+        "usage": "/coc clan [tag]",
+        "desc": "透過標籤或已設定的部落取得部落資訊。"
+      },
+      "coc player": {
+        "usage": "/coc player <tag>",
+        "desc": "取得玩家個人檔案資訊。"
+      },
+      "coc war": {
+        "usage": "/coc war [tag]",
+        "desc": "取得部落目前的戰爭資訊。"
+      },
+      "coc search": {
+        "usage": "/coc search <type> <query>",
+        "desc": "搜尋部落或玩家。"
+      },
+      "coc compare": {
+        "usage": "/coc compare <player1> <player2>",
+        "desc": "比較兩位玩家的統計資料。"
+      },
+      "coc attacks": {
+        "usage": "/coc attacks <player_tag>",
+        "desc": "顯示玩家的戰爭攻擊歷史記錄。"
+      },
+      "coc top": {
+        "usage": "/coc top <type> [limit]",
+        "desc": "顯示各類別的頂尖玩家。"
+      },
+      "coc stats": {
+        "usage": "/coc stats [tag]",
+        "desc": "取得詳細的部落或玩家統計資料。"
+      },
+      "coc warlog": {
+        "usage": "/coc warlog [tag] [limit]",
+        "desc": "顯示部落的戰爭記錄歷史。"
+      },
+      "coc watch": {
+        "usage": "/coc watch <action> [tag]",
+        "desc": "管理部落戰爭監控 (需要管理伺服器權限)。"
+      },
+      "coc config": {
+        "usage": "/coc config <setting> <value>",
+        "desc": "設定 COC 整合設定 (需要管理伺服器權限)。"
       }
     }
   },
@@ -693,7 +740,8 @@
       "status": "狀態",
       "avatar": "頭像圖片",
       "preview": "即時預覽",
-      "permissionsNote": "暱稱和頭像需要機器人權限；活動如果實作會全分片適用。",
+      "permissionsNote": "每個伺服器只能更改機器人的暱稱。Discord 不支援更改頭像、狀態和活動。",
+      "globalSettingNote": "此設定會影響所有伺服器，僅能由機器人管理員變更",
       "currentBotName": "目前機器人名稱",
       "defaultStatus": "預設狀態",
       "noActivity": "尚未設定活動",
@@ -1747,7 +1795,7 @@
       },
       "clashofclans": {
         "label": "Clash of Clans",
-        "desc": "部落戰更新與進度（規劃中）"
+        "desc": "追蹤部落戰爭、成員和捐贈活動"
       },
       "fortnite": {
         "label": "Fortnite",
@@ -1856,6 +1904,57 @@
         "resolvedTo": "已解析為 {{username}}",
         "resolveFailed": "無法解析實況主"
       }
+    },
+    "clashofclans": {
+      "fields": {
+        "clanTag": "部落標籤",
+        "clanTagHint": "輸入您的部落標籤（例如：#ABC123）",
+        "clanName": "部落名稱",
+        "clanNameHint": "輸入您的部落名稱（例如：精英戰士）",
+        "warAnnouncements": "戰爭公告",
+        "memberAnnouncements": "成員公告",
+        "donationAnnouncements": "捐贈公告"
+      },
+      "announce": {
+        "war": "戰爭",
+        "member": "成員",
+        "donation": "捐贈",
+        "globalMentions": "全域提及目標",
+        "globalMentionsHelp": "這些角色/用戶將在所有部落衝突通知中被提及（戰爭、成員、捐贈）"
+      },
+      "sections": {
+        "clanManagement": "部落管理",
+        "trackingFeatures": "追蹤功能",
+        "warStartTemplate": "戰爭開始範本",
+        "warEndTemplate": "戰爭結束範本",
+        "memberJoinTemplate": "新成員範本",
+        "donationTemplate": "捐贈範本"
+      },
+      "clans": {
+        "addClan": "新增部落",
+        "clanTagPlaceholder": "輸入部落標籤（例如：2Y0YRGG0）",
+        "noClans": "尚未新增任何部落。"
+      },
+      "tracking": {
+        "trackWars": "追蹤部落戰爭",
+        "trackMembers": "追蹤成員變化",
+        "trackDonations": "追蹤捐贈",
+        "donationThreshold": "最小捐贈門檻",
+        "donationThresholdHint": "觸發公告的每週最小捐贈數量"
+      },
+      "templates": {
+        "warStartPlaceholder": "🛡️ 與 {warOpponent} 的戰爭開始了！準備階段於 {warEndTime} 結束。加油 {roleMention}！",
+        "warEndPlaceholder": "⚔️ 與 {warOpponent} 的戰爭結束了！結果：{warResult} - {warStars} 顆星，{warDestructionPercentage}% 摧毀。幹得好 {roleMention}！",
+        "memberJoinPlaceholder": "👋 新成員加入了 {clanName}！我們現在有 {memberCount} 位成員。歡迎！",
+        "donationPlaceholder": "💎 {clanName} 的每週捐贈摘要：本週頂級捐贈者！{roleMention}"
+      },
+      "toasts": {
+        "invalidTag": "無效的部落標籤格式",
+        "alreadyTracking": "已在追蹤部落 {{tag}}",
+        "added": "已將部落 {{tag}} 新增至追蹤清單",
+        "addFailed": "新增部落失敗"
+      },
+      "intervalHint": "檢查部落更新的頻率（最少 5 分鐘，建議 1 小時）"
     },
     "leveling": "經驗值與等級系統",
     "economy": "經濟系統",

@@ -1281,6 +1281,22 @@ export default function App(){
         { name:'scheduler run', usage:'/scheduler run <id>', desc:'Manually trigger a scheduled message now (requires Manage Server).', requiresManage:true }
       ]
     },
+    {
+      key: 'coc', title: 'Clash of Clans', icon: 'fa-shield', accent: '#ff6b35',
+      items: [
+        { name:'coc clan', usage:'/coc clan [tag]', desc:'Get clan information by tag or configured clan.' },
+        { name:'coc player', usage:'/coc player <tag>', desc:'Get player profile information.' },
+        { name:'coc war', usage:'/coc war [tag]', desc:'Get current war information for a clan.' },
+        { name:'coc search', usage:'/coc search <type> <query>', desc:'Search for clans or players.' },
+        { name:'coc compare', usage:'/coc compare <player1> <player2>', desc:'Compare two players\' statistics.' },
+        { name:'coc attacks', usage:'/coc attacks <player_tag>', desc:'Show war attack history for a player.' },
+        { name:'coc top', usage:'/coc top <type> [limit]', desc:'Show top players in various categories.' },
+        { name:'coc stats', usage:'/coc stats [tag]', desc:'Get detailed clan or player statistics.' },
+        { name:'coc warlog', usage:'/coc warlog [tag] [limit]', desc:'Show war log history for a clan.' },
+        { name:'coc watch', usage:'/coc watch <action> [tag]', desc:'Manage war watching for clans (requires Manage Server).', requiresManage:true },
+        { name:'coc config', usage:'/coc config <setting> <value>', desc:'Configure COC integration settings (requires Manage Server).', requiresManage:true }
+      ]
+    },
     // Streaming group (conditionally shown if user has Manage Server permission in guild)
     {
       key: 'streaming', title: 'Streaming Integration', icon: 'fa-video', accent: '#7c3aed',
@@ -1362,7 +1378,7 @@ export default function App(){
     const color = map[st] || '#16a34a';
     return <span style={{display:'inline-block',width:10,height:10,borderRadius:'50%',background:color,marginRight:6,boxShadow:'0 0 0 2px rgba(255,255,255,0.1)'}}></span>;
   }
-  const personalizationContent = <PersonalizationSection personalization={personalization} personalizationLoading={personalizationLoading} personalizationDirty={personalizationDirty} resetPersonalization={resetPersonalization} savePersonalization={savePersonalization} handleAvatarFile={handleAvatarFile} renderStatusDot={renderStatusDot} setPersonalization={setPersonalization} />;
+  const personalizationContent = <PersonalizationSection personalization={personalization} personalizationLoading={personalizationLoading} personalizationDirty={personalizationDirty} resetPersonalization={resetPersonalization} savePersonalization={savePersonalization} handleAvatarFile={handleAvatarFile} renderStatusDot={renderStatusDot} setPersonalization={setPersonalization} selectedGuild={selectedGuild} />;
 
   // saveWelcome redefined above with dirty tracking
   // Channel selection placeholder (requires channel list API future). For now free text.

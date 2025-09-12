@@ -458,6 +458,9 @@
       "scheduler": {
         "title": "スケジューラー"
       },
+      "coc": {
+        "title": "クラッシュ・オブ・クラン"
+      },
       "streaming": {
         "title": "ストリーミング連携"
       }
@@ -663,6 +666,50 @@
       "twitchdebug": {
         "usage": "/twitchdebug action:<config|status|test|resolve>",
         "desc": "Twitch連携のデバッグと通知テスト。"
+      },
+      "coc clan": {
+        "usage": "/coc clan [tag]",
+        "desc": "タグまたは設定されたクランの情報を取得。"
+      },
+      "coc player": {
+        "usage": "/coc player <tag>",
+        "desc": "プレイヤーのプロフィール情報を取得。"
+      },
+      "coc war": {
+        "usage": "/coc war [tag]",
+        "desc": "クランの現在の戦争情報を取得。"
+      },
+      "coc search": {
+        "usage": "/coc search <type> <query>",
+        "desc": "クランまたはプレイヤーを検索。"
+      },
+      "coc compare": {
+        "usage": "/coc compare <player1> <player2>",
+        "desc": "2人のプレイヤーの統計を比較。"
+      },
+      "coc attacks": {
+        "usage": "/coc attacks <player_tag>",
+        "desc": "プレイヤーの戦争攻撃履歴を表示。"
+      },
+      "coc top": {
+        "usage": "/coc top <type> [limit]",
+        "desc": "各カテゴリのトッププレイヤーを表示。"
+      },
+      "coc stats": {
+        "usage": "/coc stats [tag]",
+        "desc": "詳細なクランまたはプレイヤー統計を取得。"
+      },
+      "coc warlog": {
+        "usage": "/coc warlog [tag] [limit]",
+        "desc": "クランの戦争ログ履歴を表示。"
+      },
+      "coc watch": {
+        "usage": "/coc watch <action> [tag]",
+        "desc": "クランの戦争監視を管理（サーバー管理権限が必要）。"
+      },
+      "coc config": {
+        "usage": "/coc config <setting> <value>",
+        "desc": "COC連携設定を構成（サーバー管理権限が必要）。"
       }
     }
   },
@@ -678,7 +725,8 @@
       "status": "ステータス",
       "avatar": "アバター画像",
       "preview": "ライブプレビュー",
-      "permissionsNote": "ニックネームとアバターはボット権限が必要。アクティビティは実装時にシャード単位でグローバル適用。",
+      "permissionsNote": "サーバー単位で変更できるのはボットのニックネームのみです。アバター、ステータス、アクティビティの変更はDiscord でサポートされていません。",
+      "globalSettingNote": "この設定は全てのサーバーに影響し、ボット管理者のみが変更可能です",
       "currentBotName": "現在のボット名",
       "defaultStatus": "既定のステータス",
       "noActivity": "アクティビティ未設定",
@@ -1711,6 +1759,10 @@
         "label": "Twitch",
         "desc": "お気に入りの配信者がライブ配信を開始したら告知します"
       },
+      "clashofclans": {
+        "label": "Clash of Clans",
+        "desc": "クランの戦争、メンバー、寄付の活動を追跡します"
+      },
       "pubg": {
         "label": "PUBG",
         "desc": "プレイヤーの統計、試合要約、お知らせ（予定）"
@@ -1726,10 +1778,6 @@
       "mobilelegends": {
         "label": "Mobile Legends",
         "desc": "チームの更新＆試合のお知らせ（予定）"
-      },
-      "clashofclans": {
-        "label": "Clash of Clans",
-        "desc": "クラン戦の更新、進捗状況（予定）"
       },
       "fortnite": {
         "label": "Fortnite",
@@ -1838,6 +1886,57 @@
         "resolvedTo": "{{username}}に解決されました",
         "resolveFailed": "配信者を解決できませんでした"
       }
+    },
+    "clashofclans": {
+      "fields": {
+        "clanTag": "クランタグ",
+        "clanTagHint": "クランタグを入力してください（例：#ABC123）",
+        "clanName": "クラン名",
+        "clanNameHint": "クラン名を入力してください（例：エリート戦士）",
+        "warAnnouncements": "戦争アナウンス",
+        "memberAnnouncements": "メンバーアナウンス",
+        "donationAnnouncements": "寄付アナウンス"
+      },
+      "announce": {
+        "war": "戦争",
+        "member": "メンバー",
+        "donation": "寄付",
+        "globalMentions": "グローバルメンション",
+        "globalMentionsHelp": "これらのロール/ユーザーは、すべてのクラッシュ・オブ・クラン通知でメンションされます（戦争、メンバー、寄付）"
+      },
+      "sections": {
+        "clanManagement": "クラン管理",
+        "trackingFeatures": "追跡機能",
+        "warStartTemplate": "戦争開始テンプレート",
+        "warEndTemplate": "戦争終了テンプレート",
+        "memberJoinTemplate": "新メンバーテンプレート",
+        "donationTemplate": "寄付テンプレート"
+      },
+      "clans": {
+        "addClan": "クランを追加",
+        "clanTagPlaceholder": "クランタグを入力（例：2Y0YRGG0）",
+        "noClans": "まだクランが追加されていません。"
+      },
+      "tracking": {
+        "trackWars": "クラン戦を追跡",
+        "trackMembers": "メンバー変更を追跡",
+        "trackDonations": "寄付を追跡",
+        "donationThreshold": "最小寄付閾値",
+        "donationThresholdHint": "アナウンスをトリガーするための週間最小寄付数"
+      },
+      "templates": {
+        "warStartPlaceholder": "🛡️ {warOpponent}との戦争が始まりました！準備は{warEndTime}に終了します。頑張れ{roleMention}！",
+        "warEndPlaceholder": "⚔️ {warOpponent}との戦争が終了しました！結果：{warResult} - {warStars}つ星で{warDestructionPercentage}%破壊。よくやった{roleMention}！",
+        "memberJoinPlaceholder": "👋 新しいメンバーが{clanName}に参加しました！現在{memberCount}メンバーです。ようこそ！",
+        "donationPlaceholder": "💎 {clanName}の週間寄付サマリー：今週のトップドナー！{roleMention}"
+      },
+      "toasts": {
+        "invalidTag": "無効なクランタグ形式",
+        "alreadyTracking": "クラン{{tag}}は既に追跡されています",
+        "added": "クラン{{tag}}を追跡リストに追加しました",
+        "addFailed": "クランの追加に失敗しました"
+      },
+      "intervalHint": "クラン更新をチェックする頻度（最小5分、推奨1時間）"
     },
     "leveling": "XPとレベルアップ",
     "economy": "経済システム",

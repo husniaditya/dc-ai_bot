@@ -238,6 +238,10 @@ export async function extractYouTubeChannelId(input){ return authFetch('/api/you
 // Twitch watcher config helpers
 export async function getTwitchConfig(guildId){ return authFetch('/api/twitch/config' + (guildId?`?guildId=${guildId}`:'')); }
 export async function updateTwitchConfig(partial, guildId){ return authFetch('/api/twitch/config' + (guildId?`?guildId=${guildId}`:''), { method:'PUT', body: JSON.stringify(partial) }); }
+
+// Clash of Clans API
+export async function getClashOfClansConfig(guildId){ return authFetch('/api/clashofclans/config' + (guildId?`?guildId=${guildId}`:'')); }
+export async function updateClashOfClansConfig(partial, guildId){ return authFetch('/api/clashofclans/config' + (guildId?`?guildId=${guildId}`:''), { method:'PUT', body: JSON.stringify(partial) }); }
 export async function resolveTwitchStreamer(input){ return authFetch('/api/twitch/resolve-streamer', { method:'POST', body: JSON.stringify({ input }) }); }
 
 // XP System config helpers
@@ -442,4 +446,4 @@ export async function deleteScheduledMessage(messageId, guildId) {
   });
 }
 
-export { login, getToken, setToken, handleAuthError };
+export { login, getToken, setToken, handleAuthError, authFetch };

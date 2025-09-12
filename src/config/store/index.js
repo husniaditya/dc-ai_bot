@@ -14,6 +14,7 @@ const commandsService = require('./services/commands');
 const personalizationService = require('./services/personalization');
 const youtubeService = require('./services/youtube');
 const twitchService = require('./services/twitch');
+const clashofclansService = require('./services/clashofclans');
 const moderationService = require('./services/moderation');
 
 async function initPersistence() {
@@ -206,6 +207,10 @@ module.exports = {
   getGuildTwitchConfig: twitchService.getGuildTwitchConfig,
   setGuildTwitchConfig: twitchService.setGuildTwitchConfig,
   invalidateGuildTwitchConfig: cache.invalidateGuildTwitchConfig,
+  
+  // Clash of Clans API
+  getGuildClashOfClansConfig: clashofclansService.getGuildClashOfClansConfig,
+  setGuildClashOfClansConfig: clashofclansService.setGuildClashOfClansConfig,
   
   // Moderation API
   getModerationFeatures: moderationService.getModerationFeatures,
