@@ -473,6 +473,9 @@
       "scheduler": {
         "title": "排程器"
       },
+      "coc": {
+        "title": "部落衝突"
+      },
       "streaming": {
         "title": "串流整合"
       }
@@ -678,6 +681,50 @@
       "twitchdebug": {
         "usage": "/twitchdebug action:<config|status|test|resolve>",
         "desc": "除錯 Twitch 整合並測試通知。"
+      },
+      "coc clan": {
+        "usage": "/coc clan [tag]",
+        "desc": "透過標籤或已設定的部落取得部落資訊。"
+      },
+      "coc player": {
+        "usage": "/coc player <tag>",
+        "desc": "取得玩家個人檔案資訊。"
+      },
+      "coc war": {
+        "usage": "/coc war [tag]",
+        "desc": "取得部落目前的戰爭資訊。"
+      },
+      "coc search": {
+        "usage": "/coc search <type> <query>",
+        "desc": "搜尋部落或玩家。"
+      },
+      "coc compare": {
+        "usage": "/coc compare <player1> <player2>",
+        "desc": "比較兩位玩家的統計資料。"
+      },
+      "coc attacks": {
+        "usage": "/coc attacks <player_tag>",
+        "desc": "顯示玩家的戰爭攻擊歷史記錄。"
+      },
+      "coc top": {
+        "usage": "/coc top <type> [limit]",
+        "desc": "顯示各類別的頂尖玩家。"
+      },
+      "coc stats": {
+        "usage": "/coc stats [tag]",
+        "desc": "取得詳細的部落或玩家統計資料。"
+      },
+      "coc warlog": {
+        "usage": "/coc warlog [tag] [limit]",
+        "desc": "顯示部落的戰爭記錄歷史。"
+      },
+      "coc watch": {
+        "usage": "/coc watch <action> [tag]",
+        "desc": "管理部落戰爭監控 (需要管理伺服器權限)。"
+      },
+      "coc config": {
+        "usage": "/coc config <setting> <value>",
+        "desc": "設定 COC 整合設定 (需要管理伺服器權限)。"
       }
     }
   },

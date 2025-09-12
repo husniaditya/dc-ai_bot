@@ -474,6 +474,9 @@
       "scheduler": {
         "title": "Scheduler"
       },
+      "coc": {
+        "title": "Clash of Clans"
+      },
       "streaming": {
         "title": "Streaming Integration"
       }
@@ -679,6 +682,50 @@
       "twitchdebug": {
         "usage": "/twitchdebug action:<config|status|test|resolve>",
         "desc": "Debug Twitch integration and test notifications."
+      },
+      "coc clan": {
+        "usage": "/coc clan [tag]",
+        "desc": "Get clan information by tag or configured clan."
+      },
+      "coc player": {
+        "usage": "/coc player <tag>",
+        "desc": "Get player profile information."
+      },
+      "coc war": {
+        "usage": "/coc war [tag]",
+        "desc": "Get current war information for a clan."
+      },
+      "coc search": {
+        "usage": "/coc search <type> <query>",
+        "desc": "Search for clans or players."
+      },
+      "coc compare": {
+        "usage": "/coc compare <player1> <player2>",
+        "desc": "Compare two players' statistics."
+      },
+      "coc attacks": {
+        "usage": "/coc attacks <player_tag>",
+        "desc": "Show war attack history for a player."
+      },
+      "coc top": {
+        "usage": "/coc top <type> [limit]",
+        "desc": "Show top players in various categories."
+      },
+      "coc stats": {
+        "usage": "/coc stats [tag]",
+        "desc": "Get detailed clan or player statistics."
+      },
+      "coc warlog": {
+        "usage": "/coc warlog [tag] [limit]",
+        "desc": "Show war log history for a clan."
+      },
+      "coc watch": {
+        "usage": "/coc watch <action> [tag]",
+        "desc": "Manage war watching for clans (requires Manage Server)."
+      },
+      "coc config": {
+        "usage": "/coc config <setting> <value>",
+        "desc": "Configure COC integration settings (requires Manage Server)."
       }
     }
   },

@@ -458,6 +458,9 @@
       "scheduler": {
         "title": "スケジューラー"
       },
+      "coc": {
+        "title": "クラッシュ・オブ・クラン"
+      },
       "streaming": {
         "title": "ストリーミング連携"
       }
@@ -663,6 +666,50 @@
       "twitchdebug": {
         "usage": "/twitchdebug action:<config|status|test|resolve>",
         "desc": "Twitch連携のデバッグと通知テスト。"
+      },
+      "coc clan": {
+        "usage": "/coc clan [tag]",
+        "desc": "タグまたは設定されたクランの情報を取得。"
+      },
+      "coc player": {
+        "usage": "/coc player <tag>",
+        "desc": "プレイヤーのプロフィール情報を取得。"
+      },
+      "coc war": {
+        "usage": "/coc war [tag]",
+        "desc": "クランの現在の戦争情報を取得。"
+      },
+      "coc search": {
+        "usage": "/coc search <type> <query>",
+        "desc": "クランまたはプレイヤーを検索。"
+      },
+      "coc compare": {
+        "usage": "/coc compare <player1> <player2>",
+        "desc": "2人のプレイヤーの統計を比較。"
+      },
+      "coc attacks": {
+        "usage": "/coc attacks <player_tag>",
+        "desc": "プレイヤーの戦争攻撃履歴を表示。"
+      },
+      "coc top": {
+        "usage": "/coc top <type> [limit]",
+        "desc": "各カテゴリのトッププレイヤーを表示。"
+      },
+      "coc stats": {
+        "usage": "/coc stats [tag]",
+        "desc": "詳細なクランまたはプレイヤー統計を取得。"
+      },
+      "coc warlog": {
+        "usage": "/coc warlog [tag] [limit]",
+        "desc": "クランの戦争ログ履歴を表示。"
+      },
+      "coc watch": {
+        "usage": "/coc watch <action> [tag]",
+        "desc": "クランの戦争監視を管理（サーバー管理権限が必要）。"
+      },
+      "coc config": {
+        "usage": "/coc config <setting> <value>",
+        "desc": "COC連携設定を構成（サーバー管理権限が必要）。"
       }
     }
   },

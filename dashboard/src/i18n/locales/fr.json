@@ -458,6 +458,9 @@
       "scheduler": {
         "title": "Planificateur"
       },
+      "coc": {
+        "title": "Clash of Clans"
+      },
       "streaming": {
         "title": "Intégration Streaming"
       }
@@ -663,6 +666,50 @@
       "twitchdebug": {
         "usage": "/twitchdebug action:<config|status|test|resolve>",
         "desc": "Déboguer l'intégration Twitch et tester les notifications."
+      },
+      "coc clan": {
+        "usage": "/coc clan [tag]",
+        "desc": "Obtenir les informations du clan par tag ou clan configuré."
+      },
+      "coc player": {
+        "usage": "/coc player <tag>",
+        "desc": "Obtenir les informations de profil du joueur."
+      },
+      "coc war": {
+        "usage": "/coc war [tag]",
+        "desc": "Obtenir les informations de guerre actuelle pour un clan."
+      },
+      "coc search": {
+        "usage": "/coc search <type> <query>",
+        "desc": "Rechercher des clans ou des joueurs."
+      },
+      "coc compare": {
+        "usage": "/coc compare <player1> <player2>",
+        "desc": "Comparer les statistiques de deux joueurs."
+      },
+      "coc attacks": {
+        "usage": "/coc attacks <player_tag>",
+        "desc": "Afficher l'historique des attaques de guerre d'un joueur."
+      },
+      "coc top": {
+        "usage": "/coc top <type> [limit]",
+        "desc": "Afficher les meilleurs joueurs dans diverses catégories."
+      },
+      "coc stats": {
+        "usage": "/coc stats [tag]",
+        "desc": "Obtenir des statistiques détaillées du clan ou du joueur."
+      },
+      "coc warlog": {
+        "usage": "/coc warlog [tag] [limit]",
+        "desc": "Afficher l'historique du journal de guerre du clan."
+      },
+      "coc watch": {
+        "usage": "/coc watch <action> [tag]",
+        "desc": "Gérer la surveillance des guerres pour les clans (nécessite Gérer le Serveur)."
+      },
+      "coc config": {
+        "usage": "/coc config <setting> <value>",
+        "desc": "Configurer les paramètres d'intégration COC (nécessite Gérer le Serveur)."
       }
     }
   },

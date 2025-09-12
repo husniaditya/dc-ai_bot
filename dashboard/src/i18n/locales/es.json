@@ -440,6 +440,7 @@
       "moderation": { "title": "Moderación y Seguridad" },
       "passive": { "title": "Pasivo / Automatización" },
       "scheduler": { "title": "Programador" },
+      "coc": { "title": "Clash of Clans" },
       "streaming": { "title": "Integración de Streaming" }
     },
     "toasts": {
@@ -496,7 +497,18 @@
       "ytstats": { "usage": "/ytstats", "desc": "Muestra caché y estadísticas de cuota del watcher de YouTube." },
       "ytdebug": { "usage": "/ytdebug", "desc": "Muestra eventos de depuración recientes del watcher de YouTube (requiere Gestionar Servidor)." },
       "twitchstats": { "usage": "/twitchstats", "desc": "Muestra caché y estadísticas de la API del watcher de Twitch." },
-      "twitchdebug": { "usage": "/twitchdebug action:<config|status|test|resolve>", "desc": "Depura la integración de Twitch y prueba notificaciones." }
+      "twitchdebug": { "usage": "/twitchdebug action:<config|status|test|resolve>", "desc": "Depura la integración de Twitch y prueba notificaciones." },
+      "coc clan": { "usage": "/coc clan [tag]", "desc": "Obtener información del clan por etiqueta o clan configurado." },
+      "coc player": { "usage": "/coc player <tag>", "desc": "Obtener información del perfil del jugador." },
+      "coc war": { "usage": "/coc war [tag]", "desc": "Obtener información de guerra actual para un clan." },
+      "coc search": { "usage": "/coc search <type> <query>", "desc": "Buscar clanes o jugadores." },
+      "coc compare": { "usage": "/coc compare <player1> <player2>", "desc": "Comparar estadísticas de dos jugadores." },
+      "coc attacks": { "usage": "/coc attacks <player_tag>", "desc": "Mostrar historial de ataques de guerra de un jugador." },
+      "coc top": { "usage": "/coc top <type> [limit]", "desc": "Mostrar mejores jugadores en varias categorías." },
+      "coc stats": { "usage": "/coc stats [tag]", "desc": "Obtener estadísticas detalladas del clan o jugador." },
+      "coc warlog": { "usage": "/coc warlog [tag] [limit]", "desc": "Mostrar historial de registro de guerras del clan." },
+      "coc watch": { "usage": "/coc watch <action> [tag]", "desc": "Gestionar vigilancia de guerras para clanes (requiere Gestionar Servidor)." },
+      "coc config": { "usage": "/coc config <setting> <value>", "desc": "Configurar ajustes de integración COC (requiere Gestionar Servidor)." }
     }
   },
   "personalization": {

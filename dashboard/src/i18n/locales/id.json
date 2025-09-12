@@ -374,6 +374,7 @@
       "moderation": { "title": "Moderasi & Keamanan" },
       "passive": { "title": "Pasif / Otomatisasi" },
       "scheduler": { "title": "Penjadwal" },
+      "coc": { "title": "Clash of Clans" },
       "streaming": { "title": "Integrasi Streaming" }
     },
     "toasts": {
@@ -439,7 +440,18 @@
       "ytstats": { "usage": "/ytstats", "desc": "Tampilkan cache & statistik kuota YouTube watcher." },
       "ytdebug": { "usage": "/ytdebug", "desc": "Tampilkan event debug YouTube watcher terbaru (butuh Kelola Server)." },
       "twitchstats": { "usage": "/twitchstats", "desc": "Tampilkan cache & statistik API Twitch watcher." },
-      "twitchdebug": { "usage": "/twitchdebug action:<config|status|test|resolve>", "desc": "Debug integrasi Twitch dan uji notifikasi." }
+      "twitchdebug": { "usage": "/twitchdebug action:<config|status|test|resolve>", "desc": "Debug integrasi Twitch dan uji notifikasi." },
+      "coc clan": { "usage": "/coc clan [tag]", "desc": "Dapatkan informasi klan berdasarkan tag atau klan yang dikonfigurasi." },
+      "coc player": { "usage": "/coc player <tag>", "desc": "Dapatkan informasi profil pemain." },
+      "coc war": { "usage": "/coc war [tag]", "desc": "Dapatkan informasi perang saat ini untuk klan." },
+      "coc search": { "usage": "/coc search <type> <query>", "desc": "Cari klan atau pemain." },
+      "coc compare": { "usage": "/coc compare <player1> <player2>", "desc": "Bandingkan statistik dua pemain." },
+      "coc attacks": { "usage": "/coc attacks <player_tag>", "desc": "Tampilkan riwayat serangan perang pemain." },
+      "coc top": { "usage": "/coc top <type> [limit]", "desc": "Tampilkan pemain teratas di berbagai kategori." },
+      "coc stats": { "usage": "/coc stats [tag]", "desc": "Dapatkan statistik klan atau pemain yang detail." },
+      "coc warlog": { "usage": "/coc warlog [tag] [limit]", "desc": "Tampilkan riwayat log perang klan." },
+      "coc watch": { "usage": "/coc watch <action> [tag]", "desc": "Kelola pengawasan perang untuk klan (butuh Kelola Server)." },
+      "coc config": { "usage": "/coc config <setting> <value>", "desc": "Konfigurasi pengaturan integrasi COC (butuh Kelola Server)." }
     }
   },
   "autosSection": {

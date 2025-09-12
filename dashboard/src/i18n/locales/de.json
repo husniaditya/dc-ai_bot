@@ -458,6 +458,9 @@
       "scheduler": {
         "title": "Planer"
       },
+      "coc": {
+        "title": "Clash of Clans"
+      },
       "streaming": {
         "title": "Streaming-Integration"
       }
@@ -663,6 +666,50 @@
       "twitchdebug": {
         "usage": "/twitchdebug action:<config|status|test|resolve>",
         "desc": "Twitch-Integration debuggen und Benachrichtigungen testen."
+      },
+      "coc clan": {
+        "usage": "/coc clan [tag]",
+        "desc": "Clan-Informationen per Tag oder konfiguriertem Clan abrufen."
+      },
+      "coc player": {
+        "usage": "/coc player <tag>",
+        "desc": "Spieler-Profilinformationen abrufen."
+      },
+      "coc war": {
+        "usage": "/coc war [tag]",
+        "desc": "Aktuelle Kriegsinformationen für einen Clan abrufen."
+      },
+      "coc search": {
+        "usage": "/coc search <type> <query>",
+        "desc": "Nach Clans oder Spielern suchen."
+      },
+      "coc compare": {
+        "usage": "/coc compare <player1> <player2>",
+        "desc": "Statistiken zweier Spieler vergleichen."
+      },
+      "coc attacks": {
+        "usage": "/coc attacks <player_tag>",
+        "desc": "Kriegsangriff-Historie eines Spielers anzeigen."
+      },
+      "coc top": {
+        "usage": "/coc top <type> [limit]",
+        "desc": "Top-Spieler in verschiedenen Kategorien anzeigen."
+      },
+      "coc stats": {
+        "usage": "/coc stats [tag]",
+        "desc": "Detaillierte Clan- oder Spielerstatistiken abrufen."
+      },
+      "coc warlog": {
+        "usage": "/coc warlog [tag] [limit]",
+        "desc": "Kriegslog-Historie des Clans anzeigen."
+      },
+      "coc watch": {
+        "usage": "/coc watch <action> [tag]",
+        "desc": "Kriegsüberwachung für Clans verwalten (erfordert Server verwalten)."
+      },
+      "coc config": {
+        "usage": "/coc config <setting> <value>",
+        "desc": "COC-Integrationseinstellungen konfigurieren (erfordert Server verwalten)."
       }
     }
   },
