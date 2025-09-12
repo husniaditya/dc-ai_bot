@@ -92,6 +92,34 @@ const defaultConfigs = {
     streamerNames: {}
   },
 
+  guildClashOfClansConfig: {
+    clans: [],
+    clanTag: '', // Single clan tag for frontend
+    clanName: '', // Clan name from API
+    warAnnounceChannelId: null,
+    memberAnnounceChannelId: null,
+    donationAnnounceChannelId: null,
+    warMentionTarget: null,
+    memberMentionTarget: null,
+    donationMentionTarget: null,
+    mentionTargets: [], // Legacy compatibility
+    enabled: false,
+    intervalSec: 3600, // 1 hour default
+    trackWars: true,
+    trackMembers: true,
+    trackDonations: true,
+    trackWarEvents: true, // Frontend field names
+    trackMemberEvents: true,
+    trackDonationEvents: true,
+    donationThreshold: 100,
+    warStartTemplate: '🛡️ War started against {warOpponent}! Preparation ends {warEndTime}. Good luck {roleMention}!',
+    warEndTemplate: '⚔️ War against {warOpponent} ended! Result: {warResult} - {warStars} stars with {warDestructionPercentage}% destruction. Great job {roleMention}!',
+    memberJoinTemplate: '👋 New member joined {clanName}! We now have {memberCount} members. Welcome!',
+    donationTemplate: '💎 Weekly donations summary for {clanName}: Top contributors this week! {roleMention}!',
+    embedEnabled: true,
+    clanData: {} // Clan data from API
+  },
+
   guildXpSettings: {
     enabled: false,
     xpPerMessage: 15,
