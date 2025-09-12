@@ -16,4 +16,5 @@ jwt-*.backup
 logs/jwt-*
 *.jwt.log
 youtube-state.json
+clashofclans-state.json
 scripts/
