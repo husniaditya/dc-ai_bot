@@ -61,7 +61,7 @@ export const SERVICES = [
     icon: 'fa-solid fa-shield', 
     color: '#16a34a', 
     descKey: 'gamesSocials.services.clashofclans.desc',
-    implemented: false
+    implemented: true
   },
   { 
     key: 'fortnite', 
@@ -107,6 +107,22 @@ export const TEMPLATE_PLACEHOLDERS = {
     '{thumbnail}',
     '{startedAt}',
     '{startedAtRelative}'
+  ],
+  clashofclans: [
+    '{clanName}',
+    '{clanTag}',
+    '{clanLevel}',
+    '{memberCount}',
+    '{description}',
+    '{warState}',
+    '{warOpponent}',
+    '{warResult}',
+    '{roleNames}',
+    '{roleMention}',
+    '{warStars}',
+    '{warDestructionPercentage}',
+    '{warEndTime}',
+    '{warPreparationStartTime}'
   ]
 };
 
@@ -137,5 +153,26 @@ export const DEFAULT_CONFIGS = {
     streamerNames: {},
     liveTemplate: '',
     announceChannelId: null
+  },
+  clashofclans: {
+    enabled: false,
+    intervalSec: 3600, // Check every hour for clan updates
+    embedEnabled: true,
+    clans: [], // Array of clan tags to track
+    mentionTargets: [],
+    clanMessages: {},
+    clanNames: {},
+    warStartTemplate: '',
+    warEndTemplate: '',
+    donationTemplate: '',
+    memberJoinTemplate: '',
+    memberLeaveTemplate: '',
+    warAnnounceChannelId: null,
+    donationAnnounceChannelId: null,
+    memberAnnounceChannelId: null,
+    trackWars: true,
+    trackDonations: false,
+    trackMemberChanges: true,
+    minDonationThreshold: 100
   }
 };

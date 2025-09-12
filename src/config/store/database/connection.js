@@ -169,6 +169,32 @@ async function initializeTables() {
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
   ) ENGINE=InnoDB`);
 
+  // Clash of Clans watcher table
+  await sqlPool.query(`CREATE TABLE IF NOT EXISTS guild_clashofclans_watch (
+    guild_id VARCHAR(32) PRIMARY KEY,
+    clans TEXT NULL,
+    clan_name TEXT NULL,
+    war_announce_channel_id VARCHAR(32) NULL,
+    member_announce_channel_id VARCHAR(32) NULL,
+    donation_announce_channel_id VARCHAR(32) NULL,
+    war_mention_target VARCHAR(512) NULL,
+    member_mention_target VARCHAR(512) NULL,
+    donation_mention_target VARCHAR(512) NULL,
+    enabled BOOLEAN NOT NULL DEFAULT 0,
+    interval_sec INT NOT NULL DEFAULT 3600,
+    track_wars BOOLEAN NOT NULL DEFAULT 1,
+    track_members BOOLEAN NOT NULL DEFAULT 1,
+    track_donations BOOLEAN NOT NULL DEFAULT 1,
+    donation_threshold INT NOT NULL DEFAULT 100,
+    war_start_template TEXT NULL,
+    war_end_template TEXT NULL,
+    member_join_template TEXT NULL,
+    donation_template TEXT NULL,
+    embed_enabled BOOLEAN NOT NULL DEFAULT 1,
+    clan_data MEDIUMTEXT NULL,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+  ) ENGINE=InnoDB`);
+
   // User and OAuth tables
   await sqlPool.query(`CREATE TABLE IF NOT EXISTS m_user (
     user_id VARCHAR(32) PRIMARY KEY,

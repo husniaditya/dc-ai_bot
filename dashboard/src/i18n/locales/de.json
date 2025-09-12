@@ -1730,7 +1730,7 @@
       },
       "clashofclans": {
         "label": "Clash of Clans",
-        "desc": "Clan-Krieg-Updates und Fortschritt (geplant)"
+        "desc": "Clan-Kriegsfortschritt, Mitglieder-Updates und Spenden-Tracking"
       },
       "fortnite": {
         "label": "Fortnite",
@@ -1839,6 +1839,57 @@
         "resolvedTo": "Gelöst zu {{username}}",
         "resolveFailed": "Konnte Streamer nicht auflösen"
       }
+    },
+    "clashofclans": {
+      "fields": {
+        "clanTag": "Clan-Tag",
+        "clanTagHint": "Geben Sie Ihren Clan-Tag ein (z.B. #ABC123)",
+        "clanName": "Clan-Name",
+        "clanNameHint": "Geben Sie Ihren Clan-Namen ein (z.B. Elite Warriors)",
+        "warAnnouncements": "Kriegsankündigungen",
+        "memberAnnouncements": "Mitgliederankündigungen", 
+        "donationAnnouncements": "Spendenankündigungen"
+      },
+      "announce": {
+        "war": "Krieg",
+        "member": "Mitglied",
+        "donation": "Spende",
+        "globalMentions": "Globale Erwähnungsziele",
+        "globalMentionsHelp": "Diese Rollen/Benutzer werden bei allen Clash of Clans-Benachrichtigungen erwähnt (Kriege, Mitglieder, Spenden)"
+      },
+      "sections": {
+        "clanManagement": "Clan-Verwaltung",
+        "trackingFeatures": "Tracking-Funktionen",
+        "warStartTemplate": "Kriegsstart-Vorlage",
+        "warEndTemplate": "Kriegsende-Vorlage",
+        "memberJoinTemplate": "Neues-Mitglied-Vorlage",
+        "donationTemplate": "Spenden-Vorlage"
+      },
+      "clans": {
+        "addClan": "Clan hinzufügen",
+        "clanTagPlaceholder": "Clan-Tag eingeben (z.B.: 2Y0YRGG0)",
+        "noClans": "Noch keine Clans hinzugefügt."
+      },
+      "tracking": {
+        "trackWars": "Clan-Kriege verfolgen",
+        "trackMembers": "Mitgliederänderungen verfolgen", 
+        "trackDonations": "Spenden verfolgen",
+        "donationThreshold": "Minimaler Spendenschwellenwert",
+        "donationThresholdHint": "Mindestspenden pro Woche um Ankündigungen auszulösen"
+      },
+      "templates": {
+        "warStartPlaceholder": "🛡️ Krieg gegen {warOpponent} begonnen! Vorbereitung endet {warEndTime}. Viel Glück {roleMention}!",
+        "warEndPlaceholder": "⚔️ Krieg gegen {warOpponent} beendet! Ergebnis: {warResult} - {warStars} Sterne mit {warDestructionPercentage}% Zerstörung. Gute Arbeit {roleMention}!",
+        "memberJoinPlaceholder": "👋 Neues Mitglied ist {clanName} beigetreten! Wir haben jetzt {memberCount} Mitglieder. Willkommen!",
+        "donationPlaceholder": "💎 Wöchentliche Spendenzusammenfassung für {clanName}: Top-Spender dieser Woche! {roleMention}"
+      },
+      "toasts": {
+        "invalidTag": "Ungültiges Clan-Tag-Format",
+        "alreadyTracking": "Clan {{tag}} wird bereits verfolgt",
+        "added": "Clan {{tag}} zur Verfolgungsliste hinzugefügt",
+        "addFailed": "Fehler beim Hinzufügen des Clans"
+      },
+      "intervalHint": "Wie oft Clan-Updates überprüft werden (minimum 5 Minuten, empfohlen 1 Stunde)"
     },
     "leveling": "XP & Levelsystem",
     "economy": "Wirtschaftssystem",

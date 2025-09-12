@@ -4,6 +4,8 @@ import {
   updateYouTubeConfig, 
   getTwitchConfig, 
   updateTwitchConfig,
+  getClashOfClansConfig,
+  updateClashOfClansConfig,
   getChannels, 
   getRoles 
 } from '../../api';
@@ -18,6 +20,7 @@ import PlaceholderService from './components/PlaceholderService';
 // Features
 import YouTubeConfig from './features/YouTubeConfig';
 import TwitchConfig from './features/TwitchConfig';
+import ClashOfClansConfig from './features/ClashOfClansConfig';
 
 // Utils
 import { cleanChannelIds, cleanStreamerUsernames, hasUnsavedChanges } from './utils';
@@ -42,6 +45,12 @@ export default function GamesSocialsSection({ guildId, pushToast }) {
   const [twitchLoading, setTwitchLoading] = useState(false);
   const [twitchSaving, setTwitchSaving] = useState(false);
   
+  // Clash of Clans state
+  const [cocConfig, setCocConfig] = useState(null);
+  const [cocOriginal, setCocOriginal] = useState(null);
+  const [cocLoading, setCocLoading] = useState(false);
+  const [cocSaving, setCocSaving] = useState(false);
+  
   // Shared data
   const [discordChannels, setDiscordChannels] = useState([]);
   const [guildRoles, setGuildRoles] = useState([]);
@@ -54,10 +63,12 @@ export default function GamesSocialsSection({ guildId, pushToast }) {
       try {
         setYtLoading(true);
         setTwitchLoading(true);
+        setCocLoading(true);
         
-        const [ytCfg, twitchCfg, ch, roles] = await Promise.all([
+        const [ytCfg, twitchCfg, cocCfg, ch, roles] = await Promise.all([
           getYouTubeConfig(guildId).catch(() => null),
           getTwitchConfig(guildId).catch(() => null),
+          getClashOfClansConfig(guildId).catch(() => null),
           getChannels(guildId).catch(() => null),
           getRoles(guildId).catch(() => null)
         ]);
@@ -84,6 +95,17 @@ export default function GamesSocialsSection({ guildId, pushToast }) {
           setTwitchOriginal(cleanedTwitchCfg); 
         }
         
+        // Set Clash of Clans config
+        if (cocCfg) {
+          const cleanedCocCfg = {
+            ...DEFAULT_CONFIGS.clashofclans,
+            ...cocCfg,
+            clans: Array.isArray(cocCfg.clans) ? cocCfg.clans : []
+          };
+          setCocConfig(cleanedCocCfg);
+          setCocOriginal(cleanedCocCfg);
+        }
+        
         // Set shared data
         if (ch && Array.isArray(ch.channels)) setDiscordChannels(ch.channels);
         if (roles && Array.isArray(roles.roles)) setGuildRoles(roles.roles);
@@ -91,6 +113,7 @@ export default function GamesSocialsSection({ guildId, pushToast }) {
       } finally { 
         setYtLoading(false); 
         setTwitchLoading(false);
+        setCocLoading(false);
       }
     })();
   }, [guildId]);
@@ -146,6 +169,29 @@ export default function GamesSocialsSection({ guildId, pushToast }) {
       } catch (err) {
   pushToast && pushToast('error', t('gamesSocials.toasts.toggleFailed'));
         setTwitchConfig(prevConfig); // revert
+      }
+    } else if (serviceKey === 'clashofclans') {
+      if (!cocConfig) return;
+      
+      const newEnabled = !cocConfig.enabled;
+      const prevConfig = cocConfig;
+      
+      // Optimistic update
+      setCocConfig(prev => ({ ...prev, enabled: newEnabled }));
+      
+      try {
+        const updated = await updateClashOfClansConfig({ ...prevConfig, enabled: newEnabled }, guildId);
+        const safeConfig = {
+          ...DEFAULT_CONFIGS.clashofclans,
+          ...updated,
+          clans: Array.isArray(updated?.clans) ? updated.clans : []
+        };
+  setCocConfig(safeConfig); 
+  setCocOriginal(safeConfig);
+  pushToast && pushToast('success', t(newEnabled ? 'gamesSocials.toasts.serviceEnabled' : 'gamesSocials.toasts.serviceDisabled', { service: t('gamesSocials.services.clashofclans.label') }));
+      } catch (err) {
+  pushToast && pushToast('error', t('gamesSocials.toasts.toggleFailed'));
+        setCocConfig(prevConfig); // revert
       }
     }
   };
@@ -206,17 +252,45 @@ export default function GamesSocialsSection({ guildId, pushToast }) {
     }
   };
 
-  const handleTwitchReset = () => {
-    if (twitchOriginal) setTwitchConfig(twitchOriginal);
+  // Clash of Clans handlers
+  const handleCocSave = async () => {
+    if (!cocConfig) return;
+    
+    try { 
+      setCocSaving(true); 
+      const updated = await updateClashOfClansConfig(cocConfig, guildId); 
+      const safe = {
+        ...DEFAULT_CONFIGS.clashofclans,
+        ...updated,
+        clans: Array.isArray(updated?.clans) ? updated.clans : [],
+        mentionTargets: Array.isArray(updated?.mentionTargets) ? updated.mentionTargets : [],
+        clanMessages: updated?.clanMessages || {},
+        clanNames: updated?.clanNames || {}
+      }; 
+  setCocConfig(safe); 
+  setCocOriginal(safe); 
+  pushToast && pushToast('success', t('gamesSocials.toasts.saved', { service: t('gamesSocials.services.clashofclans.label') })); 
+    } catch (e) { 
+      console.error('Clash of Clans save error:', e);
+  pushToast && pushToast('error', t('gamesSocials.toasts.saveFailed')); 
+    } finally { 
+      setCocSaving(false); 
+    }
+  };
+
+  const handleCocReset = () => {
+    if (cocOriginal) setCocConfig(cocOriginal);
   };
 
   // Get current service and check states
   const currentService = SERVICES.find(s => s.key === activeService);
   const showOverlay = (activeService === 'youtube' && (ytLoading || (!ytConfig && guildId))) || 
-                     (activeService === 'twitch' && (twitchLoading || (!twitchConfig && guildId)));
+                     (activeService === 'twitch' && (twitchLoading || (!twitchConfig && guildId))) ||
+                     (activeService === 'clashofclans' && (cocLoading || (!cocConfig && guildId)));
 
   const ytHasChanges = hasUnsavedChanges(ytConfig, ytOriginal);
   const twitchHasChanges = hasUnsavedChanges(twitchConfig, twitchOriginal);
+  const cocHasChanges = hasUnsavedChanges(cocConfig, cocOriginal);
 
   return (
     <LoadingSection
@@ -231,15 +305,18 @@ export default function GamesSocialsSection({ guildId, pushToast }) {
         <h5 className="mb-0">{t('gamesSocials.title')}</h5>
         {activeService === 'youtube' && ytHasChanges && <span className="dirty-badge">{t('common.unsaved')}</span>}
         {activeService === 'twitch' && twitchHasChanges && <span className="dirty-badge">{t('common.unsaved')}</span>}
+        {activeService === 'clashofclans' && cocHasChanges && <span className="dirty-badge">{t('common.unsaved')}</span>}
       </div>
 
       {/* Service Cards Grid */}
       <div className="services-grid d-flex flex-wrap gap-3 mb-3">
         {SERVICES.map(service => {
           const isEnabled = service.key === 'youtube' ? (ytConfig?.enabled ?? false) : 
-                           service.key === 'twitch' ? (twitchConfig?.enabled ?? false) : false;
+                           service.key === 'twitch' ? (twitchConfig?.enabled ?? false) : 
+                           service.key === 'clashofclans' ? (cocConfig?.enabled ?? false) : false;
           const isLoading = service.key === 'youtube' ? ytLoading : 
-                           service.key === 'twitch' ? twitchLoading : false;
+                           service.key === 'twitch' ? twitchLoading : 
+                           service.key === 'clashofclans' ? cocLoading : false;
           
           return (
             <ServiceCard
@@ -251,7 +328,8 @@ export default function GamesSocialsSection({ guildId, pushToast }) {
               onToggle={handleServiceToggle}
               canToggle={service.implemented && (
                 (service.key === 'youtube' && ytConfig) || 
-                (service.key === 'twitch' && twitchConfig)
+                (service.key === 'twitch' && twitchConfig) ||
+                (service.key === 'clashofclans' && cocConfig)
               )}
               isLoading={isLoading}
             />
@@ -267,9 +345,11 @@ export default function GamesSocialsSection({ guildId, pushToast }) {
           <ServiceConfigCard 
             serviceKey={activeService}
             isEnabled={activeService === 'youtube' ? (ytConfig?.enabled ?? false) : 
-                      activeService === 'twitch' ? (twitchConfig?.enabled ?? false) : false}
+                      activeService === 'twitch' ? (twitchConfig?.enabled ?? false) : 
+                      activeService === 'clashofclans' ? (cocConfig?.enabled ?? false) : false}
             hasUnsavedChanges={activeService === 'youtube' ? ytHasChanges : 
-                             activeService === 'twitch' ? twitchHasChanges : false}
+                             activeService === 'twitch' ? twitchHasChanges : 
+                             activeService === 'clashofclans' ? cocHasChanges : false}
           />
 
           {/* Render appropriate configuration component */}
@@ -332,6 +412,37 @@ export default function GamesSocialsSection({ guildId, pushToast }) {
                 >
                   <i className="fa-solid fa-floppy-disk me-2"/>
                   {twitchSaving ? t('common.saving') : t('common.save')}
+                </button>
+              </div>
+            </>
+          ) : activeService === 'clashofclans' ? (
+            <>
+              <ClashOfClansConfig
+                config={cocConfig}
+                onChange={setCocConfig}
+                onSave={handleCocSave}
+                discordChannels={discordChannels}
+                guildRoles={guildRoles}
+                guildId={guildId}
+                pushToast={pushToast}
+                isSaving={cocSaving}
+              />
+              
+              <div className="d-flex gap-2 mt-3">
+                <button 
+                  className="btn btn-outline-secondary" 
+                  disabled={!cocHasChanges || cocSaving} 
+                  onClick={handleCocReset}
+                >
+                  <i className="fa-solid fa-rotate-left me-2"/>{t('common.reset')}
+                </button>
+                <button 
+                  className="btn btn-primary" 
+                  disabled={!cocHasChanges || cocSaving} 
+                  onClick={handleCocSave}
+                >
+                  <i className="fa-solid fa-floppy-disk me-2"/>
+                  {cocSaving ? t('common.saving') : t('common.save')}
                 </button>
               </div>
             </>

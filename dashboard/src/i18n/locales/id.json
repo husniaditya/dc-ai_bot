@@ -1441,7 +1441,7 @@
       },
       "clashofclans": {
         "label": "Clash of Clans",
-        "desc": "Update perang clan dan kemajuan (direncanakan)"
+        "desc": "Progres perang clan, pembaruan anggota, dan pelacakan donasi"
       },
       "fortnite": {
         "label": "Fortnite",
@@ -1550,6 +1550,57 @@
         "resolvedTo": "Berhasil dihubungkan ke {{username}}",
         "resolveFailed": "Streamer tidak dapat dihubungkan"
       }
+    },
+    "clashofclans": {
+      "fields": {
+        "clanTag": "Tag Clan",
+        "clanTagHint": "Masukkan tag clan Anda (contoh: #ABC123)",
+        "clanName": "Nama Clan",
+        "clanNameHint": "Masukkan nama clan Anda (contoh: Pejuang Elite)",
+        "warAnnouncements": "Pengumuman Perang",
+        "memberAnnouncements": "Pengumuman Anggota", 
+        "donationAnnouncements": "Pengumuman Donasi"
+      },
+      "announce": {
+        "war": "Perang",
+        "member": "Anggota",
+        "donation": "Donasi",
+        "globalMentions": "Sebutan Global",
+        "globalMentionsHelp": "Peran/pengguna ini akan disebutkan dalam semua notifikasi Clash of Clans (perang, anggota, donasi)"
+      },
+      "sections": {
+        "clanManagement": "Manajemen Clan",
+        "trackingFeatures": "Fitur Pelacakan",
+        "warStartTemplate": "Template Mulai Perang",
+        "warEndTemplate": "Template Selesai Perang",
+        "memberJoinTemplate": "Template Anggota Baru",
+        "donationTemplate": "Template Donasi"
+      },
+      "clans": {
+        "addClan": "Tambah Clan",
+        "clanTagPlaceholder": "Masukkan tag clan (contoh: 2Y0YRGG0)",
+        "noClans": "Belum ada clan yang ditambahkan."
+      },
+      "tracking": {
+        "trackWars": "Lacak Perang Clan",
+        "trackMembers": "Lacak Perubahan Anggota", 
+        "trackDonations": "Lacak Donasi",
+        "donationThreshold": "Batas Minimum Donasi",
+        "donationThresholdHint": "Minimum donasi per minggu untuk memicu pengumuman"
+      },
+      "templates": {
+        "warStartPlaceholder": "🛡️ Perang dimulai melawan {warOpponent}! Persiapan berakhir {warEndTime}. Semoga beruntung {roleMention}!",
+        "warEndPlaceholder": "⚔️ Perang melawan {warOpponent} berakhir! Hasil: {warResult} - {warStars} bintang dengan {warDestructionPercentage}% kehancuran. Kerja bagus {roleMention}!",
+        "memberJoinPlaceholder": "👋 Anggota baru bergabung dengan {clanName}! Sekarang kita memiliki {memberCount} anggota. Selamat datang!",
+        "donationPlaceholder": "💎 Ringkasan donasi mingguan untuk {clanName}: Kontributor teratas minggu ini! {roleMention}"
+      },
+      "toasts": {
+        "invalidTag": "Format tag clan tidak valid",
+        "alreadyTracking": "Sudah melacak clan {{tag}}",
+        "added": "Menambahkan clan {{tag}} ke daftar pelacakan",
+        "addFailed": "Gagal menambahkan clan"
+      },
+      "intervalHint": "Seberapa sering memeriksa pembaruan clan (minimum 5 menit, disarankan 1 jam)"
     },
     "leveling": "XP & Level",
     "economy": "Sistem Ekonomi",
