@@ -15,7 +15,8 @@ class LeaderboardButtons {
             totalPages = 1,
             isAdmin = false,
             guildId = '',
-            view = 'page' // 'page' | 'summary'
+            view = 'page', // 'page' | 'summary'
+            dataView = 'donations' // 'donations' | 'war'
         } = options;
 
         const buttons = [];
@@ -23,19 +24,32 @@ class LeaderboardButtons {
         // Refresh button - always available
         buttons.push(
             new ButtonBuilder()
-                .setCustomId(`leaderboard_refresh_${guildId}`)
-                .setLabel('🔄 Refresh')
+                .setCustomId(`leaderboard_refresh_${dataView}_${guildId}`)
+                .setLabel('Refresh')
                 .setStyle(ButtonStyle.Secondary)
                 .setEmoji('🔄')
+        );
+
+        // View toggle button - switch between donations and war
+        const toggleView = dataView === 'donations' ? 'war' : 'donations';
+        const toggleEmoji = dataView === 'donations' ? '⚔️' : '📊';
+        const toggleLabel = dataView === 'donations' ? 'War Stats' : 'Donations';
+        
+        buttons.push(
+            new ButtonBuilder()
+                .setCustomId(`leaderboard_toggle_view_${currentPage}_${dataView}_${guildId}`)
+                .setLabel(toggleLabel)
+                .setStyle(ButtonStyle.Primary)
+                .setEmoji(toggleEmoji)
         );
 
         // Edit button - admin only
         if (isAdmin) {
             buttons.push(
                 new ButtonBuilder()
-                    .setCustomId(`leaderboard_edit_${guildId}`)
-                    .setLabel('✏️ Edit')
-                    .setStyle(ButtonStyle.Primary)
+                    .setCustomId(`leaderboard_edit_${dataView}_${guildId}`)
+                    .setLabel('Edit')
+                    .setStyle(ButtonStyle.Secondary)
                     .setEmoji('✏️')
             );
         }
@@ -44,16 +58,16 @@ class LeaderboardButtons {
             // Previous page button - disabled state version when needed to keep button positions consistent
             if (totalPages > 1) {
                 const prevButton = new ButtonBuilder()
-                    .setCustomId(`leaderboard_prev_${currentPage}_${guildId}`)
-                    .setLabel('◀️ Prev')
+                    .setCustomId(`leaderboard_prev_${currentPage}_${dataView}_${guildId}`)
+                    .setLabel('Prev')
                     .setStyle(ButtonStyle.Secondary)
                     .setEmoji('◀️');
                 if (currentPage <= 1) prevButton.setDisabled(true);
                 buttons.push(prevButton);
 
                 const nextButton = new ButtonBuilder()
-                    .setCustomId(`leaderboard_next_${currentPage}_${guildId}`)
-                    .setLabel('Next ▶️')
+                    .setCustomId(`leaderboard_next_${currentPage}_${dataView}_${guildId}`)
+                    .setLabel('Next')
                     .setStyle(ButtonStyle.Secondary)
                     .setEmoji('▶️');
                 if (currentPage >= totalPages) nextButton.setDisabled(true);
@@ -63,8 +77,8 @@ class LeaderboardButtons {
             // Summary button (always available on page view)
             buttons.push(
                 new ButtonBuilder()
-                    .setCustomId(`leaderboard_summary_${currentPage}_${guildId}`)
-                    .setLabel('📈 Summary')
+                    .setCustomId(`leaderboard_summary_${currentPage}_${dataView}_${guildId}`)
+                    .setLabel('Summary')
                     .setStyle(ButtonStyle.Secondary)
                     .setEmoji('📈')
             );
@@ -72,8 +86,8 @@ class LeaderboardButtons {
             // Back button to return to page view
             buttons.push(
                 new ButtonBuilder()
-                    .setCustomId(`leaderboard_back_${currentPage}_${guildId}`)
-                    .setLabel('🔙 Back')
+                    .setCustomId(`leaderboard_back_${currentPage}_${dataView}_${guildId}`)
+                    .setLabel('Back')
                     .setStyle(ButtonStyle.Secondary)
                     .setEmoji('🔙')
             );
@@ -107,15 +121,28 @@ class LeaderboardButtons {
     static parseButtonId(customId) {
         const parts = customId.split('_');
         if (parts[0] !== 'leaderboard') return null;
+        
         const action = parts[1];
-        let currentPage; let guildId;
-        if (['prev','next','summary','back'].includes(action) && parts.length >= 4 && /^\d+$/.test(parts[2])) {
+        let currentPage, view, guildId;
+
+        if (action === 'toggle' && parts[2] === 'view') {
+            // Format: leaderboard_toggle_view_<page>_<dataView>_<guildId>
+            currentPage = parseInt(parts[3], 10);
+            view = parts[4]; // current data view (donations/war)
+            guildId = parts.slice(5).join('_');
+            return { action: 'toggle_view', guildId, currentPage, view };
+        } else if (['prev','next','summary','back'].includes(action)) {
+            // Format: leaderboard_<action>_<page>_<dataView>_<guildId>
             currentPage = parseInt(parts[2], 10);
-            guildId = parts.slice(3).join('_');
+            view = parts[3]; // current data view (donations/war)
+            guildId = parts.slice(4).join('_');
+            return { action, guildId, currentPage, view };
         } else {
-            guildId = parts.slice(2).join('_');
+            // Format: leaderboard_<action>_<dataView>_<guildId> (refresh, edit)
+            view = parts[2]; // current data view (donations/war)
+            guildId = parts.slice(3).join('_');
+            return { action, guildId, view };
         }
-        return { action, guildId, currentPage };
     }
 
     /**
@@ -181,16 +208,17 @@ class LeaderboardButtons {
     /**
      * Create error button row (disabled buttons)
      * @param {string} guildId - Guild ID
+     * @param {string} dataView - Current data view (donations/war)
      * @returns {ActionRowBuilder} Error state button row
      */
-    static createErrorButtonRow(guildId) {
+    static createErrorButtonRow(guildId, dataView = 'donations') {
         const actionRow = new ActionRowBuilder();
         
         // Disabled refresh button
         actionRow.addComponents(
             new ButtonBuilder()
-                .setCustomId(`leaderboard_refresh_${guildId}`)
-                .setLabel('🔄 Refresh')
+                .setCustomId(`leaderboard_refresh_${dataView}_${guildId}`)
+                .setLabel('Refresh')
                 .setStyle(ButtonStyle.Secondary)
                 .setEmoji('🔄')
                 .setDisabled(true)
@@ -235,14 +263,17 @@ class LeaderboardButtons {
 
     /**
      * Create a loading state button row
+     * @param {string} guildId - Guild ID
+     * @param {string} dataView - Current data view (donations/war)
      */
-    static createLoadingButtonRow(guildId) {
+    static createLoadingButtonRow(guildId, dataView = 'donations') {
         const actionRow = new ActionRowBuilder();
         actionRow.addComponents(
             new ButtonBuilder()
-                .setCustomId(`leaderboard_loading_${guildId}`)
-                .setLabel('⏳ Loading...')
+                .setCustomId(`leaderboard_loading_${dataView}_${guildId}`)
+                .setLabel('Loading...')
                 .setStyle(ButtonStyle.Secondary)
+                .setEmoji('⏳')
                 .setDisabled(true)
         );
         return actionRow;
