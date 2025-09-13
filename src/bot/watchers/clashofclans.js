@@ -22,7 +22,25 @@ const {
 function saveStateDebounced(){
 	if(saveStateDebounced._t) clearTimeout(saveStateDebounced._t);
 	saveStateDebounced._t = setTimeout(()=>{
-		try { fs.writeFileSync(STATE_PATH, JSON.stringify(state, null, 2)); } catch {}
+		try { 
+		  // Convert Map objects to plain objects for JSON serialization
+		  const stateToSave = {
+		    clans: {}
+		  };
+		  
+		  for (const [key, clanState] of Object.entries(state.clans)) {
+		    stateToSave.clans[key] = {
+		      ...clanState,
+		      knownDonationMilestones: clanState.knownDonationMilestones instanceof Map 
+		        ? Object.fromEntries(clanState.knownDonationMilestones.entries())
+		        : clanState.knownDonationMilestones || {}
+		    };
+		  }
+		  
+		  fs.writeFileSync(STATE_PATH, JSON.stringify(stateToSave, null, 2)); 
+		} catch (error) {
+		  console.error('[COC] Error saving state:', error);
+		}
 	}, 500);
 }
 
@@ -86,6 +104,12 @@ async function pollGuild(guild) {
       }
       
       const clanState = state.clans[k];
+      
+      // Ensure knownDonationMilestones is a Map (JSON loading converts it to object)
+      if (!(clanState.knownDonationMilestones instanceof Map)) {
+        const oldData = clanState.knownDonationMilestones || {};
+        clanState.knownDonationMilestones = new Map(Object.entries(oldData));
+      }
       const currentMembers = clanInfo.memberList || [];
       const currentMemberTags = currentMembers.map(m => m.tag);
       
