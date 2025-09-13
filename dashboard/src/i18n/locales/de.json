@@ -1908,6 +1908,7 @@
         "clanManagement": "Clan-Verwaltung",
         "trackingFeatures": "Tracking-Funktionen",
         "donationLeaderboard": "Spenden-Bestenliste",
+        "warStatistics": "Kriegsstatistiken",
         "warStartTemplate": "Kriegsstart-Vorlage",
         "warEndTemplate": "Kriegsende-Vorlage",
         "memberJoinTemplate": "Neues-Mitglied-Vorlage",
@@ -1942,6 +1943,15 @@
         "template": "Bestenlisten-Nachrichtenvorlage",
         "templatePlaceholder": "Wöchentliche Spenden-Bestenlisten-Aktualisierung! 📊",
         "templateHint": "Nachricht, die das Bestenlisten-Bild begleitet. Leer lassen für Standardnachricht."
+      },
+      "warStats": {
+        "enableWarStats": "Automatische Kriegsstatistik-Veröffentlichung aktivieren",
+        "enableWarStatsHint": "Kriegsstatistiken automatisch während aktiver Kriege veröffentlichen",
+        "channel": "Kriegsstatistik-Kanal",
+        "channelHint": "Kanal, in dem Kriegsstatistiken veröffentlicht werden. Automatische Aktualisierung während Kriegen alle 5 Minuten.",
+        "template": "Nachrichtenvorlage",
+        "templatePlaceholder": "Aktuelle Kriegsstatistiken für {clanName}!",
+        "templateHint": "Nachricht mit Kriegsstatistik-Bild."
       },
       "templates": {
         "warStartPlaceholder": "🛡️ Krieg gegen {warOpponent} begonnen! Vorbereitung endet {warEndTime}. Viel Glück {roleMention}!",

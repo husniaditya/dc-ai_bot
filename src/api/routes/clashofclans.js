@@ -54,6 +54,9 @@ function createClashOfClansRoutes(client, store) {
         memberAnnounceChannelId: req.body.memberAnnounceChannelId,
         donationAnnounceChannelId: req.body.donationAnnounceChannelId,
         donationLeaderboardChannelId: req.body.donationLeaderboardChannelId,
+        // War leaderboard fields (CRITICAL: these were missing!)
+        warLeaderboardChannelId: req.body.warLeaderboardChannelId || req.body.war_leaderboard_channel_id,
+        warLeaderboardMessageId: req.body.warLeaderboardMessageId || req.body.war_leaderboard_message_id,
         // Global mention targets (primary)
         mentionTargets: Array.isArray(req.body.mentionTargets) ? req.body.mentionTargets : undefined,
         // Individual mention targets (for compatibility)
@@ -70,6 +73,8 @@ function createClashOfClansRoutes(client, store) {
         trackMembers: req.body.trackMembers,
         trackDonations: req.body.trackDonations,
         trackDonationLeaderboard: req.body.trackDonationLeaderboard,
+        // War leaderboard tracking (also missing!)
+        trackWarLeaderboard: req.body.trackWarLeaderboard || req.body.track_war_leaderboard,
         // Map frontend tracking fields to backend
         trackWarEvents: req.body.trackWarEvents,
         trackMemberEvents: req.body.trackMemberEvents,

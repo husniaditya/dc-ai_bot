@@ -1926,6 +1926,7 @@
         "clanManagement": "部落管理",
         "trackingFeatures": "追蹤功能",
         "donationLeaderboard": "捐贈排行榜",
+        "warStatistics": "戰爭統計",
         "warStartTemplate": "戰爭開始範本",
         "warEndTemplate": "戰爭結束範本",
         "memberJoinTemplate": "新成員範本",
@@ -1960,6 +1961,15 @@
         "template": "排行榜訊息範本",
         "templatePlaceholder": "每週捐贈排行榜更新！📊",
         "templateHint": "陪伴排行榜圖片的訊息。留空使用預設訊息。"
+      },
+      "warStats": {
+        "enableWarStats": "啟用自動戰爭統計發佈",
+        "enableWarStatsHint": "在活躍戰爭期間自動發佈戰爭統計",
+        "channel": "戰爭統計頻道",
+        "channelHint": "戰爭統計將發佈的頻道。戰爭期間每5分鐘自動刷新。",
+        "template": "訊息範本",
+        "templatePlaceholder": "{clanName} 的當前戰爭統計！",
+        "templateHint": "附帶戰爭統計圖片的訊息。"
       },
       "templates": {
         "warStartPlaceholder": "🛡️ 與 {warOpponent} 的戰爭開始了！準備階段於 {warEndTime} 結束。加油 {roleMention}！",

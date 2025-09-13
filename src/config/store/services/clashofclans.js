@@ -20,7 +20,7 @@ async function getGuildClashOfClansConfig(guildId) {
     try {
       const [rows] = await db.sqlPool.query(`
         SELECT clans, clan_name, war_announce_channel_id, member_announce_channel_id, donation_announce_channel_id,
-               donation_leaderboard_channel_id, donation_message_id, war_mention_target, member_mention_target, donation_mention_target, 
+               donation_leaderboard_channel_id, war_leaderboard_channel_id, donation_message_id, war_leaderboard_message_id, war_mention_target, member_mention_target, donation_mention_target, 
                enabled, interval_sec, track_wars, track_members, track_donations, track_donation_leaderboard,
                donation_threshold, donation_leaderboard_schedule, donation_leaderboard_time, 
                war_start_template, war_end_template, member_join_template, donation_template, 
@@ -39,7 +39,9 @@ async function getGuildClashOfClansConfig(guildId) {
           memberAnnounceChannelId: row.member_announce_channel_id,
           donationAnnounceChannelId: row.donation_announce_channel_id,
           donationLeaderboardChannelId: row.donation_leaderboard_channel_id,
+          warLeaderboardChannelId: row.war_leaderboard_channel_id,
           donationMessageId: row.donation_message_id,
+          warLeaderboardMessageId: row.war_leaderboard_message_id,
           warMentionTarget: row.war_mention_target || null,
           memberMentionTarget: row.member_mention_target || null,
           donationMentionTarget: row.donation_mention_target || null,
@@ -50,6 +52,7 @@ async function getGuildClashOfClansConfig(guildId) {
           trackMembers: !!row.track_members,
           trackDonations: !!row.track_donations,
           trackDonationLeaderboard: !!row.track_donation_leaderboard,
+          trackWarLeaderboard: !!(row.war_leaderboard_channel_id), // Implicit when channel is set
           trackWarEvents: !!row.track_wars, // Map to frontend field names
           trackMemberEvents: !!row.track_members,
           trackDonationEvents: !!row.track_donations,
@@ -104,7 +107,20 @@ async function setGuildClashOfClansConfig(guildId, partial) {
   if (partial.memberAnnounceChannelId !== undefined) next.memberAnnounceChannelId = partial.memberAnnounceChannelId;
   if (partial.donationAnnounceChannelId !== undefined) next.donationAnnounceChannelId = partial.donationAnnounceChannelId;
   if (partial.donationLeaderboardChannelId !== undefined) next.donationLeaderboardChannelId = partial.donationLeaderboardChannelId;
-  if (partial.donationMessageId !== undefined) next.donationMessageId = partial.donationMessageId;
+  if (partial.warLeaderboardChannelId !== undefined) next.warLeaderboardChannelId = partial.warLeaderboardChannelId;
+  if (partial.warLeaderboardMessageId !== undefined) next.warLeaderboardMessageId = partial.warLeaderboardMessageId;
+  
+  // Handle war leaderboard tracking - implicit when channel is set
+  if (partial.trackWarLeaderboard !== undefined) {
+    next.trackWarLeaderboard = partial.trackWarLeaderboard;
+    // If enabling war leaderboard tracking but no channel is set, clear it
+    if (!partial.trackWarLeaderboard) {
+      next.warLeaderboardChannelId = null;
+      next.warLeaderboardMessageId = null;
+    }
+  }
+  if (partial.war_leaderboard_channel_id !== undefined) next.warLeaderboardChannelId = partial.war_leaderboard_channel_id;
+  if (partial.war_leaderboard_message_id !== undefined) next.warLeaderboardMessageId = partial.war_leaderboard_message_id;
   
   // Handle mention targets - use global mentionTargets as primary source
   if (partial.mentionTargets !== undefined) {
@@ -187,11 +203,11 @@ async function setGuildClashOfClansConfig(guildId, partial) {
     await db.sqlPool.query(`
       REPLACE INTO guild_clashofclans_watch(
         guild_id, enabled, clans, clan_name, track_wars, track_members, track_donations, track_donation_leaderboard,
-        war_announce_channel_id, member_announce_channel_id, donation_announce_channel_id, donation_leaderboard_channel_id,
-        donation_message_id, war_mention_target, member_mention_target, donation_mention_target,
+        war_announce_channel_id, member_announce_channel_id, donation_announce_channel_id, donation_leaderboard_channel_id, war_leaderboard_channel_id,
+        donation_message_id, war_leaderboard_message_id, war_mention_target, member_mention_target, donation_mention_target,
         war_start_template, war_end_template, member_join_template, donation_template, donation_leaderboard_template,
         embed_enabled, clan_data, interval_sec, donation_threshold, donation_leaderboard_schedule, donation_leaderboard_time
-      ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+      ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
     `, [
       guildId,
       next.enabled ? 1 : 0,
@@ -205,7 +221,9 @@ async function setGuildClashOfClansConfig(guildId, partial) {
       next.memberAnnounceChannelId,
       next.donationAnnounceChannelId,
       next.donationLeaderboardChannelId,
+      next.warLeaderboardChannelId,
       next.donationMessageId,
+      next.warLeaderboardMessageId,
       next.warMentionTarget,
       next.memberMentionTarget,
       next.donationMentionTarget,

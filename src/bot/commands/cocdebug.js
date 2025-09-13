@@ -31,7 +31,7 @@ module.exports = {
       const testClan = interaction.options.getString('clan');
       
       // Create API instance
-      const api = new ClashOfClansAPI();
+      const api = ClashOfClansAPI;
       
       // Check API key configuration
       const hasApiKey = !!(process.env.COC_API_KEY || process.env.COC_API_TOKEN);

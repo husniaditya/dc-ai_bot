@@ -1908,6 +1908,7 @@
         "clanManagement": "クラン管理",
         "trackingFeatures": "追跡機能",
         "donationLeaderboard": "寄付リーダーボード",
+        "warStatistics": "戦争統計",
         "warStartTemplate": "戦争開始テンプレート",
         "warEndTemplate": "戦争終了テンプレート",
         "memberJoinTemplate": "新メンバーテンプレート",
@@ -1942,6 +1943,14 @@
         "template": "リーダーボードメッセージテンプレート",
         "templatePlaceholder": "週間寄付リーダーボード更新！📊",
         "templateHint": "リーダーボード画像に添付するメッセージ。デフォルトメッセージの場合は空白にしてください。"
+      },
+      "warStats": {
+        "enableWarStats": "戦争統計追跡を有効にする",
+        "channel": "戦争統計チャンネル",
+        "channelHint": "戦争統計が投稿されるチャンネル。設定されていない場合は戦争チャンネルを使用します。",
+        "template": "戦争統計メッセージテンプレート",
+        "templatePlaceholder": "⚔️ 戦争統計レポート：{clanName}",
+        "templateHint": "戦争統計画像に添付するメッセージ。デフォルトメッセージの場合は空白にしてください。"
       },
       "templates": {
         "warStartPlaceholder": "🛡️ {warOpponent}との戦争が始まりました！準備は{warEndTime}に終了します。頑張れ{roleMention}！",
