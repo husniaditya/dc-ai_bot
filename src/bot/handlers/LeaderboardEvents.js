@@ -55,6 +55,9 @@ class LeaderboardEvents {
                 guildId,
                 guild: channel.guild,
                 member: null, // No specific member for scheduled posts
+                deferred: true, // Mark as deferred to pass validation
+                replied: false, // Not replied yet
+                customId: 'scheduled_leaderboard_post', // Add customId for logging
                 editReply: async (options) => {
                     if (messageId) {
                         try {
