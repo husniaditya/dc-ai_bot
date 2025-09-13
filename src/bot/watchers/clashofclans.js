@@ -275,7 +275,7 @@ async function pollGuild(guild) {
             // Post/update leaderboard using new system
             const result = await leaderboardEvents.postLeaderboard(
               guild.id, 
-              cfg.channel, 
+              cfg.donationLeaderboardChannelId, 
               existingMessageId
             );
             
