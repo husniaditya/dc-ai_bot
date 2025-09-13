@@ -501,6 +501,27 @@ class LeaderboardInteractionHandler {
                 config.donation_leaderboard_time_range
             );
 
+            // Enhance top players with real last seen data (limited to top 10 to avoid rate limits)
+            if (freshData && freshData.players && freshData.players.length > 0) {
+                console.log('Enhancing players with activity tracking...');
+                
+                // Get previous player data for comparison
+                let previousPlayers = [];
+                if (config.donation_leaderboard_cached_data) {
+                    try {
+                        const cachedData = JSON.parse(config.donation_leaderboard_cached_data);
+                        previousPlayers = cachedData.players || [];
+                    } catch (error) {
+                        console.warn('Failed to parse previous player data:', error);
+                    }
+                }
+                
+                freshData.players = await ClashOfClansAPI.enhancePlayersWithActivity(
+                    freshData.players, 
+                    previousPlayers
+                );
+            }
+
             // Cache the fresh data
             if (freshData) {
                 await this.db.execute(
@@ -557,6 +578,27 @@ class LeaderboardInteractionHandler {
         try {
             const cocApi = ClashOfClansAPI;
             const freshData = await cocApi.getClanWarStats(config.clans);
+
+            // Enhance top players with real last seen data (limited to top 10 to avoid rate limits)
+            if (freshData && freshData.players && freshData.players.length > 0) {
+                console.log('Enhancing war players with activity tracking...');
+                
+                // Get previous player data for comparison
+                let previousPlayers = [];
+                if (config.war_leaderboard_cached_data) {
+                    try {
+                        const cachedData = JSON.parse(config.war_leaderboard_cached_data);
+                        previousPlayers = cachedData.players || [];
+                    } catch (error) {
+                        console.warn('Failed to parse previous war player data:', error);
+                    }
+                }
+                
+                freshData.players = await ClashOfClansAPI.enhancePlayersWithActivity(
+                    freshData.players, 
+                    previousPlayers
+                );
+            }
 
             // Cache the fresh data
             if (freshData) {
