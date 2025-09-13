@@ -743,7 +743,8 @@ async function handleLeaderboardCommand(interaction) {
   try {
     // Use the new LeaderboardInteractionHandler instead of old generateDonationLeaderboard
     const LeaderboardInteractionHandler = require('../handlers/LeaderboardInteractionHandler');
-    const handler = new LeaderboardInteractionHandler();
+    const store = require('../../config/store');
+    const handler = new LeaderboardInteractionHandler(store.sqlPool);
     
     // Get guild configuration for leaderboard
     const config = await handler.getLeaderboardConfig(interaction.guildId);
