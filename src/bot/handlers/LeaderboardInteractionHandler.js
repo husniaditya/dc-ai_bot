@@ -20,9 +20,19 @@ class LeaderboardInteractionHandler {
         try {
             await interaction.deferUpdate(); // Acknowledge the interaction
             
-            const { action, guildId, currentPage, view } = LeaderboardButtons.parseButtonInteraction(interaction.customId) || {};
+            console.log('Button interaction received:', {
+                customId: interaction.customId,
+                guildId: interaction.guildId,
+                userId: interaction.user.id
+            });
+
+            const parsedData = LeaderboardButtons.parseButtonInteraction(interaction.customId);
+            console.log('Parsed button data:', parsedData);
+
+            const { action, guildId, currentPage, view } = parsedData || {};
             
             if (!action || guildId !== interaction.guildId) {
+                console.error('Invalid button interaction:', { action, guildId, interactionGuildId: interaction.guildId });
                 return await this.sendError(interaction, 'Invalid button interaction');
             }
 
@@ -65,8 +75,17 @@ class LeaderboardInteractionHandler {
             }
 
         } catch (error) {
-            console.error('Error handling leaderboard button interaction:', error);
-            await this.sendError(interaction, 'An error occurred while processing your request');
+            console.error('Error handling leaderboard button interaction:', {
+                error: error.message,
+                customId: interaction.customId,
+                guildId: interaction.guildId,
+                stack: error.stack
+            });
+            try {
+                await this.sendError(interaction, 'An error occurred while processing your request');
+            } catch (sendErrorErr) {
+                console.error('Failed to send error message:', sendErrorErr);
+            }
         }
     }
 
@@ -175,21 +194,8 @@ class LeaderboardInteractionHandler {
      * @param {string} currentView - Current view (donations or war)
      */
     async handleToggleView(interaction, config, currentPage, currentView = 'donations') {
-        try {
-            const newView = currentView === 'donations' ? 'war' : 'donations';
-            
-            // Show loading state
-            await this.updateMessageWithLoading(interaction, `Switching to ${newView} view...`, newView);
-
-            // Generate the same page but in new view
-            await this.generateLeaderboardPage(interaction, config, currentPage, false, newView);
-
-            console.log(`View toggled from ${currentView} to ${newView} for guild ${config.guild_id} by ${interaction.user.tag}`);
-
-        } catch (error) {
-            console.error('Error toggling view:', error);
-            await this.sendError(interaction, 'Failed to switch view', currentView);
-        }
+        // Toggle functionality has been disabled - each leaderboard type is now separate
+        await this.sendError(interaction, 'Toggle functionality has been disabled. Donation and war leaderboards are now separate.');
     }
 
     /**
@@ -250,18 +256,32 @@ class LeaderboardInteractionHandler {
                 .setImage('attachment://leaderboard.png')
                 .setColor(view === 'war' ? '#e74c3c' : '#f39c12')
                 .setTimestamp()
-                .setFooter({ text: `${config.donation_leaderboard_time_range.replace('_', ' ')} • Updated` });
+                .setFooter({ 
+                    text: `${(config.donation_leaderboard_time_range || 'current_season').replace('_', ' ')} • Updated` 
+                });
 
             // Update the message with buttons always enabled
-            await interaction.editReply({
-                content: config.donation_leaderboard_template || null,
+            const updateData = {
                 embeds: [embed],
                 files: [{ attachment: canvasBuffer, name: 'leaderboard.png' }],
                 components: [buttonRow]
-            });
+            };
+
+            // Only add content if template exists and is not empty
+            if (config.donation_leaderboard_template && config.donation_leaderboard_template.trim()) {
+                updateData.content = config.donation_leaderboard_template;
+            }
+
+            await interaction.editReply(updateData);
 
         } catch (error) {
             console.error(`Error generating ${view} leaderboard page:`, error);
+            console.error('Full error details:', {
+                message: error.message,
+                code: error.code,
+                status: error.status,
+                stack: error.stack
+            });
             await this.sendError(interaction, `Failed to generate ${view} leaderboard`);
         }
     }
