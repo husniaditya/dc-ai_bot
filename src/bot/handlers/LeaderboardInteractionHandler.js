@@ -20,7 +20,7 @@ class LeaderboardInteractionHandler {
         try {
             await interaction.deferUpdate(); // Acknowledge the interaction
             
-            const { action, guildId, currentPage } = LeaderboardButtons.parseButtonInteraction(interaction.customId);
+            const { action, guildId, currentPage } = LeaderboardButtons.parseButtonInteraction(interaction.customId) || {};
             
             if (!action || guildId !== interaction.guildId) {
                 return await this.sendError(interaction, 'Invalid button interaction');
@@ -45,11 +45,17 @@ class LeaderboardInteractionHandler {
                 case 'edit':
                     await this.handleEdit(interaction, config);
                     break;
-                case 'previous':
-                    await this.handlePagination(interaction, config, Math.max(1, currentPage - 1));
+                case 'prev':
+                    await this.handlePagination(interaction, config, Math.max(1, (currentPage || config.donation_leaderboard_current_page || 1) - 1));
                     break;
                 case 'next':
-                    await this.handlePagination(interaction, config, currentPage + 1);
+                    await this.handlePagination(interaction, config, (currentPage || config.donation_leaderboard_current_page || 1) + 1);
+                    break;
+                case 'summary':
+                    await this.handleSummary(interaction, config, currentPage || config.donation_leaderboard_current_page || 1);
+                    break;
+                case 'back':
+                    await this.handleBackToPage(interaction, config, currentPage || config.donation_leaderboard_current_page || 1);
                     break;
                 default:
                     await this.sendError(interaction, 'Unknown action');
@@ -172,23 +178,14 @@ class LeaderboardInteractionHandler {
                 return await this.sendError(interaction, 'No donation data available');
             }
 
-            // For single page display - show all players
-            const showAllPlayers = true; // Set to true to show all players on one page
-            let pageData, totalPages;
-            
-            if (showAllPlayers) {
-                // Show all players on one page
-                pageData = donationData.players;
-                totalPages = 1;
-                page = 1;
-            } else {
-                // Use pagination (original behavior)
-                const playersPerPage = config.donation_leaderboard_players_per_page || 20;
-                totalPages = Math.ceil(donationData.players.length / playersPerPage);
-                const startIndex = (page - 1) * playersPerPage;
-                const endIndex = startIndex + playersPerPage;
-                pageData = donationData.players.slice(startIndex, endIndex);
-            }
+            // Pagination logic
+            const playersPerPage = config.donation_leaderboard_players_per_page || 20;
+            const totalPages = Math.max(1, Math.ceil(donationData.players.length / playersPerPage));
+            if (page > totalPages) page = totalPages;
+            if (page < 1) page = 1;
+            const startIndex = (page - 1) * playersPerPage;
+            const endIndex = startIndex + playersPerPage;
+            const pageData = donationData.players.slice(startIndex, endIndex);
 
             // Update database with current page state
             await this.updatePageState(config.guild_id, page, totalPages);
@@ -203,7 +200,8 @@ class LeaderboardInteractionHandler {
                 currentPage: page,
                 totalPages,
                 isAdmin,
-                guildId: config.guild_id
+                guildId: config.guild_id,
+                view: 'page'
             });
 
             // Create embed with page info
@@ -220,13 +218,75 @@ class LeaderboardInteractionHandler {
                 content: config.donation_leaderboard_template || null,
                 embeds: [embed],
                 files: [{ attachment: canvasBuffer, name: 'leaderboard.png' }],
-                components: [buttonRow] // Always show buttons
+                components: [buttonRow]
             });
 
         } catch (error) {
             console.error('Error generating leaderboard page:', error);
             await this.sendError(interaction, 'Failed to generate leaderboard');
         }
+    }
+
+    /**
+     * Show summary statistics view
+     */
+    async handleSummary(interaction, config, returnPage) {
+        try {
+            const donationData = await this.getDonationData(config, false);
+            if (!donationData || donationData.players.length === 0) {
+                return await this.sendError(interaction, 'No data available for summary');
+            }
+
+            const players = donationData.players;
+            const totalPlayers = players.length;
+            const totalDonations = players.reduce((sum, p) => sum + (p.donations || 0), 0);
+            const totalReceived = players.reduce((sum, p) => sum + (p.received || 0), 0);
+            const avgDonation = totalPlayers ? (totalDonations / totalPlayers) : 0;
+            const avgReceived = totalPlayers ? (totalReceived / totalPlayers) : 0;
+            const topDonors = [...players].sort((a,b) => (b.donations||0) - (a.donations||0)).slice(0,3);
+            const topReceivers = [...players].sort((a,b) => (b.received||0) - (a.received||0)).slice(0,3);
+
+            const embed = new EmbedBuilder()
+                .setTitle('📈 Donation Leaderboard Summary')
+                .setColor('#2ecc71')
+                .setDescription(`Overview for ${donationData.clanName || 'Clan'} (${config.donation_leaderboard_time_range.replace('_',' ')})`)
+                .addFields([
+                    { name: '👥 Players Tracked', value: String(totalPlayers), inline: true },
+                    { name: '📦 Total Donations', value: String(totalDonations), inline: true },
+                    { name: '📥 Total Received', value: String(totalReceived), inline: true },
+                    { name: '📊 Avg Donations', value: avgDonation.toFixed(1), inline: true },
+                    { name: '📊 Avg Received', value: avgReceived.toFixed(1), inline: true },
+                    { name: '🏆 Top Donors', value: topDonors.map((p,i)=>`**${i+1}.** ${p.name} - ${p.donations}`).join('\n') || 'N/A', inline: false },
+                    { name: '📥 Top Receivers', value: topReceivers.map((p,i)=>`**${i+1}.** ${p.name} - ${p.received}`).join('\n') || 'N/A', inline: false }
+                ])
+                .setTimestamp();
+
+            const isAdmin = LeaderboardButtons.hasAdminPermission(interaction.member);
+            const buttonRow = LeaderboardButtons.createButtonRow({
+                currentPage: returnPage,
+                totalPages: config.donation_leaderboard_total_pages || 1,
+                isAdmin,
+                guildId: config.guild_id,
+                view: 'summary'
+            });
+
+            await interaction.editReply({
+                content: null,
+                embeds: [embed],
+                files: [],
+                components: [buttonRow]
+            });
+        } catch (error) {
+            console.error('Error generating summary view:', error);
+            await this.sendError(interaction, 'Failed to generate summary');
+        }
+    }
+
+    /**
+     * Return to page view from summary
+     */
+    async handleBackToPage(interaction, config, page) {
+        await this.generateLeaderboardPage(interaction, config, page, false);
     }
 
     /**

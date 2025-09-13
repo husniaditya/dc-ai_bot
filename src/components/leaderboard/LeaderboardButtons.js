@@ -14,7 +14,8 @@ class LeaderboardButtons {
             currentPage = 1,
             totalPages = 1,
             isAdmin = false,
-            guildId = ''
+            guildId = '',
+            view = 'page' // 'page' | 'summary'
         } = options;
 
         const buttons = [];
@@ -39,32 +40,48 @@ class LeaderboardButtons {
             );
         }
 
-        // Previous page button - only if not on first page and multiple pages
-        if (currentPage > 1 && totalPages > 1) {
-            buttons.push(
-                new ButtonBuilder()
-                    .setCustomId(`leaderboard_prev_${guildId}`)
-                    .setLabel('◀️ Previous')
+        if (view === 'page') {
+            // Previous page button - disabled state version when needed to keep button positions consistent
+            if (totalPages > 1) {
+                const prevButton = new ButtonBuilder()
+                    .setCustomId(`leaderboard_prev_${currentPage}_${guildId}`)
+                    .setLabel('◀️ Prev')
                     .setStyle(ButtonStyle.Secondary)
-                    .setEmoji('◀️')
-            );
-        }
+                    .setEmoji('◀️');
+                if (currentPage <= 1) prevButton.setDisabled(true);
+                buttons.push(prevButton);
 
-        // Next page button - only if not on last page and multiple pages
-        if (currentPage < totalPages && totalPages > 1) {
+                const nextButton = new ButtonBuilder()
+                    .setCustomId(`leaderboard_next_${currentPage}_${guildId}`)
+                    .setLabel('Next ▶️')
+                    .setStyle(ButtonStyle.Secondary)
+                    .setEmoji('▶️');
+                if (currentPage >= totalPages) nextButton.setDisabled(true);
+                buttons.push(nextButton);
+            }
+
+            // Summary button (always available on page view)
             buttons.push(
                 new ButtonBuilder()
-                    .setCustomId(`leaderboard_next_${guildId}`)
-                    .setLabel('▶️ Next')
+                    .setCustomId(`leaderboard_summary_${currentPage}_${guildId}`)
+                    .setLabel('📈 Summary')
                     .setStyle(ButtonStyle.Secondary)
-                    .setEmoji('▶️')
+                    .setEmoji('📈')
+            );
+        } else if (view === 'summary') {
+            // Back button to return to page view
+            buttons.push(
+                new ButtonBuilder()
+                    .setCustomId(`leaderboard_back_${currentPage}_${guildId}`)
+                    .setLabel('🔙 Back')
+                    .setStyle(ButtonStyle.Secondary)
+                    .setEmoji('🔙')
             );
         }
 
         // Create action row
         const actionRow = new ActionRowBuilder();
         buttons.forEach(button => actionRow.addComponents(button));
-
         return actionRow;
     }
 
@@ -89,14 +106,23 @@ class LeaderboardButtons {
      */
     static parseButtonId(customId) {
         const parts = customId.split('_');
-        if (parts.length < 3 || parts[0] !== 'leaderboard') {
-            return null;
+        if (parts[0] !== 'leaderboard') return null;
+        const action = parts[1];
+        let currentPage; let guildId;
+        if (['prev','next','summary','back'].includes(action) && parts.length >= 4 && /^\d+$/.test(parts[2])) {
+            currentPage = parseInt(parts[2], 10);
+            guildId = parts.slice(3).join('_');
+        } else {
+            guildId = parts.slice(2).join('_');
         }
+        return { action, guildId, currentPage };
+    }
 
-        return {
-            action: parts[1], // refresh, edit, prev, next
-            guildId: parts.slice(2).join('_') // Rejoin in case guild ID contains underscores
-        };
+    /**
+     * Extended parser used by interaction handler (alias for parseButtonId for clarity)
+     */
+    static parseButtonInteraction(customId) {
+        return this.parseButtonId(customId);
     }
 
     /**
@@ -183,7 +209,9 @@ class LeaderboardButtons {
             refresh: '🔄',
             edit: '✏️',
             prev: '◀️',
-            next: '▶️'
+            next: '▶️',
+            summary: '📈',
+            back: '🔙'
         };
         return emojis[action] || '❓';
     }
@@ -198,9 +226,26 @@ class LeaderboardButtons {
             refresh: ButtonStyle.Secondary,
             edit: ButtonStyle.Primary,
             prev: ButtonStyle.Secondary,
-            next: ButtonStyle.Secondary
+            next: ButtonStyle.Secondary,
+            summary: ButtonStyle.Secondary,
+            back: ButtonStyle.Secondary
         };
         return styles[action] || ButtonStyle.Secondary;
+    }
+
+    /**
+     * Create a loading state button row
+     */
+    static createLoadingButtonRow(guildId) {
+        const actionRow = new ActionRowBuilder();
+        actionRow.addComponents(
+            new ButtonBuilder()
+                .setCustomId(`leaderboard_loading_${guildId}`)
+                .setLabel('⏳ Loading...')
+                .setStyle(ButtonStyle.Secondary)
+                .setDisabled(true)
+        );
+        return actionRow;
     }
 }
 

@@ -5,8 +5,8 @@ const { startYouTubeWatcher } = require('../services/youtube');
 const { startTwitchWatcher } = require('../services/twitch');
 const { startCOCWatcher } = require('../watchers/clashofclans');
 
-// Initialize leaderboard events
-const LeaderboardEvents = require('./LeaderboardEvents');
+// Initialize leaderboard events (relocated to handlers directory)
+const LeaderboardEvents = require('../handlers/LeaderboardEvents');
 
 function setupReadyHandler(client, store, startTimestamp, commandMap) {
   client.once('ready', () => {
