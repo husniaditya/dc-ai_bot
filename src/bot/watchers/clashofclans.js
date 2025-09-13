@@ -15,6 +15,7 @@ const {
   announce, 
   cleanClanTag, 
   formatClanTag,
+  generateDonationLeaderboard,
   getCOCStats,
   cocStats 
 } = require('../services/clashofclans');
@@ -99,7 +100,8 @@ async function pollGuild(guild) {
           knownMembers: [],
           lastWarState: null,
           lastWarEndTime: null,
-          knownDonationMilestones: new Map()
+          knownDonationMilestones: new Map(),
+          lastLeaderboardPost: null
         };
       }
       
@@ -232,6 +234,71 @@ async function pollGuild(guild) {
       }
       
       clanState.lastMemberCount = currentMembers.length;
+      
+      // Check if we should update donation leaderboard based on schedule
+      if (cfg.trackDonationLeaderboard && cfg.donationLeaderboardSchedule) {
+        const now = new Date();
+        const lastLeaderboardPost = clanState.lastLeaderboardPost ? new Date(clanState.lastLeaderboardPost) : null;
+        
+        let shouldUpdate = false;
+        
+        // Check if it's time to update based on schedule
+        switch (cfg.donationLeaderboardSchedule) {
+          case 'hourly':
+            shouldUpdate = !lastLeaderboardPost || 
+              (now.getTime() - lastLeaderboardPost.getTime()) >= (60 * 60 * 1000);
+            break;
+          case 'daily':
+            shouldUpdate = !lastLeaderboardPost || 
+              (now.getTime() - lastLeaderboardPost.getTime()) >= (24 * 60 * 60 * 1000);
+            break;
+          case 'weekly':
+            shouldUpdate = !lastLeaderboardPost || 
+              (now.getTime() - lastLeaderboardPost.getTime()) >= (7 * 24 * 60 * 60 * 1000);
+            break;
+          case 'monthly':
+            shouldUpdate = !lastLeaderboardPost || 
+              (now.getMonth() !== lastLeaderboardPost.getMonth() || 
+               now.getFullYear() !== lastLeaderboardPost.getFullYear());
+            break;
+        }
+        
+        if (shouldUpdate) {
+          try {
+            const leaderboardBuffer = await generateDonationLeaderboard(clanInfo);
+            
+            if (leaderboardBuffer) {
+              const result = await announce(guild, cfg, {
+                clanName: clanInfo.name,
+                clanTag: formatClanTag(cleanTag),
+                leaderboardBuffer,
+                leaderboardImage: true,
+                season: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+              }, 'donation_leaderboard');
+              
+              // Update the stored message ID if we got a result
+              if (result && result.messageId) {
+                try {
+                  // Update the donation message ID in the database
+                  const currentConfig = await store.getGuildClashOfClansConfig(guild.id);
+                  await store.setGuildClashOfClansConfig(guild.id, {
+                    ...currentConfig,
+                    donationMessageId: result.messageId
+                  });
+                  
+                  console.log(`[COC] ${result.updated ? 'Updated' : 'Created'} scheduled leaderboard message ${result.messageId} for clan ${clanTag}`);
+                } catch (dbError) {
+                  console.error(`[COC] Error saving donation message ID for ${clanTag}:`, dbError.message);
+                }
+              }
+              
+              clanState.lastLeaderboardPost = now.toISOString();
+            }
+          } catch (error) {
+            console.error(`[COC] Error generating scheduled donation leaderboard for ${clanTag}:`, error.message);
+          }
+        }
+      }
       
     } catch (error) {
       cocStats.totalErrors++;

@@ -142,7 +142,7 @@ export default function ClashOfClansConfig({
     <div className="clash-config-wrapper">
       {/* Basic Settings */}
       <div className="row mb-4">
-        <div className="col-lg-6">
+        <div className="col-lg-4">
           <div className="card card-glass">
             <div className="card-body">
               <h6 className="card-title">{t('gamesSocials.common.configuration')}</h6>
@@ -225,7 +225,7 @@ export default function ClashOfClansConfig({
           </div>
         </div>
 
-        <div className="col-lg-6">
+        <div className="col-lg-4">
           {/* Mention Targets */}
           <div className="card card-glass">
             <div className="card-body">
@@ -234,10 +234,10 @@ export default function ClashOfClansConfig({
               {/* Global Mention Targets */}
               <div className="mb-3">
                 <label className="form-label">
-                  {t('gamesSocials.clashofclans.announce.globalMentions', 'Global Mention Targets')}
+                  {t('gamesSocials.clashofclans.announce.globalMentions')}
                 </label>
                 <small className="form-text text-muted d-block mb-2">
-                  {t('gamesSocials.clashofclans.announce.globalMentionsHelp', 'These roles/users will be mentioned for all Clash of Clans notifications (wars, members, donations)')}
+                  {t('gamesSocials.clashofclans.announce.globalMentionsHelp')}
                 </small>
                 <MentionTargetsPicker
                   value={config.mentionTargets || []}
@@ -252,6 +252,125 @@ export default function ClashOfClansConfig({
                   }))}
                 />
               </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="col-lg-4">
+          {/* Donation Leaderboard Settings */}
+          <div className="card card-glass">
+            <div className="card-body">
+              <div className="d-flex align-items-center mb-3">
+                <h6 className="card-title mb-0">{t('gamesSocials.clashofclans.sections.donationLeaderboard')}</h6>
+              </div>
+              
+              {/* Enable Donation Leaderboard */}
+              <div className="form-check form-switch mb-4">
+                <input
+                  className="form-check-input"
+                  type="checkbox"
+                  checked={config.trackDonationLeaderboard || false}
+                  onChange={e => onChange(prev => ({ 
+                    ...prev, 
+                    trackDonationLeaderboard: e.target.checked,
+                    // Set defaults when enabling: 20 per page, current season, random colors, interactive controls enabled
+                    ...(e.target.checked && { 
+                      donation_message_id: config.donation_message_id || null,
+                      donationMessageId: config.donationMessageId || null,
+                      donationLeaderboardPlayersPerPage: 20,
+                      donation_leaderboard_players_per_page: 20,
+                      donationLeaderboardTimeRange: 'current_season',
+                      donation_leaderboard_time_range: 'current_season',
+                      donationLeaderboardInteractive: true,
+                      donation_leaderboard_interactive: true,
+                      donationLeaderboardBackgroundType: 'random',
+                      donation_leaderboard_background_type: 'random'
+                    })
+                  }))}
+                />
+                <label className="form-check-label fw-medium">
+                  {t('gamesSocials.clashofclans.leaderboard.enableLeaderboard')}
+                </label>
+              </div>
+              
+              {config.trackDonationLeaderboard && (
+                <div className="ps-3">
+                  {/* Leaderboard Channel */}
+                  <div className="mb-4">
+                    <label className="form-label fw-medium">
+                      {t('gamesSocials.clashofclans.leaderboard.channel')}
+                    </label>
+                    <select
+                      className="form-select"
+                      value={config.donationLeaderboardChannelId || config.donation_leaderboard_channel_id || config.donationAnnounceChannelId || ''}
+                      onChange={e => onChange(prev => ({ 
+                        ...prev, 
+                        donationLeaderboardChannelId: e.target.value || null,
+                        donation_leaderboard_channel_id: e.target.value || null,
+                        // Reset message ID when channel changes
+                        donation_message_id: null,
+                        donationMessageId: null
+                      }))}
+                    >
+                      <option value="">{t('gamesSocials.common.select')}</option>
+                      {discordChannels.map(ch => (
+                        <option key={ch.id} value={ch.id}>#{ch.name}</option>
+                      ))}
+                    </select>
+                    <div className="form-text text-muted small">
+                      {t('gamesSocials.clashofclans.leaderboard.channelHint')}
+                    </div>
+                  </div>
+                  
+                  {/* Schedule */}
+                  <div className="mb-4">
+                    <label className="form-label fw-medium">
+                      {t('gamesSocials.clashofclans.leaderboard.schedule')}
+                    </label>
+                    <select
+                      className="form-select"
+                      value={config.donationLeaderboardSchedule || config.donation_leaderboard_schedule || 'weekly'}
+                      onChange={e => onChange(prev => ({ 
+                        ...prev, 
+                        donationLeaderboardSchedule: e.target.value,
+                        donation_leaderboard_schedule: e.target.value,
+                        // Reset message ID when schedule changes as bot may need to recreate the message
+                        donation_message_id: null,
+                        donationMessageId: null
+                      }))}
+                    >
+                      <option value="hourly">{t('gamesSocials.clashofclans.leaderboard.schedules.hourly')}</option>
+                      <option value="daily">{t('gamesSocials.clashofclans.leaderboard.schedules.daily')}</option>
+                      <option value="weekly">{t('gamesSocials.clashofclans.leaderboard.schedules.weekly')}</option>
+                      <option value="monthly">{t('gamesSocials.clashofclans.leaderboard.schedules.monthly')}</option>
+                    </select>
+                    <div className="form-text text-muted small">
+                      {t('gamesSocials.clashofclans.leaderboard.scheduleHint')}
+                    </div>
+                  </div>
+
+                  {/* Custom Template */}
+                  <div className="mb-3">
+                    <label className="form-label fw-medium">
+                      {t('gamesSocials.clashofclans.leaderboard.template')}
+                    </label>
+                    <textarea
+                      className="form-control"
+                      rows="3"
+                      value={config.donationLeaderboardTemplate || config.donation_leaderboard_template || ''}
+                      onChange={e => onChange(prev => ({ 
+                        ...prev, 
+                        donationLeaderboardTemplate: e.target.value,
+                        donation_leaderboard_template: e.target.value
+                      }))}
+                      placeholder={t('gamesSocials.clashofclans.leaderboard.templatePlaceholder')}
+                    />
+                    <div className="form-text text-muted small">
+                      {t('gamesSocials.clashofclans.leaderboard.templateHint')}
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>

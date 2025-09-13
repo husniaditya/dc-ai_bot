@@ -1907,6 +1907,7 @@
       "sections": {
         "clanManagement": "Clan-Verwaltung",
         "trackingFeatures": "Tracking-Funktionen",
+        "donationLeaderboard": "Spenden-Bestenliste",
         "warStartTemplate": "Kriegsstart-Vorlage",
         "warEndTemplate": "Kriegsende-Vorlage",
         "memberJoinTemplate": "Neues-Mitglied-Vorlage",
@@ -1923,6 +1924,24 @@
         "trackDonations": "Spenden verfolgen",
         "donationThreshold": "Minimaler Spendenschwellenwert",
         "donationThresholdHint": "Mindestspenden pro Woche um Ankündigungen auszulösen"
+      },
+      "leaderboard": {
+        "enableLeaderboard": "Automatische Bestenlisten-Veröffentlichung aktivieren",
+        "channel": "Bestenlisten-Kanal",
+        "channelHint": "Kanal, in dem Bestenlisten-Bilder gepostet werden. Verwendet Spenden-Kanal falls nicht festgelegt.",
+        "schedule": "Aktualisierungsplan",
+        "scheduleHint": "Wie oft die Bestenliste automatisch aktualisiert wird. Die Bestenliste wird auch sofort gepostet, wenn Sie diese Konfiguration speichern.",
+        "schedules": {
+          "hourly": "Stündlich",
+          "daily": "Täglich",
+          "weekly": "Wöchentlich",
+          "monthly": "Monatlich"
+        },
+        "time": "Veröffentlichungszeit",
+        "timeHint": "Tageszeit für die Veröffentlichung der Bestenliste (24-Stunden-Format). Leer lassen für beliebige Zeit.",
+        "template": "Bestenlisten-Nachrichtenvorlage",
+        "templatePlaceholder": "Wöchentliche Spenden-Bestenlisten-Aktualisierung! 📊",
+        "templateHint": "Nachricht, die das Bestenlisten-Bild begleitet. Leer lassen für Standardnachricht."
       },
       "templates": {
         "warStartPlaceholder": "🛡️ Krieg gegen {warOpponent} begonnen! Vorbereitung endet {warEndTime}. Viel Glück {roleMention}!",

@@ -53,6 +53,7 @@ function createClashOfClansRoutes(client, store) {
         warAnnounceChannelId: req.body.warAnnounceChannelId,
         memberAnnounceChannelId: req.body.memberAnnounceChannelId,
         donationAnnounceChannelId: req.body.donationAnnounceChannelId,
+        donationLeaderboardChannelId: req.body.donationLeaderboardChannelId,
         // Global mention targets (primary)
         mentionTargets: Array.isArray(req.body.mentionTargets) ? req.body.mentionTargets : undefined,
         // Individual mention targets (for compatibility)
@@ -63,17 +64,21 @@ function createClashOfClansRoutes(client, store) {
         warChannelId: req.body.warChannelId || req.body.warAnnounceChannelId,
         memberChannelId: req.body.memberChannelId || req.body.memberAnnounceChannelId,
         donationChannelId: req.body.donationChannelId || req.body.donationAnnounceChannelId,
-        mentionTargets: Array.isArray(req.body.mentionTargets) ? req.body.mentionTargets : undefined,
         enabled: req.body.enabled,
         intervalSec: req.body.intervalSec,
         trackWars: req.body.trackWars,
         trackMembers: req.body.trackMembers,
         trackDonations: req.body.trackDonations,
+        trackDonationLeaderboard: req.body.trackDonationLeaderboard,
         // Map frontend tracking fields to backend
         trackWarEvents: req.body.trackWarEvents,
         trackMemberEvents: req.body.trackMemberEvents,
         trackDonationEvents: req.body.trackDonationEvents,
         donationThreshold: req.body.donationThreshold,
+        minDonationThreshold: req.body.minDonationThreshold, // Map frontend field name
+        donationLeaderboardSchedule: req.body.donationLeaderboardSchedule,
+        donationLeaderboardTime: req.body.donationLeaderboardTime,
+        donationLeaderboardTemplate: req.body.donationLeaderboardTemplate,
         warStartTemplate: req.body.warStartTemplate,
         warEndTemplate: req.body.warEndTemplate,
         memberJoinTemplate: req.body.memberJoinTemplate,
@@ -84,6 +89,55 @@ function createClashOfClansRoutes(client, store) {
       const cfg = await store.setGuildClashOfClansConfig(guildId, partial);
       
       audit(req, { action: 'update-clashofclans-config', guildId });
+
+      // Trigger immediate leaderboard posting whenever donation leaderboard is enabled
+      // Note: Watcher also handles automatic scheduled updates based on donationLeaderboardSchedule
+      if (partial.trackDonationLeaderboard) {
+        try {
+          // Import required services
+          const { fetchClanInfo, announce, generateDonationLeaderboard, formatClanTag, cleanClanTag } = require('../../bot/services/clashofclans');
+          
+          const guild = client.guilds.cache.get(guildId);
+          if (guild && cfg.clans && cfg.clans.length > 0) {
+            // Post leaderboard for each configured clan
+            for (const clanTag of cfg.clans) {
+              try {
+                const cleanTag = cleanClanTag(clanTag);
+                const clanInfo = await fetchClanInfo(cleanTag);
+                
+                if (clanInfo) {
+                  const leaderboardBuffer = await generateDonationLeaderboard(clanInfo);
+                  
+                  if (leaderboardBuffer) {
+                    const result = await announce(guild, cfg, {
+                      clanName: clanInfo.name,
+                      clanTag: formatClanTag(cleanTag),
+                      leaderboardBuffer,
+                      leaderboardImage: true,
+                      season: `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`
+                    }, 'donation_leaderboard');
+                    
+                    // Save the message ID for future updates
+                    if (result && result.messageId) {
+                      await store.setGuildClashOfClansConfig(guildId, {
+                        ...cfg,
+                        donationMessageId: result.messageId
+                      });
+                    }
+                    
+                    console.log(`[API] Posted leaderboard for clan ${clanTag} in guild ${guildId}`);
+                  }
+                }
+              } catch (error) {
+                console.error(`[API] Error posting leaderboard for clan ${clanTag}:`, error.message);
+              }
+            }
+          }
+        } catch (error) {
+          console.error(`[API] Error triggering leaderboard posting:`, error.message);
+          // Don't fail the API request if leaderboard posting fails
+        }
+      }
 
       // Re-fetch to ensure values reflect DB authoritative columns
       const fresh = await store.getGuildClashOfClansConfig(guildId);

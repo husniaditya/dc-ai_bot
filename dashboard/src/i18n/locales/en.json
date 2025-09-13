@@ -1939,6 +1939,7 @@
       "sections": {
         "clanManagement": "Clan Management",
         "trackingFeatures": "Tracking Features",
+        "donationLeaderboard": "Donation Leaderboard",
         "warStartTemplate": "War Start Template",
         "warEndTemplate": "War End Template",
         "memberJoinTemplate": "Member Join Template",
@@ -1955,6 +1956,26 @@
         "trackDonations": "Track Donations",
         "donationThreshold": "Minimum Donation Threshold",
         "donationThresholdHint": "Minimum donations per week to trigger announcements"
+      },
+      "leaderboard": {
+        "enableLeaderboard": "Enable Automatic Leaderboard Posting",
+        "channel": "Leaderboard Channel",
+        "channelHint": "Channel where leaderboard images will be posted. Uses donation channel if not set.",
+        "schedule": "Update Schedule",
+        "scheduleHint": "How often to automatically refresh the leaderboard. The leaderboard will also be posted immediately when you save this configuration.",
+        "schedules": {
+          "hourly": "Hourly",
+          "daily": "Daily",
+          "weekly": "Weekly",
+          "monthly": "Monthly"
+        },
+        "time": "Posting Time",
+        "timeHint": "Time of day to post the leaderboard (24-hour format). Leave blank for any time.",
+        "template": "Leaderboard Message Template",
+        "templatePlaceholder": "Weekly donation leaderboard update! 📊",
+        "templateHint": "Message to accompany the leaderboard image. Leave blank for default message.",
+        "enableInteractiveControls": "Enable Interactive Controls",
+        "interactiveControlsHint": "Add Refresh, Edit Board, and pagination buttons to the leaderboard message"
       },
       "templates": {
         "warStartPlaceholder": "🛡️ War started against {warOpponent}! Preparation ends {warEndTime}. Good luck {roleMention}!",
