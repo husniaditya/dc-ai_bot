@@ -30,7 +30,17 @@ function loadCommands(client){
           continue;
         }
       }
-      if (mod && mod.name && mod.execute) commandMap.set(mod.name, mod);
+      // Handle Discord.js v14 command structure (data.name and execute)
+      if (mod && mod.data && mod.data.name && mod.execute) {
+        commandMap.set(mod.data.name, mod);
+        console.log(`✅ Loaded command: ${mod.data.name}`);
+        continue;
+      }
+      // Handle legacy command structure (name and execute)
+      if (mod && mod.name && mod.execute) {
+        commandMap.set(mod.name, mod);
+        console.log(`✅ Loaded command: ${mod.name}`);
+      }
     } catch (e) {
       console.error('Failed loading command', file, e.message);
     }
