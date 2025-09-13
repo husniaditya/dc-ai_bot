@@ -201,7 +201,15 @@ module.exports = {
     .addSubcommand(subcommand =>
       subcommand
         .setName('config')
-        .setDescription('Show COC configuration (Admin only)')),
+        .setDescription('Show COC configuration (Admin only)'))
+    .addSubcommand(subcommand =>
+      subcommand
+        .setName('leaderboard')
+        .setDescription('Generate donation leaderboard for a clan')
+        .addStringOption(option =>
+          option.setName('tag')
+            .setDescription('Clan tag (e.g., #2Y0YRGG0)')
+            .setRequired(true))),
 
   async execute(interaction) {
     const subcommand = interaction.options.getSubcommand();
@@ -246,6 +254,9 @@ module.exports = {
           break;
         case 'config':
           await handleConfigCommand(interaction);
+          break;
+        case 'leaderboard':
+          await handleLeaderboardCommand(interaction);
           break;
         default:
           await interaction.reply({ content: 'Unknown subcommand!', ephemeral: true });
@@ -721,4 +732,54 @@ async function handleWarLogCommand(interaction) {
   embed.setFooter({ text: `Win Rate: ${winRate}% (${wins}/${wars.length} wars shown)` });
 
   await interaction.editReply({ embeds: [embed] });
+}
+
+// Donation leaderboard command
+async function handleLeaderboardCommand(interaction) {
+  await interaction.deferReply();
+  
+  const clanTag = cleanTag(interaction.options.getString('tag'));
+  const clanData = await cocApiRequest(`/clans/%23${clanTag}`);
+  
+  try {
+    // Import the leaderboard generation function
+    const { generateDonationLeaderboard } = require('../services/clashofclans');
+    
+    const leaderboardBuffer = await generateDonationLeaderboard(clanData);
+    
+    if (!leaderboardBuffer) {
+      await interaction.editReply({ 
+        content: 'Unable to generate donation leaderboard. Canvas library may not be installed or clan has no members.' 
+      });
+      return;
+    }
+    
+    // Create embed
+    const embed = new EmbedBuilder()
+      .setTitle('📊 Donation Leaderboard')
+      .setDescription(`**${clanData.name}** Donation Statistics`)
+      .setColor(0x1E90FF)
+      .setImage('attachment://donation_leaderboard.png')
+      .addFields(
+        { name: 'Clan', value: `${clanData.name} (#${clanTag})`, inline: true },
+        { name: 'Members', value: `${clanData.members}/50`, inline: true },
+        { name: 'Season', value: `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`, inline: true }
+      )
+      .setFooter({ text: 'Generated on demand' })
+      .setTimestamp();
+    
+    await interaction.editReply({
+      embeds: [embed],
+      files: [{
+        attachment: leaderboardBuffer,
+        name: 'donation_leaderboard.png'
+      }]
+    });
+    
+  } catch (error) {
+    console.error('Leaderboard generation error:', error);
+    await interaction.editReply({ 
+      content: 'Failed to generate donation leaderboard. Please try again later.' 
+    });
+  }
 }

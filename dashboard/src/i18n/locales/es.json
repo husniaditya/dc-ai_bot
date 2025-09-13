@@ -1544,6 +1544,7 @@
       "sections": {
         "clanManagement": "Gestión de Clan",
         "trackingFeatures": "Funciones de Seguimiento",
+        "donationLeaderboard": "Tabla de Liderazgo de Donaciones",
         "warStartTemplate": "Plantilla Inicio de Guerra",
         "warEndTemplate": "Plantilla Fin de Guerra",
         "memberJoinTemplate": "Plantilla Nuevo Miembro",
@@ -1560,6 +1561,24 @@
         "trackDonations": "Rastrear Donaciones",
         "donationThreshold": "Umbral Mínimo de Donaciones",
         "donationThresholdHint": "Donaciones mínimas por semana para activar anuncios"
+      },
+      "leaderboard": {
+        "enableLeaderboard": "Habilitar Publicación Automática de Tabla de Liderazgo",
+        "channel": "Canal de Tabla de Liderazgo",
+        "channelHint": "Canal donde se publicarán las imágenes de la tabla de liderazgo. Usa el canal de donaciones si no se establece.",
+        "schedule": "Horario de Actualización",
+        "scheduleHint": "Con qué frecuencia actualizar automáticamente la tabla de liderazgo. La tabla también se publicará inmediatamente al guardar esta configuración.",
+        "schedules": {
+          "hourly": "Cada hora",
+          "daily": "Diario",
+          "weekly": "Semanal",
+          "monthly": "Mensual"
+        },
+        "time": "Hora de Publicación",
+        "timeHint": "Hora del día para publicar la tabla de liderazgo (formato 24 horas). Dejar en blanco para cualquier hora.",
+        "template": "Plantilla de Mensaje de Tabla de Liderazgo",
+        "templatePlaceholder": "¡Actualización semanal de tabla de liderazgo de donaciones! 📊",
+        "templateHint": "Mensaje para acompañar la imagen de la tabla de liderazgo. Dejar en blanco para mensaje por defecto."
       },
       "templates": {
         "warStartPlaceholder": "🛡️ ¡Guerra iniciada contra {warOpponent}! La preparación termina {warEndTime}. ¡Buena suerte {roleMention}!",

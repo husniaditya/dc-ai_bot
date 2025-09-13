@@ -1583,6 +1583,7 @@
       "sections": {
         "clanManagement": "Manajemen Clan",
         "trackingFeatures": "Fitur Pelacakan",
+        "donationLeaderboard": "Leaderboard Donasi",
         "warStartTemplate": "Template Mulai Perang",
         "warEndTemplate": "Template Selesai Perang",
         "memberJoinTemplate": "Template Anggota Baru",
@@ -1599,6 +1600,24 @@
         "trackDonations": "Lacak Donasi",
         "donationThreshold": "Batas Minimum Donasi",
         "donationThresholdHint": "Minimum donasi per minggu untuk memicu pengumuman"
+      },
+      "leaderboard": {
+        "enableLeaderboard": "Aktifkan Posting Leaderboard Otomatis",
+        "channel": "Saluran Leaderboard",
+        "channelHint": "Saluran tempat gambar leaderboard akan diposting. Menggunakan saluran donasi jika tidak diatur.",
+        "schedule": "Jadwal Pembaruan",
+        "scheduleHint": "Seberapa sering otomatis memperbarui leaderboard. Leaderboard juga akan diposting langsung saat Anda menyimpan konfigurasi ini.",
+        "schedules": {
+          "hourly": "Setiap Jam",
+          "daily": "Harian",
+          "weekly": "Mingguan",
+          "monthly": "Bulanan"
+        },
+        "time": "Waktu Posting",
+        "timeHint": "Waktu dalam sehari untuk memposting leaderboard (format 24 jam). Kosongkan untuk waktu kapan saja.",
+        "template": "Template Pesan Leaderboard",
+        "templatePlaceholder": "Update leaderboard donasi mingguan! 📊",
+        "templateHint": "Pesan yang menyertai gambar leaderboard. Kosongkan untuk pesan default."
       },
       "templates": {
         "warStartPlaceholder": "🛡️ Perang dimulai melawan {warOpponent}! Persiapan berakhir {warEndTime}. Semoga beruntung {roleMention}!",

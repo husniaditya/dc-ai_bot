@@ -262,6 +262,20 @@ function createCOCEmbed(data, type, config) {
         { name: 'Donations', value: data.donationCount, inline: true }
       ];
       break;
+      
+    case 'donation_leaderboard':
+      embed.title = '📊 Donation Leaderboard';
+      embed.description = `**${data.clanName}** Donation Statistics`;
+      embed.color = 0x1E90FF; // Blue
+      if (data.leaderboardImage) {
+        embed.image = { url: 'attachment://donation_leaderboard.png' };
+      }
+      embed.fields = [
+        { name: 'Clan', value: `${data.clanName} (${data.clanTag})`, inline: true },
+        { name: 'Season', value: data.season || 'Current', inline: true },
+        { name: 'Last Updated', value: `<t:${Math.floor(Date.now() / 1000)}:R>`, inline: true }
+      ];
+      break;
   }
   
   return embed;
@@ -289,6 +303,11 @@ async function announce(guild, config, data, type) {
       case 'donation_milestone':
         channelId = config.donationAnnounceChannelId;
         template = config.donationTemplate;
+        mentionTargets = config.mentionTargets || config.donationMentionTarget?.split(',').filter(Boolean) || [];
+        break;
+      case 'donation_leaderboard':
+        channelId = config.donationLeaderboardChannelId || config.donationAnnounceChannelId;
+        template = config.donationLeaderboardTemplate || 'Weekly donation leaderboard update!';
         mentionTargets = config.mentionTargets || config.donationMentionTarget?.split(',').filter(Boolean) || [];
         break;
       default:
@@ -334,31 +353,256 @@ async function announce(guild, config, data, type) {
     }
     
     // Prepare message options
-    const messageOptions = { content: content || undefined };
+    const messageOptions = { 
+      content: content || undefined,
+      files: []
+    };
     
     // Add embed if enabled
-    if (config.embedEnabled) {
+    if (config.embedEnabled || type === 'donation_leaderboard') {
       messageOptions.embeds = [createCOCEmbed(templateData, type, config)];
     }
     
-    // Send message
-    await channel.send(messageOptions);
-    cocStats.totalAnnouncements++;
-    pushDebug(`ANNOUNCED: ${type} in #${channel.name} for clan ${data.clanTag}`);
-    
-  } catch (error) {
+    // Add leaderboard image if present
+    if (type === 'donation_leaderboard' && data.leaderboardBuffer) {
+      messageOptions.files.push({
+        attachment: data.leaderboardBuffer,
+        name: 'donation_leaderboard.png'
+      });
+    }
+
+    // Handle donation leaderboard message updates
+    if (type === 'donation_leaderboard') {
+      let message = null;
+      
+      // Try to fetch and update existing message if we have a message ID
+      if (config.donationMessageId) {
+        try {
+          message = await channel.messages.fetch(config.donationMessageId);
+          if (message) {
+            // Update existing message
+            await message.edit(messageOptions);
+            pushDebug(`UPDATED: ${type} message ${config.donationMessageId} in #${channel.name} for clan ${data.clanTag}`);
+            cocStats.totalAnnouncements++;
+            return { messageId: message.id, updated: true };
+          }
+        } catch (error) {
+          // Message not found or couldn't fetch - will create new one
+          pushDebug(`MESSAGE_NOT_FOUND: Could not fetch message ${config.donationMessageId}, creating new one: ${error.message}`);
+        }
+      }
+      
+      // Create new message if no existing message or update failed
+      message = await channel.send(messageOptions);
+      pushDebug(`ANNOUNCED: ${type} new message ${message.id} in #${channel.name} for clan ${data.clanTag}`);
+      cocStats.totalAnnouncements++;
+      
+      // Return the message ID so the watcher can save it
+      return { messageId: message.id, updated: false };
+    } else {
+      // For non-leaderboard messages, just send normally
+      await channel.send(messageOptions);
+      cocStats.totalAnnouncements++;
+      pushDebug(`ANNOUNCED: ${type} in #${channel.name} for clan ${data.clanTag}`);
+    }  } catch (error) {
     cocStats.totalErrors++;
     pushDebug(`ANNOUNCE_ERROR: ${error.message} for ${type}`);
   }
 }
 
-// Get COC stats for debugging
+// Generate donation leaderboard image buffer (similar to the image shown)
+async function generateDonationLeaderboard(clanInfo, options = {}) {
+  try {
+    // Import canvas only when needed (optional dependency)
+    let Canvas;
+    try {
+      Canvas = require('canvas');
+    } catch (err) {
+      pushDebug(`CANVAS_NOT_AVAILABLE: Cannot generate leaderboard image - canvas not installed`);
+      return null;
+    }
+    
+    const { createCanvas } = Canvas;
+    
+    // Sort members by donations (descending)
+    const sortedMembers = [...(clanInfo.memberList || [])]
+      .sort((a, b) => (b.donations || 0) - (a.donations || 0))
+      .slice(0, 50); // Limit to 50 members maximum
+    
+    if (sortedMembers.length === 0) {
+      pushDebug(`NO_MEMBERS: No members to generate leaderboard for`);
+      return null;
+    }
+    
+    // Calculate layout
+    const membersPerColumn = 25;
+    const leftColumn = sortedMembers.slice(0, membersPerColumn);
+    const rightColumn = sortedMembers.slice(membersPerColumn);
+    
+    // Canvas dimensions
+    const width = 800;
+    const height = Math.max(600, leftColumn.length * 22 + 120);
+    const canvas = createCanvas(width, height);
+    const ctx = canvas.getContext('2d');
+    
+    // Background
+    ctx.fillStyle = '#2C2F33';
+    ctx.fillRect(0, 0, width, height);
+    
+    // Header background
+    ctx.fillStyle = '#5865F2';
+    ctx.fillRect(0, 0, width, 80);
+    
+    // Title
+    ctx.fillStyle = '#FFFFFF';
+    ctx.font = 'bold 24px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText('Donation Leaderboard', width / 2, 35);
+    
+    // Subtitle with clan name
+    ctx.font = '16px Arial';
+    ctx.fillText(`${clanInfo.name || 'Unknown Clan'} • Season ${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`, width / 2, 60);
+    
+    // Helper function to draw member row
+    function drawMemberRow(member, index, x, y) {
+      const rowY = y + (index * 22);
+      const isOddRow = index % 2 === 1;
+      
+      // Row background (alternating colors)
+      ctx.fillStyle = isOddRow ? '#36393F' : '#40444B';
+      ctx.fillRect(x, rowY - 2, 380, 20);
+      
+      // Rank
+      ctx.fillStyle = '#FFFFFF';
+      ctx.font = '12px Arial';
+      ctx.textAlign = 'left';
+      const globalRank = index < membersPerColumn ? index + 1 : index + 1;
+      ctx.fillText(`${globalRank}.`, x + 5, rowY + 12);
+      
+      // Player name (truncate if too long)
+      let playerName = member.name || 'Unknown';
+      if (playerName.length > 12) {
+        playerName = playerName.substring(0, 12) + '...';
+      }
+      ctx.fillText(playerName, x + 25, rowY + 12);
+      
+      // Donations
+      const donations = member.donations || 0;
+      ctx.textAlign = 'right';
+      ctx.fillText(donations.toLocaleString(), x + 120, rowY + 12);
+      
+      // Donations received
+      const received = member.donationsReceived || 0;
+      ctx.fillText(received.toLocaleString(), x + 180, rowY + 12);
+      
+      // Ratio
+      const ratio = received > 0 ? (donations / received).toFixed(2) : (donations > 0 ? '∞' : '0.00');
+      ctx.fillText(ratio, x + 240, rowY + 12);
+      
+      // Last online (simplified)
+      const lastSeen = member.lastSeen || 'Unknown';
+      let lastSeenText = lastSeen;
+      if (lastSeen.includes('T')) {
+        // Parse ISO date
+        const date = new Date(lastSeen);
+        const now = new Date();
+        const diffDays = Math.floor((now - date) / (1000 * 60 * 60 * 24));
+        if (diffDays === 0) {
+          lastSeenText = 'Today';
+        } else if (diffDays === 1) {
+          lastSeenText = '1d ago';
+        } else if (diffDays < 30) {
+          lastSeenText = `${diffDays}d ago`;
+        } else {
+          lastSeenText = `${Math.floor(diffDays / 30)}mo ago`;
+        }
+      }
+      ctx.fillText(lastSeenText, x + 360, rowY + 12);
+    }
+    
+    // Column headers
+    const headerY = 100;
+    
+    // Left column header
+    ctx.fillStyle = '#5865F2';
+    ctx.fillRect(10, headerY - 5, 380, 20);
+    ctx.fillStyle = '#FFFFFF';
+    ctx.font = 'bold 12px Arial';
+    ctx.textAlign = 'left';
+    ctx.fillText('#', 15, headerY + 8);
+    ctx.fillText('Player Name', 30, headerY + 8);
+    ctx.textAlign = 'right';
+    ctx.fillText('Dons', 125, headerY + 8);
+    ctx.fillText('Rec', 185, headerY + 8);
+    ctx.fillText('Ratio', 245, headerY + 8);
+    ctx.fillText('Last On', 365, headerY + 8);
+    
+    // Right column header (if needed)
+    if (rightColumn.length > 0) {
+      ctx.fillStyle = '#5865F2';
+      ctx.fillRect(410, headerY - 5, 380, 20);
+      ctx.fillStyle = '#FFFFFF';
+      ctx.textAlign = 'left';
+      ctx.fillText('#', 415, headerY + 8);
+      ctx.fillText('Player Name', 430, headerY + 8);
+      ctx.textAlign = 'right';
+      ctx.fillText('Dons', 525, headerY + 8);
+      ctx.fillText('Rec', 585, headerY + 8);
+      ctx.fillText('Ratio', 645, headerY + 8);
+      ctx.fillText('Last On', 765, headerY + 8);
+    }
+    
+    // Draw member rows
+    leftColumn.forEach((member, index) => {
+      drawMemberRow(member, index, 10, 125);
+    });
+    
+    rightColumn.forEach((member, index) => {
+      drawMemberRow(member, index + membersPerColumn, 410, 125);
+    });
+    
+    // Footer
+    const footerY = height - 25;
+    ctx.fillStyle = '#72767D';
+    ctx.font = '10px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText(`Last Updated • ${new Date().toLocaleString()}`, width / 2, footerY);
+    
+    // Convert to buffer
+    const buffer = canvas.toBuffer('image/png');
+    pushDebug(`LEADERBOARD_GENERATED: ${sortedMembers.length} members for ${clanInfo.name}`);
+    return buffer;
+    
+  } catch (error) {
+    pushDebug(`LEADERBOARD_ERROR: ${error.message}`);
+    return null;
+  }
+}
+
+//Get COC stats for debugging
 function getCOCStats() {
   return {
     ...cocStats,
     hasApiToken: !!COC_API_TOKEN,
     stateKeys: 0 // Will be updated by watcher
   };
+}
+
+// Helper function to update donation message ID
+async function updateDonationMessageId(guildId, messageId) {
+  try {
+    const store = require('../../config/store');
+    const currentConfig = await store.getGuildClashOfClansConfig(guildId);
+    await store.setGuildClashOfClansConfig(guildId, {
+      ...currentConfig,
+      donationMessageId: messageId
+    });
+    pushDebug(`UPDATED_MESSAGE_ID: Set donation message ID to ${messageId} for guild ${guildId}`);
+    return true;
+  } catch (error) {
+    pushDebug(`ERROR_UPDATING_MESSAGE_ID: ${error.message} for guild ${guildId}`);
+    return false;
+  }
 }
 
 module.exports = {
@@ -370,6 +614,8 @@ module.exports = {
   buildRoleMention,
   replacePlaceholders,
   createCOCEmbed,
+  generateDonationLeaderboard,
+  updateDonationMessageId,
   getCOCStats,
   cocStats,
   pushDebug

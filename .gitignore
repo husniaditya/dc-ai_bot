@@ -18,3 +18,4 @@ logs/jwt-*
 youtube-state.json
 clashofclans-state.json
 scripts/
+test/

@@ -1907,6 +1907,7 @@
       "sections": {
         "clanManagement": "クラン管理",
         "trackingFeatures": "追跡機能",
+        "donationLeaderboard": "寄付リーダーボード",
         "warStartTemplate": "戦争開始テンプレート",
         "warEndTemplate": "戦争終了テンプレート",
         "memberJoinTemplate": "新メンバーテンプレート",
@@ -1923,6 +1924,24 @@
         "trackDonations": "寄付を追跡",
         "donationThreshold": "最小寄付閾値",
         "donationThresholdHint": "アナウンスをトリガーするための週間最小寄付数"
+      },
+      "leaderboard": {
+        "enableLeaderboard": "自動リーダーボード投稿を有効にする",
+        "channel": "リーダーボードチャンネル",
+        "channelHint": "リーダーボード画像が投稿されるチャンネル。設定されていない場合は寄付チャンネルを使用します。",
+        "schedule": "更新スケジュール",
+        "scheduleHint": "リーダーボードを自動的に更新する頻度。この設定を保存する際にもリーダーボードが即座に投稿されます。",
+        "schedules": {
+          "hourly": "毎時",
+          "daily": "毎日",
+          "weekly": "毎週",
+          "monthly": "毎月"
+        },
+        "time": "投稿時間",
+        "timeHint": "リーダーボードを投稿する時刻（24時間形式）。任意の時間の場合は空白にしてください。",
+        "template": "リーダーボードメッセージテンプレート",
+        "templatePlaceholder": "週間寄付リーダーボード更新！📊",
+        "templateHint": "リーダーボード画像に添付するメッセージ。デフォルトメッセージの場合は空白にしてください。"
       },
       "templates": {
         "warStartPlaceholder": "🛡️ {warOpponent}との戦争が始まりました！準備は{warEndTime}に終了します。頑張れ{roleMention}！",

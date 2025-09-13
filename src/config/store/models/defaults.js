@@ -99,6 +99,7 @@ const defaultConfigs = {
     warAnnounceChannelId: null,
     memberAnnounceChannelId: null,
     donationAnnounceChannelId: null,
+    donationLeaderboardChannelId: null,
     warMentionTarget: null,
     memberMentionTarget: null,
     donationMentionTarget: null,
@@ -108,10 +109,15 @@ const defaultConfigs = {
     trackWars: true,
     trackMembers: true,
     trackDonations: true,
+    trackDonationLeaderboard: false,
     trackWarEvents: true, // Frontend field names
     trackMemberEvents: true,
     trackDonationEvents: true,
     donationThreshold: 100,
+    minDonationThreshold: 100, // Map frontend field name
+    donationLeaderboardSchedule: 'weekly',
+    donationLeaderboardTime: '20:00',
+    donationLeaderboardTemplate: '',
     warStartTemplate: '🛡️ War started against {warOpponent}! Preparation ends {warEndTime}. Good luck {roleMention}!',
     warEndTemplate: '⚔️ War against {warOpponent} ended! Result: {warResult} - {warStars} stars with {warDestructionPercentage}% destruction. Great job {roleMention}!',
     memberJoinTemplate: '👋 New member joined {clanName}! We now have {memberCount} members. Welcome!',

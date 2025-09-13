@@ -841,6 +841,19 @@ const commands = [
         name: 'config',
         description: 'Show COC configuration (Admin only)',
         type: 1 // SUB_COMMAND
+      },
+      {
+        name: 'leaderboard',
+        description: 'Generate donation leaderboard for a clan',
+        type: 1, // SUB_COMMAND
+        options: [
+          {
+            name: 'tag',
+            description: 'Clan tag (e.g., #2Y0YRGG0)',
+            type: 3, // STRING
+            required: true
+          }
+        ]
       }
     ]
   },

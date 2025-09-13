@@ -1907,6 +1907,7 @@
       "sections": {
         "clanManagement": "Gestion de Clan",
         "trackingFeatures": "Fonctionnalités de Suivi",
+        "donationLeaderboard": "Classement des Dons",
         "warStartTemplate": "Modèle Début de Guerre",
         "warEndTemplate": "Modèle Fin de Guerre",
         "memberJoinTemplate": "Modèle Nouveau Membre",
@@ -1923,6 +1924,24 @@
         "trackDonations": "Suivre les Dons",
         "donationThreshold": "Seuil Minimum de Dons",
         "donationThresholdHint": "Dons minimum par semaine pour déclencher les annonces"
+      },
+      "leaderboard": {
+        "enableLeaderboard": "Activer la Publication Automatique du Classement",
+        "channel": "Canal du Classement",
+        "channelHint": "Canal où les images du classement seront publiées. Utilise le canal des dons si non défini.",
+        "schedule": "Horaire de Mise à Jour",
+        "scheduleHint": "Fréquence de mise à jour automatique du classement. Le classement sera également publié immédiatement lors de l'enregistrement de cette configuration.",
+        "schedules": {
+          "hourly": "Toutes les heures",
+          "daily": "Quotidien",
+          "weekly": "Hebdomadaire",
+          "monthly": "Mensuel"
+        },
+        "time": "Heure de Publication",
+        "timeHint": "Heure de la journée pour publier le classement (format 24 heures). Laisser vide pour n'importe quelle heure.",
+        "template": "Modèle de Message du Classement",
+        "templatePlaceholder": "Mise à jour hebdomadaire du classement des dons! 📊",
+        "templateHint": "Message accompagnant l'image du classement. Laisser vide pour le message par défaut."
       },
       "templates": {
         "warStartPlaceholder": "🛡️ Guerre commencée contre {warOpponent}! La préparation se termine {warEndTime}. Bonne chance {roleMention}!",

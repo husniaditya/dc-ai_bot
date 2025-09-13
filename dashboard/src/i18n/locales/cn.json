@@ -1925,6 +1925,7 @@
       "sections": {
         "clanManagement": "部落管理",
         "trackingFeatures": "追蹤功能",
+        "donationLeaderboard": "捐贈排行榜",
         "warStartTemplate": "戰爭開始範本",
         "warEndTemplate": "戰爭結束範本",
         "memberJoinTemplate": "新成員範本",
@@ -1941,6 +1942,24 @@
         "trackDonations": "追蹤捐贈",
         "donationThreshold": "最小捐贈門檻",
         "donationThresholdHint": "觸發公告的每週最小捐贈數量"
+      },
+      "leaderboard": {
+        "enableLeaderboard": "啟用自動排行榜發佈",
+        "channel": "排行榜頻道",
+        "channelHint": "排行榜圖片將發佈的頻道。如未設定則使用捐贈頻道。",
+        "schedule": "更新時程",
+        "scheduleHint": "自動刷新排行榜的頻率。儲存此設定時排行榜也會立即發佈。",
+        "schedules": {
+          "hourly": "每小時",
+          "daily": "每日",
+          "weekly": "每週",
+          "monthly": "每月"
+        },
+        "time": "發佈時間",
+        "timeHint": "發佈排行榜的時間（24小時制）。留空表示任何時間。",
+        "template": "排行榜訊息範本",
+        "templatePlaceholder": "每週捐贈排行榜更新！📊",
+        "templateHint": "陪伴排行榜圖片的訊息。留空使用預設訊息。"
       },
       "templates": {
         "warStartPlaceholder": "🛡️ 與 {warOpponent} 的戰爭開始了！準備階段於 {warEndTime} 結束。加油 {roleMention}！",
