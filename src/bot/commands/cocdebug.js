@@ -1,10 +1,20 @@
 const { cocStats } = require('../services/clashofclans');
+const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
+const ClashOfClansAPI = require('../services/ClashOfClansAPI');
 
 module.exports = {
   name: 'cocdebug',
+  data: new SlashCommandBuilder()
+    .setName('cocdebug')
+    .setDescription('Debug Clash of Clans API configuration and status')
+    .addStringOption(option =>
+      option.setName('clan')
+        .setDescription('Test a specific clan tag (optional)')
+        .setRequired(false)
+    ),
   execute: async (interaction) => {
     // Defer immediately to prevent timeout
-    await interaction.deferReply({ flags: 64 });
+    await interaction.deferReply({ ephemeral: true });
     
     const guild = interaction.guild;
     if(!guild){ 
@@ -17,84 +27,137 @@ module.exports = {
       return interaction.editReply({ content:'Manage Server permission required.' });
     }
     
-    const enabled = process.env.COC_DEBUG_EVENTS === '1';
-    if(!enabled){
-      return interaction.editReply({ content:'Set COC_DEBUG_EVENTS=1 and restart to collect debug events.' });
-    }
-    
     try {
+      const testClan = interaction.options.getString('clan');
+      
+      // Create API instance
+      const api = new ClashOfClansAPI();
+      
+      // Check API key configuration
+      const hasApiKey = !!(process.env.COC_API_KEY || process.env.COC_API_TOKEN);
+      const apiKey = process.env.COC_API_KEY || process.env.COC_API_TOKEN;
+      const apiKeyMasked = hasApiKey ? `${apiKey.substring(0, 8)}...` : 'Not set';
+      const keySource = process.env.COC_API_KEY ? 'COC_API_KEY' : process.env.COC_API_TOKEN ? 'COC_API_TOKEN' : 'None';
+      
+      const embed = new EmbedBuilder()
+        .setTitle('🔧 Clash of Clans Debug Information')
+        .setColor('#f39c12')
+        .addFields([
+          {
+            name: '🔑 API Configuration',
+            value: `**API Key:** ${apiKeyMasked}\n**Source:** ${keySource}\n**Status:** ${hasApiKey ? '✅ Configured' : '❌ Missing'}`,
+            inline: true
+          },
+          {
+            name: '📊 Service Statistics',
+            value: `**Total Polls:** ${cocStats.totalPolls}\n**API Calls:** ${cocStats.apiCalls}\n**Errors:** ${cocStats.totalErrors}`,
+            inline: true
+          }
+        ]);
+
+      // Test API if key is configured
+      if (hasApiKey) {
+        if (testClan) {
+          try {
+            embed.addFields([
+              { name: '🧪 Testing Clan...', value: `Testing clan: ${testClan}`, inline: false }
+            ]);
+            
+            await interaction.editReply({ embeds: [embed] });
+            
+            // Test the specific clan
+            const clanData = await api.getClan(testClan);
+            
+            embed.addFields([
+              {
+                name: '✅ Clan Test Success',
+                value: `**Name:** ${clanData.name}\n**Tag:** ${clanData.tag}\n**Members:** ${clanData.memberCount}/${clanData.size}\n**Level:** ${clanData.clanLevel}`,
+                inline: false
+              }
+            ]);
+            
+            // Test donation data
+            const donationData = await api.getClanDonationData(testClan, 'current_season');
+            embed.addFields([
+              {
+                name: '📊 Donation Data',
+                value: `**Players:** ${donationData.players.length}\n**Total Donations:** ${donationData.players.reduce((sum, p) => sum + (p.donations || 0), 0)}`,
+                inline: false
+              }
+            ]);
+            
+          } catch (testError) {
+            embed.addFields([
+              {
+                name: '❌ Clan Test Failed',
+                value: `**Error:** ${testError.message}\n**Clan:** ${testClan}`,
+                inline: false
+              }
+            ]);
+            
+            if (testError.message.includes('API key invalid')) {
+              embed.addFields([
+                {
+                  name: '🔧 Fix API Key Issue',
+                  value: '1. Visit https://developer.clashofclans.com\n2. Create/update your API key\n3. Ensure it includes this server\'s IP\n4. Set COC_API_KEY **or** COC_API_TOKEN environment variable\n5. Restart the bot',
+                  inline: false
+                }
+              ]);
+            }
+          }
+        } else {
+          // No specific clan to test, just check API connectivity
+          try {
+            // Try a basic API call (get a well-known clan)
+            await api.getClan('#2PP');
+            embed.addFields([
+              { name: '✅ API Connection', value: 'API key is working correctly', inline: false }
+            ]);
+          } catch (apiError) {
+            embed.addFields([
+              {
+                name: '❌ API Connection Failed',
+                value: `**Error:** ${apiError.message}`,
+                inline: false
+              }
+            ]);
+          }
+        }
+      } else {
+        embed.addFields([
+          {
+            name: '❌ API Key Missing',
+            value: 'Set COC_API_KEY or COC_API_TOKEN environment variable and restart the bot.',
+            inline: false
+          }
+        ]);
+      }
+      
       // Get comprehensive stats from the service module
       const cocService = require('../services/clashofclans');
       const fullStats = cocService.getCOCStats ? cocService.getCOCStats() : null;
       
-      // Show basic stats first
-      let stats = `**Clash of Clans Watcher Statistics:**
-      Total Polls: ${cocStats.totalPolls}
-      Total Announcements: ${cocStats.totalAnnouncements}
-      Total Errors: ${cocStats.totalErrors}
-      API Calls: ${cocStats.apiCalls}
-      Quota Errors: ${cocStats.quotaErrors}
-      Last Poll: ${cocStats.lastPoll || 'Never'}
-
-      **API Status:**
-      Has API Token: ${fullStats?.hasApiToken ? 'Yes' : 'No'}
-      State Keys: ${fullStats?.stateKeys || 0}
-
-      **Detailed Breakdown:**
-      Clan API Calls: ${cocStats.clanApiCalls}
-      Members Calls: ${cocStats.membersCalls}
-      War Calls: ${cocStats.warCalls}
-      Cache Hits: ${cocStats.cacheHits}`;
-
-      stats += `
-      **Recent Events (latest last):**`;
-      
-      const lines = cocStats._debugEvents.slice(-15); // Show last 15 events to fit in Discord message
-      if(!lines.length){
-        return await interaction.editReply({ content: stats + '\nNo debug events recorded yet.' });
-      }
-      
-      const events = lines.join('\n');
-      const msg = stats + '\n```\n' + events + '\n```';
-      
-      // Send the response (handle splitting carefully)
-      try {
-        if(msg.length > 1900) {
-          // Send stats first
-          await interaction.editReply({ content: stats });
-          
-          // Prepare events message
-          let eventMsg = '```\n' + events + '\n```';
-          if (eventMsg.length > 1900) {
-            const truncatedEvents = events.substring(0, 1800) + '\n... (truncated)';
-            eventMsg = '```\n' + truncatedEvents + '\n```';
+      if (fullStats) {
+        embed.addFields([
+          {
+            name: '📈 Extended Stats',
+            value: `**State Keys:** ${fullStats.stateKeys || 0}\n**Cache Hits:** ${cocStats.cacheHits || 0}\n**Last Poll:** ${cocStats.lastPoll || 'Never'}`,
+            inline: false
           }
-          
-          // Send events as follow-up
-          await interaction.followUp({ content: eventMsg, flags:64 });
-        } else {
-          // Send everything in one message
-          await interaction.editReply({ content: msg });
-        }
-      } catch (sendError) {
-        console.error('Error sending cocdebug response:', sendError);
-        // If we can still edit reply, send a simple error message
-        try {
-          await interaction.editReply({ content: 'Error displaying debug information.' });
-        } catch (fallbackError) {
-          console.error('Failed to send fallback error message:', fallbackError);
-        }
-        throw sendError; // Re-throw to trigger main catch block
+        ]);
       }
+      
+      await interaction.editReply({ embeds: [embed] });
       
     } catch (error) {
       console.error('cocdebug error:', error);
-      // Try to edit the deferred reply with an error message
-      try {
-        await interaction.editReply({ content: 'An error occurred while retrieving debug information.' });
-      } catch (editError) {
-        console.error('Failed to edit reply with error message:', editError);
-      }
+      
+      const errorEmbed = new EmbedBuilder()
+        .setTitle('❌ Debug Error')
+        .setDescription(`Failed to gather debug information: ${error.message}`)
+        .setColor('#e74c3c');
+        
+      await interaction.editReply({ embeds: [errorEmbed] });
     }
   }
 };

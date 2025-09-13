@@ -332,20 +332,46 @@ class LeaderboardInteractionHandler {
         }
 
         // Fetch fresh data from CoC API
-        const freshData = await ClashOfClansAPI.getClanDonationData(
-            config.clans,
-            config.donation_leaderboard_time_range
-        );
-
-        // Cache the fresh data
-        if (freshData) {
-            await this.db.execute(
-                'UPDATE guild_clashofclans_watch SET donation_leaderboard_cached_data = ?, donation_leaderboard_last_update = CURRENT_TIMESTAMP WHERE guild_id = ?',
-                [JSON.stringify({ ...freshData, last_fetched: new Date().toISOString() }), config.guild_id]
+        try {
+            const freshData = await ClashOfClansAPI.getClanDonationData(
+                config.clans,
+                config.donation_leaderboard_time_range
             );
-        }
 
-        return freshData;
+            // Cache the fresh data
+            if (freshData) {
+                await this.db.execute(
+                    'UPDATE guild_clashofclans_watch SET donation_leaderboard_cached_data = ?, donation_leaderboard_last_update = CURRENT_TIMESTAMP WHERE guild_id = ?',
+                    [JSON.stringify({ ...freshData, last_fetched: new Date().toISOString() }), config.guild_id]
+                );
+            }
+
+            return freshData;
+        } catch (error) {
+            console.error('Error fetching donation data:', error);
+            
+            // If API fails, try to use cached data even if old
+            if (config.donation_leaderboard_cached_data) {
+                try {
+                    const cached = JSON.parse(config.donation_leaderboard_cached_data);
+                    console.log('Using stale cached data due to API failure');
+                    return cached;
+                } catch (cacheError) {
+                    console.warn('Failed to parse cached data:', cacheError);
+                }
+            }
+            
+            // Throw more specific error based on the type
+            if (error.message.includes('API key invalid')) {
+                throw new Error('❌ Clash of Clans API key is invalid or expired. Please check your configuration.');
+            } else if (error.message.includes('Clan not found')) {
+                throw new Error('❌ Clan not found. Please verify the clan tag is correct.');
+            } else if (error.message.includes('rate limit')) {
+                throw new Error('❌ API rate limit exceeded. Please try again in a few minutes.');
+            } else {
+                throw new Error(`❌ Failed to fetch clan data: ${error.message}`);
+            }
+        }
     }
 
     async updateMessageWithLoading(interaction, message) {

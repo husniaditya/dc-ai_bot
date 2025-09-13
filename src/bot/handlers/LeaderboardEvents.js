@@ -57,9 +57,26 @@ class LeaderboardEvents {
                 member: null, // No specific member for scheduled posts
                 editReply: async (options) => {
                     if (messageId) {
-                        // Update existing message
-                        const existingMessage = await channel.messages.fetch(messageId);
-                        return await existingMessage.edit(options);
+                        try {
+                            // Try to update existing message
+                            const existingMessage = await channel.messages.fetch(messageId);
+                            return await existingMessage.edit(options);
+                        } catch (error) {
+                            // If message not found (deleted), create new one and update DB
+                            if (error.code === 10008 || error.message.includes('Unknown Message')) {
+                                console.log(`[COC] Message ${messageId} not found, creating new leaderboard message`);
+                                const newMessage = await channel.send(options);
+                                
+                                // Update database with new message ID
+                                await this.interactionHandler.db.execute(
+                                    'UPDATE guild_clashofclans_watch SET donation_message_id = ? WHERE guild_id = ?',
+                                    [newMessage.id, guildId]
+                                );
+                                
+                                return newMessage;
+                            }
+                            throw error; // Re-throw other errors
+                        }
                     } else {
                         // Post new message
                         const newMessage = await channel.send(options);
