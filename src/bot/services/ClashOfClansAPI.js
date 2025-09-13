@@ -184,6 +184,7 @@ class ClashOfClansAPI {
                             previousClanRank: member.previousClanRank || 0,
                             // Note: lastSeen is not available in clan members endpoint
                             // Would require individual player API calls which are rate-limited
+                            // Consider implementing a background job to periodically fetch and cache this data
                             lastSeen: null
                         };
 
@@ -472,6 +473,71 @@ class ClashOfClansAPI {
         const tag = this.formatClanTag(playerTag); // Same format as clan tags
         const endpoint = `/players/${encodeURIComponent(tag)}`;
         return await this.makeRequest(endpoint);
+    }
+
+    /**
+     * Enhance player data with activity tracking based on stat changes
+     * This simulates "last seen" by tracking when player stats change
+     * @param {Array} players - Array of basic player data
+     * @param {Array} previousPlayers - Previous fetch data for comparison
+     * @returns {Array} Enhanced player data with estimated last seen
+     */
+    async enhancePlayersWithActivity(players, previousPlayers = []) {
+        const enhancedPlayers = [];
+        const currentTime = new Date();
+        
+        for (const player of players) {
+            const previousPlayer = previousPlayers.find(p => p.tag === player.tag);
+            let estimatedLastSeen = null;
+            
+            if (previousPlayer) {
+                // Check if any stats changed (indicating recent activity)
+                const hasActivity = (
+                    player.donations !== previousPlayer.donations ||
+                    player.donationsReceived !== previousPlayer.donationsReceived ||
+                    player.trophies !== previousPlayer.trophies ||
+                    player.expLevel !== previousPlayer.expLevel
+                );
+                
+                if (hasActivity) {
+                    // Player has been active recently
+                    estimatedLastSeen = currentTime.toISOString();
+                } else if (previousPlayer.lastSeen) {
+                    // Keep previous last seen time
+                    estimatedLastSeen = previousPlayer.lastSeen;
+                } else {
+                    // First time seeing this player, assume recent activity
+                    estimatedLastSeen = currentTime.toISOString();
+                }
+            } else {
+                // New player, assume recent activity
+                estimatedLastSeen = currentTime.toISOString();
+            }
+            
+            enhancedPlayers.push({
+                ...player,
+                lastSeen: estimatedLastSeen
+            });
+        }
+        
+        return enhancedPlayers;
+    }
+
+    /**
+     * Get cached player data for comparison
+     * @param {string} guildId - Guild ID for cache lookup
+     * @param {string} view - 'donations' or 'war' 
+     * @returns {Array} Previous player data
+     */
+    async getPreviousPlayerData(guildId, view = 'donations') {
+        try {
+            // This would need database access - for now return empty array
+            // In a full implementation, this would query the cached data
+            return [];
+        } catch (error) {
+            console.warn('Failed to get previous player data:', error);
+            return [];
+        }
     }
 
     /**
