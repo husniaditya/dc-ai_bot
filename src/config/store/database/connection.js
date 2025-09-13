@@ -197,7 +197,8 @@ async function initializeTables() {
     donation_leaderboard_template TEXT NULL,
     embed_enabled BOOLEAN NOT NULL DEFAULT 1,
     clan_data MEDIUMTEXT NULL,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    war_leaderboard_cached_data TEXT NULL 
   ) ENGINE=InnoDB`);
 
   // User and OAuth tables

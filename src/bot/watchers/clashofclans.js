@@ -224,6 +224,11 @@ async function pollGuild(guild) {
           
           clanState.lastWarState = warState;
           clanState.lastWarEndTime = warEndTime;
+
+          // Auto-refresh war statistics during active wars
+          if (warState === 'inWar' && cfg.trackDonationLeaderboard) {
+            await autoRefreshWarLeaderboard(guild, cfg, cleanTag, warInfo, clanState);
+          }
         } else {
           // No war info available, reset war state
           if (clanState.lastWarState === 'inWar') {
@@ -343,6 +348,124 @@ function startCOCWatcher(client) {
   // Initial delay
   setTimeout(tick, 10000); // 10 seconds
   console.log('COC watcher started');
+}
+
+/**
+ * Auto-refresh war leaderboard during active wars
+ * Refreshes every 5 minutes when war is active or when new attacks are detected
+ */
+async function autoRefreshWarLeaderboard(guild, cfg, clanTag, warInfo, clanState) {
+  try {
+    // Check if war leaderboard is enabled
+    if (!cfg.donation_leaderboard_enabled || !cfg.donation_leaderboard_channel_id) {
+      return;
+    }
+
+    if (!clanState) return;
+
+    const now = Date.now();
+    const lastWarRefresh = clanState.lastWarLeaderboardRefresh || 0;
+    const refreshInterval = 5 * 60 * 1000; // 5 minutes
+
+    // Calculate current attack details for tracking changes
+    const currentAttackData = warInfo.clan.members.map(member => ({
+      tag: member.tag,
+      attacks: (member.attacks || []).map(attack => ({
+        stars: attack.stars,
+        destruction: attack.destructionPercentage,
+        defenderPosition: attack.defenderPosition,
+        order: attack.order
+      }))
+    }));
+
+    // Check for attack changes (new attacks or star/destruction changes)
+    const lastAttackData = clanState.lastWarAttackData || [];
+    let attacksChanged = false;
+
+    // Compare current attacks with last known attacks
+    if (lastAttackData.length !== currentAttackData.length) {
+      attacksChanged = true;
+    } else {
+      for (let i = 0; i < currentAttackData.length; i++) {
+        const current = currentAttackData[i];
+        const last = lastAttackData.find(l => l.tag === current.tag);
+        
+        if (!last || last.attacks.length !== current.attacks.length) {
+          attacksChanged = true;
+          break;
+        }
+        
+        // Check if any attack details changed
+        for (let j = 0; j < current.attacks.length; j++) {
+          const currentAttack = current.attacks[j];
+          const lastAttack = last.attacks[j];
+          
+          if (!lastAttack || 
+              currentAttack.stars !== lastAttack.stars ||
+              currentAttack.destruction !== lastAttack.destruction ||
+              currentAttack.defenderPosition !== lastAttack.defenderPosition) {
+            attacksChanged = true;
+            break;
+          }
+        }
+        
+        if (attacksChanged) break;
+      }
+    }
+
+    // Refresh if attacks changed or enough time has passed
+    if (attacksChanged || now - lastWarRefresh >= refreshInterval) {
+      
+      console.log(`[COC] Auto-refreshing war leaderboard for ${guild.name} - attacks changed: ${attacksChanged}`);
+      
+      // Find and update war leaderboard message
+      const channel = guild.channels.cache.get(cfg.donation_leaderboard_channel_id);
+      if (channel) {
+        const messageId = cfg.donation_leaderboard_message_id;
+        if (messageId) {
+          try {
+            const message = await channel.messages.fetch(messageId);
+            if (message) {
+              // Import the handler
+              const LeaderboardInteractionHandler = require('../handlers/LeaderboardInteractionHandler');
+              const handler = new LeaderboardInteractionHandler(store.db);
+              
+              // Create a mock interaction for auto-refresh
+              const mockInteraction = {
+                guildId: guild.id,
+                editReply: async (data) => {
+                  await message.edit(data);
+                },
+                user: { tag: 'War Auto-Refresh' },
+                member: null
+              };
+              
+              // Force refresh war data
+              await handler.clearCachedData(guild.id, 'war');
+              
+              // Get current config
+              const currentConfig = await store.getGuildClashOfClansConfig(guild.id);
+              
+              // Generate new war leaderboard page
+              await handler.generateLeaderboardPage(mockInteraction, currentConfig, 1, true, 'war');
+              
+              console.log(`[COC] War leaderboard auto-refreshed for ${guild.name}`);
+            }
+          } catch (error) {
+            console.error(`[COC] Failed to auto-refresh war leaderboard for ${guild.name}:`, error.message);
+          }
+        }
+      }
+      
+      // Update last refresh time and attack data
+      clanState.lastWarLeaderboardRefresh = now;
+      clanState.lastWarAttackData = currentAttackData;
+      saveStateDebounced();
+    }
+    
+  } catch (error) {
+    console.error('[COC] Error in auto-refresh war leaderboard:', error);
+  }
 }
 
 // Get COC stats for debugging

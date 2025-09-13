@@ -91,6 +91,39 @@ class ClashOfClansAPI {
     }
 
     /**
+     * Gets current clan war information
+     * @param {string} clanTag - Clan tag
+     * @returns {Object} Current war data
+     */
+    async getCurrentWar(clanTag) {
+        const tag = this.formatClanTag(clanTag);
+        const endpoint = `/clans/${encodeURIComponent(tag)}/currentwar`;
+        return await this.makeRequest(endpoint);
+    }
+
+    /**
+     * Gets clan war league information
+     * @param {string} clanTag - Clan tag
+     * @returns {Object} War league data
+     */
+    async getWarLeague(clanTag) {
+        const tag = this.formatClanTag(clanTag);
+        const endpoint = `/clans/${encodeURIComponent(tag)}/currentwar/leaguegroup`;
+        return await this.makeRequest(endpoint);
+    }
+
+    /**
+     * Gets war log (recent wars)
+     * @param {string} clanTag - Clan tag
+     * @returns {Object} War log data
+     */
+    async getWarLog(clanTag) {
+        const tag = this.formatClanTag(clanTag);
+        const endpoint = `/clans/${encodeURIComponent(tag)}/warlog`;
+        return await this.makeRequest(endpoint);
+    }
+
+    /**
      * Gets aggregated donation data for multiple clans
      * @param {string|Array} clans - Clan tag(s) - can be comma-separated string or array
      * @param {string} timeRange - Time range filter
@@ -177,6 +210,179 @@ class ClashOfClansAPI {
 
         } catch (error) {
             console.error('Error fetching clan donation data:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Gets aggregated war statistics for multiple clans
+     * @param {string|Array} clans - Clan tag(s) - can be comma-separated string or array
+     * @returns {Object} Formatted war statistics data
+     */
+    async getClanWarStats(clans) {
+        try {
+            // Parse clans input
+            const clanTags = Array.isArray(clans) ? clans : (clans || '').split(',').map(tag => tag.trim()).filter(Boolean);
+            
+            if (clanTags.length === 0) {
+                throw new Error('No clan tags provided');
+            }
+
+            console.log(`Fetching war stats for ${clanTags.length} clan(s): ${clanTags.join(', ')}`);
+
+            const allWarData = [];
+            let primaryClanName = '';
+
+            // Fetch data for each clan
+            for (const clanTag of clanTags) {
+                try {
+                    const [clanInfo, currentWar, warLog] = await Promise.all([
+                        this.getClan(clanTag),
+                        this.getCurrentWar(clanTag).catch(() => null), // War might not be active
+                        this.getWarLog(clanTag).catch(() => null) // War log might be private
+                    ]);
+
+                    // Use first clan name as primary
+                    if (!primaryClanName) {
+                        primaryClanName = clanInfo.name;
+                    }
+
+                    // Process current war if active
+                    if (currentWar && currentWar.state !== 'notInWar') {
+                        allWarData.push({
+                            type: 'current',
+                            clan: clanInfo,
+                            war: currentWar
+                        });
+                    }
+
+                    // Process war log
+                    if (warLog && warLog.items) {
+                        for (const war of warLog.items.slice(0, 10)) { // Last 10 wars
+                            allWarData.push({
+                                type: 'history',
+                                clan: clanInfo,
+                                war: war
+                            });
+                        }
+                    }
+
+                } catch (clanError) {
+                    console.error(`Failed to fetch war data for clan ${clanTag}:`, clanError.message);
+                    continue;
+                }
+            }
+
+            // Process and aggregate player war stats
+            const playerStats = new Map();
+
+            for (const warData of allWarData) {
+                const war = warData.war;
+                const isCurrentWar = warData.type === 'current';
+                
+                // Process clan members in this war
+                const clanMembers = war.clan?.members || [];
+                
+                for (const member of clanMembers) {
+                    const tag = member.tag;
+                    
+                    if (!playerStats.has(tag)) {
+                        playerStats.set(tag, {
+                            tag: member.tag,
+                            name: member.name,
+                            role: member.role || 'member',
+                            // War statistics
+                            warsParticipated: 0,
+                            warsWon: 0,
+                            warsLost: 0,
+                            warsTied: 0,
+                            totalAttacks: 0,
+                            totalStars: 0,
+                            totalDestruction: 0,
+                            averageStars: 0,
+                            averageDestruction: 0,
+                            missedAttacks: 0,
+                            // Current war stats
+                            currentWarAttacks: 0,
+                            currentWarStars: 0,
+                            currentWarDestruction: 0,
+                            currentWarPosition: member.mapPosition || 0,
+                            // Detailed attack information for current war
+                            currentWarAttackDetails: []
+                        });
+                    }
+
+                    const stats = playerStats.get(tag);
+                    stats.warsParticipated++;
+
+                    // Update war result counts
+                    if (war.result === 'win') stats.warsWon++;
+                    else if (war.result === 'lose') stats.warsLost++;
+                    else if (war.result === 'tie') stats.warsTied++;
+
+                    // Process attacks
+                    const attacks = member.attacks || [];
+                    const maxAttacks = 2; // Standard war attacks per player
+                    
+                    stats.totalAttacks += attacks.length;
+                    stats.missedAttacks += Math.max(0, maxAttacks - attacks.length);
+
+                    for (const attack of attacks) {
+                        stats.totalStars += attack.stars || 0;
+                        stats.totalDestruction += attack.destructionPercentage || 0;
+                    }
+
+                    // Current war specific stats
+                    if (isCurrentWar) {
+                        stats.currentWarAttacks = attacks.length;
+                        stats.currentWarStars = attacks.reduce((sum, attack) => sum + (attack.stars || 0), 0);
+                        stats.currentWarDestruction = attacks.length > 0 
+                            ? attacks.reduce((sum, attack) => sum + (attack.destructionPercentage || 0), 0) / attacks.length 
+                            : 0;
+                        
+                        // Store detailed attack information for current war
+                        stats.currentWarAttackDetails = attacks.map((attack, index) => ({
+                            attackNumber: index + 1,
+                            stars: attack.stars || 0,
+                            destructionPercentage: attack.destructionPercentage || 0,
+                            attackerTag: attack.attackerTag,
+                            defenderTag: attack.defenderTag,
+                            defenderPosition: attack.defenderPosition || 0,
+                            attackOrder: attack.order || 0
+                        }));
+                        
+                        stats.currentWarPosition = member.mapPosition || 0;
+                    }
+                }
+            }
+
+            // Calculate averages and sort players
+            const sortedPlayers = Array.from(playerStats.values()).map(player => {
+                player.averageStars = player.totalAttacks > 0 ? (player.totalStars / player.totalAttacks).toFixed(2) : '0.00';
+                player.averageDestruction = player.totalAttacks > 0 ? (player.totalDestruction / player.totalAttacks).toFixed(1) : '0.0';
+                player.winRate = player.warsParticipated > 0 ? ((player.warsWon / player.warsParticipated) * 100).toFixed(1) : '0.0';
+                player.attackRate = player.warsParticipated > 0 ? ((player.totalAttacks / (player.warsParticipated * 2)) * 100).toFixed(1) : '0.0';
+                return player;
+            }).sort((a, b) => {
+                // Sort by average stars, then by total stars, then by participation
+                if (a.averageStars !== b.averageStars) return b.averageStars - a.averageStars;
+                if (a.totalStars !== b.totalStars) return b.totalStars - a.totalStars;
+                return b.warsParticipated - a.warsParticipated;
+            });
+
+            console.log(`Successfully processed war stats for ${sortedPlayers.length} players from ${clanTags.length} clan(s)`);
+
+            return {
+                players: sortedPlayers,
+                clanName: clanTags.length === 1 ? primaryClanName : `${primaryClanName} (+${clanTags.length - 1} more)`,
+                totalClans: clanTags.length,
+                currentWar: allWarData.find(wd => wd.type === 'current')?.war || null,
+                lastUpdated: new Date().toISOString(),
+                totalWarsAnalyzed: allWarData.length
+            };
+
+        } catch (error) {
+            console.error('Error fetching clan war stats:', error);
             throw error;
         }
     }
