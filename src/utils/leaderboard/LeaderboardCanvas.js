@@ -4,8 +4,11 @@ const path = require('path');
 
 class LeaderboardCanvas {
     constructor() {
+        // Canvas dimensions
         this.width = 1800; // Significantly increased from 1400 for bigger table
-        this.minHeight = 900; // Increased from 700 for larger content
+        this.minHeight = 900; // Increased from 700 for larger tables
+        
+        // Color theme
         this.backgroundColor = '#2c2f33';
         this.primaryColor = '#7289da';
         this.secondaryColor = '#99aab5';
@@ -14,8 +17,8 @@ class LeaderboardCanvas {
         
         // Layout constants - increased for bigger table and larger fonts
         this.padding = 50; // Increased from 40
-        this.headerHeight = 140; // Increased from 120
-        this.playerRowHeight = 85; // Increased from 70 for larger fonts
+        this.headerHeight = 160; // Increased from 140 for larger fonts
+        this.playerRowHeight = 95; // Increased from 85 for larger fonts
         this.avatarSize = 60; // Increased from 50
         this.rankWidth = 110; // Increased from 90
         this.nameWidth = 350; // Increased from 280
@@ -26,11 +29,11 @@ class LeaderboardCanvas {
         this.lastOnlineWidth = 180; // Increased from 150
         this.footerHeight = 100; // Increased from 80
         
-        // Font settings - significantly increased for better readability
-        this.titleFont = 'bold 40px Arial'; // Increased from 32px
-        this.headerFont = 'bold 32px Arial'; // Increased from 26px
-        this.playerFont = '28px Arial'; // Increased from 22px
-        this.donationFont = 'bold 28px Arial'; // Increased from 22px
+        // Font settings - significantly increased for maximum readability
+        this.titleFont = 'bold 48px Arial'; // Increased from 40px
+        this.headerFont = 'bold 38px Arial'; // Increased from 32px
+        this.playerFont = '34px Arial'; // Increased from 28px
+        this.donationFont = 'bold 34px Arial'; // Increased from 28px
     }
 
     /**
@@ -342,7 +345,7 @@ class LeaderboardCanvas {
         ctx.textAlign = 'center';
         
         const roleText = this.formatRole(player.role);
-        ctx.fillText(roleText, currentX + (this.roleWidth / 2), y + 45); // Adjusted from 35 to 45
+        ctx.fillText(roleText, currentX + (this.roleWidth / 2), y + 52); // Adjusted from 45 to 52
         currentX += this.roleWidth;
 
         // Donation count
@@ -351,20 +354,20 @@ class LeaderboardCanvas {
         ctx.textAlign = 'center';
         
         const donationCount = this.formatDonationCount(player.donations || 0);
-        ctx.fillText(donationCount, currentX + (this.donationWidth / 2), y + 45); // Adjusted from 35 to 45
+        ctx.fillText(donationCount, currentX + (this.donationWidth / 2), y + 52); // Adjusted from 45 to 52
         currentX += this.donationWidth;
 
         // Received count
         ctx.fillStyle = '#f39c12'; // Orange color for received
         const receivedCount = this.formatDonationCount(player.donationsReceived || 0);
-        ctx.fillText(receivedCount, currentX + (this.receivedWidth / 2), y + 45); // Adjusted from 35 to 45
+        ctx.fillText(receivedCount, currentX + (this.receivedWidth / 2), y + 52); // Adjusted from 45 to 52
         currentX += this.receivedWidth;
 
         // Ratio
         ctx.fillStyle = this.secondaryColor;
         ctx.font = this.playerFont; // Increased font size
         const ratio = this.calculateRatio(player.donations || 0, player.donationsReceived || 0);
-        ctx.fillText(ratio, currentX + (this.ratioWidth / 2), y + 45); // Adjusted from 35 to 45
+        ctx.fillText(ratio, currentX + (this.ratioWidth / 2), y + 52); // Adjusted from 45 to 52
         currentX += this.ratioWidth;
 
         // Last Online
@@ -372,7 +375,7 @@ class LeaderboardCanvas {
         ctx.font = this.playerFont;
         ctx.textAlign = 'center';
         const lastOnlineText = this.formatLastOnline(player.lastSeen);
-        ctx.fillText(lastOnlineText, currentX + (this.lastOnlineWidth / 2), y + 45); // Adjusted from 35 to 45
+        ctx.fillText(lastOnlineText, currentX + (this.lastOnlineWidth / 2), y + 52); // Adjusted from 45 to 52
     }
 
     /**
@@ -452,8 +455,7 @@ class LeaderboardCanvas {
     
     formatLastOnline(lastSeen) {
         if (!lastSeen) {
-            // Return "Active" instead of "Online" when no activity data is available
-            return 'Active';
+            return 'Unknown';
         }
         
         try {
@@ -462,7 +464,7 @@ class LeaderboardCanvas {
             
             // Check if the date is valid
             if (isNaN(lastSeenDate.getTime())) {
-                return 'Active';
+                return 'Unknown';
             }
             
             const diffMs = now - lastSeenDate;
@@ -478,15 +480,15 @@ class LeaderboardCanvas {
             } else if (diffHours < 24) {
                 return `${diffHours}h ago`;
             } else if (diffDays === 1) {
-                return '1 day ago';
+                return '1d ago';
             } else if (diffDays < 30) {
-                return `${diffDays} days ago`;
+                return `${diffDays}d ago`;
             } else {
                 return '30+ days ago';
             }
         } catch (error) {
             console.warn('Error formatting last online time:', error);
-            return 'Active';
+            return 'Unknown';
         }
     }
 
@@ -722,7 +724,7 @@ class LeaderboardCanvas {
         ctx.textAlign = 'center';
         
         const rankText = this.getRankDisplay(player.rank || index + 1);
-        ctx.fillText(rankText, currentX + (this.rankWidth / 2), y + 45); // Adjusted from 35 to 45
+        ctx.fillText(rankText, currentX + (this.rankWidth / 2), y + 52); // Adjusted from 45 to 52
         currentX += this.rankWidth;
 
         // Player avatar
@@ -736,7 +738,7 @@ class LeaderboardCanvas {
         ctx.textAlign = 'left';
         
         const nameX = avatarX + this.avatarSize + 15;
-        const nameY = y + 45; // Adjusted from 35 to 45
+        const nameY = y + 52; // Adjusted from 45 to 52
         
         // Truncate name if too long
         let displayName = player.name || 'Unknown Player';
@@ -753,7 +755,7 @@ class LeaderboardCanvas {
         ctx.textAlign = 'center';
         
         const roleText = this.formatRole(player.role);
-        ctx.fillText(roleText, currentX + (this.roleWidth / 2), y + 45); // Adjusted from 35 to 45
+        ctx.fillText(roleText, currentX + (this.roleWidth / 2), y + 52); // Adjusted from 45 to 52
         currentX += this.roleWidth;
 
         // Current War Attack Details (like your image example)
@@ -766,14 +768,14 @@ class LeaderboardCanvas {
         ctx.textAlign = 'center';
         
         const avgStars = player.averageStars || '0.00';
-        ctx.fillText(`${avgStars}⭐`, currentX + (this.receivedWidth / 2), y + 45); // Adjusted from 35 to 45
+        ctx.fillText(`${avgStars}⭐`, currentX + (this.receivedWidth / 2), y + 52); // Adjusted from 45 to 52
         currentX += this.receivedWidth;
 
         // Win Rate
         ctx.fillStyle = this.secondaryColor;
         ctx.font = this.playerFont;
         const winRate = player.winRate || '0.0';
-        ctx.fillText(`${winRate}%`, currentX + (this.ratioWidth / 2), y + 45); // Adjusted from 35 to 45
+        ctx.fillText(`${winRate}%`, currentX + (this.ratioWidth / 2), y + 52); // Adjusted from 45 to 52
         currentX += this.ratioWidth;
 
         // Wars Participated
@@ -781,7 +783,7 @@ class LeaderboardCanvas {
         ctx.font = this.playerFont;
         ctx.textAlign = 'center';
         const participation = player.warsParticipated || 0;
-        ctx.fillText(participation.toString(), currentX + (this.lastOnlineWidth / 2), y + 45); // Adjusted from 35 to 45
+        ctx.fillText(participation.toString(), currentX + (this.lastOnlineWidth / 2), y + 52); // Adjusted from 45 to 52
     }
 
     /**
@@ -796,7 +798,7 @@ class LeaderboardCanvas {
             ctx.fillStyle = '#95a5a6'; // Gray
             ctx.font = this.playerFont; // Use consistent larger font
             ctx.textAlign = 'center';
-            ctx.fillText('No attacks', x + (this.donationWidth * 1.5 / 2), y + 45); // Adjusted from 35 to 45
+            ctx.fillText('No attacks', x + (this.donationWidth * 1.5 / 2), y + 52); // Adjusted from 45 to 52
             return;
         }
 
