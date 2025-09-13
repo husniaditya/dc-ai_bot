@@ -227,6 +227,10 @@ export default function GamesSocialsSection({ guildId, pushToast }) {
   };
 
   // Twitch handlers
+  const handleTwitchReset = () => {
+    if (twitchOriginal) setTwitchConfig(twitchOriginal);
+  };
+
   const handleTwitchSave = async () => {
     if (!twitchConfig) return;
     
