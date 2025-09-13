@@ -16,7 +16,8 @@ class LeaderboardButtons {
             isAdmin = false,
             guildId = '',
             view = 'page', // 'page' | 'summary'
-            dataView = 'donations' // 'donations' | 'war'
+            dataView = 'donations', // 'donations' | 'war'
+            showToggle = false // NEW: Control whether to show the view toggle button
         } = options;
 
         const buttons = [];
@@ -30,18 +31,20 @@ class LeaderboardButtons {
                 .setEmoji('🔄')
         );
 
-        // View toggle button - switch between donations and war
-        const toggleView = dataView === 'donations' ? 'war' : 'donations';
-        const toggleEmoji = dataView === 'donations' ? '⚔️' : '📊';
-        const toggleLabel = dataView === 'donations' ? 'War Stats' : 'Donations';
-        
-        buttons.push(
-            new ButtonBuilder()
-                .setCustomId(`leaderboard_toggle_view_${currentPage}_${dataView}_${guildId}`)
-                .setLabel(toggleLabel)
-                .setStyle(ButtonStyle.Primary)
-                .setEmoji(toggleEmoji)
-        );
+        // View toggle button - switch between donations and war (only if enabled)
+        if (showToggle) {
+            const toggleView = dataView === 'donations' ? 'war' : 'donations';
+            const toggleEmoji = dataView === 'donations' ? '⚔️' : '📊';
+            const toggleLabel = dataView === 'donations' ? 'War Stats' : 'Donations';
+            
+            buttons.push(
+                new ButtonBuilder()
+                    .setCustomId(`leaderboard_toggle_view_${currentPage}_${dataView}_${guildId}`)
+                    .setLabel(toggleLabel)
+                    .setStyle(ButtonStyle.Primary)
+                    .setEmoji(toggleEmoji)
+            );
+        }
 
         // Edit button - admin only
         if (isAdmin) {
