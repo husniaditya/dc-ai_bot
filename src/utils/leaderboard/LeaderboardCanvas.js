@@ -15,18 +15,18 @@ class LeaderboardCanvas {
         this.textColor = '#ffffff';
         this.accentColor = '#43b581';
         
-        // Layout constants - increased for bigger table and larger fonts
-        this.padding = 50; // Increased from 40
+        // Layout constants - optimized to fill full canvas width
+        this.padding = 40; // Reduced padding for more table space
         this.headerHeight = 160; // Increased from 140 for larger fonts
         this.playerRowHeight = 95; // Increased from 85 for larger fonts
         this.avatarSize = 60; // Increased from 50
-        this.rankWidth = 110; // Increased from 90
-        this.nameWidth = 350; // Increased from 280
-        this.donationWidth = 150; // Increased from 120
-        this.receivedWidth = 150; // Increased from 120
-        this.ratioWidth = 120; // Increased from 100
-        this.roleWidth = 170; // Increased from 140
-        this.lastOnlineWidth = 180; // Increased from 150
+        this.rankWidth = 140; // Expanded rank column
+        this.nameWidth = 420; // Expanded name column for longer names
+        this.roleWidth = 200; // Expanded role column
+        this.donationWidth = 180; // Expanded donated column
+        this.receivedWidth = 180; // Expanded received column
+        this.ratioWidth = 160; // Expanded ratio column
+        this.lastOnlineWidth = 280; // Significantly expanded last online column
         this.footerHeight = 100; // Increased from 80
         
         // Font settings - significantly increased for maximum readability
@@ -47,7 +47,7 @@ class LeaderboardCanvas {
     async generateLeaderboard(players, config, page = 1, totalPages = 1) {
         try {
             // Calculate dynamic height based on player count
-            const tableHeaderHeight = 35;
+            const tableHeaderHeight = 40; // Updated to match drawTableHeaders height
             const spacingHeight = 30;
             const dynamicHeight = this.padding * 2 + // Top and bottom padding
                                  this.headerHeight + // Header section
@@ -98,7 +98,7 @@ class LeaderboardCanvas {
     async generateWarLeaderboard(players, config, page = 1, totalPages = 1, warData = {}) {
         try {
             // Calculate dynamic height based on player count
-            const tableHeaderHeight = 35;
+            const tableHeaderHeight = 40; // Updated to match drawTableHeaders height
             const spacingHeight = 30;
             const dynamicHeight = this.padding * 2 + // Top and bottom padding
                                  this.headerHeight + // Header section
@@ -161,24 +161,9 @@ class LeaderboardCanvas {
      * Draw the background with gradient
      */
     async drawBackground(ctx, height) {
-        // Create gradient background
-        const gradient = ctx.createLinearGradient(0, 0, this.width, height);
-        gradient.addColorStop(0, this.backgroundColor);
-        gradient.addColorStop(0.5, this.lightenColor(this.backgroundColor, 10));
-        gradient.addColorStop(1, this.backgroundColor);
-        
-        ctx.fillStyle = gradient;
+        // Use solid background instead of gradient to prevent any interference
+        ctx.fillStyle = this.backgroundColor; // Solid color instead of gradient
         ctx.fillRect(0, 0, this.width, height);
-
-        // Add subtle pattern overlay
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.02)';
-        for (let x = 0; x < this.width; x += 20) {
-            for (let y = 0; y < height; y += 20) {
-                if ((x + y) % 40 === 0) {
-                    ctx.fillRect(x, y, 1, 1);
-                }
-            }
-        }
     }
 
     /**
@@ -206,26 +191,26 @@ class LeaderboardCanvas {
         ctx.textAlign = 'center';
         
         const title = `🏆 ${config.clan_name || 'Clan'} Donation Leaderboard`;
-        const titleY = headerY + 45;
+        const titleY = headerY + 70; // Moved back to original position
         ctx.fillText(title, this.width / 2, titleY);
 
-        // Draw time range subtitle
+        // Draw time range subtitle with much more gap
         ctx.font = this.headerFont;
         const timeRangeText = this.getTimeRangeText(config.time_range);
-        const subtitleY = titleY + 30;
+        const subtitleY = titleY + 60; // Increased from 45 to 60 for much bigger gap
         ctx.fillText(timeRangeText, this.width / 2, subtitleY);
 
-        // Draw page indicator
+        // Draw page indicator with much bigger font
         if (totalPages > 1) {
-            ctx.font = '14px Arial';
+            ctx.font = 'bold 24px Arial'; // Increased from 18px to 24px and made bold
             ctx.textAlign = 'right';
             const pageText = `Page ${page} of ${totalPages}`;
             ctx.fillText(pageText, this.width - this.padding - 10, subtitleY);
         }
 
-        // Draw clan tag if available
+        // Draw clan tag if available with bigger font
         if (config.clan_tag) {
-            ctx.font = '12px Arial';
+            ctx.font = '18px Arial'; // Increased from 14px to 18px
             ctx.textAlign = 'left';
             ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
             ctx.fillText(config.clan_tag, this.padding + 10, subtitleY);
@@ -242,10 +227,10 @@ class LeaderboardCanvas {
         // Draw table headers
         await this.drawTableHeaders(ctx, tableHeaderY);
         
-        // Draw players
+        // Draw players - adjusted spacing for taller header
         for (let i = 0; i < players.length; i++) {
             const player = players[i];
-            const playerY = tableHeaderY + 40 + (i * this.playerRowHeight);
+            const playerY = tableHeaderY + 45 + (i * this.playerRowHeight); // Increased from 40 to 45
             await this.drawPlayerRow(ctx, player, playerY, i);
         }
     }
@@ -254,46 +239,58 @@ class LeaderboardCanvas {
      * Draw table headers
      */
     async drawTableHeaders(ctx, y) {
-        // Header background
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
-        ctx.fillRect(this.padding, y, this.width - (this.padding * 2), 35);
+        // Save the current canvas state
+        ctx.save();
+        
+        // Clear any previous fill styles and start fresh
+        ctx.fillStyle = '#000000'; // Reset to black first
+        
+        // Draw header background with completely solid color
+        ctx.fillStyle = '#2c2c2c'; // Dark solid color for header
+        ctx.fillRect(this.padding, y, this.width - (this.padding * 2), 40);
 
-        // Header text
-        ctx.fillStyle = this.secondaryColor;
+        // Reset canvas state to ensure clean text rendering
+        ctx.restore();
+        ctx.save();
+
+        // Header text with fresh styling
+        ctx.fillStyle = '#ffffff'; // Pure white text
         ctx.font = this.headerFont;
         ctx.textAlign = 'center';
 
-        // Calculate column positions
+        // Calculate column positions to match player row layout with better spacing
         let currentX = this.padding;
         
-        // Rank header
-        ctx.fillText('#', currentX + (this.rankWidth / 2), y + 22);
+        // Rank header - centered
+        ctx.fillText('#', currentX + (this.rankWidth / 2), y + 25); // Adjusted Y position
         currentX += this.rankWidth;
         
-        // Player header
-        ctx.textAlign = 'left';
-        ctx.fillText('Player', currentX + 20, y + 22);
+        // Player header - centered in the name area
+        const playerHeaderX = currentX + 15 + this.avatarSize + (this.nameWidth / 2); // Align with centered names
+        ctx.fillText('Player', playerHeaderX, y + 25);
         currentX += this.nameWidth + this.avatarSize + 30;
         
-        // Role header
-        ctx.textAlign = 'center';
-        ctx.fillText('Role', currentX + (this.roleWidth / 2), y + 22);
+        // Role header - centered
+        ctx.fillText('Role', currentX + (this.roleWidth / 2), y + 25);
         currentX += this.roleWidth;
         
         // Donations header
-        ctx.fillText('Donated', currentX + (this.donationWidth / 2), y + 22);
+        ctx.fillText('Donated', currentX + (this.donationWidth / 2), y + 25);
         currentX += this.donationWidth;
         
         // Received header
-        ctx.fillText('Received', currentX + (this.receivedWidth / 2), y + 22);
+        ctx.fillText('Received', currentX + (this.receivedWidth / 2), y + 25);
         currentX += this.receivedWidth;
         
         // Ratio header
-        ctx.fillText('Ratio', currentX + (this.ratioWidth / 2), y + 22);
+        ctx.fillText('Ratio', currentX + (this.ratioWidth / 2), y + 25);
         currentX += this.ratioWidth;
         
         // Last Online header
-        ctx.fillText('Last Online', currentX + (this.lastOnlineWidth / 2), y + 22);
+        ctx.fillText('Last Online', currentX + (this.lastOnlineWidth / 2), y + 25);
+        
+        // Restore canvas state
+        ctx.restore();
     }
 
     /**
@@ -308,32 +305,32 @@ class LeaderboardCanvas {
 
         let currentX = this.padding;
 
-        // Rank
+        // Rank - centered better
         ctx.fillStyle = this.getRankColor(player.rank);
         ctx.font = this.donationFont;
         ctx.textAlign = 'center';
         
         const rankText = this.getRankDisplay(player.rank);
-        ctx.fillText(rankText, currentX + (this.rankWidth / 2), y + 45); // Adjusted from 35 to 45 for larger row height
+        ctx.fillText(rankText, currentX + (this.rankWidth / 2), y + 52); // Centered vertically
         currentX += this.rankWidth;
 
-        // Player avatar
-        const avatarX = currentX + 10;
+        // Player avatar - better positioning
+        const avatarX = currentX + 15; // More space from rank
         const avatarY = y + (this.playerRowHeight - this.avatarSize) / 2; // Center avatar in the taller row
         await this.drawPlayerAvatar(ctx, player, avatarX, avatarY);
 
-        // Player name
+        // Player name - centered in available space
         ctx.fillStyle = this.textColor;
         ctx.font = this.playerFont;
-        ctx.textAlign = 'left';
+        ctx.textAlign = 'center'; // Center the name
         
-        const nameX = avatarX + this.avatarSize + 15;
-        const nameY = y + 45; // Adjusted from 35 to 45 for better centering with larger fonts
+        const nameX = avatarX + this.avatarSize + (this.nameWidth / 2); // Center in name column
+        const nameY = y + 52; // Aligned with other elements
         
         // Truncate name if too long
         let displayName = player.name || 'Unknown Player';
-        if (displayName.length > 18) {
-            displayName = displayName.substring(0, 15) + '...';
+        if (displayName.length > 20) { // Allow longer names with more space
+            displayName = displayName.substring(0, 17) + '...';
         }
         
         ctx.fillText(displayName, nameX, nameY);
@@ -433,19 +430,20 @@ class LeaderboardCanvas {
      * Draw footer with additional info
      */
     async drawFooter(ctx, page, totalPages, canvasHeight) {
-        const footerY = canvasHeight - 50;
+        const footerY = canvasHeight - 60; // Adjusted to accommodate bigger text
         
-        // Footer text
+        // Footer text with much bigger font
         ctx.fillStyle = this.secondaryColor;
-        ctx.font = '12px Arial';
+        ctx.font = '28px Arial'; // Increased from 16px to 20px
         ctx.textAlign = 'center';
         
         const updateTime = new Date().toLocaleString();
         ctx.fillText(`Last updated: ${updateTime}`, this.width / 2, footerY);
         
-        // Navigation hint (only show if there are actually multiple pages)
+        // Navigation hint (only show if there are actually multiple pages) with much bigger font
         if (totalPages > 1) {
-            ctx.fillText('Use buttons below to navigate pages', this.width / 2, footerY + 20);
+            ctx.font = '24px Arial'; // Increased from 14px to 18px
+            ctx.fillText('Use buttons below to navigate pages', this.width / 2, footerY + 30); // Increased spacing from 25 to 30
         }
     }
 
