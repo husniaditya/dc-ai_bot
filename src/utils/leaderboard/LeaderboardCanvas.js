@@ -4,22 +4,25 @@ const path = require('path');
 
 class LeaderboardCanvas {
     constructor() {
-        this.width = 800;
-        this.minHeight = 600;
+        this.width = 1200; // Increased from 800 to 1200
+        this.minHeight = 700; // Increased from 600 to 700
         this.backgroundColor = '#2c2f33';
         this.primaryColor = '#7289da';
         this.secondaryColor = '#99aab5';
         this.textColor = '#ffffff';
         this.accentColor = '#43b581';
         
-        // Layout constants
+        // Layout constants - updated for wider canvas
         this.padding = 40;
         this.headerHeight = 120;
         this.playerRowHeight = 65;
         this.avatarSize = 50;
-        this.rankWidth = 60;
-        this.nameWidth = 300;
-        this.donationWidth = 120;
+        this.rankWidth = 80;
+        this.nameWidth = 250;
+        this.donationWidth = 100;
+        this.receivedWidth = 100;
+        this.ratioWidth = 80;
+        this.roleWidth = 120;
         this.footerHeight = 80;
         
         // Font settings
@@ -205,17 +208,33 @@ class LeaderboardCanvas {
         ctx.font = this.headerFont;
         ctx.textAlign = 'center';
 
+        // Calculate column positions
+        let currentX = this.padding;
+        
         // Rank header
-        ctx.fillText('#', this.padding + (this.rankWidth / 2), y + 22);
+        ctx.fillText('#', currentX + (this.rankWidth / 2), y + 22);
+        currentX += this.rankWidth;
         
         // Player header
         ctx.textAlign = 'left';
-        ctx.fillText('Player', this.padding + this.rankWidth + 20, y + 22);
+        ctx.fillText('Player', currentX + 20, y + 22);
+        currentX += this.nameWidth + this.avatarSize + 30;
+        
+        // Role header
+        ctx.textAlign = 'center';
+        ctx.fillText('Role', currentX + (this.roleWidth / 2), y + 22);
+        currentX += this.roleWidth;
         
         // Donations header
-        ctx.textAlign = 'center';
-        const donationX = this.width - this.padding - (this.donationWidth / 2);
-        ctx.fillText('Donations', donationX, y + 22);
+        ctx.fillText('Donated', currentX + (this.donationWidth / 2), y + 22);
+        currentX += this.donationWidth;
+        
+        // Received header
+        ctx.fillText('Received', currentX + (this.receivedWidth / 2), y + 22);
+        currentX += this.receivedWidth;
+        
+        // Ratio header
+        ctx.fillText('Ratio', currentX + (this.ratioWidth / 2), y + 22);
     }
 
     /**
@@ -228,16 +247,19 @@ class LeaderboardCanvas {
         ctx.fillStyle = isEven ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.1)';
         ctx.fillRect(this.padding, y, this.width - (this.padding * 2), this.playerRowHeight);
 
+        let currentX = this.padding;
+
         // Rank
         ctx.fillStyle = this.getRankColor(player.rank);
         ctx.font = this.donationFont;
         ctx.textAlign = 'center';
         
         const rankText = this.getRankDisplay(player.rank);
-        ctx.fillText(rankText, this.padding + (this.rankWidth / 2), y + 35);
+        ctx.fillText(rankText, currentX + (this.rankWidth / 2), y + 35);
+        currentX += this.rankWidth;
 
-        // Player avatar (placeholder circle for now)
-        const avatarX = this.padding + this.rankWidth + 10;
+        // Player avatar
+        const avatarX = currentX + 10;
         const avatarY = y + 7;
         await this.drawPlayerAvatar(ctx, player, avatarX, avatarY);
 
@@ -247,49 +269,46 @@ class LeaderboardCanvas {
         ctx.textAlign = 'left';
         
         const nameX = avatarX + this.avatarSize + 15;
-        const nameY = y + 25;
+        const nameY = y + 30;
         
         // Truncate name if too long
         let displayName = player.name || 'Unknown Player';
-        if (displayName.length > 20) {
-            displayName = displayName.substring(0, 17) + '...';
+        if (displayName.length > 18) {
+            displayName = displayName.substring(0, 15) + '...';
         }
         
         ctx.fillText(displayName, nameX, nameY);
+        currentX += this.nameWidth + this.avatarSize + 30;
 
-        // Player role/level if available
-        if (player.role || player.expLevel) {
-            ctx.fillStyle = this.secondaryColor;
-            ctx.font = '12px Arial';
-            const roleText = player.role ? `${player.role}` : `Lvl ${player.expLevel}`;
-            ctx.fillText(roleText, nameX, nameY + 18);
-        }
+        // Player role
+        ctx.fillStyle = this.getRoleColor(player.role);
+        ctx.font = '14px Arial';
+        ctx.textAlign = 'center';
+        
+        const roleText = this.formatRole(player.role);
+        ctx.fillText(roleText, currentX + (this.roleWidth / 2), y + 30);
+        currentX += this.roleWidth;
 
         // Donation count
         ctx.fillStyle = this.accentColor;
         ctx.font = this.donationFont;
         ctx.textAlign = 'center';
         
-        const donationX = this.width - this.padding - (this.donationWidth / 2);
-        const donationText = this.formatDonationCount(player.donations);
-        ctx.fillText(donationText, donationX, y + 35);
+        const donationCount = this.formatDonationCount(player.donations || 0);
+        ctx.fillText(donationCount, currentX + (this.donationWidth / 2), y + 30);
+        currentX += this.donationWidth;
 
-        // Progress bar for donations (optional visual enhancement)
-        if (player.maxDonations && player.maxDonations > 0) {
-            const progressWidth = 100;
-            const progressHeight = 4;
-            const progressX = donationX - (progressWidth / 2);
-            const progressY = y + 45;
-            
-            // Background
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
-            ctx.fillRect(progressX, progressY, progressWidth, progressHeight);
-            
-            // Progress
-            const progress = Math.min(player.donations / player.maxDonations, 1);
-            ctx.fillStyle = this.accentColor;
-            ctx.fillRect(progressX, progressY, progressWidth * progress, progressHeight);
-        }
+        // Received count
+        ctx.fillStyle = '#f39c12'; // Orange color for received
+        const receivedCount = this.formatDonationCount(player.donationsReceived || 0);
+        ctx.fillText(receivedCount, currentX + (this.receivedWidth / 2), y + 30);
+        currentX += this.receivedWidth;
+
+        // Ratio
+        ctx.fillStyle = this.secondaryColor;
+        ctx.font = '14px Arial';
+        const ratio = this.calculateRatio(player.donations || 0, player.donationsReceived || 0);
+        ctx.fillText(ratio, currentX + (this.ratioWidth / 2), y + 30);
     }
 
     /**
@@ -391,16 +410,60 @@ class LeaderboardCanvas {
         return count.toString();
     }
 
+    formatRole(role) {
+        if (!role) return 'Member';
+        
+        // Handle different role variations and fix the elder/admin issue
+        const roleMap = {
+            'leader': 'Leader',
+            'coleader': 'Co-Leader',
+            'co-leader': 'Co-Leader',
+            'elder': 'Elder',
+            'member': 'Member',
+            'admin': 'Elder' // Map admin back to Elder (this fixes the issue)
+        };
+        
+        const normalizedRole = role.toLowerCase().replace(/[\s-_]/g, '');
+        return roleMap[normalizedRole] || role;
+    }
+
+    getRoleColor(role) {
+        const colors = {
+            'Leader': '#ffd700',     // Gold
+            'Co-Leader': '#ff6b35',  // Orange-red
+            'Elder': '#9370db',      // Purple
+            'Member': '#99aab5'      // Gray
+        };
+        
+        const formattedRole = this.formatRole(role);
+        return colors[formattedRole] || colors['Member'];
+    }
+
+    calculateRatio(donations, received) {
+        if (received === 0) {
+            return donations > 0 ? '∞' : '0.00';
+        }
+        return (donations / received).toFixed(2);
+    }
+
     getTimeRangeText(timeRange) {
+        const now = new Date();
+        const currentMonth = now.toLocaleString('en', { month: 'long', year: 'numeric' });
+        
+        // Calculate current season dates (CoC seasons typically run monthly)
+        const seasonStart = new Date(now.getFullYear(), now.getMonth(), 1);
+        const seasonEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+        const seasonText = `${seasonStart.getDate()}-${seasonEnd.getDate()} ${seasonStart.toLocaleString('en', { month: 'short' })} ${seasonStart.getFullYear()}`;
+        
         const ranges = {
-            'current_season': '🗓️ Current Season',
+            'current_season': `🗓️ Current Season (${seasonText})`,
             'current_week': '📅 This Week',
-            'current_month': '📊 This Month',
+            'current_month': `📊 ${currentMonth}`,
             'last_week': '📅 Last Week',
             'last_month': '📊 Last Month',
             'all_time': '⏰ All Time'
         };
-        return ranges[timeRange] || '📊 Current Season';
+        return ranges[timeRange] || `📊 Current Season (${seasonText})`;
     }
 
     generatePlayerColor(name) {
