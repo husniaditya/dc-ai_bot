@@ -97,13 +97,10 @@ class LeaderboardInteractionHandler {
      */
     async handleRefresh(interaction, config, view = 'donations') {
         try {
-            // Show loading state
-            await this.updateMessageWithLoading(interaction, `Refreshing ${view} data...`, view);
-
             // Clear cached data to force fresh fetch
             await this.clearCachedData(config.guild_id, view);
 
-            // Regenerate current page
+            // Regenerate current page directly (no loading state to avoid double acknowledgment)
             const currentPage = config.donation_leaderboard_current_page || 1;
             await this.generateLeaderboardPage(interaction, config, currentPage, true, view);
 
@@ -172,10 +169,7 @@ class LeaderboardInteractionHandler {
                 return await this.sendError(interaction, 'Invalid page number');
             }
 
-            // Show loading state
-            await this.updateMessageWithLoading(interaction, `Loading page ${targetPage}...`, view);
-
-            // Generate the requested page
+            // Generate the requested page directly (no loading state to avoid double acknowledgment)
             await this.generateLeaderboardPage(interaction, config, targetPage, false, view);
 
             console.log(`${view} leaderboard page changed to ${targetPage} for guild ${config.guild_id} by ${interaction.user.tag}`);
