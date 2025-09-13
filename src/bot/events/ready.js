@@ -5,6 +5,9 @@ const { startYouTubeWatcher } = require('../services/youtube');
 const { startTwitchWatcher } = require('../services/twitch');
 const { startCOCWatcher } = require('../watchers/clashofclans');
 
+// Initialize leaderboard events
+const LeaderboardEvents = require('./LeaderboardEvents');
+
 function setupReadyHandler(client, store, startTimestamp, commandMap) {
   client.once('ready', () => {
     console.log(`Logged in as ${client.user.tag}`);
@@ -79,6 +82,14 @@ function setupReadyHandler(client, store, startTimestamp, commandMap) {
       startCOCWatcher(client);
     } catch(e) { 
       console.warn('COC watcher failed to start', e.message); 
+    }
+
+    // Initialize leaderboard button interactions
+    try {
+      const leaderboardEvents = new LeaderboardEvents(client, store.sqlPool);
+      console.log('✅ Leaderboard button interactions initialized');
+    } catch(e) { 
+      console.warn('Leaderboard events failed to initialize', e.message); 
     }
     
     // Set up daily stats reset (every 24 hours at midnight UTC)

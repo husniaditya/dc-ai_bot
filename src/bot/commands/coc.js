@@ -739,42 +739,24 @@ async function handleLeaderboardCommand(interaction) {
   await interaction.deferReply();
   
   const clanTag = cleanTag(interaction.options.getString('tag'));
-  const clanData = await cocApiRequest(`/clans/%23${clanTag}`);
   
   try {
-    // Import the leaderboard generation function
-    const { generateDonationLeaderboard } = require('../services/clashofclans');
+    // Use the new LeaderboardInteractionHandler instead of old generateDonationLeaderboard
+    const LeaderboardInteractionHandler = require('../handlers/LeaderboardInteractionHandler');
+    const handler = new LeaderboardInteractionHandler();
     
-    const leaderboardBuffer = await generateDonationLeaderboard(clanData);
+    // Get guild configuration for leaderboard
+    const config = await handler.getLeaderboardConfig(interaction.guildId);
     
-    if (!leaderboardBuffer) {
+    if (!config || !config.track_donation_leaderboard) {
       await interaction.editReply({ 
-        content: 'Unable to generate donation leaderboard. Canvas library may not be installed or clan has no members.' 
+        content: 'Donation leaderboard is not enabled for this server. Please enable it first using the dashboard.' 
       });
       return;
     }
     
-    // Create embed
-    const embed = new EmbedBuilder()
-      .setTitle('📊 Donation Leaderboard')
-      .setDescription(`**${clanData.name}** Donation Statistics`)
-      .setColor(0x1E90FF)
-      .setImage('attachment://donation_leaderboard.png')
-      .addFields(
-        { name: 'Clan', value: `${clanData.name} (#${clanTag})`, inline: true },
-        { name: 'Members', value: `${clanData.members}/50`, inline: true },
-        { name: 'Season', value: `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`, inline: true }
-      )
-      .setFooter({ text: 'Generated on demand' })
-      .setTimestamp();
-    
-    await interaction.editReply({
-      embeds: [embed],
-      files: [{
-        attachment: leaderboardBuffer,
-        name: 'donation_leaderboard.png'
-      }]
-    });
+    // Generate leaderboard page 1 using new canvas system
+    await handler.generateLeaderboardPage(interaction, config, 1, true);
     
   } catch (error) {
     console.error('Leaderboard generation error:', error);

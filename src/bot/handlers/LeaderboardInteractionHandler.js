@@ -172,12 +172,23 @@ class LeaderboardInteractionHandler {
                 return await this.sendError(interaction, 'No donation data available');
             }
 
-            // Calculate pagination
-            const playersPerPage = config.donation_leaderboard_players_per_page || 20;
-            const totalPages = Math.ceil(donationData.players.length / playersPerPage);
-            const startIndex = (page - 1) * playersPerPage;
-            const endIndex = startIndex + playersPerPage;
-            const pageData = donationData.players.slice(startIndex, endIndex);
+            // For single page display - show all players
+            const showAllPlayers = true; // Set to true to show all players on one page
+            let pageData, totalPages;
+            
+            if (showAllPlayers) {
+                // Show all players on one page
+                pageData = donationData.players;
+                totalPages = 1;
+                page = 1;
+            } else {
+                // Use pagination (original behavior)
+                const playersPerPage = config.donation_leaderboard_players_per_page || 20;
+                totalPages = Math.ceil(donationData.players.length / playersPerPage);
+                const startIndex = (page - 1) * playersPerPage;
+                const endIndex = startIndex + playersPerPage;
+                pageData = donationData.players.slice(startIndex, endIndex);
+            }
 
             // Update database with current page state
             await this.updatePageState(config.guild_id, page, totalPages);
@@ -204,12 +215,12 @@ class LeaderboardInteractionHandler {
                 .setTimestamp()
                 .setFooter({ text: `${config.donation_leaderboard_time_range.replace('_', ' ')} • Updated` });
 
-            // Update the message
+            // Update the message with buttons always enabled
             await interaction.editReply({
                 content: config.donation_leaderboard_template || null,
                 embeds: [embed],
                 files: [{ attachment: canvasBuffer, name: 'leaderboard.png' }],
-                components: config.donation_leaderboard_interactive ? [buttonRow] : []
+                components: [buttonRow] // Always show buttons
             });
 
         } catch (error) {

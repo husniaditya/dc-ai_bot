@@ -5,7 +5,7 @@ const path = require('path');
 class LeaderboardCanvas {
     constructor() {
         this.width = 800;
-        this.height = 1000;
+        this.minHeight = 600;
         this.backgroundColor = '#2c2f33';
         this.primaryColor = '#7289da';
         this.secondaryColor = '#99aab5';
@@ -20,6 +20,7 @@ class LeaderboardCanvas {
         this.rankWidth = 60;
         this.nameWidth = 300;
         this.donationWidth = 120;
+        this.footerHeight = 80;
         
         // Font settings
         this.titleFont = 'bold 32px Arial';
@@ -38,8 +39,20 @@ class LeaderboardCanvas {
      */
     async generateLeaderboard(players, config, page = 1, totalPages = 1) {
         try {
-            // Create canvas
-            const canvas = createCanvas(this.width, this.height);
+            // Calculate dynamic height based on player count
+            const tableHeaderHeight = 35;
+            const spacingHeight = 30;
+            const dynamicHeight = this.padding * 2 + // Top and bottom padding
+                                 this.headerHeight + // Header section
+                                 spacingHeight + // Space after header
+                                 tableHeaderHeight + // Table header
+                                 (players.length * this.playerRowHeight) + // Player rows
+                                 this.footerHeight; // Footer
+
+            const canvasHeight = Math.max(this.minHeight, dynamicHeight);
+            
+            // Create canvas with dynamic height
+            const canvas = createCanvas(this.width, canvasHeight);
             const ctx = canvas.getContext('2d');
 
             // Generate random background gradient colors if specified
@@ -48,7 +61,7 @@ class LeaderboardCanvas {
             }
 
             // Draw background
-            await this.drawBackground(ctx);
+            await this.drawBackground(ctx, canvasHeight);
             
             // Draw header
             await this.drawHeader(ctx, config, page, totalPages);
@@ -57,7 +70,7 @@ class LeaderboardCanvas {
             await this.drawPlayerList(ctx, players, config);
             
             // Draw footer with pagination info
-            await this.drawFooter(ctx, page, totalPages);
+            await this.drawFooter(ctx, page, totalPages, canvasHeight);
 
             return canvas.toBuffer('image/png');
         } catch (error) {
@@ -89,20 +102,20 @@ class LeaderboardCanvas {
     /**
      * Draw the background with gradient
      */
-    async drawBackground(ctx) {
+    async drawBackground(ctx, height) {
         // Create gradient background
-        const gradient = ctx.createLinearGradient(0, 0, this.width, this.height);
+        const gradient = ctx.createLinearGradient(0, 0, this.width, height);
         gradient.addColorStop(0, this.backgroundColor);
         gradient.addColorStop(0.5, this.lightenColor(this.backgroundColor, 10));
         gradient.addColorStop(1, this.backgroundColor);
         
         ctx.fillStyle = gradient;
-        ctx.fillRect(0, 0, this.width, this.height);
+        ctx.fillRect(0, 0, this.width, height);
 
         // Add subtle pattern overlay
         ctx.fillStyle = 'rgba(255, 255, 255, 0.02)';
         for (let x = 0; x < this.width; x += 20) {
-            for (let y = 0; y < this.height; y += 20) {
+            for (let y = 0; y < height; y += 20) {
                 if ((x + y) % 40 === 0) {
                     ctx.fillRect(x, y, 1, 1);
                 }
@@ -333,8 +346,8 @@ class LeaderboardCanvas {
     /**
      * Draw footer with additional info
      */
-    async drawFooter(ctx, page, totalPages) {
-        const footerY = this.height - 50;
+    async drawFooter(ctx, page, totalPages, canvasHeight) {
+        const footerY = canvasHeight - 50;
         
         // Footer text
         ctx.fillStyle = this.secondaryColor;
@@ -344,7 +357,7 @@ class LeaderboardCanvas {
         const updateTime = new Date().toLocaleString();
         ctx.fillText(`Last updated: ${updateTime}`, this.width / 2, footerY);
         
-        // Navigation hint
+        // Navigation hint (only show if there are actually multiple pages)
         if (totalPages > 1) {
             ctx.fillText('Use buttons below to navigate pages', this.width / 2, footerY + 20);
         }

@@ -15,7 +15,6 @@ const {
   announce, 
   cleanClanTag, 
   formatClanTag,
-  generateDonationLeaderboard,
   getCOCStats,
   cocStats 
 } = require('../services/clashofclans');
@@ -265,35 +264,28 @@ async function pollGuild(guild) {
         
         if (shouldUpdate) {
           try {
-            const leaderboardBuffer = await generateDonationLeaderboard(clanInfo);
+            // Use the new LeaderboardEvents system instead of old generateDonationLeaderboard
+            const LeaderboardEvents = require('../events/LeaderboardEvents');
+            const leaderboardEvents = new LeaderboardEvents(guild.client, store.sqlPool);
             
-            if (leaderboardBuffer) {
-              const result = await announce(guild, cfg, {
-                clanName: clanInfo.name,
-                clanTag: formatClanTag(cleanTag),
-                leaderboardBuffer,
-                leaderboardImage: true,
-                season: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
-              }, 'donation_leaderboard');
-              
-              // Update the stored message ID if we got a result
-              if (result && result.messageId) {
-                try {
-                  // Update the donation message ID in the database
-                  const currentConfig = await store.getGuildClashOfClansConfig(guild.id);
-                  await store.setGuildClashOfClansConfig(guild.id, {
-                    ...currentConfig,
-                    donationMessageId: result.messageId
-                  });
-                  
-                  console.log(`[COC] ${result.updated ? 'Updated' : 'Created'} scheduled leaderboard message ${result.messageId} for clan ${clanTag}`);
-                } catch (dbError) {
-                  console.error(`[COC] Error saving donation message ID for ${clanTag}:`, dbError.message);
-                }
-              }
-              
+            // Get existing message ID for updating
+            const currentConfig = await store.getGuildClashOfClansConfig(guild.id);
+            const existingMessageId = currentConfig.donationMessageId || null;
+            
+            // Post/update leaderboard using new system
+            const result = await leaderboardEvents.postLeaderboard(
+              guild.id, 
+              cfg.channel, 
+              existingMessageId
+            );
+            
+            if (result && result.success) {
+              console.log(`[COC] Updated leaderboard using new canvas system for clan ${clanTag}`);
               clanState.lastLeaderboardPost = now.toISOString();
+            } else {
+              console.error(`[COC] Failed to update leaderboard for ${clanTag}:`, result?.error);
             }
+              
           } catch (error) {
             console.error(`[COC] Error generating scheduled donation leaderboard for ${clanTag}:`, error.message);
           }

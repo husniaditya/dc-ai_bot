@@ -94,43 +94,27 @@ function createClashOfClansRoutes(client, store) {
       // Note: Watcher also handles automatic scheduled updates based on donationLeaderboardSchedule
       if (partial.trackDonationLeaderboard) {
         try {
-          // Import required services
-          const { fetchClanInfo, announce, generateDonationLeaderboard, formatClanTag, cleanClanTag } = require('../../bot/services/clashofclans');
+          // Use the new LeaderboardEvents system
+          const LeaderboardEvents = require('../../bot/events/LeaderboardEvents');
           
           const guild = client.guilds.cache.get(guildId);
-          if (guild && cfg.clans && cfg.clans.length > 0) {
-            // Post leaderboard for each configured clan
-            for (const clanTag of cfg.clans) {
-              try {
-                const cleanTag = cleanClanTag(clanTag);
-                const clanInfo = await fetchClanInfo(cleanTag);
-                
-                if (clanInfo) {
-                  const leaderboardBuffer = await generateDonationLeaderboard(clanInfo);
-                  
-                  if (leaderboardBuffer) {
-                    const result = await announce(guild, cfg, {
-                      clanName: clanInfo.name,
-                      clanTag: formatClanTag(cleanTag),
-                      leaderboardBuffer,
-                      leaderboardImage: true,
-                      season: `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`
-                    }, 'donation_leaderboard');
-                    
-                    // Save the message ID for future updates
-                    if (result && result.messageId) {
-                      await store.setGuildClashOfClansConfig(guildId, {
-                        ...cfg,
-                        donationMessageId: result.messageId
-                      });
-                    }
-                    
-                    console.log(`[API] Posted leaderboard for clan ${clanTag} in guild ${guildId}`);
-                  }
-                }
-              } catch (error) {
-                console.error(`[API] Error posting leaderboard for clan ${clanTag}:`, error.message);
-              }
+          if (guild) {
+            const leaderboardEvents = new LeaderboardEvents(guild.client, store.sqlPool);
+            
+            // Get existing message ID for updating
+            const existingMessageId = cfg.donationMessageId || null;
+            
+            // Post/update leaderboard using new system
+            const result = await leaderboardEvents.postLeaderboard(
+              guild.id, 
+              cfg.channel, 
+              existingMessageId
+            );
+            
+            if (result && result.success) {
+              console.log(`[API] Updated leaderboard using new canvas system for guild ${guild.id}`);
+            } else {
+              console.error(`[API] Failed to update leaderboard for guild ${guild.id}:`, result?.error);
             }
           }
         } catch (error) {
