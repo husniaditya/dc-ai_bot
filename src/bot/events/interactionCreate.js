@@ -194,6 +194,7 @@ async function handleContextMenuCommand(interaction, store) {
 async function handleChatInputCommand(interaction, client, store, commandMap) {
   const cmd = commandMap.get(interaction.commandName);
   if (!cmd) {
+    console.log(`Command not found in map: ${interaction.commandName}. Available commands:`, Array.from(commandMap.keys()));
     return interaction.reply({ content: 'Unknown command (not loaded).' });
   }
 
@@ -395,6 +396,7 @@ function getCategoryForCommand(commandName) {
     // Fun commands
     'poll': 'fun',
     'echo': 'fun',
+    'meme': 'fun',
     
     // XP/Leveling
     'level': 'leveling',
@@ -408,6 +410,7 @@ function getCategoryForCommand(commandName) {
     'autorole': 'automation',
     'welcome': 'automation',
     'role': 'automation',
+    'antiraid': 'automation',
     
     // AI Integration
     'ask': 'ai',
@@ -422,6 +425,10 @@ function getCategoryForCommand(commandName) {
     'ytdebug': 'streaming',
     'twitchstats': 'streaming',
     'twitchdebug': 'streaming',
+    
+    // Gaming
+    'coc': 'gaming',
+    'cocdebug': 'gaming',
     
     // Configuration
     'config': 'configuration',

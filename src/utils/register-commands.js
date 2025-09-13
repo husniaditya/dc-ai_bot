@@ -698,6 +698,219 @@ const commands = [
     ]
   },
   {
+    name: 'coc',
+    description: 'Clash of Clans information and commands',
+    options: [
+      {
+        name: 'clan',
+        description: 'Get clan information',
+        type: 1, // SUB_COMMAND
+        options: [
+          {
+            name: 'tag',
+            description: 'Clan tag (e.g., #2Y0YRGG0)',
+            type: 3, // STRING
+            required: true
+          }
+        ]
+      },
+      {
+        name: 'player',
+        description: 'Get player information',
+        type: 1, // SUB_COMMAND
+        options: [
+          {
+            name: 'tag',
+            description: 'Player tag (e.g., #ABC123)',
+            type: 3, // STRING
+            required: true
+          }
+        ]
+      },
+      {
+        name: 'war',
+        description: 'Get current war information',
+        type: 1, // SUB_COMMAND
+        options: [
+          {
+            name: 'tag',
+            description: 'Clan tag (e.g., #2Y0YRGG0)',
+            type: 3, // STRING
+            required: true
+          }
+        ]
+      },
+      {
+        name: 'search',
+        description: 'Search for clans',
+        type: 1, // SUB_COMMAND
+        options: [
+          {
+            name: 'name',
+            description: 'Clan name to search for',
+            type: 3, // STRING
+            required: true
+          },
+          {
+            name: 'limit',
+            description: 'Number of results (1-20)',
+            type: 4, // INTEGER
+            required: false,
+            min_value: 1,
+            max_value: 20
+          }
+        ]
+      },
+      {
+        name: 'playersearch',
+        description: 'Search for players',
+        type: 1, // SUB_COMMAND
+        options: [
+          {
+            name: 'name',
+            description: 'Player name to search for',
+            type: 3, // STRING
+            required: true
+          },
+          {
+            name: 'limit',
+            description: 'Number of results (1-20)',
+            type: 4, // INTEGER
+            required: false,
+            min_value: 1,
+            max_value: 20
+          }
+        ]
+      },
+      {
+        name: 'compare',
+        description: 'Compare two players',
+        type: 1, // SUB_COMMAND
+        options: [
+          {
+            name: 'player1',
+            description: 'First player tag (e.g., #ABC123)',
+            type: 3, // STRING
+            required: true
+          },
+          {
+            name: 'player2',
+            description: 'Second player tag (e.g., #DEF456)',
+            type: 3, // STRING
+            required: true
+          }
+        ]
+      },
+      {
+        name: 'attacks',
+        description: 'Show remaining war attacks',
+        type: 1, // SUB_COMMAND
+        options: [
+          {
+            name: 'tag',
+            description: 'Clan tag (e.g., #2Y0YRGG0)',
+            type: 3, // STRING
+            required: true
+          }
+        ]
+      },
+      {
+        name: 'top',
+        description: 'Show top players in clan',
+        type: 1, // SUB_COMMAND
+        options: [
+          {
+            name: 'tag',
+            description: 'Clan tag (e.g., #2Y0YRGG0)',
+            type: 3, // STRING
+            required: true
+          },
+          {
+            name: 'category',
+            description: 'What to rank by',
+            type: 3, // STRING
+            required: false,
+            choices: [
+              { name: 'Trophies', value: 'trophies' },
+              { name: 'Donations', value: 'donations' },
+              { name: 'Donations Received', value: 'received' },
+              { name: 'Level', value: 'level' }
+            ]
+          }
+        ]
+      },
+      {
+        name: 'stats',
+        description: 'Show detailed player statistics',
+        type: 1, // SUB_COMMAND
+        options: [
+          {
+            name: 'tag',
+            description: 'Player tag (e.g., #ABC123)',
+            type: 3, // STRING
+            required: true
+          }
+        ]
+      },
+      {
+        name: 'warlog',
+        description: 'Show recent war history',
+        type: 1, // SUB_COMMAND
+        options: [
+          {
+            name: 'tag',
+            description: 'Clan tag (e.g., #2Y0YRGG0)',
+            type: 3, // STRING
+            required: true
+          },
+          {
+            name: 'limit',
+            description: 'Number of wars to show (1-10)',
+            type: 4, // INTEGER
+            required: false,
+            min_value: 1,
+            max_value: 10
+          }
+        ]
+      },
+      {
+        name: 'watch',
+        description: 'Add clan to monitoring (Admin only)',
+        type: 1, // SUB_COMMAND
+        options: [
+          {
+            name: 'tag',
+            description: 'Clan tag (e.g., #2Y0YRGG0)',
+            type: 3, // STRING
+            required: true
+          }
+        ]
+      },
+      {
+        name: 'unwatch',
+        description: 'Remove clan from monitoring (Admin only)',
+        type: 1, // SUB_COMMAND
+        options: [
+          {
+            name: 'tag',
+            description: 'Clan tag (e.g., #2Y0YRGG0)',
+            type: 3, // STRING
+            required: true
+          }
+        ]
+      },
+      {
+        name: 'config',
+        description: 'Show COC configuration (Admin only)',
+        type: 1 // SUB_COMMAND
+      }
+    ]
+  },
+  {
+    name: 'cocdebug',
+    description: 'Show COC watcher debug events and statistics (Manage Server)'
+  },
+  {
     name: 'Explain Image',
     type: 3 // MESSAGE context menu
   },
