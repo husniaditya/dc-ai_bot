@@ -94,8 +94,8 @@ function createClashOfClansRoutes(client, store) {
       // Note: Watcher also handles automatic scheduled updates based on donationLeaderboardSchedule
       if (partial.trackDonationLeaderboard) {
         try {
-          // Use the new LeaderboardEvents system
-          const LeaderboardEvents = require('../../bot/events/LeaderboardEvents');
+          // Use the new LeaderboardEvents system (moved to handlers directory)
+          const LeaderboardEvents = require('../../bot/handlers/LeaderboardEvents');
           
           const guild = client.guilds.cache.get(guildId);
           if (guild) {

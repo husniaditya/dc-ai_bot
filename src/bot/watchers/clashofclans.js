@@ -264,8 +264,12 @@ async function pollGuild(guild) {
         
         if (shouldUpdate) {
           try {
+            if (!cfg.donationLeaderboardChannelId) {
+              console.warn(`[COC] Skipping leaderboard update for guild ${guild.id} (no donationLeaderboardChannelId set)`);
+              continue;
+            }
             // Use the new LeaderboardEvents system instead of old generateDonationLeaderboard
-            const LeaderboardEvents = require('../events/LeaderboardEvents');
+            const LeaderboardEvents = require('../handlers/LeaderboardEvents');
             const leaderboardEvents = new LeaderboardEvents(guild.client, store.sqlPool);
             
             // Get existing message ID for updating
