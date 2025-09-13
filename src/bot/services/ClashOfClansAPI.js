@@ -7,7 +7,8 @@ const axios = require('axios');
 class ClashOfClansAPI {
     constructor() {
         this.baseURL = 'https://api.clashofclans.com/v1';
-        this.apiKey = process.env.COC_API_KEY;
+        // Use same environment variable as existing service for consistency
+        this.apiKey = process.env.COC_API_KEY || process.env.COC_API_TOKEN;
         this.requestCache = new Map();
         this.rateLimitDelay = 1000; // 1 second between requests
         this.lastRequestTime = 0;
