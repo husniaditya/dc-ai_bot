@@ -10,6 +10,7 @@ const ClashOfClansAPI = require('../services/ClashOfClansAPI');
 class LeaderboardInteractionHandler {
     constructor(database) {
         this.db = database;
+        this.lastInteraction = new Map(); // Track last interaction time per user to prevent spam
     }
 
     /**
@@ -18,7 +19,41 @@ class LeaderboardInteractionHandler {
      */
     async handleButtonInteraction(interaction) {
         try {
-            await interaction.deferUpdate(); // Acknowledge the interaction
+            // Rate limiting: prevent rapid button clicking (minimum 500ms between interactions)
+            const userId = interaction.user.id;
+            const now = Date.now();
+            const lastTime = this.lastInteraction.get(userId) || 0;
+            
+            if (now - lastTime < 500) {
+                console.log(`Rate limited interaction from user ${userId}, ignoring`);
+                return; // Silently ignore rapid clicks
+            }
+            
+            this.lastInteraction.set(userId, now);
+            
+            // Check if interaction is still valid before trying to defer
+            if (!interaction.isButton() || !interaction.guildId) {
+                console.error('Invalid interaction type or missing guild:', {
+                    isButton: interaction.isButton(),
+                    guildId: interaction.guildId,
+                    customId: interaction.customId
+                });
+                return;
+            }
+
+            // Try to defer the interaction with error handling
+            try {
+                await interaction.deferUpdate();
+            } catch (deferError) {
+                console.error('Failed to defer interaction (likely expired):', {
+                    error: deferError.message,
+                    code: deferError.code,
+                    customId: interaction.customId,
+                    guildId: interaction.guildId
+                });
+                // If we can't defer, the interaction is likely expired - just return
+                return;
+            }
             
             console.log('Button interaction received:', {
                 customId: interaction.customId,
@@ -77,14 +112,25 @@ class LeaderboardInteractionHandler {
         } catch (error) {
             console.error('Error handling leaderboard button interaction:', {
                 error: error.message,
+                code: error.code,
                 customId: interaction.customId,
                 guildId: interaction.guildId,
                 stack: error.stack
             });
-            try {
-                await this.sendError(interaction, 'An error occurred while processing your request');
-            } catch (sendErrorErr) {
-                console.error('Failed to send error message:', sendErrorErr);
+            
+            // Don't try to send error messages for expired/unknown interactions
+            if (error.code === 10062 || error.code === 40060 || error.message.includes('Unknown interaction') || error.message.includes('already been acknowledged')) {
+                console.log('Interaction expired or invalid, skipping error message');
+                return;
+            }
+            
+            // Only try to send error message if interaction is still valid
+            if (interaction.deferred || interaction.replied) {
+                try {
+                    await this.sendError(interaction, 'An error occurred while processing your request');
+                } catch (sendErrorErr) {
+                    console.error('Failed to send error message:', sendErrorErr);
+                }
             }
         }
     }
@@ -266,7 +312,23 @@ class LeaderboardInteractionHandler {
                 updateData.content = config.donation_leaderboard_template;
             }
 
-            await interaction.editReply(updateData);
+            // Check if interaction is still valid before editing
+            if (interaction.deferred || interaction.replied) {
+                try {
+                    await interaction.editReply(updateData);
+                } catch (editError) {
+                    console.error('Failed to edit reply (interaction may be expired):', {
+                        error: editError.message,
+                        code: editError.code,
+                        customId: interaction.customId
+                    });
+                    // Don't throw - just log the error since we can't recover
+                    return;
+                }
+            } else {
+                console.error('Interaction not properly deferred, cannot edit reply');
+                return;
+            }
 
         } catch (error) {
             console.error(`Error generating ${view} leaderboard page:`, error);
@@ -355,12 +417,27 @@ class LeaderboardInteractionHandler {
                 dataView: view
             });
 
-            await interaction.editReply({
-                content: null,
-                embeds: [embed],
-                files: [],
-                components: [buttonRow]
-            });
+            // Check if interaction is still valid before editing
+            if (interaction.deferred || interaction.replied) {
+                try {
+                    await interaction.editReply({
+                        content: null,
+                        embeds: [embed],
+                        files: [],
+                        components: [buttonRow]
+                    });
+                } catch (editError) {
+                    console.error('Failed to edit reply in summary (interaction may be expired):', {
+                        error: editError.message,
+                        code: editError.code,
+                        customId: interaction.customId
+                    });
+                    return;
+                }
+            } else {
+                console.error('Interaction not properly deferred, cannot edit reply in summary');
+                return;
+            }
         } catch (error) {
             console.error(`Error generating ${view} summary view:`, error);
             await this.sendError(interaction, `Failed to generate ${view} summary`);
@@ -518,17 +595,37 @@ class LeaderboardInteractionHandler {
     }
 
     async updateMessageWithLoading(interaction, message, view = 'donations') {
+        // Check if interaction is still valid before editing
+        if (!interaction.deferred && !interaction.replied) {
+            console.error('Cannot update with loading: interaction not properly deferred');
+            return;
+        }
+
         const loadingButtons = LeaderboardButtons.createLoadingButtonRow(interaction.guildId, view);
         
-        await interaction.editReply({
-            content: `⏳ ${message}`,
-            embeds: [],
-            files: [],
-            components: [loadingButtons]
-        });
+        try {
+            await interaction.editReply({
+                content: `⏳ ${message}`,
+                embeds: [],
+                files: [],
+                components: [loadingButtons]
+            });
+        } catch (editError) {
+            console.error('Failed to update with loading message (interaction may be expired):', {
+                error: editError.message,
+                code: editError.code,
+                customId: interaction.customId
+            });
+        }
     }
 
     async sendError(interaction, message, view = 'donations') {
+        // Check if interaction is still valid before trying to send error
+        if (!interaction.deferred && !interaction.replied) {
+            console.error('Cannot send error: interaction not properly deferred');
+            return;
+        }
+
         const errorEmbed = new EmbedBuilder()
             .setTitle('❌ Error')
             .setDescription(message)
@@ -536,12 +633,21 @@ class LeaderboardInteractionHandler {
 
         const errorButtons = LeaderboardButtons.createErrorButtonRow(interaction.guildId, view);
 
-        await interaction.editReply({
-            content: null,
-            embeds: [errorEmbed],
-            files: [],
-            components: [errorButtons]
-        });
+        try {
+            await interaction.editReply({
+                content: null,
+                embeds: [errorEmbed],
+                files: [],
+                components: [errorButtons]
+            });
+        } catch (editError) {
+            console.error('Failed to send error message (interaction may be expired):', {
+                error: editError.message,
+                code: editError.code,
+                customId: interaction.customId
+            });
+            // Don't throw - just log the error since we can't recover
+        }
     }
 }
 
