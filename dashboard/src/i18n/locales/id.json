@@ -1584,6 +1584,7 @@
         "clanManagement": "Manajemen Clan",
         "trackingFeatures": "Fitur Pelacakan",
         "donationLeaderboard": "Leaderboard Donasi",
+        "warStatistics": "Statistik Perang",
         "warStartTemplate": "Template Mulai Perang",
         "warEndTemplate": "Template Selesai Perang",
         "memberJoinTemplate": "Template Anggota Baru",
@@ -1618,6 +1619,15 @@
         "template": "Template Pesan Leaderboard",
         "templatePlaceholder": "Update leaderboard donasi mingguan! 📊",
         "templateHint": "Pesan yang menyertai gambar leaderboard. Kosongkan untuk pesan default."
+      },
+      "warStats": {
+        "enableWarStats": "Aktifkan Posting Statistik Perang Otomatis",
+        "enableWarStatsHint": "Posting statistik perang otomatis selama perang aktif",
+        "channel": "Saluran Statistik Perang",
+        "channelHint": "Saluran tempat statistik perang akan diposting. Auto-refresh selama perang setiap 5 menit.",
+        "template": "Template Pesan",
+        "templatePlaceholder": "Statistik perang saat ini untuk {clanName}!",
+        "templateHint": "Pesan dengan gambar statistik perang."
       },
       "templates": {
         "warStartPlaceholder": "🛡️ Perang dimulai melawan {warOpponent}! Persiapan berakhir {warEndTime}. Semoga beruntung {roleMention}!",

@@ -464,7 +464,7 @@ class LeaderboardInteractionHandler {
 
         // Fetch fresh data from CoC API
         try {
-            const cocApi = new ClashOfClansAPI();
+            const cocApi = ClashOfClansAPI;
             const freshData = await cocApi.getClanWarStats(config.clans);
 
             // Cache the fresh data

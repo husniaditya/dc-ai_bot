@@ -2358,7 +2358,21 @@ select.form-select, .dataTables_wrapper .dataTables_length select.form-select {
 select.form-select:focus, .dataTables_wrapper .dataTables_length select.form-select:focus {
   box-shadow:0 0 0 2px rgba(99,102,241,0.5) !important;
 }
+/* Dark theme override for all select dropdown options */
+html.dark select.form-select option, 
+html.dark .dataTables_wrapper .dataTables_length select.form-select option {
+  background: rgba(31, 37, 71, 0.95) !important;
+  color: var(--text-base) !important;
+}
+
 select.form-select option, .dataTables_wrapper .dataTables_length select.form-select option { background:#1c2233; color: var(--text-base); }
+
+/* Light theme override for all select dropdown options */
+html:not(.dark) select.form-select option, 
+html:not(.dark) .dataTables_wrapper .dataTables_length select.form-select option {
+  background: #ffffff !important;
+  color: #1f2530 !important;
+}
 /* Page size selector themed */
 .dt-toolbar .form-select.form-select-sm { 
   background: rgba(255,255,255,0.08) !important;
@@ -5826,4 +5840,107 @@ html:not(.dark) .info-label {
   .table-responsive.d-block {
     display: none !important;
   }
+}
+
+/* Fix dropdown z-index overlapping issues */
+.form-select {
+  position: relative;
+  z-index: 1;
+}
+
+/* Ensure dropdown options appear above other content */
+.form-select option {
+  z-index: 9999 !important;
+}
+
+/* Fix for select dropdown positioning */
+select.form-select {
+  position: relative;
+  z-index: 10;
+}
+
+/* When select is focused/open, increase z-index */
+select.form-select:focus {
+  z-index: 1000 !important;
+  position: relative;
+}
+
+/* Card containers should have lower z-index when select is open */
+.card-glass {
+  position: relative;
+  z-index: 1;
+}
+
+/* Clash of Clans config specific dropdown fixes */
+.clash-config-wrapper .form-select {
+  position: relative;
+  z-index: 100;
+}
+
+.clash-config-wrapper .form-select:focus,
+.clash-config-wrapper .form-select:active {
+  z-index: 1001 !important;
+}
+
+/* Ensure mention targets picker doesn't interfere */
+.clash-config-wrapper .card-body {
+  overflow: visible;
+}
+
+/* Fix dropdown menu positioning for better layering */
+.clash-config-wrapper select option {
+  background: var(--glass-bg) !important;
+  color: var(--text-base) !important;
+  border: none !important;
+}
+
+/* Dark theme dropdown options - more specific selector */
+html.dark .clash-config-wrapper select.form-select option {
+  background: rgba(31, 37, 71, 0.95) !important;
+  color: var(--text-base) !important;
+  border: none !important;
+}
+
+/* Light theme dropdown options */
+html:not(.dark) .clash-config-wrapper select.form-select option {
+  background: #ffffff !important;
+  color: #1f2530 !important;
+  border: none !important;
+}
+
+/* Additional fix for dropdown positioning - ensure proper stacking context */
+.clash-config-wrapper .row {
+  position: relative;
+  z-index: auto;
+}
+
+.clash-config-wrapper .col-lg-4 {
+  position: relative;
+  z-index: auto;
+}
+
+/* Fix specific to select dropdowns in cards */
+.clash-config-wrapper .card-glass .form-select {
+  z-index: 200;
+}
+
+.clash-config-wrapper .card-glass .form-select:focus,
+.clash-config-wrapper .card-glass .form-select:active {
+  z-index: 1002 !important;
+  position: relative;
+}
+
+/* Ensure cards don't create stacking context issues */
+.clash-config-wrapper .card-glass {
+  z-index: 1;
+  isolation: auto;
+}
+
+/* Force dropdown to appear above all other content */
+.clash-config-wrapper select {
+  position: relative !important;
+}
+
+.clash-config-wrapper select:focus {
+  z-index: 9999 !important;
 }

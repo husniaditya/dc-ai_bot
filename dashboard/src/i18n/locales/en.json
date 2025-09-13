@@ -1940,6 +1940,7 @@
         "clanManagement": "Clan Management",
         "trackingFeatures": "Tracking Features",
         "donationLeaderboard": "Donation Leaderboard",
+        "warStatistics": "War Statistics",
         "warStartTemplate": "War Start Template",
         "warEndTemplate": "War End Template",
         "memberJoinTemplate": "Member Join Template",
@@ -1976,6 +1977,15 @@
         "templateHint": "Message to accompany the leaderboard image. Leave blank for default message.",
         "enableInteractiveControls": "Enable Interactive Controls",
         "interactiveControlsHint": "Add Refresh, Edit Board, and pagination buttons to the leaderboard message"
+      },
+      "warStats": {
+        "enableWarStats": "Enable Automatic War Statistics Posting",
+        "enableWarStatsHint": "Automatically post war statistics during active wars",
+        "channel": "War Statistics Channel",
+        "channelHint": "Channel where war statistics will be posted. Auto-refreshes during wars every 5 minutes.",
+        "template": "Message Template",
+        "templatePlaceholder": "Current war statistics for {clanName}!",
+        "templateHint": "Message with war statistics image."
       },
       "templates": {
         "warStartPlaceholder": "🛡️ War started against {warOpponent}! Preparation ends {warEndTime}. Good luck {roleMention}!",

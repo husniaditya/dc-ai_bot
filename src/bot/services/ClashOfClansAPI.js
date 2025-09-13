@@ -91,6 +91,17 @@ class ClashOfClansAPI {
     }
 
     /**
+     * Gets individual player data including lastSeen
+     * @param {string} playerTag - Player tag
+     * @returns {Object} Player data
+     */
+    async getPlayer(playerTag) {
+        const tag = this.formatClanTag(playerTag); // Same format function works for player tags
+        const endpoint = `/players/${encodeURIComponent(tag)}`;
+        return await this.makeRequest(endpoint);
+    }
+
+    /**
      * Gets current clan war information
      * @param {string} clanTag - Clan tag
      * @returns {Object} Current war data
@@ -170,7 +181,10 @@ class ClashOfClansAPI {
                             trophies: member.trophies || 0,
                             versusTrophies: member.versusTrophies || 0,
                             clanRank: member.clanRank || 0,
-                            previousClanRank: member.previousClanRank || 0
+                            previousClanRank: member.previousClanRank || 0,
+                            // Note: lastSeen is not available in clan members endpoint
+                            // Would require individual player API calls which are rate-limited
+                            lastSeen: null
                         };
 
                         allPlayers.push(playerData);

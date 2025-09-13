@@ -1545,6 +1545,7 @@
         "clanManagement": "Gestión de Clan",
         "trackingFeatures": "Funciones de Seguimiento",
         "donationLeaderboard": "Tabla de Liderazgo de Donaciones",
+        "warStatistics": "Estadísticas de Guerra",
         "warStartTemplate": "Plantilla Inicio de Guerra",
         "warEndTemplate": "Plantilla Fin de Guerra",
         "memberJoinTemplate": "Plantilla Nuevo Miembro",
@@ -1579,6 +1580,15 @@
         "template": "Plantilla de Mensaje de Tabla de Liderazgo",
         "templatePlaceholder": "¡Actualización semanal de tabla de liderazgo de donaciones! 📊",
         "templateHint": "Mensaje para acompañar la imagen de la tabla de liderazgo. Dejar en blanco para mensaje por defecto."
+      },
+      "warStats": {
+        "enableWarStats": "Habilitar Publicación Automática de Estadísticas de Guerra",
+        "enableWarStatsHint": "Publicar automáticamente estadísticas de guerra durante guerras activas",
+        "channel": "Canal de Estadísticas de Guerra",
+        "channelHint": "Canal donde se publicarán las estadísticas de guerra. Auto-actualización durante guerras cada 5 minutos.",
+        "template": "Plantilla de Mensaje",
+        "templatePlaceholder": "¡Estadísticas de guerra actuales para {clanName}!",
+        "templateHint": "Mensaje con imagen de estadísticas de guerra."
       },
       "templates": {
         "warStartPlaceholder": "🛡️ ¡Guerra iniciada contra {warOpponent}! La preparación termina {warEndTime}. ¡Buena suerte {roleMention}!",

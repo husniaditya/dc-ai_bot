@@ -140,9 +140,9 @@ export default function ClashOfClansConfig({
 
   return (
     <div className="clash-config-wrapper">
-      {/* Basic Settings */}
+      {/* First Row: Configuration and Mention Targets */}
       <div className="row mb-4">
-        <div className="col-lg-4">
+        <div className="col-lg-6">
           <div className="card card-glass">
             <div className="card-body">
               <h6 className="card-title">{t('gamesSocials.common.configuration')}</h6>
@@ -164,12 +164,19 @@ export default function ClashOfClansConfig({
               {/* Embed Toggle */}
               <div className="form-check form-switch mb-3">
                 <input
+                  id="embedToggle"
                   className="form-check-input"
                   type="checkbox"
                   checked={config.embedEnabled}
                   onChange={e => onChange(prev => ({ ...prev, embedEnabled: e.target.checked }))}
                 />
-                <label className="form-check-label">{t('gamesSocials.common.embeds')}</label>
+                <label 
+                  className="form-check-label user-select-none" 
+                  htmlFor="embedToggle"
+                  style={{ cursor: 'pointer' }}
+                >
+                  {t('gamesSocials.common.embeds')}
+                </label>
               </div>
 
               {/* Feature Toggles */}
@@ -178,32 +185,60 @@ export default function ClashOfClansConfig({
                 
                 <div className="form-check form-switch">
                   <input
+                    id="trackWarsToggle"
                     className="form-check-input"
                     type="checkbox"
                     checked={config.trackWarEvents || config.trackWars}
-                    onChange={e => onChange(prev => ({ ...prev, trackWarEvents: e.target.checked, trackWars: e.target.checked }))}
+                    onChange={e => onChange(prev => ({ 
+                      ...prev, 
+                      trackWarEvents: e.target.checked, 
+                      trackWars: e.target.checked,
+                      // Also enable war leaderboard by default when enabling war tracking
+                      trackWarLeaderboard: e.target.checked,
+                      track_war_leaderboard: e.target.checked
+                    }))}
                   />
-                  <label className="form-check-label">{t('gamesSocials.clashofclans.tracking.trackWars')}</label>
+                  <label 
+                    className="form-check-label user-select-none" 
+                    htmlFor="trackWarsToggle"
+                    style={{ cursor: 'pointer' }}
+                  >
+                    {t('gamesSocials.clashofclans.tracking.trackWars')}
+                  </label>
                 </div>
                 
                 <div className="form-check form-switch">
                   <input
+                    id="trackMembersToggle"
                     className="form-check-input"
                     type="checkbox"
                     checked={config.trackMemberEvents || config.trackMemberChanges}
                     onChange={e => onChange(prev => ({ ...prev, trackMemberEvents: e.target.checked, trackMemberChanges: e.target.checked }))}
                   />
-                  <label className="form-check-label">{t('gamesSocials.clashofclans.tracking.trackMembers')}</label>
+                  <label 
+                    className="form-check-label user-select-none" 
+                    htmlFor="trackMembersToggle"
+                    style={{ cursor: 'pointer' }}
+                  >
+                    {t('gamesSocials.clashofclans.tracking.trackMembers')}
+                  </label>
                 </div>
                 
                 <div className="form-check form-switch">
                   <input
+                    id="trackDonationsToggle"
                     className="form-check-input"
                     type="checkbox"
                     checked={config.trackDonationEvents || config.trackDonations}
                     onChange={e => onChange(prev => ({ ...prev, trackDonationEvents: e.target.checked, trackDonations: e.target.checked }))}
                   />
-                  <label className="form-check-label">{t('gamesSocials.clashofclans.tracking.trackDonations')}</label>
+                  <label 
+                    className="form-check-label user-select-none" 
+                    htmlFor="trackDonationsToggle"
+                    style={{ cursor: 'pointer' }}
+                  >
+                    {t('gamesSocials.clashofclans.tracking.trackDonations')}
+                  </label>
                 </div>
               </div>
 
@@ -225,7 +260,7 @@ export default function ClashOfClansConfig({
           </div>
         </div>
 
-        <div className="col-lg-4">
+        <div className="col-lg-6">
           {/* Mention Targets */}
           <div className="card card-glass">
             <div className="card-body">
@@ -255,8 +290,121 @@ export default function ClashOfClansConfig({
             </div>
           </div>
         </div>
+      </div>
 
-        <div className="col-lg-4">
+      {/* Second Row: War Statistics and Donation Leaderboard */}
+      <div className="row mb-4">
+        <div className="col-lg-6">
+          {/* War Statistics Settings */}
+          <div className="card card-glass">
+            <div className="card-body">
+              <div className="d-flex align-items-center mb-3">
+                <h6 className="card-title mb-0">{t('gamesSocials.clashofclans.sections.warStatistics')}</h6>
+              </div>
+              
+              {/* Enable War Leaderboard */}
+              <div className="form-check form-switch mb-4">
+                <input
+                  id="warStatsToggle"
+                  className="form-check-input"
+                  type="checkbox"
+                  checked={config.trackWarLeaderboard || config.track_war_leaderboard || (config.trackWars || config.trackWarEvents) || false}
+                  onChange={e => onChange(prev => ({ 
+                    ...prev, 
+                    // Set both frontend and potential database field names
+                    trackWarLeaderboard: e.target.checked,
+                    track_war_leaderboard: e.target.checked,
+                    // Set defaults when enabling - maintain both frontend and database field names
+                    ...(e.target.checked && { 
+                      // Frontend field names
+                      warLeaderboardMessageId: config.warLeaderboardMessageId || config.war_leaderboard_message_id || null,
+                      // Database column names (correct field name!)
+                      war_leaderboard_message_id: config.war_leaderboard_message_id || config.warLeaderboardMessageId || null
+                    })
+                  }))}
+                />
+                <label 
+                  className="form-check-label fw-medium user-select-none" 
+                  htmlFor="warStatsToggle"
+                  style={{ cursor: 'pointer' }}
+                >
+                  {t('gamesSocials.clashofclans.warStats.enableWarStats')}
+                </label>
+              </div>
+              
+              {/* War Statistics Channel - Visible when war tracking or war leaderboard is enabled */}
+              {(config.trackWarLeaderboard || config.track_war_leaderboard || config.trackWars || config.trackWarEvents) && (
+                <div className="ps-3">
+                  {/* War Leaderboard Channel */}
+                  <div className="mb-3">
+                    <label className="form-label fw-medium">
+                      {t('gamesSocials.clashofclans.warStats.channel')}
+                    </label>
+                    <select
+                      className="form-select"
+                      value={config.warLeaderboardChannelId || config.war_leaderboard_channel_id || ''}
+                      onChange={e => {
+                        onChange(prev => ({ 
+                          ...prev, 
+                          // Frontend field names (multiple variations for compatibility)
+                          warLeaderboardChannelId: e.target.value || null,
+                          warChannelId: e.target.value || null,
+                          warStatsChannelId: e.target.value || null,
+                          warLeaderboardMessageId: null,
+                          warMessageId: null,
+                          warStatsMessageId: null,
+                          // Database column names (multiple variations for compatibility)
+                          war_leaderboard_channel_id: e.target.value || null,
+                          war_channel_id: e.target.value || null,
+                          war_stats_channel_id: e.target.value || null,
+                          war_leaderboard_message_id: null,
+                          war_message_id: null,
+                          war_stats_message_id: null,
+                          // Auto-enable war leaderboard tracking when channel is selected
+                          ...(e.target.value && {
+                            trackWarLeaderboard: true,
+                            track_war_leaderboard: true
+                          })
+                        }));
+                      }}
+                    >
+                      <option value="">{t('gamesSocials.common.select')}</option>
+                      {discordChannels.map(ch => (
+                        <option key={ch.id} value={ch.id}>#{ch.name}</option>
+                      ))}
+                    </select>
+                    <div className="form-text text-muted small">
+                      {t('gamesSocials.clashofclans.warStats.channelHint')}
+                    </div>
+                  </div>
+                  
+                  {/* War Message Template */}
+                  <div className="mb-3">
+                    <label className="form-label fw-medium">
+                      {t('gamesSocials.clashofclans.warStats.template')}
+                    </label>
+                    <textarea
+                      className="form-control"
+                      rows="2"
+                      value={config.warLeaderboardTemplate || config.war_leaderboard_template || ''}
+                      onChange={e => onChange(prev => ({ 
+                        ...prev, 
+                        warLeaderboardTemplate: e.target.value,
+                        war_leaderboard_template: e.target.value
+                      }))}
+                      placeholder={t('gamesSocials.clashofclans.warStats.templatePlaceholder')}
+                    />
+                    <div className="form-text text-muted small">
+                      {t('gamesSocials.clashofclans.warStats.templateHint')}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div className="col-lg-6">
           {/* Donation Leaderboard Settings */}
           <div className="card card-glass">
             <div className="card-body">
@@ -267,6 +415,7 @@ export default function ClashOfClansConfig({
               {/* Enable Donation Leaderboard */}
               <div className="form-check form-switch mb-4">
                 <input
+                  id="donationLeaderboardToggle"
                   className="form-check-input"
                   type="checkbox"
                   checked={config.trackDonationLeaderboard || false}
@@ -288,7 +437,11 @@ export default function ClashOfClansConfig({
                     })
                   }))}
                 />
-                <label className="form-check-label fw-medium">
+                <label 
+                  className="form-check-label fw-medium user-select-none" 
+                  htmlFor="donationLeaderboardToggle"
+                  style={{ cursor: 'pointer' }}
+                >
                   {t('gamesSocials.clashofclans.leaderboard.enableLeaderboard')}
                 </label>
               </div>

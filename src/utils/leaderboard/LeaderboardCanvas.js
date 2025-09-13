@@ -451,7 +451,7 @@ class LeaderboardCanvas {
      */
     
     formatLastOnline(lastSeen) {
-        if (!lastSeen) return 'Unknown';
+        if (!lastSeen) return 'N/A';
         
         const now = new Date();
         const lastSeenDate = new Date(lastSeen);

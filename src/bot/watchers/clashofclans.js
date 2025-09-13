@@ -226,7 +226,7 @@ async function pollGuild(guild) {
           clanState.lastWarEndTime = warEndTime;
 
           // Auto-refresh war statistics during active wars
-          if (warState === 'inWar' && cfg.trackDonationLeaderboard) {
+          if (warState === 'inWar' && cfg.warLeaderboardChannelId) {
             await autoRefreshWarLeaderboard(guild, cfg, cleanTag, warInfo, clanState);
           }
         } else {
@@ -356,9 +356,9 @@ function startCOCWatcher(client) {
  */
 async function autoRefreshWarLeaderboard(guild, cfg, clanTag, warInfo, clanState) {
   try {
-    // Check if war leaderboard is enabled
-    if (!cfg.donation_leaderboard_enabled || !cfg.donation_leaderboard_channel_id) {
-      return;
+    // Check if war leaderboard is enabled and has a separate channel
+    if (!cfg.warLeaderboardChannelId) {
+      return; // No war leaderboard channel configured
     }
 
     if (!clanState) return;
@@ -419,9 +419,9 @@ async function autoRefreshWarLeaderboard(guild, cfg, clanTag, warInfo, clanState
       console.log(`[COC] Auto-refreshing war leaderboard for ${guild.name} - attacks changed: ${attacksChanged}`);
       
       // Find and update war leaderboard message
-      const channel = guild.channels.cache.get(cfg.donation_leaderboard_channel_id);
+      const channel = guild.channels.cache.get(cfg.warLeaderboardChannelId);
       if (channel) {
-        const messageId = cfg.donation_leaderboard_message_id;
+        const messageId = cfg.warLeaderboardMessageId;
         if (messageId) {
           try {
             const message = await channel.messages.fetch(messageId);
