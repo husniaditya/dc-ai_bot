@@ -219,6 +219,10 @@
       "noData": "No data available"
     },
     "loadingAnalytics": "Loading analytics…",
+    "loadingCommands": "Loading command data…",
+    "sampleData": "sample data",
+    "noCommandsYet": "No commands executed yet",
+    "noCommandsHint": "Command statistics will appear here once users start interacting with your bot",
     "of": "of",
     "serverInformation": "Server Information",
     "activityStreamTitle": "Recent Activity Stream",
@@ -319,6 +323,43 @@
         "mute": "Mute",
         "kick": "Kick",
         "ban": "Ban"
+      },
+      "recentActivity": {
+        "title": "Recent Security Activity",
+        "violation": "Violation",
+        "user": "User",
+        "action": "Action",
+        "time": "Time",
+        "ruleType": "Rule Type",
+        "severity": "Severity",
+        "autoMod": "Auto-Mod",
+        "manual": "Manual",
+        "noViolations": "No recent violations found",
+        "noViolationsHint": "Security violations will appear here when they occur",
+        "severityLevels": {
+          "low": "Low",
+          "medium": "Medium",
+          "high": "High",
+          "extreme": "Extreme"
+        },
+        "ruleTypes": {
+          "spam": "Spam",
+          "caps": "Excessive Caps", 
+          "links": "Links",
+          "invite_links": "Invite Links",
+          "profanity": "Profanity",
+          "mention_spam": "Mention Spam"
+        },
+        "messages": {
+          "violatedBy": "violated by",
+          "userMessage": "Message:",
+          "unknownUser": "Unknown User",
+          "messageNotAvailable": "Message not available",
+          "in": "in",
+          "ruleName": "Rule",
+          "violationReason": "Reason",
+          "messageContent": "Message Content"
+        }
       },
       "thisWeek": "this week",
       "noDataThisWeek": "No data this week"

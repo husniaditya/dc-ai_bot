@@ -219,6 +219,10 @@
       "noData": "沒有可用資料"
     },
     "loadingAnalytics": "正在載入分析…",
+    "loadingCommands": "正在載入指令資料…",
+    "sampleData": "範例資料",
+    "noCommandsYet": "尚未執行任何指令",
+    "noCommandsHint": "一旦使用者開始與您的機器人互動，指令統計將會顯示在這裡",
     "of": "／",
     "serverInformation": "伺服器資訊",
     "activityStreamTitle": "近期活動串流",
@@ -319,6 +323,43 @@
         "mute": "靜音",
         "kick": "踢除",
         "ban": "封鎖"
+      },
+      "recentActivity": {
+        "title": "最近的安全活動",
+        "violation": "違規",
+        "user": "用戶",
+        "action": "動作",
+        "time": "時間",
+        "ruleType": "規則類型",
+        "severity": "嚴重程度",
+        "autoMod": "自動審核",
+        "manual": "手動",
+        "noViolations": "未發現最近的違規",
+        "noViolationsHint": "安全違規發生時將顯示在此處",
+        "severityLevels": {
+          "low": "低",
+          "medium": "中",
+          "high": "高",
+          "extreme": "極高"
+        },
+        "ruleTypes": {
+          "spam": "垃圾訊息",
+          "caps": "過多大寫字母",
+          "links": "連結",
+          "invite_links": "邀請連結",
+          "profanity": "不當言論",
+          "mention_spam": "提及垃圾訊息"
+        },
+        "messages": {
+          "violatedBy": "違規者",
+          "userMessage": "訊息",
+          "unknownUser": "未知用戶",
+          "messageNotAvailable": "訊息不可用",
+          "in": "在",
+          "ruleName": "規則",
+          "violationReason": "原因",
+          "messageContent": "訊息內容"
+        }
       },
       "thisWeek": "本週",
       "noDataThisWeek": "本週無資料"

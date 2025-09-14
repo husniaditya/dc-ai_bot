@@ -243,13 +243,7 @@ class AnalyticsService {
             }));
         } catch (error) {
             console.error('Error getting top commands:', error);
-            return [
-                { name: 'ping', count: 142 },
-                { name: 'help', count: 89 },
-                { name: 'level', count: 67 },
-                { name: 'rank', count: 54 },
-                { name: 'poll', count: 32 }
-            ];
+            return [];
         }
     }
 
@@ -299,17 +293,11 @@ class AnalyticsService {
                 autosEnabled: 10
             },
             commands: {
-                today: 89,
-                weeklyTrend: [45, 52, 38, 63, 71, 59, 48],
-                top: [
-                    { name: 'ping', count: 142 },
-                    { name: 'help', count: 89 },
-                    { name: 'level', count: 67 },
-                    { name: 'rank', count: 54 },
-                    { name: 'poll', count: 32 }
-                ],
-                successRate: 96,
-                avgResponseTime: 54
+                today: 0,
+                weeklyTrend: [0, 0, 0, 0, 0, 0, 0],
+                top: [],
+                successRate: 100,
+                avgResponseTime: 0
             },
             activity: {
                 recent: []

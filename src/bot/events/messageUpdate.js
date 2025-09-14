@@ -1,35 +1,23 @@
 const { PermissionsBitField } = require('discord.js');
-const XPHandler = require('../handlers/xpHandler');
-const antiRaidService = require('../services/anti-raid');
 
 module.exports = (client, store) => {
-  // Initialize XP handler
-  const xpHandler = new XPHandler(store);
-  
-  client.on('messageCreate', async (message) => {
+  // Handle message updates (edits) - recheck links and other moderation rules
+  client.on('messageUpdate', async (oldMessage, newMessage) => {
     try {
-      // Ignore bots and DMs
-      if (!message.guild || message.author.bot) return;
+      // Ignore bots, DMs, and partial messages
+      if (!newMessage.guild || newMessage.author?.bot || newMessage.partial) return;
+      
+      // Skip if content didn't change
+      if (oldMessage.content === newMessage.content) return;
 
-      const guildId = message.guild.id;
-      
-      // ANTI-RAID PROTECTION - Check messages from new members
-      if (antiRaidService.isNewMemberMonitored(guildId, message.author.id)) {
-        const antiRaidConfig = await store.getGuildAntiRaidSettings(guildId);
-        await antiRaidService.handleNewMemberMessage(message, antiRaidConfig, store, client);
-        // If message was deleted or user was kicked, stop processing
-        if (!message.guild.members.cache.has(message.author.id)) return;
-      }
-      
-      // Process XP gain for this message (before moderation checks)
-      await xpHandler.processMessage(message);
+      const guildId = newMessage.guild.id;
       
       // Get guild auto moderation rules
       const autoModRules = await store.getGuildAutoModRules(guildId);
       if (!autoModRules || autoModRules.length === 0) return;
 
       // Check if user has bypass roles
-      const member = message.member;
+      const member = newMessage.member;
       if (!member) return;
 
       // Get moderation features to check bypass roles
@@ -41,12 +29,12 @@ module.exports = (client, store) => {
         if (userHasBypassRole) return; // User has bypass role, skip moderation
       }
 
-      // Process each enabled auto mod rule
+      // Process each enabled auto mod rule for the updated message
       for (const rule of autoModRules) {
         if (!rule.enabled) continue;
 
         // Check if channel/role is whitelisted for this rule
-        if (rule.whitelistChannels && rule.whitelistChannels.includes(message.channel.id)) continue;
+        if (rule.whitelistChannels && rule.whitelistChannels.includes(newMessage.channel.id)) continue;
         if (rule.whitelistRoles && rule.whitelistRoles.some(roleId => member.roles.cache.has(roleId))) continue;
 
         let shouldTrigger = false;
@@ -54,131 +42,48 @@ module.exports = (client, store) => {
 
         switch (rule.triggerType) {
           case 'spam':
-            shouldTrigger = await checkSpamDetection(message, rule.thresholdValue || 5);
-            reason = 'Spam detection';
+            // Check for spam in edited messages - look for rapid edits or spammy content
+            shouldTrigger = await checkEditSpamDetection(newMessage, oldMessage, rule.thresholdValue || 3);
+            reason = 'Spam content in edited message';
             break;
           
           case 'caps':
-            shouldTrigger = checkExcessiveCaps(message.content, rule.thresholdValue || 70);
+            shouldTrigger = checkExcessiveCaps(newMessage.content, rule.thresholdValue || 70);
             reason = 'Excessive caps';
             break;
           
           case 'links':
-            shouldTrigger = await checkLinks(message.content, guildId, store, message);
+            shouldTrigger = await checkLinks(newMessage.content, guildId, store, newMessage);
             reason = 'Unauthorized or malicious links';
             break;
           
           case 'invite_links':
-            shouldTrigger = checkInviteLinks(message.content);
+            shouldTrigger = checkInviteLinks(newMessage.content);
             reason = 'Discord invite links';
             break;
           
           case 'profanity':
-            shouldTrigger = await checkProfanity(message.content, guildId, store);
+            shouldTrigger = await checkProfanity(newMessage.content, guildId, store);
             reason = 'Inappropriate language';
             break;
           
           case 'mention_spam':
-            shouldTrigger = checkMentionSpam(message, rule.thresholdValue || 5);
+            shouldTrigger = checkMentionSpam(newMessage, rule.thresholdValue || 5);
             reason = 'Excessive mentions';
             break;
         }
 
         if (shouldTrigger) {
-          await executeAutoModAction(message, rule, reason, store);
+          // Add context that this was an edited message
+          await executeAutoModActionForEdit(newMessage, oldMessage, rule, reason, store);
           break; // Only trigger first matching rule
         }
       }
     } catch (error) {
-      console.error('Error in messageCreate auto moderation:', error);
+      console.error('Error in messageUpdate auto moderation:', error);
     }
   });
 };
-
-// Spam detection - check for repeated messages
-const spamCache = new Map(); // userId -> { messages: [], timestamps: [] }
-async function checkSpamDetection(message, threshold = 3) {
-  const userId = message.author.id;
-  const content = message.content.toLowerCase();
-  const now = Date.now();
-  
-  if (!spamCache.has(userId)) {
-    spamCache.set(userId, { messages: [], timestamps: [] });
-  }
-  
-  const userCache = spamCache.get(userId);
-  
-  // Clean old entries (older than 10 seconds)
-  const cutoff = now - 10000;
-  userCache.messages = userCache.messages.filter((_, i) => userCache.timestamps[i] > cutoff);
-  userCache.timestamps = userCache.timestamps.filter(t => t > cutoff);
-  
-  // Add current message
-  userCache.messages.push(content);
-  userCache.timestamps.push(now);
-  
-  // Check for spam patterns
-  if (userCache.messages.length >= threshold) {
-    // Check for identical messages
-    const recentMessages = userCache.messages.slice(-threshold);
-    const identicalCount = recentMessages.filter(msg => msg === content).length;
-    if (identicalCount >= Math.ceil(threshold * 0.8)) return true;
-    
-    // Check for very similar messages (character overlap)
-    let similarityCount = 0;
-    for (const msg of recentMessages) {
-      if (calculateSimilarity(content, msg) > 0.8) {
-        similarityCount++;
-      }
-    }
-    if (similarityCount >= Math.ceil(threshold * 0.7)) return true;
-  }
-  
-  return false;
-}
-
-// Calculate text similarity (simple approach)
-function calculateSimilarity(str1, str2) {
-  if (str1 === str2) return 1;
-  if (str1.length === 0 || str2.length === 0) return 0;
-  
-  const longer = str1.length > str2.length ? str1 : str2;
-  const shorter = str1.length > str2.length ? str2 : str1;
-  
-  if (longer.length === 0) return 1;
-  
-  const editDistance = levenshteinDistance(longer, shorter);
-  return (longer.length - editDistance) / longer.length;
-}
-
-// Simple Levenshtein distance calculation
-function levenshteinDistance(str1, str2) {
-  const matrix = [];
-  
-  for (let i = 0; i <= str2.length; i++) {
-    matrix[i] = [i];
-  }
-  
-  for (let j = 0; j <= str1.length; j++) {
-    matrix[0][j] = j;
-  }
-  
-  for (let i = 1; i <= str2.length; i++) {
-    for (let j = 1; j <= str1.length; j++) {
-      if (str2.charAt(i - 1) === str1.charAt(j - 1)) {
-        matrix[i][j] = matrix[i - 1][j - 1];
-      } else {
-        matrix[i][j] = Math.min(
-          matrix[i - 1][j - 1] + 1,
-          matrix[i][j - 1] + 1,
-          matrix[i - 1][j] + 1
-        );
-      }
-    }
-  }
-  
-  return matrix[str2.length][str1.length];
-}
 
 // Check for excessive caps (excluding URLs from analysis)
 function checkExcessiveCaps(content, threshold = 75) {
@@ -246,10 +151,6 @@ async function checkLinks(content, guildId, store, message) {
 }
 
 // Check for Discord invite links
-// ============================================================================
-// DISCORD INVITE FILTER SECTION
-// ============================================================================
-
 function checkInviteLinks(content) {
   return hasDiscordInvitePattern(content) || hasOtherInvitePattern(content);
 }
@@ -282,7 +183,274 @@ function hasOtherInvitePattern(content) {
   return otherInvitePatterns.some(pattern => pattern.test(content));
 }
 
-// Check if a link is malicious using online services
+// Check for profanity
+async function checkProfanity(content, guildId, store) {
+  try {
+    // Get guild-specific profanity words and patterns
+    const [profanityWords, profanityPatterns] = await Promise.all([
+      store.getGuildProfanityWords(guildId),
+      store.getGuildProfanityPatterns(guildId)
+    ]);
+    
+    const contentLower = content.toLowerCase();
+    
+    // Check against profanity words
+    for (const wordObj of profanityWords) {
+      if (!wordObj.enabled) continue;
+      
+      const word = wordObj.word.toLowerCase();
+      if (wordObj.wholeWordOnly) {
+        const wordRegex = new RegExp(`\\b${escapeRegex(word)}\\b`, wordObj.caseSensitive ? 'g' : 'gi');
+        if (wordRegex.test(wordObj.caseSensitive ? content : contentLower)) return true;
+      } else {
+        if (wordObj.caseSensitive) {
+          if (content.includes(wordObj.word)) return true;
+        } else {
+          if (contentLower.includes(word)) return true;
+        }
+      }
+    }
+    
+    // Check against profanity patterns
+    for (const patternObj of profanityPatterns) {
+      if (!patternObj.enabled) continue;
+      
+      try {
+        const regex = new RegExp(patternObj.pattern, patternObj.flags || 'gi');
+        if (regex.test(content)) return true;
+      } catch (regexError) {
+        console.warn(`Invalid regex pattern: ${patternObj.pattern}`, regexError);
+      }
+    }
+    
+    return false;
+  } catch (error) {
+    console.error('Error checking profanity:', error);
+    return false;
+  }
+}
+
+// Escape special regex characters
+function escapeRegex(string) {
+  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+// Check for mention spam
+function checkMentionSpam(message, threshold = 3) {
+  const mentions = message.mentions.users.size + message.mentions.roles.size;
+  return mentions >= threshold;
+}
+
+// Edit-specific spam detection - check for spammy edits
+const editSpamCache = new Map(); // userId -> { edits: [], timestamps: [] }
+async function checkEditSpamDetection(newMessage, oldMessage, threshold = 3) {
+  const userId = newMessage.author.id;
+  const newContent = (newMessage.content || '').toLowerCase();
+  const oldContent = (oldMessage.content || '').toLowerCase();
+  const now = Date.now();
+  
+  // If content is identical, not spam
+  if (newContent === oldContent) return false;
+  
+  if (!editSpamCache.has(userId)) {
+    editSpamCache.set(userId, { edits: [], timestamps: [] });
+  }
+  
+  const userCache = editSpamCache.get(userId);
+  
+  // Clean old entries (older than 30 seconds for edits)
+  const cutoff = now - 30000;
+  userCache.edits = userCache.edits.filter((_, i) => userCache.timestamps[i] > cutoff);
+  userCache.timestamps = userCache.timestamps.filter(t => t > cutoff);
+  
+  // Add current edit
+  userCache.edits.push({
+    messageId: newMessage.id,
+    oldContent,
+    newContent,
+    editTime: now
+  });
+  userCache.timestamps.push(now);
+  
+  // Check for spam patterns in edits
+  if (userCache.edits.length >= threshold) {
+    const recentEdits = userCache.edits.slice(-threshold);
+    
+    // Check for rapid successive edits (more than threshold edits in 30 seconds)
+    if (recentEdits.length >= threshold) {
+      const timeSpan = now - recentEdits[0].editTime;
+      if (timeSpan < 30000) { // 30 seconds
+        return true; // Rapid edit spam
+      }
+    }
+    
+    // Check for repetitive edit content (editing to same content repeatedly)
+    const contentCounts = {};
+    for (const edit of recentEdits) {
+      const content = edit.newContent;
+      contentCounts[content] = (contentCounts[content] || 0) + 1;
+      if (contentCounts[content] >= Math.ceil(threshold * 0.7)) {
+        return true; // Repetitive content spam
+      }
+    }
+    
+    // Check for edit cycling (A->B->A->B pattern)
+    if (recentEdits.length >= 4) {
+      for (let i = 0; i < recentEdits.length - 3; i++) {
+        const pattern1 = recentEdits[i].newContent;
+        const pattern2 = recentEdits[i + 1].newContent;
+        const pattern3 = recentEdits[i + 2].newContent;
+        const pattern4 = recentEdits[i + 3].newContent;
+        
+        if (pattern1 === pattern3 && pattern2 === pattern4 && pattern1 !== pattern2) {
+          return true; // Edit cycling detected
+        }
+      }
+    }
+  }
+  
+  // Check for spammy characteristics in the new content
+  if (isSpammyContent(newContent)) {
+    return true;
+  }
+  
+  return false;
+}
+
+// Check if content has spammy characteristics
+function isSpammyContent(content) {
+  // Check for excessive repetition of characters or words
+  const repetitivePatterns = [
+    /(.)\1{10,}/g, // Same character repeated 10+ times
+    /(\b\w+\b)(\s+\1){4,}/gi, // Same word repeated 5+ times
+    /(.{2,}?)\1{5,}/g, // Same pattern repeated 6+ times
+  ];
+  
+  for (const pattern of repetitivePatterns) {
+    if (pattern.test(content)) {
+      return true;
+    }
+  }
+  
+  // Check for excessive special characters
+  const specialCharCount = (content.match(/[!@#$%^&*()_+=\[\]{};':"\\|,.<>\/?~`]/g) || []).length;
+  const specialCharRatio = specialCharCount / content.length;
+  if (specialCharRatio > 0.3 && content.length > 10) { // More than 30% special chars
+    return true;
+  }
+  
+  // Check for excessive emojis
+  const emojiCount = (content.match(/[\u{1F600}-\u{1F64F}]|[\u{1F300}-\u{1F5FF}]|[\u{1F680}-\u{1F6FF}]|[\u{1F700}-\u{1F77F}]|[\u{1F780}-\u{1F7FF}]|[\u{1F800}-\u{1F8FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/gu) || []).length;
+  const emojiRatio = emojiCount / content.length;
+  if (emojiRatio > 0.2 && content.length > 5) { // More than 20% emojis
+    return true;
+  }
+  
+  return false;
+}
+
+// Determine what type of change was made in the edit
+function determineChangeType(oldContent, newContent) {
+  // Ensure we have valid strings to work with
+  const safeOldContent = oldContent || '';
+  const safeNewContent = newContent || '';
+  
+  // Check if links were added
+  const oldLinks = (safeOldContent.match(/(https?:\/\/[^\s]+)/gi) || []).length;
+  const newLinks = (safeNewContent.match(/(https?:\/\/[^\s]+)/gi) || []).length;
+  
+  // Check if mentions were added
+  const oldMentions = (safeOldContent.match(/<@[!&]?\d+>/g) || []).length;
+  const newMentions = (safeNewContent.match(/<@[!&]?\d+>/g) || []).length;
+  
+  // Check if content was made longer (potential spam)
+  const lengthIncrease = safeNewContent.length - safeOldContent.length;
+  
+  // Determine primary change type
+  const changes = [];
+  
+  if (newLinks > oldLinks) {
+    changes.push(`added_${newLinks - oldLinks}_links`);
+  } else if (newLinks < oldLinks) {
+    changes.push(`removed_${oldLinks - newLinks}_links`);
+  }
+  
+  if (newMentions > oldMentions) {
+    changes.push(`added_${newMentions - oldMentions}_mentions`);
+  } else if (newMentions < oldMentions) {
+    changes.push(`removed_${oldMentions - newMentions}_mentions`);
+  }
+  
+  if (lengthIncrease > 100) {
+    changes.push('significant_content_addition');
+  } else if (lengthIncrease < -100) {
+    changes.push('significant_content_removal');
+  }
+  
+  // Check for caps changes
+  const oldCapsRatio = safeOldContent.length > 0 ? (safeOldContent.match(/[A-Z]/g) || []).length / safeOldContent.length : 0;
+  const newCapsRatio = safeNewContent.length > 0 ? (safeNewContent.match(/[A-Z]/g) || []).length / safeNewContent.length : 0;
+  if (newCapsRatio > oldCapsRatio + 0.2) {
+    changes.push('increased_caps');
+  }
+  
+  // Check for profanity addition (basic check)
+  if (safeOldContent.length > 0 && (safeNewContent.includes('fuck') || safeNewContent.includes('shit'))) {
+    changes.push('potential_profanity_added');
+  }
+  
+  return changes.length > 0 ? changes.join(', ') : 'content_modification';
+}
+
+// Send safe link confirmation message
+async function sendSafeLinkConfirmation(message, linkCount) {
+  try {
+    // Create a confirmation message that auto-deletes after a few seconds
+    const confirmationMessage = await message.reply({
+      embeds: [{
+        color: 0x4caf50, // Green color for safe
+        title: '🔗 Link Security Check - Edited Message',
+        description: `✅ Link${linkCount > 1 ? 's' : ''} in edited message verified as safe!`,
+        fields: [
+          { 
+            name: '🛡️ Security Status', 
+            value: `${linkCount} link${linkCount > 1 ? 's' : ''} checked and approved`, 
+            inline: true 
+          },
+          { 
+            name: '🔒 Protection', 
+            value: 'No threats detected', 
+            inline: true 
+          },
+          { 
+            name: '📝 Action', 
+            value: 'Message edit scanned', 
+            inline: true 
+          }
+        ],
+        footer: { text: '🔍 Link Security System' },
+        timestamp: new Date().toISOString()
+      }]
+    });
+    
+    // Auto-delete the confirmation message after 5 seconds
+    // setTimeout(async () => {
+    //   try {
+    //     if (confirmationMessage.deletable) {
+    //       await confirmationMessage.delete();
+    //     }
+    //   } catch (deleteError) {
+    //     console.log('Could not delete safe link confirmation message:', deleteError.message);
+    //   }
+    // }, 5000);
+    
+  } catch (error) {
+    console.error('Error sending safe link confirmation:', error);
+  }
+}
+
+// Import shared malicious link detection functions
+// These functions are imported from external modules or shared utilities
 async function isMaliciousLink(url, guildId, store) {
   try {
     // Extract domain from URL
@@ -330,48 +498,6 @@ async function isMaliciousLink(url, guildId, store) {
     console.error('Error in malicious link check:', error);
     // If all services fail, use heuristic analysis as fallback
     return hasSuspiciousPattern(url);
-  }
-}
-
-// Send safe link confirmation message
-async function sendSafeLinkConfirmation(message, linkCount) {
-  try {
-    // Create a confirmation message that auto-deletes after a few seconds
-    const confirmationMessage = await message.reply({
-      embeds: [{
-        color: 0x4caf50, // Green color for safe
-        title: '🔗 Link Security Check',
-        description: `✅ Link${linkCount > 1 ? 's' : ''} verified as safe!`,
-        fields: [
-          { 
-            name: '🛡️ Security Status', 
-            value: `${linkCount} link${linkCount > 1 ? 's' : ''} checked and approved`, 
-            inline: true 
-          },
-          { 
-            name: '🔒 Protection', 
-            value: 'No threats detected', 
-            inline: true 
-          }
-        ],
-        footer: { text: '🔍 Link Security System' },
-        timestamp: new Date().toISOString()
-      }]
-    });
-    
-    // Auto-delete the confirmation message after 5 seconds
-    // setTimeout(async () => {
-    //   try {
-    //     if (confirmationMessage.deletable) {
-    //       await confirmationMessage.delete();
-    //     }
-    //   } catch (deleteError) {
-    //     console.log('Could not delete safe link confirmation message:', deleteError.message);
-    //   }
-    // }, 5000);
-    
-  } catch (error) {
-    console.error('Error sending safe link confirmation:', error);
   }
 }
 
@@ -471,7 +597,7 @@ async function addToBlacklist(domain, guildId, store, reason = 'manual') {
   }
 }
 
-// Google Safe Browsing API check
+// Online service checks
 async function checkGoogleSafeBrowsing(url) {
   try {
     const apiKey = process.env.GOOGLE_SAFE_BROWSING_API_KEY;
@@ -513,7 +639,6 @@ async function checkGoogleSafeBrowsing(url) {
   return false;
 }
 
-// VirusTotal API check
 async function checkVirusTotal(url) {
   try {
     const apiKey = process.env.VIRUSTOTAL_API_KEY;
@@ -546,7 +671,6 @@ async function checkVirusTotal(url) {
   return false;
 }
 
-// PhishTank API check (free alternative to URLVoid)
 async function checkPhishTank(url) {
   try {
     // PhishTank has a simpler free API
@@ -568,11 +692,7 @@ async function checkPhishTank(url) {
   return false;
 }
 
-// ============================================================================
-// LINK FILTERING SYSTEM - Organized by Category
-// ============================================================================
-
-// Heuristic analysis for suspicious patterns - organized by category
+// Heuristic analysis for suspicious patterns
 function hasSuspiciousPattern(url) {
   return (
     hasDiscordPhishingPattern(url) ||
@@ -585,10 +705,6 @@ function hasSuspiciousPattern(url) {
     hasSocialEngineeringPattern(url)
   );
 }
-
-// ============================================================================
-// DISCORD & GAMING PHISHING FILTER SECTION
-// ============================================================================
 
 function hasDiscordPhishingPattern(url) {
   const discordPhishingPatterns = [
@@ -624,10 +740,6 @@ function hasGamingScamPattern(url) {
   return gamingScamPatterns.some(pattern => pattern.test(url));
 }
 
-// ============================================================================
-// CRYPTOCURRENCY SCAM FILTER SECTION
-// ============================================================================
-
 function hasCryptoScamPattern(url) {
   const cryptoScamPatterns = [
     // Crypto generators and free coin scams
@@ -645,10 +757,6 @@ function hasCryptoScamPattern(url) {
   return cryptoScamPatterns.some(pattern => pattern.test(url));
 }
 
-// ============================================================================
-// URL SHORTENER & REDIRECT FILTER SECTION
-// ============================================================================
-
 function hasURLShortenerPattern(url) {
   const shortenerPatterns = [
     // Popular URL shorteners (high risk for hiding malicious links)
@@ -662,10 +770,6 @@ function hasURLShortenerPattern(url) {
   
   return shortenerPatterns.some(pattern => pattern.test(url));
 }
-
-// ============================================================================
-// IP ADDRESS & TECHNICAL FILTER SECTION
-// ============================================================================
 
 function hasIPAddressPattern(url) {
   const ipPatterns = [
@@ -682,10 +786,6 @@ function hasIPAddressPattern(url) {
   return ipPatterns.some(pattern => pattern.test(url));
 }
 
-// ============================================================================
-// SUSPICIOUS TLD & DOMAIN FILTER SECTION
-// ============================================================================
-
 function hasSuspiciousTLDPattern(url) {
   const suspiciousTLDPatterns = [
     // Free/suspicious TLDs commonly used for phishing
@@ -700,10 +800,6 @@ function hasSuspiciousTLDPattern(url) {
   
   return suspiciousTLDPatterns.some(pattern => pattern.test(url));
 }
-
-// ============================================================================
-// PHISHING KEYWORD FILTER SECTION
-// ============================================================================
 
 function hasPhishingKeywordPattern(url) {
   const phishingKeywordPatterns = [
@@ -723,10 +819,6 @@ function hasPhishingKeywordPattern(url) {
   return phishingKeywordPatterns.some(pattern => pattern.test(url));
 }
 
-// ============================================================================
-// SOCIAL ENGINEERING FILTER SECTION
-// ============================================================================
-
 function hasSocialEngineeringPattern(url) {
   const socialEngineeringPatterns = [
     // Too-good-to-be-true offers
@@ -745,73 +837,13 @@ function hasSocialEngineeringPattern(url) {
   return socialEngineeringPatterns.some(pattern => pattern.test(url));
 }
 
-// Check for profanity
-async function checkProfanity(content, guildId, store) {
-  try {
-    // Get guild-specific profanity words and patterns
-    const [profanityWords, profanityPatterns] = await Promise.all([
-      store.getGuildProfanityWords(guildId),
-      store.getGuildProfanityPatterns(guildId)
-    ]);
-    
-    const contentLower = content.toLowerCase();
-    
-    // Check against profanity words
-    for (const wordObj of profanityWords) {
-      if (!wordObj.enabled) continue;
-      
-      const word = wordObj.word.toLowerCase();
-      if (wordObj.wholeWordOnly) {
-        const wordRegex = new RegExp(`\\b${escapeRegex(word)}\\b`, wordObj.caseSensitive ? 'g' : 'gi');
-        if (wordRegex.test(wordObj.caseSensitive ? content : contentLower)) return true;
-      } else {
-        if (wordObj.caseSensitive) {
-          if (content.includes(wordObj.word)) return true;
-        } else {
-          if (contentLower.includes(word)) return true;
-        }
-      }
-    }
-    
-    // Check against profanity patterns
-    for (const patternObj of profanityPatterns) {
-      if (!patternObj.enabled) continue;
-      
-      try {
-        const regex = new RegExp(patternObj.pattern, patternObj.flags || 'gi');
-        if (regex.test(content)) return true;
-      } catch (regexError) {
-        console.warn(`Invalid regex pattern: ${patternObj.pattern}`, regexError);
-      }
-    }
-    
-    return false;
-  } catch (error) {
-    console.error('Error checking profanity:', error);
-    return false;
-  }
-}
-
-// Escape special regex characters
-function escapeRegex(string) {
-  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
-
-// Check for mention spam
-function checkMentionSpam(message, threshold = 3) {
-  const mentions = message.mentions.users.size + message.mentions.roles.size;
-  return mentions >= threshold;
-}
-
-// Warning escalation helpers - now using database persistence
-// Database-only warning functions (no memory cache fallback)
+// Database-only warning functions
 async function getWarningCount(guildId, userId, ruleType, store) {
   try {
     const result = await store.getWarningCount(guildId, userId, ruleType);
     return result;
   } catch (error) {
     console.error('Error getting warning count from database:', error);
-    // Return zero warnings on error rather than using memory cache
     return { count: 0, lastViolation: null };
   }
 }
@@ -822,8 +854,6 @@ async function incrementWarningCount(guildId, userId, ruleType, increment = 1, s
     return newCount;
   } catch (error) {
     console.error('Error incrementing warning count in database:', error);
-    console.error('WARNING: Cannot track warning counts without database!');
-    // Get current count and add increment as fallback
     const current = await getWarningCount(guildId, userId, ruleType, store);
     return current.count + increment;
   }
@@ -839,53 +869,42 @@ async function resetWarningCount(guildId, userId, ruleType, store) {
   }
 }
 
-// Execute auto moderation action
-async function executeAutoModAction(message, rule, reason, store) {
+// Execute auto moderation action for edited messages
+async function executeAutoModActionForEdit(newMessage, oldMessage, rule, reason, store) {
   try {
-    const guild = message.guild;
-    const member = message.member;
+    const guild = newMessage.guild;
+    const member = newMessage.member;
     const guildId = guild.id;
-    const userId = message.author.id;
-    const ruleType = rule.triggerType; // Use trigger type as rule identifier
+    const userId = newMessage.author.id;
+    const ruleType = rule.triggerType;
     
-    // Don't delete message here - handle it in the specific action cases
     const shouldDelete = rule.messageAction === 'delete' || rule.autoDelete;
-    
-    // Get current warning count for this user and this specific rule type
     const currentWarnings = await getWarningCount(guildId, userId, ruleType, store);
-    
-    // Use the stored threshold value from the database as warning threshold
-    // If no threshold is set, default to 3 warnings
     let warningThreshold = rule.thresholdValue || 3;
     
-    // Determine what action to take based on warning count and rule settings
     let actualAction = rule.actionType;
     let shouldWarn = false;
-    let warningIncrement = 1; // How many warnings to add for this violation
-    
+    let warningIncrement = 1;
     
     // Check if we should escalate through warnings first
     if (rule.enableWarningEscalation !== false && rule.actionType !== 'warn' && rule.actionType !== 'delete') {
       if (currentWarnings.count + warningIncrement < warningThreshold) {
-        // User hasn't reached warning threshold yet for this rule type, give warning instead
         actualAction = 'warn';
         shouldWarn = true;
-      } else {
-        // User has reached warning threshold for this rule type, will execute the actual action
-        // Warning reset will happen after successful action execution
       }
     }
     
-    // Log the action if log channel is specified
+    // Log the action if log channel is specified (with edit context)
     if (rule.logChannelId) {
-      await logModerationAction(guild, rule.logChannelId, {
+      await logModerationActionForEdit(guild, rule.logChannelId, {
         action: actualAction,
-        user: message.author,
+        user: newMessage.author,
         reason: reason,
         rule: rule.name,
         ruleType: ruleType,
-        messageContent: message.content,
-        channel: message.channel,
+        oldContent: oldMessage.content,
+        newContent: newMessage.content,
+        channel: newMessage.channel,
         deleted: shouldDelete,
         warningCount: currentWarnings.count + (shouldWarn ? warningIncrement : 0),
         warningThreshold: warningThreshold,
@@ -893,12 +912,11 @@ async function executeAutoModAction(message, rule, reason, store) {
       });
     }
     
-    // Execute the determined action
+    // Execute the determined action with edit-specific messaging
     switch (actualAction) {
       case 'warn':
         const newWarningCount = await incrementWarningCount(guildId, userId, ruleType, warningIncrement, store);
         
-        // Record the violation in database
         await store.recordViolation({
           guildId,
           userId,
@@ -906,92 +924,33 @@ async function executeAutoModAction(message, rule, reason, store) {
           ruleType,
           ruleName: rule.name,
           violationReason: reason,
-          messageContent: message.content,
-          channelId: message.channel.id,
-          messageId: message.id,
+          messageContent: newMessage.content,
+          channelId: newMessage.channel.id,
+          messageId: newMessage.id,
           actionTaken: 'warn',
           warningIncrement,
           totalWarningsAtTime: newWarningCount,
           thresholdAtTime: warningThreshold,
           isAutoMod: true,
-          severity: warningIncrement > 1 ? 'high' : 'medium'
+          severity: warningIncrement > 1 ? 'high' : 'medium',
+          metadata: JSON.stringify({ 
+            editedMessage: true, 
+            originalContent: oldMessage.content,
+            changeType: determineChangeType(oldMessage.content, newMessage.content),
+            editTimestamp: new Date().toISOString()
+          })
         });
         
-        await warnUserWithCount(message, reason, rule, newWarningCount, warningThreshold, warningIncrement, ruleType);
-        // Delete message after warning if auto-delete is enabled
-        if (shouldDelete && message.deletable) {
-          await message.delete();
+        await warnUserForEdit(newMessage, oldMessage, reason, rule, newWarningCount, warningThreshold, warningIncrement, ruleType);
+        
+        if (shouldDelete && newMessage.deletable) {
+          await newMessage.delete();
         }
         break;
       
       case 'mute':
-        // Record the violation in database
-        await store.recordViolation({
-          guildId,
-          userId,
-          ruleId: rule.id || null,
-          ruleType,
-          ruleName: rule.name,
-          violationReason: reason,
-          messageContent: message.content,
-          channelId: message.channel.id,
-          messageId: message.id,
-          actionTaken: 'mute',
-          warningIncrement,
-          totalWarningsAtTime: currentWarnings.count + warningIncrement,
-          thresholdAtTime: warningThreshold,
-          isAutoMod: true,
-          severity: 'high'
-        });
-        
-        await muteUserAfterWarnings(message, rule.duration, reason, warningThreshold);
-        
-        // Reset warnings after successful punishment action
-        if (!shouldWarn && currentWarnings.count + warningIncrement >= warningThreshold) {
-          await resetWarningCount(guildId, userId, ruleType, store);
-        }
-        
-        // Delete message after muting if auto-delete is enabled
-        if (shouldDelete && message.deletable) {
-          await message.delete();
-        }
-        break;
-      
       case 'kick':
-        // Record the violation in database
-        await store.recordViolation({
-          guildId,
-          userId,
-          ruleId: rule.id || null,
-          ruleType,
-          ruleName: rule.name,
-          violationReason: reason,
-          messageContent: message.content,
-          channelId: message.channel.id,
-          messageId: message.id,
-          actionTaken: 'kick',
-          warningIncrement,
-          totalWarningsAtTime: currentWarnings.count + warningIncrement,
-          thresholdAtTime: warningThreshold,
-          isAutoMod: true,
-          severity: 'extreme'
-        });
-        
-        await kickUserAfterWarnings(message, reason, warningThreshold);
-        
-        // Reset warnings after successful punishment action
-        if (!shouldWarn && currentWarnings.count + warningIncrement >= warningThreshold) {
-          await resetWarningCount(guildId, userId, ruleType, store);
-        }
-        
-        // Delete message after kicking if auto-delete is enabled
-        if (shouldDelete && message.deletable) {
-          await message.delete();
-        }
-        break;
-      
       case 'ban':
-        // Record the violation in database
         await store.recordViolation({
           guildId,
           userId,
@@ -999,32 +958,37 @@ async function executeAutoModAction(message, rule, reason, store) {
           ruleType,
           ruleName: rule.name,
           violationReason: reason,
-          messageContent: message.content,
-          channelId: message.channel.id,
-          messageId: message.id,
-          actionTaken: 'ban',
+          messageContent: newMessage.content,
+          channelId: newMessage.channel.id,
+          messageId: newMessage.id,
+          actionTaken: actualAction,
           warningIncrement,
           totalWarningsAtTime: currentWarnings.count + warningIncrement,
           thresholdAtTime: warningThreshold,
           isAutoMod: true,
-          severity: 'extreme'
+          severity: 'high',
+          metadata: JSON.stringify({ editedMessage: true, originalContent: oldMessage.content })
         });
         
-        await banUserAfterWarnings(message, reason, warningThreshold);
+        // Use the same action functions but with edit context
+        if (actualAction === 'mute') {
+          await muteUserAfterWarnings(newMessage, rule.duration, `${reason} (edited message)`, warningThreshold);
+        } else if (actualAction === 'kick') {
+          await kickUserAfterWarnings(newMessage, `${reason} (edited message)`, warningThreshold);
+        } else if (actualAction === 'ban') {
+          await banUserAfterWarnings(newMessage, `${reason} (edited message)`, warningThreshold);
+        }
         
-        // Reset warnings after successful punishment action
         if (!shouldWarn && currentWarnings.count + warningIncrement >= warningThreshold) {
           await resetWarningCount(guildId, userId, ruleType, store);
         }
         
-        // Delete message after banning if auto-delete is enabled
-        if (shouldDelete && message.deletable) {
-          await message.delete();
+        if (shouldDelete && newMessage.deletable) {
+          await newMessage.delete();
         }
         break;
       
       case 'delete':
-        // Record the violation in database
         await store.recordViolation({
           guildId,
           userId,
@@ -1032,88 +996,87 @@ async function executeAutoModAction(message, rule, reason, store) {
           ruleType,
           ruleName: rule.name,
           violationReason: reason,
-          messageContent: message.content,
-          channelId: message.channel.id,
-          messageId: message.id,
+          messageContent: newMessage.content,
+          channelId: newMessage.channel.id,
+          messageId: newMessage.id,
           actionTaken: 'delete',
-          warningIncrement: 0, // Delete actions don't add warnings
+          warningIncrement: 0,
           totalWarningsAtTime: currentWarnings.count,
           thresholdAtTime: warningThreshold,
           isAutoMod: true,
-          severity: 'low'
+          severity: 'low',
+          metadata: JSON.stringify({ editedMessage: true, originalContent: oldMessage.content })
         });
         
-        // Reply to the message first, then delete it
         try {
-          await message.reply({
+          await newMessage.reply({
             embeds: [{
               color: 0xff6b6b,
-              title: '🗑️ Message Deleted',
-              description: `Your message was deleted for violating community guidelines.`,
+              title: '✏️ Edited Message Deleted',
+              description: `Your edited message was deleted for violating community guidelines.`,
               fields: [
                 { name: '🛡️ Rule', value: rule.name, inline: true },
-                { name: '⚠️ Reason', value: reason, inline: true }
+                { name: '⚠️ Reason', value: reason, inline: true },
+                { name: '📝 Action', value: 'Message edit detected and removed', inline: true }
               ],
               footer: { text: 'Auto Moderation System' },
               timestamp: new Date().toISOString()
             }]
           });
           
-          // Now delete the original message if it's deletable
-          if (shouldDelete && message.deletable) {
-            await message.delete();
+          if (shouldDelete && newMessage.deletable) {
+            await newMessage.delete();
           }
           
-          // Try to send DM to user
-          await message.author.send({
+          await newMessage.author.send({
             embeds: [{
               color: 0xff6b6b,
-              title: '🗑️ Message Deleted',
-              description: `Your message in **${message.guild.name}** was deleted for violating community guidelines.`,
+              title: '✏️ Edited Message Deleted',
+              description: `Your edited message in **${newMessage.guild.name}** was deleted for violating community guidelines.`,
               fields: [
                 { name: '🛡️ Rule', value: rule.name, inline: true },
-                { name: '📋 Channel', value: `#${message.channel.name}`, inline: true },
-                { name: '⚠️ Reason', value: reason, inline: false }
+                { name: '📋 Channel', value: `#${newMessage.channel.name}`, inline: true },
+                { name: '⚠️ Reason', value: reason, inline: false },
+                { name: '💡 Tip', value: 'Editing messages to add prohibited content is still monitored', inline: false }
               ],
               footer: { text: 'Auto Moderation System' },
               timestamp: new Date().toISOString()
             }]
           });
         } catch (dmError) {
-          console.log(`[AUTO MOD] Could not DM user about deleted message: ${dmError.message}`);
+          console.log(`[AUTO MOD] Could not DM user about deleted edited message: ${dmError.message}`);
         }
         break;
     }
     
   } catch (error) {
-    console.error('Error executing auto mod action:', error);
+    console.error('Error executing auto mod action for edited message:', error);
   }
 }
 
-// Warn user with warning count
-async function warnUserWithCount(message, reason, rule, warningCount, warningThreshold, warningIncrement = 1, ruleType = 'general') {
+// Warn user with warning count (for edited messages)
+async function warnUserForEdit(newMessage, oldMessage, reason, rule, warningCount, warningThreshold, warningIncrement = 1, ruleType = 'general') {
   try {
-    // Determine severity level based on warning increment and trigger type
     let severityInfo = '';
-    let severityColor = 0xff9500; // Default orange
+    let severityColor = 0xff9500;
     
     if (warningIncrement > 1) {
       severityInfo = ` (+${warningIncrement} warnings - severe violation)`;
-      severityColor = 0xff5722; // Red-orange for severe violations
+      severityColor = 0xff5722;
     }
 
-    // Format rule type for display
     const ruleTypeDisplay = ruleType.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
     
     const dmEmbed = {
       color: severityColor,
-      title: '⚠️ Auto Moderation Warning',
-      description: `Your message in **${message.guild.name}** was flagged for: **${reason}**${severityInfo}`,
+      title: '✏️ Auto Moderation Warning - Edited Message',
+      description: `Your edited message in **${newMessage.guild.name}** was flagged for: **${reason}**${severityInfo}`,
       fields: [
         { name: '🛡️ Rule', value: rule.name, inline: true },
         { name: '🔍 Rule Type', value: ruleTypeDisplay, inline: true },
-        { name: '📋 Channel', value: `#${message.channel.name}`, inline: true },
-        { name: '📊 Warning Count (for this rule)', value: `${warningCount}/${warningThreshold}`, inline: true }
+        { name: '📋 Channel', value: `#${newMessage.channel.name}`, inline: true },
+        { name: '📊 Warning Count (for this rule)', value: `${warningCount}/${warningThreshold}`, inline: true },
+        { name: '💡 Note', value: 'Editing messages to add prohibited content is still monitored', inline: false }
       ],
       footer: { 
         text: warningCount >= warningThreshold ? 
@@ -1123,7 +1086,6 @@ async function warnUserWithCount(message, reason, rule, warningCount, warningThr
       timestamp: new Date().toISOString()
     };
     
-    // Add violation severity info if applicable
     if (warningIncrement > 1) {
       dmEmbed.fields.push({
         name: 'Violation Severity',
@@ -1132,47 +1094,24 @@ async function warnUserWithCount(message, reason, rule, warningCount, warningThr
       });
     }
     
-    // Format action and duration from rule
     const actionText = rule.actionType || 'punished';
     const durationText = rule.duration ? `${rule.duration}` : '1';
     
-    // Create specialized embed for link violations
-    let channelEmbed;
+    const channelEmbed = {
+      color: warningCount >= warningThreshold - 1 ? 0xff5722 : severityColor,
+      title: warningCount >= warningThreshold - 1 ? '✏️ Final Warning - Edited Message' : (warningIncrement > 1 ? '✏️ Severe Warning - Edited Message' : '✏️ Warning - Edited Message'),
+      description: `<@${newMessage.author.id}> received a warning for editing their message to violate community guidelines. Will be **${actionText}** for **${durationText} minute(s)** upon reaching ${warningThreshold} warnings for this rule.`,
+      fields: [
+        { name: '🛡️ Rule', value: rule.name, inline: true },
+        { name: '🔍 Rule Type', value: ruleTypeDisplay, inline: true },
+        { name: '⚠️ Reason', value: reason, inline: true },
+        { name: '📊 Warning Count', value: `${warningCount}/${warningThreshold} (${ruleTypeDisplay})`, inline: true },
+        { name: '📝 Action', value: 'Message edit detected', inline: true }
+      ],
+      footer: { text: '🔒 Auto Moderation System' },
+      timestamp: new Date().toISOString()
+    };
     
-    if (ruleType === 'links' || ruleType === 'invite_links') {
-      // Special embed for link-related violations
-      channelEmbed = {
-        color: warningCount >= warningThreshold - 1 ? 0xff1744 : 0xff5722, // Red theme for links
-        title: warningCount >= warningThreshold - 1 ? '🔗 Final Link Warning' : (warningIncrement > 1 ? '🔗 Severe Link Violation' : '🔗 Link Warning'),
-        description: `<@${message.author.id}> posted a suspicious or unauthorized link. Will be **${actionText}** for **${durationText} minute(s)** upon reaching ${warningThreshold} warnings for link violations.`,
-        fields: [
-          { name: '🛡️ Security Rule', value: rule.name, inline: true },
-          { name: '🔍 Detection Type', value: ruleTypeDisplay, inline: true },
-          { name: '⚠️ Violation Reason', value: reason, inline: true },
-          { name: '📊 Link Warnings', value: `${warningCount}/${warningThreshold} (${ruleTypeDisplay})`, inline: true },
-          { name: '💡 Safety Tip', value: 'Only share links from trusted sources to keep our community safe!', inline: false }
-        ],
-        footer: { text: '🔒 Link Security System' },
-        timestamp: new Date().toISOString()
-      };
-    } else {
-      // Default embed for other rule types
-      channelEmbed = {
-        color: warningCount >= warningThreshold - 1 ? 0xff5722 : severityColor,
-        title: warningCount >= warningThreshold - 1 ? '⚠️ Final Warning' : (warningIncrement > 1 ? '⚠️ Severe Warning' : '⚠️ Warning Issued'),
-        description: `<@${message.author.id}> received a warning for violating community guidelines. Will be **${actionText}** for **${durationText} minute(s)** upon reaching ${warningThreshold} warnings for this rule.`,
-        fields: [
-          { name: '🛡️ Rule', value: rule.name, inline: true },
-          { name: '🔍 Rule Type', value: ruleTypeDisplay, inline: true },
-          { name: '⚠️ Reason', value: reason, inline: true },
-          { name: '📊 Warning Count', value: `${warningCount}/${warningThreshold} (${ruleTypeDisplay})`, inline: true }
-        ],
-        footer: { text: '🔒 Auto Moderation System' },
-        timestamp: new Date().toISOString()
-      };
-    }
-    
-    // Add severity info to channel embed if applicable
     if (warningIncrement > 1) {
       channelEmbed.fields.push({
         name: 'Severity',
@@ -1181,69 +1120,72 @@ async function warnUserWithCount(message, reason, rule, warningCount, warningThr
       });
     }
     
-    // Reply to the original message with warning
-    await message.reply({ embeds: [channelEmbed] });
+    await newMessage.reply({ embeds: [channelEmbed] });
     
-    // Try to send DM to user
     try {
-      await message.author.send({ embeds: [dmEmbed] });
+      await newMessage.author.send({ embeds: [dmEmbed] });
     } catch (dmError) {
-      console.log(`[AUTO MOD] Could not DM user ${message.author.tag}: ${dmError.message}`);
-      // If DM fails, send a follow-up reply
-      await message.followUp({
+      console.log(`[AUTO MOD] Could not DM user ${newMessage.author.tag}: ${dmError.message}`);
+      await newMessage.followUp({
         content: `I couldn't send you a DM. Please check your message settings.`,
-        allowedMentions: { users: [message.author.id] }
+        allowedMentions: { users: [newMessage.author.id] }
       });
     }
   } catch (error) {
-    console.error('Error warning user:', error);
+    console.error('Error warning user for edited message:', error);
   }
 }
 
-// Warn user (legacy function for direct warn actions)
-async function warnUser(message, reason, rule, store) {
-  const guildId = message.guild.id;
-  const userId = message.author.id;
-  const ruleType = rule.triggerType;
-  
-  // Determine warning increment based on rule type
-  let warningIncrement = 1;
-  switch (rule.triggerType) {
-    case 'profanity':
-    case 'invite_links':
-      warningIncrement = 2;
-      break;
-    default:
-      warningIncrement = 1;
-      break;
+// Log moderation action for edited messages
+async function logModerationActionForEdit(guild, logChannelId, actionData) {
+  try {
+    const logChannel = guild.channels.cache.get(logChannelId);
+    if (!logChannel || !logChannel.isTextBased()) return;
+    
+    const ruleTypeDisplay = actionData.ruleType ? 
+      actionData.ruleType.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) : 
+      'General';
+    
+    const embed = {
+      color: 0xff7043, // Orange color to distinguish from regular mod actions
+      title: '🛡️ Auto Moderation Action - Edited Message',
+      fields: [
+        { name: '👤 User', value: `${actionData.user} (${actionData.user.id})`, inline: true },
+        { name: '🔨 Action', value: actionData.action, inline: true },
+        { name: '🛡️ Rule', value: actionData.rule, inline: true },
+        { name: '🔎 Rule Type', value: ruleTypeDisplay, inline: true },
+        { name: '⚠️ Reason', value: actionData.reason, inline: true },
+        { name: '📋 Channel', value: `<#${actionData.channel.id}>`, inline: true },
+        { name: '💬 Message Deleted', value: actionData.deleted ? 'Yes' : 'No', inline: true },
+        { name: '📝 Action Type', value: 'Message Edit Detected', inline: true }
+      ],
+      footer: { text: 'Auto Moderation System - Edit Monitor' },
+      timestamp: new Date().toISOString()
+    };
+    
+    if (actionData.warningCount !== undefined && actionData.warningThreshold !== undefined) {
+      embed.fields.push({
+        name: 'Warning Progress',
+        value: `${actionData.warningCount}/${actionData.warningThreshold} (${ruleTypeDisplay})`,
+        inline: true
+      });
+    }
+    
+    if (actionData.oldContent || actionData.newContent) {
+      embed.fields.push({
+        name: 'Content Changes',
+        value: `**Before:** ${actionData.oldContent ? (actionData.oldContent.length > 100 ? actionData.oldContent.substring(0, 100) + '...' : actionData.oldContent) : 'No content'}\n\n**After:** ${actionData.newContent ? (actionData.newContent.length > 100 ? actionData.newContent.substring(0, 100) + '...' : actionData.newContent) : 'No content'}`,
+        inline: false
+      });
+    }
+    
+    await logChannel.send({ embeds: [embed] });
+  } catch (error) {
+    console.error('Error logging moderation action for edited message:', error);
   }
-  
-  const warningCount = await incrementWarningCount(guildId, userId, ruleType, warningIncrement, store);
-  const warningThreshold = rule.thresholdValue || 3; // Use thresholdValue from database
-  
-  // Record the violation in database
-  await store.recordViolation({
-    guildId,
-    userId,
-    ruleId: rule.id || null,
-    ruleType,
-    ruleName: rule.name,
-    violationReason: reason,
-    messageContent: message.content,
-    channelId: message.channel.id,
-    messageId: message.id,
-    actionTaken: 'warn',
-    warningIncrement,
-    totalWarningsAtTime: warningCount,
-    thresholdAtTime: warningThreshold,
-    isAutoMod: true,
-    severity: warningIncrement > 1 ? 'high' : 'medium'
-  });
-  
-  await warnUserWithCount(message, reason, rule, warningCount, warningThreshold, warningIncrement, ruleType);
 }
 
-// Mute user after warning escalation
+// Import action functions from messageCreate.js (these need to be shared)
 async function muteUserAfterWarnings(message, duration, reason, warningThreshold) {
   try {
     const member = message.member;
@@ -1252,18 +1194,17 @@ async function muteUserAfterWarnings(message, duration, reason, warningThreshold
       return;
     }
     
-    const durationMs = duration ? duration * 60 * 1000 : 5 * 60 * 1000; // Default 5 minutes
-    const maxDuration = 28 * 24 * 60 * 60 * 1000; // 28 days max
+    const durationMs = duration ? duration * 60 * 1000 : 5 * 60 * 1000;
+    const maxDuration = 28 * 24 * 60 * 60 * 1000;
     const finalDuration = Math.min(durationMs, maxDuration);
     
     await member.timeout(finalDuration, `Auto-mod: ${reason} (exceeded ${warningThreshold} warnings)`);
     
-    // Reply to the original message with mute notification
     await message.reply({
       embeds: [{
         color: 0xef5350,
-        title: '🔇 User Muted - Warning Limit Exceeded',
-        description: `You have been muted for violating community guidelines after receiving ${warningThreshold} warnings.`,
+        title: '🔇 User Muted - Warning Limit Exceeded (Edited Message)',
+        description: `You have been muted for editing your message to violate community guidelines after receiving ${warningThreshold} warnings.`,
         fields: [
           { name: '⏰ Duration', value: `${Math.round(finalDuration / 60000)} minutes`, inline: true },
           { name: '⚠️ Reason', value: reason, inline: true },
@@ -1274,13 +1215,12 @@ async function muteUserAfterWarnings(message, duration, reason, warningThreshold
       }]
     });
     
-    // Try to send DM to user
     try {
       await member.user.send({
         embeds: [{
           color: 0xef5350,
-          title: '🔇 You Have Been Muted - Warning Limit Exceeded',
-          description: `You have been muted in **${member.guild.name}** for ${Math.round(finalDuration / 60000)} minutes after receiving ${warningThreshold} warnings.`,
+          title: '🔇 You Have Been Muted - Warning Limit Exceeded (Edited Message)',
+          description: `You have been muted in **${member.guild.name}** for ${Math.round(finalDuration / 60000)} minutes after editing your message to violate guidelines.`,
           fields: [
             { name: '⚠️ Reason', value: reason, inline: true },
             { name: '🌐 Server', value: member.guild.name, inline: true },
@@ -1298,12 +1238,6 @@ async function muteUserAfterWarnings(message, duration, reason, warningThreshold
   }
 }
 
-// Mute user (legacy function for direct mute actions)
-async function muteUser(message, duration, reason) {
-  await muteUserAfterWarnings(message, duration, reason, 0);
-}
-
-// Kick user after warning escalation
 async function kickUserAfterWarnings(message, reason, warningThreshold) {
   try {
     const member = message.member;
@@ -1312,12 +1246,11 @@ async function kickUserAfterWarnings(message, reason, warningThreshold) {
       return;
     }
     
-    // Reply to the original message with kick notification
     await message.reply({
       embeds: [{
         color: 0xf44336,
-        title: '👢 User Kicked - Warning Limit Exceeded',
-        description: `You have been kicked for violating community guidelines after receiving ${warningThreshold} warnings.`,
+        title: '👢 User Kicked - Warning Limit Exceeded (Edited Message)',
+        description: `You have been kicked for editing your message to violate community guidelines after receiving ${warningThreshold} warnings.`,
         fields: [
           { name: '⚠️ Reason', value: reason, inline: true },
           { name: '📊 Warnings Given', value: `${warningThreshold}/${warningThreshold}`, inline: true }
@@ -1327,13 +1260,12 @@ async function kickUserAfterWarnings(message, reason, warningThreshold) {
       }]
     });
     
-    // Send DM before kicking (so they can still receive it)
     try {
       await member.user.send({
         embeds: [{
           color: 0xf44336,
-          title: '👢 You Have Been Kicked - Warning Limit Exceeded',
-          description: `You have been kicked from **${member.guild.name}** for violating community guidelines after receiving ${warningThreshold} warnings.`,
+          title: '👢 You Have Been Kicked - Warning Limit Exceeded (Edited Message)',
+          description: `You have been kicked from **${member.guild.name}** for editing your message to violate guidelines.`,
           fields: [
             { name: '⚠️ Reason', value: reason, inline: true },
             { name: '🌐 Server', value: member.guild.name, inline: true },
@@ -1348,20 +1280,12 @@ async function kickUserAfterWarnings(message, reason, warningThreshold) {
     }
     
     await member.kick(`Auto-mod: ${reason} (exceeded ${warningThreshold} warnings)`);
-    
     console.log(`[AUTO MOD] Kicked user: ${member.user.tag} for: ${reason} (after ${warningThreshold} warnings)`);
   } catch (error) {
     console.error('Error kicking user:', error);
   }
 }
 
-// Kick user (legacy function for direct kick actions)
-async function kickUser(message, reason) {
-  await kickUserAfterWarnings(message, reason, 0);
-}
-
-// Ban user
-// Ban user after warning escalation
 async function banUserAfterWarnings(message, reason, warningThreshold) {
   try {
     const member = message.member;
@@ -1370,12 +1294,11 @@ async function banUserAfterWarnings(message, reason, warningThreshold) {
       return;
     }
     
-    // Reply to the original message with ban notification
     await message.reply({
       embeds: [{
         color: 0xd32f2f,
-        title: '⛔ User Banned - Warning Limit Exceeded',
-        description: `You have been banned for violating community guidelines after receiving ${warningThreshold} warnings.`,
+        title: '⛔ User Banned - Warning Limit Exceeded (Edited Message)',
+        description: `You have been banned for editing your message to violate community guidelines after receiving ${warningThreshold} warnings.`,
         fields: [
           { name: '⚠️ Reason', value: reason, inline: true },
           { name: '📊 Warnings Given', value: `${warningThreshold}/${warningThreshold}`, inline: true }
@@ -1385,13 +1308,12 @@ async function banUserAfterWarnings(message, reason, warningThreshold) {
       }]
     });
     
-    // Send DM before banning (so they can still receive it)
     try {
       await member.user.send({
         embeds: [{
           color: 0xd32f2f,
-          title: '⛔ You Have Been Banned - Warning Limit Exceeded',
-          description: `You have been banned from **${member.guild.name}** for violating community guidelines after receiving ${warningThreshold} warnings.`,
+          title: '⛔ You Have Been Banned - Warning Limit Exceeded (Edited Message)',
+          description: `You have been banned from **${member.guild.name}** for editing your message to violate guidelines.`,
           fields: [
             { name: '⚠️ Reason', value: reason, inline: true },
             { name: '🌐 Server', value: member.guild.name, inline: true },
@@ -1407,16 +1329,14 @@ async function banUserAfterWarnings(message, reason, warningThreshold) {
     
     await member.ban({ reason: `Auto-mod: ${reason} (exceeded ${warningThreshold} warnings)`, deleteMessageDays: 1 });
     
-    // Get a channel to send notification to
     const channel = member.guild.channels.cache.find(ch => ch.isTextBased() && ch.permissionsFor(member.guild.members.me).has('SendMessages'));
     
-    // Send notification in channel after ban
     if (channel) {
       await channel.send({
         embeds: [{
           color: 0xd32f2f,
-          title: '⛔ User Banned - Warning Limit Exceeded',
-          description: `${member.user.tag} has been banned for violating community guidelines after receiving ${warningThreshold} warnings.`,
+          title: '⛔ User Banned - Warning Limit Exceeded (Edited Message)',
+          description: `${member.user.tag} has been banned for editing their message to violate guidelines.`,
           fields: [
             { name: '⚠️ Reason', value: reason, inline: true },
             { name: '👤 User ID', value: member.user.id, inline: true },
@@ -1429,61 +1349,5 @@ async function banUserAfterWarnings(message, reason, warningThreshold) {
     }
   } catch (error) {
     console.error('Error banning user:', error);
-  }
-}
-
-// Ban user (legacy function for direct ban actions)
-async function banUser(message, reason) {
-  await banUserAfterWarnings(message, reason, 0);
-}
-
-// Log moderation action
-async function logModerationAction(guild, logChannelId, actionData) {
-  try {
-    const logChannel = guild.channels.cache.get(logChannelId);
-    if (!logChannel || !logChannel.isTextBased()) return;
-    
-    // Format rule type for display
-    const ruleTypeDisplay = actionData.ruleType ? 
-      actionData.ruleType.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) : 
-      'General';
-    
-    const embed = {
-      color: 0xdc2626,
-      title: '🛡️ Auto Moderation Action',
-      fields: [
-        { name: '👤 User', value: `${actionData.user} (${actionData.user.id})`, inline: true },
-        { name: '🔨 Action', value: actionData.action, inline: true },
-        { name: '🛡️ Rule', value: actionData.rule, inline: true },
-        { name: '🔎 Rule Type', value: ruleTypeDisplay, inline: true },
-        { name: '⚠️ Reason', value: actionData.reason, inline: true },
-        { name: '📋 Channel', value: `<#${actionData.channel.id}>`, inline: true },
-        { name: '💬 Message Deleted', value: actionData.deleted ? 'Yes' : 'No', inline: true }
-      ],
-      footer: { text: 'Auto Moderation System' },
-      timestamp: new Date().toISOString()
-    };
-    
-    // Add warning information if applicable
-    if (actionData.warningCount !== undefined && actionData.warningThreshold !== undefined) {
-      embed.fields.push({
-        name: 'Warning Progress',
-        value: `${actionData.warningCount}/${actionData.warningThreshold} (${ruleTypeDisplay})`,
-        inline: true
-      });
-    }
-    
-    if (actionData.messageContent && actionData.messageContent.length > 0) {
-      embed.fields.push({
-        name: 'Message Content',
-        value: actionData.messageContent.length > 1000 
-          ? actionData.messageContent.substring(0, 1000) + '...'
-          : actionData.messageContent
-      });
-    }
-    
-    await logChannel.send({ embeds: [embed] });
-  } catch (error) {
-    console.error('Error logging moderation action:', error);
   }
 }

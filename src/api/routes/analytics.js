@@ -86,14 +86,8 @@ function createAnalyticsRoutes(client, store, startTimestamp, commandMap) {
       // Get real command data from guild_command_logs table
       let commandData = {
         today: 0,
-        weeklyTrend: [45, 52, 38, 63, 71, 59, 48],
-        top: [
-          { name: 'ping', count: 142 },
-          { name: 'help', count: 89 },
-          { name: 'level', count: 67 },
-          { name: 'rank', count: 54 },
-          { name: 'poll', count: 32 }
-        ]
+        weeklyTrend: [0, 0, 0, 0, 0, 0, 0],
+        top: []
       };
       
       // Fetch real command data if database is available
@@ -325,7 +319,8 @@ function createAnalyticsRoutes(client, store, startTimestamp, commandMap) {
           ban: 0
         },
         effectiveness: 0,
-        weeklyTrend: [0, 0, 0, 0, 0, 0, 0]
+        weeklyTrend: [0, 0, 0, 0, 0, 0, 0],
+        recentViolations: []
       };
       
       // Get moderation features status
@@ -593,6 +588,64 @@ function createAnalyticsRoutes(client, store, startTimestamp, commandMap) {
             newToday: guildStats.newMembersToday || 0,
             cleanMembersPercentage: cleanMembersPct
           };
+          // Get recent violations for security activity table (last 10 violations)
+          const [recentViolations] = await store.sqlPool.query(`
+            SELECT 
+              id,
+              rule_type,
+              rule_name,
+              violation_reason,
+              action_taken,
+              user_id,
+              message_content,
+              channel_id,
+              created_at,
+              is_auto_mod,
+              severity
+            FROM guild_user_violations 
+            WHERE guild_id = ? AND status = 'active'
+            ORDER BY created_at DESC 
+            LIMIT 10
+          `, [guildId]);
+          
+          // Fetch usernames and channel names from Discord API for violations
+          let guild = null;
+          if (client && client.guilds && client.guilds.cache.has(guildId)) {
+            guild = client.guilds.cache.get(guildId);
+          }
+          
+          violationData.recentViolations = await Promise.all(recentViolations.map(async (violation) => {
+            let username = null;
+            
+            // Fetch username from Discord API
+            if (guild && violation.user_id) {
+              try {
+                const member = await guild.members.fetch(violation.user_id);
+                username = member.user.username || member.user.globalName || member.displayName;
+              } catch (fetchError) {
+                // User might have left the server or be unavailable
+                console.warn(`Could not fetch user ${violation.user_id}:`, fetchError.message);
+                username = null;
+              }
+            }
+            
+            return {
+              id: violation.id,
+              ruleType: violation.rule_type,
+              ruleName: violation.rule_name,
+              reason: violation.violation_reason,
+              messageContent: violation.message_content,
+              action: violation.action_taken,
+              userId: violation.user_id,
+              username: username,
+              channelId: violation.channel_id,
+              channelName: guild?.channels?.cache?.get(violation.channel_id)?.name || null,
+              timestamp: violation.created_at,
+              isAutoMod: violation.is_auto_mod,
+              severity: violation.severity
+            };
+          }));
+
           // Also provide on guild for UI convenience
           guildStats.cleanMembersPercentage = cleanMembersPct;
           
@@ -663,6 +716,7 @@ function createAnalyticsRoutes(client, store, startTimestamp, commandMap) {
           violationsToday: violationData.todayTotal,
           violationsWeek: violationData.weeklyTotal,
           violationTrend: violationData.weeklyTrend,
+          recentViolations: violationData.recentViolations || [],
           score: violationData.securityScore,
           members: violationData.memberStats
         },
