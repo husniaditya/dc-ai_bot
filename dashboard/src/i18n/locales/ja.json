@@ -214,6 +214,10 @@
       "noData": "データがありません"
     },
     "loadingAnalytics": "分析を読み込み中…",
+    "loadingCommands": "コマンドデータを読み込み中…",
+    "sampleData": "サンプルデータ",
+    "noCommandsYet": "まだコマンドが実行されていません",
+    "noCommandsHint": "ユーザーがボットと交流を始めると、コマンド統計がここに表示されます",
     "of": "／",
     "serverInformation": "サーバー情報",
     "activityStreamTitle": "最近のアクティビティ",
@@ -314,6 +318,43 @@
         "mute": "ミュート",
         "kick": "キック",
         "ban": "BAN"
+      },
+      "recentActivity": {
+        "title": "最近のセキュリティアクティビティ",
+        "violation": "違反",
+        "user": "ユーザー",
+        "action": "アクション",
+        "time": "時間",
+        "ruleType": "ルールタイプ",
+        "severity": "重要度",
+        "autoMod": "自動モデレーション",
+        "manual": "手動",
+        "noViolations": "最近の違反は見つかりませんでした",
+        "noViolationsHint": "セキュリティ違反が発生するとここに表示されます",
+        "severityLevels": {
+          "low": "低",
+          "medium": "中",
+          "high": "高",
+          "extreme": "極度"
+        },
+        "ruleTypes": {
+          "spam": "スパム",
+          "caps": "過度な大文字",
+          "links": "リンク",
+          "invite_links": "招待リンク",
+          "profanity": "不適切な言葉",
+          "mention_spam": "メンションスパム"
+        },
+        "messages": {
+          "violatedBy": "違反者",
+          "userMessage": "メッセージ",
+          "unknownUser": "不明なユーザー",
+          "messageNotAvailable": "メッセージ利用不可",
+          "in": "で",
+          "ruleName": "ルール",
+          "violationReason": "理由",
+          "messageContent": "メッセージ内容"
+        }
       },
       "thisWeek": "今週",
       "noDataThisWeek": "今週のデータはありません"

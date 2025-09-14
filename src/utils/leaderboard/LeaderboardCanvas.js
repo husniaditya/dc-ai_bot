@@ -275,11 +275,11 @@ class LeaderboardCanvas {
         currentX += this.roleWidth;
         
         // Donations header
-        ctx.fillText('Donated', currentX + (this.donationWidth / 2), y + 25);
+        ctx.fillText('Don', currentX + (this.donationWidth / 2), y + 25);
         currentX += this.donationWidth;
         
         // Received header
-        ctx.fillText('Received', currentX + (this.receivedWidth / 2), y + 25);
+        ctx.fillText('Rec', currentX + (this.receivedWidth / 2), y + 25);
         currentX += this.receivedWidth;
         
         // Ratio header
@@ -287,7 +287,7 @@ class LeaderboardCanvas {
         currentX += this.ratioWidth;
         
         // Last Online header
-        ctx.fillText('Last Online', currentX + (this.lastOnlineWidth / 2), y + 25);
+        ctx.fillText('Last On', currentX + (this.lastOnlineWidth / 2), y + 25);
         
         // Restore canvas state
         ctx.restore();

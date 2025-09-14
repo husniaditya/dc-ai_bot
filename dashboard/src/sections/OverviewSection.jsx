@@ -599,17 +599,40 @@ export default function OverviewSection({ analytics, apiStatus, autos, totalEnab
                     {t('overview.topCommands24h')}
                   </span>
                   <span className="badge bg-info small">
-                    {(analytics?.commands?.top || []).reduce((sum, cmd) => sum + cmd.count, 0)} {t('overview.total')}
+                    {(() => {
+                      const realCommands = analytics?.commands?.top || [];
+                      return realCommands.reduce((sum, cmd) => sum + cmd.count, 0);
+                    })()} {t('overview.total')}
                   </span>
                 </h6>
                 <div className="command-leaderboard">
-                  {(analytics?.commands?.top && analytics.commands.top.length > 0 ? analytics.commands.top : [
-                    { name: 'ping', count: 142 },
-                    { name: 'help', count: 89 },
-                    { name: 'level', count: 67 },
-                    { name: 'rank', count: 54 },
-                    { name: 'poll', count: 32 }
-                  ]).slice(0, 5).map((cmd, idx) => (
+                  {loading && !analytics ? (
+                    <div className="text-center py-4">
+                      <div className="spinner-border spinner-border-sm text-primary me-2" role="status">
+                        <span className="visually-hidden">Loading...</span>
+                      </div>
+                      <span className="text-muted small">{t('overview.loadingCommands')}</span>
+                    </div>
+                  ) : (() => {
+                    const realCommands = analytics?.commands?.top || [];
+                    const hasRealData = realCommands.length > 0;
+                    
+                    // If we have analytics but no commands, show a "no commands yet" message
+                    if (analytics && !hasRealData) {
+                      return (
+                        <div className="text-center py-4">
+                          <i className="fas fa-robot text-muted mb-2" style={{fontSize: '2rem', opacity: 0.5}}></i>
+                          <div className="text-muted">
+                            <div className="small fw-medium">{t('overview.noCommandsYet')}</div>
+                            <div className="extra-small mt-1">{t('overview.noCommandsHint')}</div>
+                          </div>
+                        </div>
+                      );
+                    }
+                    
+                    // Only show real commands, no sample data
+                    const commandsToShow = realCommands;
+                    return commandsToShow.slice(0, 5).map((cmd, idx) => (
                     <div key={idx} className="command-rank d-flex justify-content-between align-items-center py-2 border-bottom border-secondary border-opacity-10">
                       <div className="d-flex align-items-center">
                         <span className={`rank-badge me-2 ${idx === 0 ? 'gold' : idx === 1 ? 'silver' : idx === 2 ? 'bronze' : 'default'}`}>
@@ -633,9 +656,9 @@ export default function OverviewSection({ analytics, apiStatus, autos, totalEnab
                         )}
                         <div className="progress-ring" style={{width: '20px', height: '4px', backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: '2px'}}>
                           <div 
-                            className="progress-bar bg-primary" 
+                            className="progress-bar bg-primary"
                             style={{
-                              width: `${(cmd.count / ((analytics?.commands?.top || [{count: 142}])[0]?.count || cmd.count)) * 100}%`, 
+                              width: `${(cmd.count / (commandsToShow[0]?.count || cmd.count)) * 100}%`, 
                               height: '100%', 
                               borderRadius: '2px',
                               transition: 'width 0.3s ease'
@@ -644,13 +667,8 @@ export default function OverviewSection({ analytics, apiStatus, autos, totalEnab
                         </div>
                       </div>
                     </div>
-                  ))}
-          {(!analytics?.commands?.top || analytics.commands.top.length === 0) && (
-                    <div className="text-center py-3 text-muted small">
-                      <i className="fas fa-terminal me-2"></i>
-            {t('overview.topCommandsEmpty')}
-                    </div>
-                  )}
+                  ));
+                  })()}
                 </div>
               </div>
             </div>
@@ -955,7 +973,7 @@ export default function OverviewSection({ analytics, apiStatus, autos, totalEnab
                 <div className="trend-chart-container">
                   <div className="small text-muted mb-2">{t('overview.security.securityEventsLast7d')}</div>
                   {chartsReady && HighchartsReact && Highcharts && <HighchartsReact highcharts={Highcharts} options={{
-                    chart: { type: 'column', backgroundColor: 'transparent', height: 200 },
+                    chart: { type: 'column', backgroundColor: 'transparent', height: 278 },
                     title: { text: null },
                     xAxis: { 
                       // Align labels with the last 7 days data order (6 days ago -> today)
@@ -1054,20 +1072,177 @@ export default function OverviewSection({ analytics, apiStatus, autos, totalEnab
                     </div>
                     <div className="metric-row d-flex justify-content-between py-2">
                       <span className="small text-muted">{t('overview.security.warnedUsers')}</span>
-                      <span className="badge bg-warning">{analytics?.security?.members?.warned || analytics?.guild?.warnedMembers || 8}</span>
+                      <span className="badge bg-warning">{analytics?.security?.members?.warned || analytics?.guild?.warnedMembers || 0}</span>
                     </div>
                     <div className="metric-row d-flex justify-content-between py-2">
                       <span className="small text-muted">{t('overview.security.bannedToday')}</span>
-                      <span className="badge bg-danger">{analytics?.security?.members?.banned || analytics?.guild?.bannedToday || 2}</span>
+                      <span className="badge bg-danger">{analytics?.security?.members?.banned || analytics?.guild?.bannedToday || 0}</span>
                     </div>
                     <div className="metric-row d-flex justify-content-between py-2">
                       <span className="small text-muted">{t('overview.security.newMembers')}</span>
-                      <span className="badge bg-info">{analytics?.guild?.newMembersToday || analytics?.security?.members?.newToday || Math.floor(Math.random() * 20) + 5}</span>
+                      <span className="badge bg-info">{analytics?.guild?.newMembersToday || analytics?.security?.members?.newToday || 0}</span>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
+
+            {/* Recent Security Activity Table - Right below Security Events */}
+            {analytics && <div className="row g-4 mt-3">
+              <div className="col-12">
+                <div className="card card-glass shadow-sm">
+                  <div className="card-body">
+                    <h6 className="text-muted mb-3 d-flex align-items-center justify-content-between" style={{letterSpacing:'.5px'}}>
+                      <span>
+                        <i className="fas fa-shield-alt me-2 text-danger"></i>
+                        {t('overview.security.recentActivity.title')}
+                      </span>
+                      <span className="badge bg-secondary">
+                        {analytics?.security?.recentViolations?.length || 0} {t('overview.security.recentActivity.violation')}s
+                      </span>
+                    </h6>
+                    
+                    {analytics?.security?.recentViolations?.length > 0 ? (
+                      <div className="table-responsive">
+                        <table className="table table-dark table-hover table-sm">
+                          <thead>
+                            <tr>
+                              <th className="border-0 small text-muted">{t('overview.security.recentActivity.user')}</th>
+                              <th className="border-0 small text-muted">{t('overview.security.recentActivity.messages.ruleName')}</th>
+                              <th className="border-0 small text-muted">{t('overview.security.recentActivity.messages.violationReason')}</th>
+                              <th className="border-0 small text-muted">{t('overview.security.recentActivity.messages.messageContent')}</th>
+                              <th className="border-0 small text-muted">{t('overview.security.recentActivity.action')}</th>
+                              <th className="border-0 small text-muted">{t('overview.security.recentActivity.severity')}</th>
+                              <th className="border-0 small text-muted">{t('overview.security.recentActivity.time')}</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {(analytics?.security?.recentViolations || []).map((violation, index) => (
+                              <tr key={index}>
+                                {/* User Column */}
+                                <td className="align-middle">
+                                  <div className="d-flex align-items-center">
+                                    <div className={`activity-dot me-2 ${
+                                      violation.severity === 'extreme' ? 'bg-danger' :
+                                      violation.severity === 'high' ? 'bg-warning' :
+                                      violation.severity === 'medium' ? 'bg-info' :
+                                      violation.severity === 'low' ? 'bg-success' : 'bg-secondary'
+                                    }`} style={{width: '8px', height: '8px', borderRadius: '50%'}}></div>
+                                    <div className="user-avatar-mini me-2" style={{
+                                      width: '20px', 
+                                      height: '20px', 
+                                      borderRadius: '50%', 
+                                      backgroundColor: '#6366f1',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'center',
+                                      color: 'white',
+                                      fontSize: '8px',
+                                      fontWeight: 'bold'
+                                    }}>
+                                      {violation.userId ? violation.userId.slice(-2) : '??'}
+                                    </div>
+                                    <div>
+                                      <div className="small text-light fw-medium">
+                                        {violation.username || violation.userId || t('overview.security.recentActivity.messages.unknownUser')}
+                                      </div>
+                                      {(violation.channelName || violation.channelId) && (
+                                        <div className="extra-small text-info">
+                                          #{violation.channelName || violation.channelId.slice(-4)}
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                </td>
+                                
+                                {/* Rule Column */}
+                                <td className="align-middle">
+                                  <div className="small text-light">
+                                    {violation.ruleName || t(`overview.security.ruleTypes.${violation.ruleType}`) || violation.ruleType}
+                                  </div>
+                                </td>
+                                
+                                {/* Reason Column */}
+                                <td className="align-middle">
+                                  <div className="small text-light" style={{maxWidth: '200px'}}>
+                                    {violation.reason ? (
+                                      <span className="text-truncate d-block" title={violation.reason}>
+                                        {violation.reason}
+                                      </span>
+                                    ) : (
+                                      <span className="text-muted">-</span>
+                                    )}
+                                  </div>
+                                </td>
+                                
+                                {/* Message Content Column */}
+                                <td className="align-middle">
+                                  <div className="small text-light" style={{maxWidth: '250px'}}>
+                                    {violation.messageContent ? (
+                                      <span className="text-truncate d-block" title={violation.messageContent}>
+                                        "{violation.messageContent}"
+                                      </span>
+                                    ) : (
+                                      <span className="text-muted">-</span>
+                                    )}
+                                  </div>
+                                </td>
+                                
+                                {/* Action Column */}
+                                <td className="align-middle">
+                                  <div className="d-flex align-items-center">
+                                    <span className={`badge ${
+                                      violation.action === 'ban' ? 'bg-danger' :
+                                      violation.action === 'kick' ? 'bg-warning' :
+                                      violation.action === 'mute' ? 'bg-info' :
+                                      violation.action === 'warn' ? 'bg-secondary' : 'bg-primary'
+                                    } me-1`} style={{fontSize: '9px'}}>
+                                      {t(`overview.security.actions.${violation.action}`) || violation.action}
+                                    </span>
+                                    {violation.isAutoMod && (
+                                      <span className="badge bg-success" style={{fontSize: '8px'}}>
+                                        {t('overview.security.recentActivity.autoMod')}
+                                      </span>
+                                    )}
+                                  </div>
+                                </td>
+                                
+                                {/* Severity Column */}
+                                <td className="align-middle">
+                                  <span className={`badge ${
+                                    violation.severity === 'extreme' ? 'bg-danger' :
+                                    violation.severity === 'high' ? 'bg-warning' :
+                                    violation.severity === 'medium' ? 'bg-info' :
+                                    violation.severity === 'low' ? 'bg-success' : 'bg-secondary'
+                                  }`} style={{fontSize: '8px'}}>
+                                    {t(`overview.security.recentActivity.severityLevels.${violation.severity}`) || violation.severity}
+                                  </span>
+                                </td>
+                                
+                                {/* Time Column */}
+                                <td className="align-middle">
+                                  <div className="small text-muted">
+                                    {violation.timestamp ? new Date(violation.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'N/A'}
+                                  </div>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    ) : (
+                      <div className="text-center py-4">
+                        <i className="fas fa-shield-check text-muted mb-2" style={{fontSize: '2rem', opacity: 0.5}}></i>
+                        <div className="text-muted">
+                          <div className="small fw-medium">{t('overview.security.recentActivity.noViolations')}</div>
+                          <div className="extra-small mt-1">{t('overview.security.recentActivity.noViolationsHint')}</div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>}
           </div>
         </div>
       </div>

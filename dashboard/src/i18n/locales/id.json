@@ -215,6 +215,10 @@
       "noData": "Data tidak tersedia"
     },
     "loadingAnalytics": "Memuat analitik…",
+    "loadingCommands": "Memuat data perintah…",
+    "sampleData": "data contoh",
+    "noCommandsYet": "Belum ada perintah yang dieksekusi",
+    "noCommandsHint": "Statistik perintah akan muncul di sini setelah pengguna mulai berinteraksi dengan bot Anda",
     "of": "dari",
     "serverInformation": "Informasi Server",
     "activityStreamTitle": "Alur Aktivitas Terbaru",
@@ -315,6 +319,43 @@
         "mute": "Bisukan",
         "kick": "Keluarkan",
         "ban": "Blokir"
+      },
+      "recentActivity": {
+        "title": "Aktivitas Keamanan Terbaru",
+        "violation": "Pelanggaran",
+        "user": "Pengguna",
+        "action": "Tindakan",
+        "time": "Waktu",
+        "ruleType": "Jenis Aturan",
+        "severity": "Tingkat Keparahan",
+        "autoMod": "Auto-Mod",
+        "manual": "Manual",
+        "noViolations": "Tidak ada pelanggaran terbaru ditemukan",
+        "noViolationsHint": "Pelanggaran keamanan akan muncul di sini ketika terjadi",
+        "severityLevels": {
+          "low": "Rendah",
+          "medium": "Sedang",
+          "high": "Tinggi",
+          "extreme": "Ekstrem"
+        },
+        "ruleTypes": {
+          "spam": "Spam",
+          "caps": "Huruf Kapital Berlebihan",
+          "links": "Tautan",
+          "invite_links": "Tautan Undangan",
+          "profanity": "Kata Kasar",
+          "mention_spam": "Spam Mention"
+        },
+        "messages": {
+          "violatedBy": "Dilanggar oleh",
+          "userMessage": "Pesan",
+          "unknownUser": "Pengguna tidak dikenal",
+          "messageNotAvailable": "Pesan tidak tersedia",
+          "in": "di",
+          "ruleName": "Aturan",
+          "violationReason": "Alasan",
+          "messageContent": "Isi Pesan"
+        }
       },
       "thisWeek": "minggu ini",
       "noDataThisWeek": "Tidak ada data minggu ini"

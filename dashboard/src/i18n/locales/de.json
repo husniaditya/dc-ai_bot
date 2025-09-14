@@ -214,6 +214,10 @@
       "noData": "Keine Daten verfügbar"
     },
     "loadingAnalytics": "Analysen werden geladen…",
+    "loadingCommands": "Befehlsdaten werden geladen…",
+    "sampleData": "Beispieldaten",
+    "noCommandsYet": "Noch keine Befehle ausgeführt",
+    "noCommandsHint": "Befehlsstatistiken werden hier angezeigt, sobald Benutzer mit Ihrem Bot interagieren",
     "of": "von",
     "serverInformation": "Serverinformationen",
     "activityStreamTitle": "Aktueller Aktivitäts-Stream",
@@ -314,6 +318,43 @@
         "mute": "Stummschalten",
         "kick": "Kicken",
         "ban": "Bannen"
+      },
+      "recentActivity": {
+        "title": "Aktuelle Sicherheitsaktivität",
+        "violation": "Verstoß",
+        "user": "Benutzer",
+        "action": "Aktion",
+        "time": "Zeit",
+        "ruleType": "Regeltyp",
+        "severity": "Schweregrad",
+        "autoMod": "Auto-Mod",
+        "manual": "Manuell",
+        "noViolations": "Keine aktuellen Verstöße gefunden",
+        "noViolationsHint": "Sicherheitsverstöße werden hier angezeigt, wenn sie auftreten",
+        "severityLevels": {
+          "low": "Niedrig",
+          "medium": "Mittel",
+          "high": "Hoch",
+          "extreme": "Extrem"
+        },
+        "ruleTypes": {
+          "spam": "Spam",
+          "caps": "Zu viele Großbuchstaben",
+          "links": "Links",
+          "invite_links": "Einladungslinks",
+          "profanity": "Vulgäre Sprache",
+          "mention_spam": "Erwähnungs-Spam"
+        },
+        "messages": {
+          "violatedBy": "Verstoß von",
+          "userMessage": "Nachricht",
+          "unknownUser": "Unbekannter Benutzer",
+          "messageNotAvailable": "Nachricht nicht verfügbar",
+          "in": "in",
+          "ruleName": "Regel",
+          "violationReason": "Grund",
+          "messageContent": "Nachrichteninhalt"
+        }
       },
       "thisWeek": "diese Woche",
       "noDataThisWeek": "Keine Daten diese Woche"

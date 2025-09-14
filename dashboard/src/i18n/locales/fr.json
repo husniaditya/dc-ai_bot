@@ -214,6 +214,10 @@
       "noData": "Aucune donnée disponible"
     },
     "loadingAnalytics": "Chargement des analyses…",
+    "loadingCommands": "Chargement des données de commandes…",
+    "sampleData": "données d'exemple",
+    "noCommandsYet": "Aucune commande exécutée pour le moment",
+    "noCommandsHint": "Les statistiques de commandes apparaîtront ici une fois que les utilisateurs commenceront à interagir avec votre bot",
     "of": "de",
     "serverInformation": "Informations du serveur",
     "activityStreamTitle": "Flux d'activité récente",
@@ -314,6 +318,43 @@
         "mute": "Rendre muet",
         "kick": "Expulser",
         "ban": "Bannir"
+      },
+      "recentActivity": {
+        "title": "Activité de Sécurité Récente",
+        "violation": "Violation",
+        "user": "Utilisateur",
+        "action": "Action",
+        "time": "Temps",
+        "ruleType": "Type de Règle",
+        "severity": "Sévérité",
+        "autoMod": "Auto-Mod",
+        "manual": "Manuel",
+        "noViolations": "Aucune violation récente trouvée",
+        "noViolationsHint": "Les violations de sécurité apparaîtront ici lorsqu'elles se produiront",
+        "severityLevels": {
+          "low": "Faible",
+          "medium": "Moyen",
+          "high": "Élevé",
+          "extreme": "Extrême"
+        },
+        "ruleTypes": {
+          "spam": "Spam",
+          "caps": "Majuscules Excessives",
+          "links": "Liens",
+          "invite_links": "Liens d'Invitation",
+          "profanity": "Grossièretés",
+          "mention_spam": "Spam de Mentions"
+        },
+        "messages": {
+          "violatedBy": "Violation par",
+          "userMessage": "Message",
+          "unknownUser": "Utilisateur inconnu",
+          "messageNotAvailable": "Message non disponible",
+          "in": "dans",
+          "ruleName": "Règle",
+          "violationReason": "Raison",
+          "messageContent": "Contenu du Message"
+        }
       },
       "thisWeek": "cette semaine",
       "noDataThisWeek": "Pas de données cette semaine"

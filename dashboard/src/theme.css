@@ -742,6 +742,90 @@ html:not(.dark) .activity-dot {
   border: 1px solid rgba(0, 0, 0, 0.1);
 }
 
+/* Security activity table theme support */
+html:not(.dark) .table-dark {
+  --bs-table-bg: rgba(255, 255, 255, 0.95);
+  --bs-table-striped-bg: rgba(255, 255, 255, 0.95);
+  --bs-table-striped-color: #1f2530;
+  --bs-table-active-bg: rgba(239, 246, 255, 0.8);
+  --bs-table-active-color: #1f2530;
+  --bs-table-hover-bg: rgba(239, 246, 255, 0.9);
+  --bs-table-hover-color: #1f2530;
+  --bs-table-color: #1f2530;
+  --bs-table-border-color: rgba(0, 0, 0, 0.12);
+  color: #1f2530;
+  border-color: rgba(0, 0, 0, 0.12);
+  background: rgba(255, 255, 255, 0.95);
+}
+
+html:not(.dark) .table-dark th {
+  background: rgba(248, 250, 252, 0.95);
+  color: #445066;
+  border-color: rgba(0, 0, 0, 0.12);
+  font-weight: 600;
+}
+
+html:not(.dark) .table-dark td {
+  border-color: rgba(0, 0, 0, 0.1);
+  color: #1f2530;
+  background: rgba(255, 255, 255, 0.95);
+}
+
+html:not(.dark) .table-dark tbody tr {
+  background: rgba(255, 255, 255, 0.95);
+}
+
+html:not(.dark) .table-dark tbody tr:hover {
+  background: rgba(239, 246, 255, 0.9);
+}
+
+html:not(.dark) .table-dark tbody tr:hover td {
+  background: rgba(239, 246, 255, 0.9);
+}
+
+html:not(.dark) .table-dark .text-light {
+  color: #1f2530 !important;
+}
+
+html:not(.dark) .table-dark .text-muted {
+  color: #7c8899 !important;
+}
+
+html:not(.dark) .table-dark .text-info {
+  color: #0ea5e9 !important;
+}
+
+/* Dark theme security activity table (default styling enhanced) */
+html.dark .table-dark {
+  --bs-table-bg: rgba(30, 41, 59, 0.6);
+  --bs-table-striped-bg: rgba(30, 41, 59, 0.8);
+  --bs-table-striped-color: #e2e8f0;
+  --bs-table-active-bg: rgba(99, 102, 241, 0.15);
+  --bs-table-active-color: #e2e8f0;
+  --bs-table-hover-bg: rgba(30, 41, 59, 0.9);
+  --bs-table-hover-color: #e2e8f0;
+  --bs-table-color: #e2e8f0;
+  --bs-table-border-color: rgba(148, 163, 184, 0.2);
+  background: rgba(30, 41, 59, 0.6);
+  backdrop-filter: blur(8px);
+  border-radius: 8px;
+}
+
+html.dark .table-dark th {
+  background: rgba(15, 23, 42, 0.8);
+  color: #94a3b8;
+  border-color: rgba(148, 163, 184, 0.2);
+  font-weight: 600;
+}
+
+html.dark .table-dark td {
+  border-color: rgba(148, 163, 184, 0.15);
+}
+
+html.dark .table-dark tbody tr:hover {
+  background: rgba(99, 102, 241, 0.1);
+}
+
 html:not(.dark) .command-leaderboard {
   background: rgba(248, 250, 252, 0.8) !important;
   border: 1px solid rgba(0, 0, 0, 0.08) !important;
