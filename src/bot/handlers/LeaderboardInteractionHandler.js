@@ -64,7 +64,7 @@ class LeaderboardInteractionHandler {
             const parsedData = LeaderboardButtons.parseButtonInteraction(interaction.customId);
             console.log('Parsed button data:', parsedData);
 
-            const { action, guildId, currentPage, view } = parsedData || {};
+            const { action, guildId, currentPage, view, clanTag } = parsedData || {};
             
             if (!action || guildId !== interaction.guildId) {
                 console.error('Invalid button interaction:', { action, guildId, interactionGuildId: interaction.guildId });
@@ -85,25 +85,25 @@ class LeaderboardInteractionHandler {
             // Route to appropriate handler
             switch (action) {
                 case 'refresh':
-                    await this.handleRefresh(interaction, config, view);
+                    await this.handleRefresh(interaction, config, view, clanTag);
                     break;
                 case 'edit':
-                    await this.handleEdit(interaction, config);
+                    await this.handleEdit(interaction, config, clanTag);
                     break;
                 case 'prev':
-                    await this.handlePagination(interaction, config, Math.max(1, (currentPage || config.donation_leaderboard_current_page || 1) - 1), view);
+                    await this.handlePagination(interaction, config, Math.max(1, (currentPage || config.donation_leaderboard_current_page || 1) - 1), view, clanTag);
                     break;
                 case 'next':
-                    await this.handlePagination(interaction, config, (currentPage || config.donation_leaderboard_current_page || 1) + 1, view);
+                    await this.handlePagination(interaction, config, (currentPage || config.donation_leaderboard_current_page || 1) + 1, view, clanTag);
                     break;
                 case 'summary':
-                    await this.handleSummary(interaction, config, currentPage || config.donation_leaderboard_current_page || 1, view);
+                    await this.handleSummary(interaction, config, currentPage || config.donation_leaderboard_current_page || 1, view, clanTag);
                     break;
                 case 'back':
-                    await this.handleBackToPage(interaction, config, currentPage || config.donation_leaderboard_current_page || 1, view);
+                    await this.handleBackToPage(interaction, config, currentPage || config.donation_leaderboard_current_page || 1, view, clanTag);
                     break;
                 case 'toggle_view':
-                    await this.handleToggleView(interaction, config, currentPage || config.donation_leaderboard_current_page || 1, view);
+                    await this.handleToggleView(interaction, config, currentPage || config.donation_leaderboard_current_page || 1, view, clanTag);
                     break;
                 default:
                     await this.sendError(interaction, 'Unknown action');
@@ -140,21 +140,22 @@ class LeaderboardInteractionHandler {
      * @param {ButtonInteraction} interaction 
      * @param {Object} config - Leaderboard configuration
      * @param {string} view - Current view (donations or war)
+     * @param {string} clanTag - Specific clan tag for clan-specific refresh
      */
-    async handleRefresh(interaction, config, view = 'donations') {
+    async handleRefresh(interaction, config, view = 'donations', clanTag = null) {
         try {
             // Clear cached data to force fresh fetch
             await this.clearCachedData(config.guild_id, view);
 
             // Regenerate current page directly (no loading state to avoid double acknowledgment)
             const currentPage = config.donation_leaderboard_current_page || 1;
-            await this.generateLeaderboardPage(interaction, config, currentPage, true, view);
+            await this.generateLeaderboardPage(interaction, config, currentPage, true, view, clanTag);
 
-            console.log(`${view} leaderboard refreshed for guild ${config.guild_id} by ${interaction.user.tag}`);
+            console.log(`${view} leaderboard refreshed for guild ${config.guild_id} by ${interaction.user.tag}${clanTag ? ` (clan: ${clanTag})` : ''}`);
 
         } catch (error) {
             console.error(`Error refreshing ${view} leaderboard:`, error);
-            await this.sendError(interaction, `Failed to refresh ${view} data`, view);
+            await this.sendError(interaction, `Failed to refresh ${view} data`, view, clanTag);
         }
     }
 
@@ -163,11 +164,11 @@ class LeaderboardInteractionHandler {
      * @param {ButtonInteraction} interaction 
      * @param {Object} config - Leaderboard configuration
      */
-    async handleEdit(interaction, config) {
+    async handleEdit(interaction, config, clanTag = null) {
         try {
             const embed = new EmbedBuilder()
                 .setTitle('🛠️ Leaderboard Settings')
-                .setDescription('Current leaderboard configuration:')
+                .setDescription(`Current leaderboard configuration${clanTag ? ` for ${clanTag}` : ''}:`)
                 .addFields([
                     {
                         name: '📊 Display Settings',
@@ -195,7 +196,7 @@ class LeaderboardInteractionHandler {
 
         } catch (error) {
             console.error('Error showing edit panel:', error);
-            await this.sendError(interaction, 'Failed to load leaderboard settings');
+            await this.sendError(interaction, 'Failed to load leaderboard settings', 'donations', clanTag);
         }
     }
 
@@ -205,8 +206,9 @@ class LeaderboardInteractionHandler {
      * @param {Object} config - Leaderboard configuration
      * @param {number} targetPage - Page to navigate to
      * @param {string} view - Current view (donations or war)
+     * @param {string} clanTag - Specific clan tag for clan-specific pagination
      */
-    async handlePagination(interaction, config, targetPage, view = 'donations') {
+    async handlePagination(interaction, config, targetPage, view = 'donations', clanTag = null) {
         try {
             const totalPages = config.donation_leaderboard_total_pages || 1;
             
@@ -216,13 +218,13 @@ class LeaderboardInteractionHandler {
             }
 
             // Generate the requested page directly (no loading state to avoid double acknowledgment)
-            await this.generateLeaderboardPage(interaction, config, targetPage, false, view);
+            await this.generateLeaderboardPage(interaction, config, targetPage, false, view, clanTag);
 
-            console.log(`${view} leaderboard page changed to ${targetPage} for guild ${config.guild_id} by ${interaction.user.tag}`);
+            console.log(`${view} leaderboard page changed to ${targetPage} for guild ${config.guild_id} by ${interaction.user.tag}${clanTag ? ` (clan: ${clanTag})` : ''}`);
 
         } catch (error) {
             console.error('Error handling pagination:', error);
-            await this.sendError(interaction, 'Failed to load requested page', view);
+            await this.sendError(interaction, 'Failed to load requested page', view, clanTag);
         }
     }
 
@@ -232,23 +234,501 @@ class LeaderboardInteractionHandler {
      * @param {Object} config - Leaderboard configuration
      * @param {number} currentPage - Current page number
      * @param {string} currentView - Current view (donations or war)
+     * @param {string} clanTag - Optional specific clan tag
      */
-    async handleToggleView(interaction, config, currentPage, currentView = 'donations') {
+    async handleToggleView(interaction, config, currentPage, currentView = 'donations', clanTag = null) {
         // Toggle functionality has been disabled - each leaderboard type is now separate
-        await this.sendError(interaction, 'Toggle functionality has been disabled. Donation and war leaderboards are now separate.');
+        await this.sendError(interaction, 'Toggle functionality has been disabled. Donation and war leaderboards are now separate.', currentView, clanTag);
     }
 
     /**
-     * Generates and displays a leaderboard page
+     * Generates and displays a leaderboard page (handles both individual and combined clan data)
+     * @param {Interaction} interaction 
+     * @param {Object} config - Leaderboard configuration
+     * @param {number} page - Page number to generate
+     * @param {boolean} forceRefresh - Whether to force data refresh
+     * @param {string} view - View type (donations or war)
+     * @param {string} clanTag - Optional specific clan tag for individual clan display
+     */
+    async generateLeaderboardPage(interaction, config, page, forceRefresh = false, view = 'donations', clanTag = null) {
+        try {
+            // If clanTag is specified, generate individual clan leaderboard
+            if (clanTag) {
+                return await this.generateIndividualClanLeaderboard(interaction, config, page, forceRefresh, view, clanTag);
+            }
+
+            // Check if multiple clans are configured - if so, send separate messages for each clan
+            const clanTags = (config.clashofclans_clans || config.clans || '').split(',').map(tag => tag.trim()).filter(Boolean);
+            
+            if (clanTags.length > 1) {
+                // Multiple clans - generate separate messages for each clan
+                return await this.generateMultipleClanLeaderboards(interaction, config, page, forceRefresh, view, clanTags);
+            }
+
+            // Single clan or legacy behavior - use original combined method
+            return await this.generateOriginalLeaderboardPage(interaction, config, page, forceRefresh, view);
+
+        } catch (error) {
+            console.error(`Error generating ${view} leaderboard page:`, error);
+            await this.sendError(interaction, `Failed to generate ${view} leaderboard`, view, clanTag);
+        }
+    }
+
+    /**
+     * Generate individual clan leaderboard for a specific clan
+     * @param {Interaction} interaction 
+     * @param {Object} config - Leaderboard configuration
+     * @param {number} page - Page number to generate
+     * @param {boolean} forceRefresh - Whether to force data refresh
+     * @param {string} view - View type (donations or war)
+     * @param {string} clanTag - Specific clan tag
+     */
+    async generateIndividualClanLeaderboard(interaction, config, page, forceRefresh = false, view = 'donations', clanTag) {
+        try {
+            // Get data for the specific clan
+            const clanData = view === 'war' 
+                ? await this.getIndividualWarData(config, clanTag, forceRefresh)
+                : await this.getIndividualDonationData(config, clanTag, forceRefresh);
+            
+            if (!clanData || clanData.players.length === 0) {
+                return await this.sendError(interaction, `No ${view} data available for clan ${clanTag}`, view, clanTag);
+            }
+
+            // Pagination logic
+            const playersPerPage = config.donation_leaderboard_players_per_page || 20;
+            const totalPages = Math.max(1, Math.ceil(clanData.players.length / playersPerPage));
+            if (page > totalPages) page = totalPages;
+            if (page < 1) page = 1;
+            const startIndex = (page - 1) * playersPerPage;
+            const endIndex = startIndex + playersPerPage;
+            const pageData = clanData.players.slice(startIndex, endIndex);
+
+            // Update database with current page state
+            await this.updatePageState(config.guild_id, page, totalPages);
+
+            // Generate canvas image
+            const canvas = new LeaderboardCanvas();
+            const canvasBuffer = view === 'war'
+                ? await canvas.generateWarLeaderboard(pageData, {...config, clan_name: clanData.clanName, clan_tag: clanTag}, page, totalPages, clanData)
+                : await canvas.generateLeaderboard(pageData, {...config, clan_name: clanData.clanName, clan_tag: clanTag}, page, totalPages);
+
+            // Create buttons with clan tag
+            const isAdmin = LeaderboardButtons.hasAdminPermission(interaction.member);
+            const buttonRow = LeaderboardButtons.createButtonRow({
+                currentPage: page,
+                totalPages,
+                isAdmin,
+                guildId: config.guild_id,
+                clanTag: clanTag,
+                view: 'page',
+                dataView: view
+            });
+
+            // Create embed with page info
+            const viewTitle = view === 'war' ? 'War Statistics' : 'Donation Leaderboard';
+            const viewEmoji = view === 'war' ? '⚔️' : '📊';
+            
+            const embed = new EmbedBuilder()
+                .setTitle(`${viewEmoji} ${clanData.clanName} ${viewTitle}`)
+                .setDescription(LeaderboardButtons.createPageIndicator(page, totalPages, clanData.players.length))
+                .setImage('attachment://leaderboard.png')
+                .setColor(view === 'war' ? '#e74c3c' : '#f39c12')
+                .setTimestamp()
+                .setFooter({ 
+                    text: `${clanTag} • ${(config.donation_leaderboard_time_range || 'current_season').replace('_', ' ')} • Updated` 
+                });
+
+            // Update the message
+            const updateData = {
+                embeds: [embed],
+                files: [{ attachment: canvasBuffer, name: 'leaderboard.png' }],
+                components: [buttonRow]
+            };
+
+            // Only add content if template exists and is not empty
+            if (config.donation_leaderboard_template && config.donation_leaderboard_template.trim()) {
+                updateData.content = config.donation_leaderboard_template;
+            }
+
+            // Update the interaction reply
+            if (interaction.deferred || interaction.replied) {
+                try {
+                    await interaction.editReply(updateData);
+                } catch (editError) {
+                    console.error('Failed to edit reply (interaction may be expired):', {
+                        error: editError.message,
+                        code: editError.code,
+                        customId: interaction.customId
+                    });
+                    return;
+                }
+            } else {
+                console.error('Interaction not properly deferred, cannot edit reply');
+                return;
+            }
+
+        } catch (error) {
+            console.error(`Error generating individual ${view} leaderboard for clan ${clanTag}:`, error);
+            await this.sendError(interaction, `Failed to generate ${view} leaderboard for ${clanTag}`, view, clanTag);
+        }
+    }
+
+    /**
+     * Generate separate leaderboard messages for multiple clans
+     * @param {Interaction} interaction 
+     * @param {Object} config - Leaderboard configuration
+     * @param {number} page - Page number to generate
+     * @param {boolean} forceRefresh - Whether to force data refresh
+     * @param {string} view - View type (donations or war)
+     * @param {Array} clanTags - Array of clan tags
+     */
+    async generateMultipleClanLeaderboards(interaction, config, page, forceRefresh = false, view = 'donations', clanTags) {
+        try {
+            // Get individual data for each clan
+            const clanDataArray = view === 'war' 
+                ? await ClashOfClansAPI.getIndividualClanWarStats(clanTags)
+                : await ClashOfClansAPI.getIndividualClanDonationData(clanTags, config.donation_leaderboard_time_range);
+            
+            if (!clanDataArray || clanDataArray.length === 0) {
+                return await this.sendError(interaction, `No ${view} data available for any clan`, view);
+            }
+
+            // For the first clan, update the original interaction reply
+            const firstClanData = clanDataArray[0];
+            await this.generateClanLeaderboardForData(interaction, config, page, firstClanData, view, true);
+
+            // For additional clans, send follow-up messages
+            for (let i = 1; i < clanDataArray.length; i++) {
+                const clanData = clanDataArray[i];
+                try {
+                    await this.generateClanLeaderboardForData(interaction, config, page, clanData, view, false);
+                } catch (followUpError) {
+                    console.error(`Failed to send follow-up for clan ${clanData.clanTag}:`, followUpError);
+                }
+            }
+
+            console.log(`Generated ${view} leaderboards for ${clanDataArray.length} clans`);
+
+        } catch (error) {
+            console.error(`Error generating multiple ${view} leaderboards:`, error);
+            await this.sendError(interaction, `Failed to generate ${view} leaderboards`, view);
+        }
+    }
+
+    /**
+     * Generate leaderboard for specific clan data (helper method)
+     * @param {Interaction} interaction 
+     * @param {Object} config - Leaderboard configuration
+     * @param {number} page - Page number
+     * @param {Object} clanData - Individual clan data
+     * @param {string} view - View type (donations or war)
+     * @param {boolean} isOriginalReply - Whether this is the original reply or a follow-up
+     */
+    async generateClanLeaderboardForData(interaction, config, page, clanData, view, isOriginalReply = false) {
+        try {
+            // Pagination logic
+            const playersPerPage = config.donation_leaderboard_players_per_page || 20;
+            const totalPages = Math.max(1, Math.ceil(clanData.players.length / playersPerPage));
+            if (page > totalPages) page = totalPages;
+            if (page < 1) page = 1;
+            const startIndex = (page - 1) * playersPerPage;
+            const endIndex = startIndex + playersPerPage;
+            const pageData = clanData.players.slice(startIndex, endIndex);
+
+            // Generate canvas image
+            const canvas = new LeaderboardCanvas();
+            const canvasBuffer = view === 'war'
+                ? await canvas.generateWarLeaderboard(pageData, {...config, clan_name: clanData.clanName, clan_tag: clanData.clanTag}, page, totalPages, clanData)
+                : await canvas.generateLeaderboard(pageData, {...config, clan_name: clanData.clanName, clan_tag: clanData.clanTag}, page, totalPages);
+
+            // Create buttons with clan tag
+            const isAdmin = LeaderboardButtons.hasAdminPermission(interaction.member);
+            const buttonRow = LeaderboardButtons.createButtonRow({
+                currentPage: page,
+                totalPages,
+                isAdmin,
+                guildId: config.guild_id,
+                clanTag: clanData.clanTag,
+                view: 'page',
+                dataView: view
+            });
+
+            // Create embed with page info
+            const viewTitle = view === 'war' ? 'War Statistics' : 'Donation Leaderboard';
+            const viewEmoji = view === 'war' ? '⚔️' : '📊';
+            
+            const embed = new EmbedBuilder()
+                .setTitle(`${viewEmoji} ${clanData.clanName} ${viewTitle}`)
+                .setDescription(LeaderboardButtons.createPageIndicator(page, totalPages, clanData.players.length))
+                .setImage('attachment://leaderboard.png')
+                .setColor(view === 'war' ? '#e74c3c' : '#f39c12')
+                .setTimestamp()
+                .setFooter({ 
+                    text: `${clanData.clanTag} • ${(config.donation_leaderboard_time_range || 'current_season').replace('_', ' ')} • Updated` 
+                });
+
+            // Prepare message data
+            const messageData = {
+                embeds: [embed],
+                files: [{ attachment: canvasBuffer, name: 'leaderboard.png' }],
+                components: [buttonRow]
+            };
+
+            // Only add content if template exists and is not empty (only for original reply)
+            if (isOriginalReply && config.donation_leaderboard_template && config.donation_leaderboard_template.trim()) {
+                messageData.content = config.donation_leaderboard_template;
+            }
+
+            // Send message
+            if (isOriginalReply) {
+                // Update the original interaction reply
+                if (interaction.deferred || interaction.replied) {
+                    await interaction.editReply(messageData);
+                } else {
+                    console.error('Interaction not properly deferred, cannot edit reply');
+                }
+            } else {
+                // Send as follow-up message
+                await interaction.followUp(messageData);
+            }
+
+        } catch (error) {
+            console.error(`Error generating leaderboard for clan ${clanData.clanTag}:`, error);
+            throw error;
+        }
+    }
+
+    /**
+     * Show summary statistics view
+     * @param {ButtonInteraction} interaction 
+     * @param {Object} config - Leaderboard configuration
+     * @param {number} returnPage - Page to return to
+     * @param {string} view - Current view (donations or war)
+     * @param {string} clanTag - Optional specific clan tag
+     */
+    async handleSummary(interaction, config, returnPage, view = 'donations', clanTag = null) {
+        try {
+            let leaderboardData;
+            
+            if (clanTag) {
+                // Get data for specific clan
+                leaderboardData = view === 'war' 
+                    ? await this.getIndividualWarData(config, clanTag, false)
+                    : await this.getIndividualDonationData(config, clanTag, false);
+            } else {
+                // Get combined data (original behavior)
+                leaderboardData = view === 'war' 
+                    ? await this.getWarData(config, false)
+                    : await this.getDonationData(config, false);
+            }
+                
+            if (!leaderboardData || leaderboardData.players.length === 0) {
+                return await this.sendError(interaction, `No ${view} data available for summary`, view, clanTag);
+            }
+
+            const players = leaderboardData.players;
+            const totalPlayers = players.length;
+            
+            let embed;
+            if (view === 'war') {
+                // War statistics summary
+                const totalWars = players.reduce((sum, p) => sum + (p.warsParticipated || 0), 0);
+                const totalStars = players.reduce((sum, p) => sum + (p.totalStars || 0), 0);
+                const totalAttacks = players.reduce((sum, p) => sum + (p.totalAttacks || 0), 0);
+                const avgStars = totalAttacks > 0 ? (totalStars / totalAttacks) : 0;
+                const topWarriors = [...players].sort((a,b) => parseFloat(b.averageStars||0) - parseFloat(a.averageStars||0)).slice(0,3);
+                const topParticipants = [...players].sort((a,b) => (b.warsParticipated||0) - (a.warsParticipated||0)).slice(0,3);
+
+                embed = new EmbedBuilder()
+                    .setTitle(`⚔️ War Statistics Summary${clanTag ? ` - ${clanTag}` : ''}`)
+                    .setColor('#e74c3c')
+                    .setDescription(`War overview for ${leaderboardData.clanName || 'Clan'}`)
+                    .addFields([
+                        { name: '👥 Warriors Tracked', value: String(totalPlayers), inline: true },
+                        { name: '⚔️ Total Wars', value: String(Math.max(...players.map(p => p.warsParticipated || 0))), inline: true },
+                        { name: '⭐ Total Stars', value: String(totalStars), inline: true },
+                        { name: '🎯 Total Attacks', value: String(totalAttacks), inline: true },
+                        { name: '📊 Avg Stars/Attack', value: avgStars.toFixed(2), inline: true },
+                        { name: '🏆 Top Warriors (Avg Stars)', value: topWarriors.map((p,i)=>`**${i+1}.** ${p.name} - ${p.averageStars}⭐`).join('\n') || 'N/A', inline: false },
+                        { name: '🛡️ Most Active Warriors', value: topParticipants.map((p,i)=>`**${i+1}.** ${p.name} - ${p.warsParticipated} wars`).join('\n') || 'N/A', inline: false }
+                    ])
+                    .setTimestamp();
+            } else {
+                // Donation statistics summary  
+                const totalDonations = players.reduce((sum, p) => sum + (p.donations || 0), 0);
+                const totalReceived = players.reduce((sum, p) => sum + (p.received || 0), 0);
+                const avgDonation = totalPlayers ? (totalDonations / totalPlayers) : 0;
+                const avgReceived = totalPlayers ? (totalReceived / totalPlayers) : 0;
+                const topDonors = [...players].sort((a,b) => (b.donations||0) - (a.donations||0)).slice(0,3);
+                const topReceivers = [...players].sort((a,b) => (b.received||0) - (a.received||0)).slice(0,3);
+
+                embed = new EmbedBuilder()
+                    .setTitle(`📈 Donation Leaderboard Summary${clanTag ? ` - ${clanTag}` : ''}`)
+                    .setColor('#2ecc71')
+                    .setDescription(`Overview for ${leaderboardData.clanName || 'Clan'} (${config.donation_leaderboard_time_range.replace('_',' ')})`)
+                    .addFields([
+                        { name: '👥 Players Tracked', value: String(totalPlayers), inline: true },
+                        { name: '📦 Total Donations', value: String(totalDonations), inline: true },
+                        { name: '📥 Total Received', value: String(totalReceived), inline: true },
+                        { name: '📊 Avg Donations', value: avgDonation.toFixed(1), inline: true },
+                        { name: '📊 Avg Received', value: avgReceived.toFixed(1), inline: true },
+                        { name: '🏆 Top Donors', value: topDonors.map((p,i)=>`**${i+1}.** ${p.name} - ${p.donations}`).join('\n') || 'N/A', inline: false },
+                        { name: '📥 Top Receivers', value: topReceivers.map((p,i)=>`**${i+1}.** ${p.name} - ${p.received}`).join('\n') || 'N/A', inline: false }
+                    ])
+                    .setTimestamp();
+            }
+
+            const isAdmin = LeaderboardButtons.hasAdminPermission(interaction.member);
+            const buttonRow = LeaderboardButtons.createButtonRow({
+                currentPage: returnPage,
+                totalPages: config.donation_leaderboard_total_pages || 1,
+                isAdmin,
+                guildId: config.guild_id,
+                clanTag: clanTag,
+                view: 'summary',
+                dataView: view
+            });
+
+            // Check if interaction is still valid before editing
+            if (interaction.deferred || interaction.replied) {
+                try {
+                    await interaction.editReply({
+                        content: null,
+                        embeds: [embed],
+                        files: [],
+                        components: [buttonRow]
+                    });
+                } catch (editError) {
+                    console.error('Failed to edit reply in summary (interaction may be expired):', {
+                        error: editError.message,
+                        code: editError.code,
+                        customId: interaction.customId
+                    });
+                    return;
+                }
+            } else {
+                console.error('Interaction not properly deferred, cannot edit reply in summary');
+                return;
+            }
+        } catch (error) {
+            console.error(`Error generating ${view} summary view:`, error);
+            await this.sendError(interaction, `Failed to generate ${view} summary`, view, clanTag);
+        }
+    }
+
+    /**
+     * Return to page view from summary
+     * @param {ButtonInteraction} interaction 
+     * @param {Object} config - Leaderboard configuration
+     * @param {number} page - Page number to return to
+     * @param {string} view - Current view (donations or war)
+     * @param {string} clanTag - Optional specific clan tag
+     */
+    async handleBackToPage(interaction, config, page, view = 'donations', clanTag = null) {
+        await this.generateLeaderboardPage(interaction, config, page, false, view, clanTag);
+    }
+
+    /**
+     * Helper methods
+     */
+
+    async getLeaderboardConfig(guildId) {
+        const [rows] = await this.db.execute(
+            'SELECT * FROM guild_clashofclans_watch WHERE guild_id = ?',
+            [guildId]
+        );
+        return rows[0] || null;
+    }
+
+    /**
+     * Get individual clan donation data
+     * @param {Object} config - Leaderboard configuration
+     * @param {string} clanTag - Specific clan tag
+     * @param {boolean} forceRefresh - Whether to force data refresh
+     * @returns {Object} Individual clan donation data
+     */
+    async getIndividualDonationData(config, clanTag, forceRefresh = false) {
+        // For individual clan, we can use the new API method
+        const clanDataArray = await ClashOfClansAPI.getIndividualClanDonationData([clanTag], config.donation_leaderboard_time_range);
+        
+        if (!clanDataArray || clanDataArray.length === 0) {
+            throw new Error(`No donation data available for clan ${clanTag}`);
+        }
+
+        const clanData = clanDataArray[0];
+        
+        // Enhance with activity tracking if we have previous data
+        if (clanData.players && clanData.players.length > 0) {
+            let previousPlayers = [];
+            const cacheKey = `${config.guild_id}_${clanTag}_donations`;
+            
+            if (config.donation_leaderboard_cached_data) {
+                try {
+                    const cachedData = JSON.parse(config.donation_leaderboard_cached_data);
+                    if (cachedData[cacheKey]) {
+                        previousPlayers = cachedData[cacheKey].players || [];
+                    }
+                } catch (error) {
+                    console.warn('Failed to parse previous clan data:', error);
+                }
+            }
+            
+            clanData.players = await ClashOfClansAPI.enhancePlayersWithActivity(clanData.players, previousPlayers);
+        }
+
+        return clanData;
+    }
+
+    /**
+     * Get individual clan war data
+     * @param {Object} config - Leaderboard configuration
+     * @param {string} clanTag - Specific clan tag
+     * @param {boolean} forceRefresh - Whether to force data refresh
+     * @returns {Object} Individual clan war data
+     */
+    async getIndividualWarData(config, clanTag, forceRefresh = false) {
+        // For individual clan, we can use the new API method
+        const clanDataArray = await ClashOfClansAPI.getIndividualClanWarStats([clanTag]);
+        
+        if (!clanDataArray || clanDataArray.length === 0) {
+            throw new Error(`No war data available for clan ${clanTag}`);
+        }
+
+        const clanData = clanDataArray[0];
+        
+        // Enhance with activity tracking if we have previous data
+        if (clanData.players && clanData.players.length > 0) {
+            let previousPlayers = [];
+            const cacheKey = `${config.guild_id}_${clanTag}_war`;
+            
+            if (config.war_leaderboard_cached_data) {
+                try {
+                    const cachedData = JSON.parse(config.war_leaderboard_cached_data);
+                    if (cachedData[cacheKey]) {
+                        previousPlayers = cachedData[cacheKey].players || [];
+                    }
+                } catch (error) {
+                    console.warn('Failed to parse previous clan war data:', error);
+                }
+            }
+            
+            clanData.players = await ClashOfClansAPI.enhancePlayersWithActivity(clanData.players, previousPlayers);
+        }
+
+        return clanData;
+    }
+
+    /**
+     * Original leaderboard page generation (for backward compatibility)
      * @param {Interaction} interaction 
      * @param {Object} config - Leaderboard configuration
      * @param {number} page - Page number to generate
      * @param {boolean} forceRefresh - Whether to force data refresh
      * @param {string} view - View type (donations or war)
      */
-    async generateLeaderboardPage(interaction, config, page, forceRefresh = false, view = 'donations') {
+    async generateOriginalLeaderboardPage(interaction, config, page, forceRefresh = false, view = 'donations') {
         try {
-            // Get data based on view type
+            // Get data based on view type (original combined method)
             const leaderboardData = view === 'war' 
                 ? await this.getWarData(config, forceRefresh)
                 : await this.getDonationData(config, forceRefresh);
@@ -275,7 +755,7 @@ class LeaderboardInteractionHandler {
                 ? await canvas.generateWarLeaderboard(pageData, config, page, totalPages, leaderboardData)
                 : await canvas.generateLeaderboard(pageData, config, page, totalPages);
 
-            // Create buttons
+            // Create buttons (without clan tag for combined view)
             const isAdmin = LeaderboardButtons.hasAdminPermission(interaction.member);
             const buttonRow = LeaderboardButtons.createButtonRow({
                 currentPage: page,
@@ -322,7 +802,6 @@ class LeaderboardInteractionHandler {
                         code: editError.code,
                         customId: interaction.customId
                     });
-                    // Don't throw - just log the error since we can't recover
                     return;
                 }
             } else {
@@ -331,136 +810,9 @@ class LeaderboardInteractionHandler {
             }
 
         } catch (error) {
-            console.error(`Error generating ${view} leaderboard page:`, error);
-            console.error('Full error details:', {
-                message: error.message,
-                code: error.code,
-                status: error.status,
-                stack: error.stack
-            });
+            console.error(`Error generating original ${view} leaderboard page:`, error);
             await this.sendError(interaction, `Failed to generate ${view} leaderboard`);
         }
-    }
-
-    /**
-     * Show summary statistics view
-     */
-    async handleSummary(interaction, config, returnPage, view = 'donations') {
-        try {
-            const leaderboardData = view === 'war' 
-                ? await this.getWarData(config, false)
-                : await this.getDonationData(config, false);
-                
-            if (!leaderboardData || leaderboardData.players.length === 0) {
-                return await this.sendError(interaction, `No ${view} data available for summary`);
-            }
-
-            const players = leaderboardData.players;
-            const totalPlayers = players.length;
-            
-            let embed;
-            if (view === 'war') {
-                // War statistics summary
-                const totalWars = players.reduce((sum, p) => sum + (p.warsParticipated || 0), 0);
-                const totalStars = players.reduce((sum, p) => sum + (p.totalStars || 0), 0);
-                const totalAttacks = players.reduce((sum, p) => sum + (p.totalAttacks || 0), 0);
-                const avgStars = totalAttacks > 0 ? (totalStars / totalAttacks) : 0;
-                const topWarriors = [...players].sort((a,b) => parseFloat(b.averageStars||0) - parseFloat(a.averageStars||0)).slice(0,3);
-                const topParticipants = [...players].sort((a,b) => (b.warsParticipated||0) - (a.warsParticipated||0)).slice(0,3);
-
-                embed = new EmbedBuilder()
-                    .setTitle('⚔️ War Statistics Summary')
-                    .setColor('#e74c3c')
-                    .setDescription(`War overview for ${leaderboardData.clanName || 'Clan'}`)
-                    .addFields([
-                        { name: '👥 Warriors Tracked', value: String(totalPlayers), inline: true },
-                        { name: '⚔️ Total Wars', value: String(Math.max(...players.map(p => p.warsParticipated || 0))), inline: true },
-                        { name: '⭐ Total Stars', value: String(totalStars), inline: true },
-                        { name: '🎯 Total Attacks', value: String(totalAttacks), inline: true },
-                        { name: '📊 Avg Stars/Attack', value: avgStars.toFixed(2), inline: true },
-                        { name: '🏆 Top Warriors (Avg Stars)', value: topWarriors.map((p,i)=>`**${i+1}.** ${p.name} - ${p.averageStars}⭐`).join('\n') || 'N/A', inline: false },
-                        { name: '🛡️ Most Active Warriors', value: topParticipants.map((p,i)=>`**${i+1}.** ${p.name} - ${p.warsParticipated} wars`).join('\n') || 'N/A', inline: false }
-                    ])
-                    .setTimestamp();
-            } else {
-                // Donation statistics summary  
-                const totalDonations = players.reduce((sum, p) => sum + (p.donations || 0), 0);
-                const totalReceived = players.reduce((sum, p) => sum + (p.received || 0), 0);
-                const avgDonation = totalPlayers ? (totalDonations / totalPlayers) : 0;
-                const avgReceived = totalPlayers ? (totalReceived / totalPlayers) : 0;
-                const topDonors = [...players].sort((a,b) => (b.donations||0) - (a.donations||0)).slice(0,3);
-                const topReceivers = [...players].sort((a,b) => (b.received||0) - (a.received||0)).slice(0,3);
-
-                embed = new EmbedBuilder()
-                    .setTitle('📈 Donation Leaderboard Summary')
-                    .setColor('#2ecc71')
-                    .setDescription(`Overview for ${leaderboardData.clanName || 'Clan'} (${config.donation_leaderboard_time_range.replace('_',' ')})`)
-                    .addFields([
-                        { name: '👥 Players Tracked', value: String(totalPlayers), inline: true },
-                        { name: '📦 Total Donations', value: String(totalDonations), inline: true },
-                        { name: '📥 Total Received', value: String(totalReceived), inline: true },
-                        { name: '📊 Avg Donations', value: avgDonation.toFixed(1), inline: true },
-                        { name: '📊 Avg Received', value: avgReceived.toFixed(1), inline: true },
-                        { name: '🏆 Top Donors', value: topDonors.map((p,i)=>`**${i+1}.** ${p.name} - ${p.donations}`).join('\n') || 'N/A', inline: false },
-                        { name: '📥 Top Receivers', value: topReceivers.map((p,i)=>`**${i+1}.** ${p.name} - ${p.received}`).join('\n') || 'N/A', inline: false }
-                    ])
-                    .setTimestamp();
-            }
-
-            const isAdmin = LeaderboardButtons.hasAdminPermission(interaction.member);
-            const buttonRow = LeaderboardButtons.createButtonRow({
-                currentPage: returnPage,
-                totalPages: config.donation_leaderboard_total_pages || 1,
-                isAdmin,
-                guildId: config.guild_id,
-                view: 'summary',
-                dataView: view
-            });
-
-            // Check if interaction is still valid before editing
-            if (interaction.deferred || interaction.replied) {
-                try {
-                    await interaction.editReply({
-                        content: null,
-                        embeds: [embed],
-                        files: [],
-                        components: [buttonRow]
-                    });
-                } catch (editError) {
-                    console.error('Failed to edit reply in summary (interaction may be expired):', {
-                        error: editError.message,
-                        code: editError.code,
-                        customId: interaction.customId
-                    });
-                    return;
-                }
-            } else {
-                console.error('Interaction not properly deferred, cannot edit reply in summary');
-                return;
-            }
-        } catch (error) {
-            console.error(`Error generating ${view} summary view:`, error);
-            await this.sendError(interaction, `Failed to generate ${view} summary`);
-        }
-    }
-
-    /**
-     * Return to page view from summary
-     */
-    async handleBackToPage(interaction, config, page, view = 'donations') {
-        await this.generateLeaderboardPage(interaction, config, page, false, view);
-    }
-
-    /**
-     * Helper methods
-     */
-
-    async getLeaderboardConfig(guildId) {
-        const [rows] = await this.db.execute(
-            'SELECT * FROM guild_clashofclans_watch WHERE guild_id = ?',
-            [guildId]
-        );
-        return rows[0] || null;
     }
 
     async updatePageState(guildId, currentPage, totalPages) {
@@ -497,7 +849,7 @@ class LeaderboardInteractionHandler {
         // Fetch fresh data from CoC API
         try {
             const freshData = await ClashOfClansAPI.getClanDonationData(
-                config.clans,
+                config.clashofclans_clans || config.clans,
                 config.donation_leaderboard_time_range
             );
 
@@ -577,7 +929,7 @@ class LeaderboardInteractionHandler {
         // Fetch fresh data from CoC API
         try {
             const cocApi = ClashOfClansAPI;
-            const freshData = await cocApi.getClanWarStats(config.clans);
+            const freshData = await cocApi.getClanWarStats(config.clashofclans_clans || config.clans);
 
             // Enhance top players with real last seen data (limited to top 10 to avoid rate limits)
             if (freshData && freshData.players && freshData.players.length > 0) {
@@ -661,7 +1013,7 @@ class LeaderboardInteractionHandler {
         }
     }
 
-    async sendError(interaction, message, view = 'donations') {
+    async sendError(interaction, message, view = 'donations', clanTag = null) {
         // Check if interaction is still valid before trying to send error
         if (!interaction.deferred && !interaction.replied) {
             console.error('Cannot send error: interaction not properly deferred');
@@ -673,7 +1025,7 @@ class LeaderboardInteractionHandler {
             .setDescription(message)
             .setColor('#e74c3c');
 
-        const errorButtons = LeaderboardButtons.createErrorButtonRow(interaction.guildId, view);
+        const errorButtons = LeaderboardButtons.createErrorButtonRow(interaction.guildId, view, clanTag);
 
         try {
             await interaction.editReply({
