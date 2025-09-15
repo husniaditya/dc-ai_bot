@@ -40,13 +40,13 @@ https://chocomaid.xyz
 ### 📊 Modern Dashboard
 
 <div align="center">
-  <img src="https://github.com/husniaditya/dc-ai_bot/blob/main/dashboard/public/images/dashboard/dashboard_statistics.png" alt="Dashboard Statistics" width="48%">
-  <img src="https://github.com/husniaditya/dc-ai_bot/blob/main/dashboard/public/images/dashboard/dashboard_activity.png" alt="Dashboard Activity" width="48%">
+  <img src="https://chocomaid.xyz/images/dashboard/dashboard_statistics.png" alt="Dashboard Statistics" width="48%">
+  <img src="https://chocomaid.xyz/images/dashboard/dashboard_activity.png" alt="Dashboard Activity" width="48%">
 </div>
 
 <div align="center">
-  <img src="https://github.com/husniaditya/dc-ai_bot/blob/main/dashboard/public/images/dashboard/dashboard_automod.png" alt="Dashboard Auto Moderation" width="48%">
-  <img src="https://github.com/husniaditya/dc-ai_bot/blob/main/dashboard/public/images/dashboard/dashboard_security.png" alt="Dashboard Security" width="48%">
+  <img src="https://chocomaid.xyz/images/dashboard/dashboard_automod.png" alt="Dashboard Auto Moderation" width="48%">
+  <img src="https://chocomaid.xyz/images/dashboard/dashboard_security.png" alt="Dashboard Security" width="48%">
 </div>
 
 <p align="center">
@@ -62,7 +62,7 @@ https://chocomaid.xyz
 ### 🛡️ Advanced Moderation System
 
 <div align="center">
-  <img src="https://github.com/husniaditya/dc-ai_bot/blob/main/dashboard/public/images/dashboard/moderation.png" alt="Moderation Dashboard" width="70%">
+  <img src="https://chocomaid.xyz/images/dashboard/moderation.png" alt="Moderation Dashboard" width="70%">
 </div>
 
 <p align="center">
@@ -119,7 +119,7 @@ The dashboard provides full translation coverage for:
 
 ### 🎨 Language Selector
 <div align="center">
-  <img src="https://github.com/husniaditya/dc-ai_bot/blob/main/dashboard/public/images/dashboard/language_selector.png" alt="Language Selector" width="40%">
+  <img src="https://chocomaid.xyz/images/dashboard/language_selector.png" alt="Language Selector" width="40%">
 </div>
 
 <p align="center">
@@ -194,7 +194,7 @@ Automatic formatting for dates and timestamps based on selected language:
 ### 🎯 Core Commands
 
 <div align="center">
-  <img src="https://github.com/husniaditya/dc-ai_bot/blob/main/dashboard/public/images/dashboard/commands_list.png" alt="Commands List" width="60%">
+  <img src="https://chocomaid.xyz/images/dashboard/commands_list.png" alt="Commands List" width="60%">
 </div>
 
 <p align="center">
