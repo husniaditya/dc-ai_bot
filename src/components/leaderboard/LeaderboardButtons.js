@@ -126,17 +126,19 @@ class LeaderboardButtons {
      * @returns {Object} Parsed interaction data
      */
     static parseButtonId(customId) {
-        const parts = customId.split('_');
-        if (parts[0] !== 'leaderboard') return null;
+        const originalParts = customId.split('_');
+        if (originalParts[0] !== 'leaderboard') return null;
         
+        let parts = [...originalParts]; // Create a copy
         const action = parts[1];
         let currentPage, view, guildId, clanTag;
 
-        // Check if this is a clan-specific button (has encoded clan tag at the end)
-        const hasClanTag = parts[parts.length - 1].startsWith('clan');
+        // Check if this is a clan-specific button (has 'clan' as second-to-last part)
+        const hasClanTag = parts.length >= 2 && parts[parts.length - 2] === 'clan';
         if (hasClanTag) {
-            clanTag = this.decodeClanTag(parts[parts.length - 1]);
-            parts.pop(); // Remove clan tag part
+            // The clan tag is the last part, reconstruct it with #
+            clanTag = `#${parts[parts.length - 1]}`;
+            parts = parts.slice(0, -2); // Remove 'clan' and the clan tag parts
         }
 
         if (action === 'toggle' && parts[2] === 'view') {
