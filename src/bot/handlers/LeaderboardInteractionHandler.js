@@ -146,13 +146,13 @@ class LeaderboardInteractionHandler {
     async handleRefresh(interaction, config, view = 'donations', clanTag = null) {
         try {
             // Clear cached data to force fresh fetch
-            await this.clearCachedData(config.guild_id, view);
+            await this.clearCachedData(interaction.guildId, view);
 
             // Regenerate current page directly (no loading state to avoid double acknowledgment)
             const currentPage = config.donation_leaderboard_current_page || 1;
             await this.generateLeaderboardPage(interaction, config, currentPage, true, view, clanTag);
 
-            console.log(`${view} leaderboard refreshed for guild ${config.guild_id} by ${interaction.user.tag}${clanTag ? ` (clan: ${clanTag})` : ''}`);
+            console.log(`${view} leaderboard refreshed for guild ${interaction.guildId} by ${interaction.user.tag}${clanTag ? ` (clan: ${clanTag})` : ''}`);
 
         } catch (error) {
             console.error(`Error refreshing ${view} leaderboard:`, error);
@@ -221,7 +221,7 @@ class LeaderboardInteractionHandler {
             // Generate the requested page directly (no loading state to avoid double acknowledgment)
             await this.generateLeaderboardPage(interaction, config, targetPage, false, view, clanTag);
 
-            console.log(`${view} leaderboard page changed to ${targetPage} for guild ${config.guild_id} by ${interaction.user.tag}${clanTag ? ` (clan: ${clanTag})` : ''}`);
+            console.log(`${view} leaderboard page changed to ${targetPage} for guild ${interaction.guildId} by ${interaction.user.tag}${clanTag ? ` (clan: ${clanTag})` : ''}`);
 
         } catch (error) {
             console.error('Error handling pagination:', error);
@@ -568,7 +568,7 @@ class LeaderboardInteractionHandler {
                 embed = new EmbedBuilder()
                     .setTitle(`📈 Donation Leaderboard Summary${clanTag ? ` - ${clanTag}` : ''}`)
                     .setColor('#2ecc71')
-                    .setDescription(`Overview for ${leaderboardData.clanName || 'Clan'} (${config.donation_leaderboard_time_range.replace('_',' ')})`)
+                    .setDescription(`Overview for ${leaderboardData.clanName || 'Clan'} (${(config.donation_leaderboard_time_range || 'current_season').replace('_',' ')})`)
                     .addFields([
                         { name: '👥 Players Tracked', value: String(totalPlayers), inline: true },
                         { name: '📦 Total Donations', value: String(totalDonations), inline: true },
