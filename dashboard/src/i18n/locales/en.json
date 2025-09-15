@@ -1990,12 +1990,23 @@
       "clans": {
         "addClan": "Add Clan",
         "clanTagPlaceholder": "Enter clan tag (e.g., 2Y0YRGG0)",
-        "noClans": "No clans added yet."
+        "noClans": "No clans added yet.",
+        "mentionTargets": "Per-Clan Mention Targets",
+        "memberAnnouncementChannel": "Member Announcement Channel",
+        "memberAnnouncementChannelHelp": "Channel for member join/leave announcements for this specific clan",
+        "warMentions": "War Mentions",
+        "warMentionsHelp": "Roles/users to mention for war events from this clan",
+        "memberMentions": "Member Mentions", 
+        "memberMentionsHelp": "Roles/users to mention for member events from this clan",
+        "donationMentions": "Donation Mentions",
+        "donationMentionsHelp": "Roles/users to mention for donation events from this clan"
       },
       "tracking": {
         "trackWars": "Track Clan Wars",
         "trackMembers": "Track Member Changes", 
         "trackDonations": "Track Donations",
+        "trackWarStats": "Enable Automatic War Statistics Posting",
+        "trackDonationLeaderboard": "Enable Automatic Donation Leaderboard Posting",
         "donationThreshold": "Minimum Donation Threshold",
         "donationThresholdHint": "Minimum donations per week to trigger announcements"
       },

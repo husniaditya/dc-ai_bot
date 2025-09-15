@@ -269,7 +269,8 @@ export default function GamesSocialsSection({ guildId, pushToast }) {
         clans: Array.isArray(updated?.clans) ? updated.clans : [],
         mentionTargets: Array.isArray(updated?.mentionTargets) ? updated.mentionTargets : [],
         clanMessages: updated?.clanMessages || {},
-        clanNames: updated?.clanNames || {}
+        clanNames: updated?.clanNames || {},
+        clanConfigs: updated?.clanConfigs || {}
       }; 
   setCocConfig(safe); 
   setCocOriginal(safe); 

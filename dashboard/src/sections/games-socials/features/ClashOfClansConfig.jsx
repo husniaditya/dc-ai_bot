@@ -192,10 +192,7 @@ export default function ClashOfClansConfig({
                     onChange={e => onChange(prev => ({ 
                       ...prev, 
                       trackWarEvents: e.target.checked, 
-                      trackWars: e.target.checked,
-                      // Also enable war leaderboard by default when enabling war tracking
-                      trackWarLeaderboard: e.target.checked,
-                      track_war_leaderboard: e.target.checked
+                      trackWars: e.target.checked
                     }))}
                   />
                   <label 
@@ -238,6 +235,66 @@ export default function ClashOfClansConfig({
                     style={{ cursor: 'pointer' }}
                   >
                     {t('gamesSocials.clashofclans.tracking.trackDonations')}
+                  </label>
+                </div>
+                
+                <div className="form-check form-switch">
+                  <input
+                    id="trackWarStatsToggle"
+                    className="form-check-input"
+                    type="checkbox"
+                    checked={config.trackWarLeaderboard || config.track_war_leaderboard || false}
+                    onChange={e => onChange(prev => ({ 
+                      ...prev, 
+                      trackWarLeaderboard: e.target.checked,
+                      track_war_leaderboard: e.target.checked,
+                      ...(e.target.checked && { 
+                        warLeaderboardMessageId: config.warLeaderboardMessageId || config.war_leaderboard_message_id || null,
+                        war_leaderboard_message_id: config.war_leaderboard_message_id || config.warLeaderboardMessageId || null
+                      })
+                    }))}
+                  />
+                  <label 
+                    className="form-check-label user-select-none" 
+                    htmlFor="trackWarStatsToggle"
+                    style={{ cursor: 'pointer' }}
+                  >
+                    {t('gamesSocials.clashofclans.tracking.trackWarStats')}
+                  </label>
+                </div>
+                
+                <div className="form-check form-switch">
+                  <input
+                    id="trackDonationLeaderboardToggle"
+                    className="form-check-input"
+                    type="checkbox"
+                    checked={config.trackDonationLeaderboard || false}
+                    onChange={e => onChange(prev => ({ 
+                      ...prev, 
+                      trackDonationLeaderboard: e.target.checked,
+                      // Set defaults when enabling: hourly schedule (fixed), random colors, interactive controls enabled
+                      ...(e.target.checked && { 
+                        donation_message_id: config.donation_message_id || null,
+                        donationMessageId: config.donationMessageId || null,
+                        donationLeaderboardPlayersPerPage: 20,
+                        donation_leaderboard_players_per_page: 20,
+                        donationLeaderboardTimeRange: 'current_season',
+                        donation_leaderboard_time_range: 'current_season',
+                        donationLeaderboardInteractive: true,
+                        donation_leaderboard_interactive: true,
+                        donationLeaderboardBackgroundType: 'random',
+                        donation_leaderboard_background_type: 'random',
+                        donationLeaderboardSchedule: 'hourly',
+                        donation_leaderboard_schedule: 'hourly'
+                      })
+                    }))}
+                  />
+                  <label 
+                    className="form-check-label user-select-none" 
+                    htmlFor="trackDonationLeaderboardToggle"
+                    style={{ cursor: 'pointer' }}
+                  >
+                    {t('gamesSocials.clashofclans.tracking.trackDonationLeaderboard')}
                   </label>
                 </div>
               </div>
@@ -292,243 +349,6 @@ export default function ClashOfClansConfig({
         </div>
       </div>
 
-      {/* Second Row: War Statistics and Donation Leaderboard */}
-      <div className="row mb-4">
-        <div className="col-lg-6">
-          {/* War Statistics Settings */}
-          <div className="card card-glass">
-            <div className="card-body">
-              <div className="d-flex align-items-center mb-3">
-                <h6 className="card-title mb-0">{t('gamesSocials.clashofclans.sections.warStatistics')}</h6>
-              </div>
-              
-              {/* Enable War Leaderboard */}
-              <div className="form-check form-switch mb-4">
-                <input
-                  id="warStatsToggle"
-                  className="form-check-input"
-                  type="checkbox"
-                  checked={config.trackWarLeaderboard || config.track_war_leaderboard || (config.trackWars || config.trackWarEvents) || false}
-                  onChange={e => onChange(prev => ({ 
-                    ...prev, 
-                    // Set both frontend and potential database field names
-                    trackWarLeaderboard: e.target.checked,
-                    track_war_leaderboard: e.target.checked,
-                    // Set defaults when enabling - maintain both frontend and database field names
-                    ...(e.target.checked && { 
-                      // Frontend field names
-                      warLeaderboardMessageId: config.warLeaderboardMessageId || config.war_leaderboard_message_id || null,
-                      // Database column names (correct field name!)
-                      war_leaderboard_message_id: config.war_leaderboard_message_id || config.warLeaderboardMessageId || null
-                    })
-                  }))}
-                />
-                <label 
-                  className="form-check-label fw-medium user-select-none" 
-                  htmlFor="warStatsToggle"
-                  style={{ cursor: 'pointer' }}
-                >
-                  {t('gamesSocials.clashofclans.warStats.enableWarStats')}
-                </label>
-              </div>
-              
-              {/* War Statistics Channel - Visible when war tracking or war leaderboard is enabled */}
-              {(config.trackWarLeaderboard || config.track_war_leaderboard || config.trackWars || config.trackWarEvents) && (
-                <div className="ps-3">
-                  {/* War Leaderboard Channel */}
-                  <div className="mb-3">
-                    <label className="form-label fw-medium">
-                      {t('gamesSocials.clashofclans.warStats.channel')}
-                    </label>
-                    <select
-                      className="form-select"
-                      value={config.warLeaderboardChannelId || config.war_leaderboard_channel_id || ''}
-                      onChange={e => {
-                        onChange(prev => ({ 
-                          ...prev, 
-                          // Frontend field names (multiple variations for compatibility)
-                          warLeaderboardChannelId: e.target.value || null,
-                          warChannelId: e.target.value || null,
-                          warStatsChannelId: e.target.value || null,
-                          warLeaderboardMessageId: null,
-                          warMessageId: null,
-                          warStatsMessageId: null,
-                          // Database column names (multiple variations for compatibility)
-                          war_leaderboard_channel_id: e.target.value || null,
-                          war_channel_id: e.target.value || null,
-                          war_stats_channel_id: e.target.value || null,
-                          war_leaderboard_message_id: null,
-                          war_message_id: null,
-                          war_stats_message_id: null,
-                          // Auto-enable war leaderboard tracking when channel is selected
-                          ...(e.target.value && {
-                            trackWarLeaderboard: true,
-                            track_war_leaderboard: true
-                          })
-                        }));
-                      }}
-                    >
-                      <option value="">{t('gamesSocials.common.select')}</option>
-                      {discordChannels.map(ch => (
-                        <option key={ch.id} value={ch.id}>#{ch.name}</option>
-                      ))}
-                    </select>
-                    <div className="form-text text-muted small">
-                      {t('gamesSocials.clashofclans.warStats.channelHint')}
-                    </div>
-                  </div>
-                  
-                  {/* War Message Template */}
-                  <div className="mb-3">
-                    <label className="form-label fw-medium">
-                      {t('gamesSocials.clashofclans.warStats.template')}
-                    </label>
-                    <textarea
-                      className="form-control"
-                      rows="2"
-                      value={config.warLeaderboardTemplate || config.war_leaderboard_template || ''}
-                      onChange={e => onChange(prev => ({ 
-                        ...prev, 
-                        warLeaderboardTemplate: e.target.value,
-                        war_leaderboard_template: e.target.value
-                      }))}
-                      placeholder={t('gamesSocials.clashofclans.warStats.templatePlaceholder')}
-                    />
-                    <div className="form-text text-muted small">
-                      {t('gamesSocials.clashofclans.warStats.templateHint')}
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        <div className="col-lg-6">
-          {/* Donation Leaderboard Settings */}
-          <div className="card card-glass">
-            <div className="card-body">
-              <div className="d-flex align-items-center mb-3">
-                <h6 className="card-title mb-0">{t('gamesSocials.clashofclans.sections.donationLeaderboard')}</h6>
-              </div>
-              
-              {/* Enable Donation Leaderboard */}
-              <div className="form-check form-switch mb-4">
-                <input
-                  id="donationLeaderboardToggle"
-                  className="form-check-input"
-                  type="checkbox"
-                  checked={config.trackDonationLeaderboard || false}
-                  onChange={e => onChange(prev => ({ 
-                    ...prev, 
-                    trackDonationLeaderboard: e.target.checked,
-                    // Set defaults when enabling: 20 per page, current season, random colors, interactive controls enabled
-                    ...(e.target.checked && { 
-                      donation_message_id: config.donation_message_id || null,
-                      donationMessageId: config.donationMessageId || null,
-                      donationLeaderboardPlayersPerPage: 20,
-                      donation_leaderboard_players_per_page: 20,
-                      donationLeaderboardTimeRange: 'current_season',
-                      donation_leaderboard_time_range: 'current_season',
-                      donationLeaderboardInteractive: true,
-                      donation_leaderboard_interactive: true,
-                      donationLeaderboardBackgroundType: 'random',
-                      donation_leaderboard_background_type: 'random'
-                    })
-                  }))}
-                />
-                <label 
-                  className="form-check-label fw-medium user-select-none" 
-                  htmlFor="donationLeaderboardToggle"
-                  style={{ cursor: 'pointer' }}
-                >
-                  {t('gamesSocials.clashofclans.leaderboard.enableLeaderboard')}
-                </label>
-              </div>
-              
-              {config.trackDonationLeaderboard && (
-                <div className="ps-3">
-                  {/* Leaderboard Channel */}
-                  <div className="mb-4">
-                    <label className="form-label fw-medium">
-                      {t('gamesSocials.clashofclans.leaderboard.channel')}
-                    </label>
-                    <select
-                      className="form-select"
-                      value={config.donationLeaderboardChannelId || config.donation_leaderboard_channel_id || config.donationAnnounceChannelId || ''}
-                      onChange={e => onChange(prev => ({ 
-                        ...prev, 
-                        donationLeaderboardChannelId: e.target.value || null,
-                        donation_leaderboard_channel_id: e.target.value || null,
-                        // Reset message ID when channel changes
-                        donation_message_id: null,
-                        donationMessageId: null
-                      }))}
-                    >
-                      <option value="">{t('gamesSocials.common.select')}</option>
-                      {discordChannels.map(ch => (
-                        <option key={ch.id} value={ch.id}>#{ch.name}</option>
-                      ))}
-                    </select>
-                    <div className="form-text text-muted small">
-                      {t('gamesSocials.clashofclans.leaderboard.channelHint')}
-                    </div>
-                  </div>
-                  
-                  {/* Schedule */}
-                  <div className="mb-4">
-                    <label className="form-label fw-medium">
-                      {t('gamesSocials.clashofclans.leaderboard.schedule')}
-                    </label>
-                    <select
-                      className="form-select"
-                      value={config.donationLeaderboardSchedule || config.donation_leaderboard_schedule || 'weekly'}
-                      onChange={e => onChange(prev => ({ 
-                        ...prev, 
-                        donationLeaderboardSchedule: e.target.value,
-                        donation_leaderboard_schedule: e.target.value,
-                        // Reset message ID when schedule changes as bot may need to recreate the message
-                        donation_message_id: null,
-                        donationMessageId: null
-                      }))}
-                    >
-                      <option value="hourly">{t('gamesSocials.clashofclans.leaderboard.schedules.hourly')}</option>
-                      <option value="daily">{t('gamesSocials.clashofclans.leaderboard.schedules.daily')}</option>
-                      <option value="weekly">{t('gamesSocials.clashofclans.leaderboard.schedules.weekly')}</option>
-                      <option value="monthly">{t('gamesSocials.clashofclans.leaderboard.schedules.monthly')}</option>
-                    </select>
-                    <div className="form-text text-muted small">
-                      {t('gamesSocials.clashofclans.leaderboard.scheduleHint')}
-                    </div>
-                  </div>
-
-                  {/* Custom Template */}
-                  <div className="mb-3">
-                    <label className="form-label fw-medium">
-                      {t('gamesSocials.clashofclans.leaderboard.template')}
-                    </label>
-                    <textarea
-                      className="form-control"
-                      rows="3"
-                      value={config.donationLeaderboardTemplate || config.donation_leaderboard_template || ''}
-                      onChange={e => onChange(prev => ({ 
-                        ...prev, 
-                        donationLeaderboardTemplate: e.target.value,
-                        donation_leaderboard_template: e.target.value
-                      }))}
-                      placeholder={t('gamesSocials.clashofclans.leaderboard.templatePlaceholder')}
-                    />
-                    <div className="form-text text-muted small">
-                      {t('gamesSocials.clashofclans.leaderboard.templateHint')}
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* Clan Management */}
       <div className="card card-glass mb-4">
         <div className="card-body">
@@ -559,43 +379,228 @@ export default function ClashOfClansConfig({
             <div className="clans-list">
               {config.clans.map((clanTag, index) => {
                 const isPrimary = config.clanTag === clanTag;
+                const clanConfigs = config.clanConfigs || {};
+                const clanConfig = clanConfigs[clanTag] || {};
+                
                 return (
-                  <div key={clanTag} className={`d-flex align-items-center justify-content-between p-3 border rounded mb-2 ${isPrimary ? 'border-primary bg-primary bg-opacity-10' : ''}`}>
-                    <div className="d-flex align-items-center gap-2 flex-grow-1">
-                      <div className="d-flex flex-column">
-                        <div className="d-flex align-items-center gap-2">
-                          <code className="text-primary">#{clanTag}</code>
-                          {isPrimary && <span className="badge bg-primary">Primary</span>}
+                  <div key={clanTag} className={`clan-card border rounded mb-3 ${isPrimary ? 'border-primary bg-primary bg-opacity-10' : ''}`}>
+                    {/* Clan Header */}
+                    <div className="d-flex align-items-center justify-content-between p-3 border-bottom">
+                      <div className="d-flex align-items-center gap-2 flex-grow-1">
+                        <div className="d-flex flex-column">
+                          <div className="d-flex align-items-center gap-2">
+                            <code className="text-primary">#{clanTag}</code>
+                            {isPrimary && <span className="badge bg-primary">Primary</span>}
+                          </div>
+                          {editingClan === clanTag ? (
+                            <input
+                              type="text"
+                              className="form-control form-control-sm mt-1"
+                              placeholder="Enter clan name..."
+                              value={config.clanNames?.[clanTag] || ''}
+                              onChange={e => updateClanName(clanTag, e.target.value)}
+                              onBlur={() => setEditingClan(null)}
+                              onKeyDown={e => e.key === 'Enter' && setEditingClan(null)}
+                              autoFocus
+                            />
+                          ) : (
+                            <span 
+                              className="text-muted cursor-pointer small mt-1"
+                              onClick={() => setEditingClan(clanTag)}
+                              title="Click to edit clan name"
+                            >
+                              {config.clanNames?.[clanTag] || 'Click to set clan name'}
+                            </span>
+                          )}
                         </div>
-                        {editingClan === clanTag ? (
-                          <input
-                            type="text"
-                            className="form-control form-control-sm mt-1"
-                            placeholder="Enter clan name..."
-                            value={config.clanNames?.[clanTag] || ''}
-                            onChange={e => updateClanName(clanTag, e.target.value)}
-                            onBlur={() => setEditingClan(null)}
-                            onKeyDown={e => e.key === 'Enter' && setEditingClan(null)}
-                            autoFocus
-                          />
-                        ) : (
-                          <span 
-                            className="text-muted cursor-pointer small mt-1"
-                            onClick={() => setEditingClan(clanTag)}
-                            title="Click to edit clan name"
+                      </div>
+                      <button
+                        className="btn btn-outline-danger btn-sm"
+                        onClick={() => removeClan(clanTag)}
+                        title="Remove clan"
+                      >
+                        ×
+                      </button>
+                    </div>
+                    
+                    {/* Per-Clan Configuration */}
+                    <div className="p-3">
+                      <h6 className="mb-3 text-muted small">{t('gamesSocials.clashofclans.clans.mentionTargets')}</h6>
+                      
+                      {/* Announcement Channels */}
+                      <div className="row g-3 mb-4">
+                        {/* War Announcement Channel */}
+                        <div className="col-md-4">
+                          <label className="form-label small fw-medium">
+                            {t('gamesSocials.clashofclans.fields.warAnnouncements')}
+                          </label>
+                          <select
+                            className="form-select form-select-sm"
+                            value={clanConfig.warAnnounceChannelId || ''}
+                            onChange={e => {
+                              const updatedClanConfigs = {
+                                ...config.clanConfigs,
+                                [clanTag]: {
+                                  ...clanConfig,
+                                  warAnnounceChannelId: e.target.value || null
+                                }
+                              };
+                              onChange(prev => ({ 
+                                ...prev, 
+                                clanConfigs: updatedClanConfigs
+                              }));
+                            }}
                           >
-                            {config.clanNames?.[clanTag] || 'Click to set clan name'}
-                          </span>
-                        )}
+                            <option value="">{t('gamesSocials.common.select')}</option>
+                            {discordChannels.map(ch => (
+                              <option key={ch.id} value={ch.id}>#{ch.name}</option>
+                            ))}
+                          </select>
+                        </div>
+
+                        {/* Member Announcement Channel */}
+                        <div className="col-md-4">
+                          <label className="form-label small fw-medium">
+                            {t('gamesSocials.clashofclans.fields.memberAnnouncements')}
+                          </label>
+                          <select
+                            className="form-select form-select-sm"
+                            value={clanConfig.memberAnnouncementChannelId || ''}
+                            onChange={e => {
+                              const updatedClanConfigs = {
+                                ...config.clanConfigs,
+                                [clanTag]: {
+                                  ...clanConfig,
+                                  memberAnnouncementChannelId: e.target.value || null
+                                }
+                              };
+                              onChange(prev => ({ 
+                                ...prev, 
+                                clanConfigs: updatedClanConfigs
+                              }));
+                            }}
+                          >
+                            <option value="">{t('gamesSocials.common.select')}</option>
+                            {discordChannels.map(ch => (
+                              <option key={ch.id} value={ch.id}>#{ch.name}</option>
+                            ))}
+                          </select>
+                        </div>
+
+                        {/* Donation Announcement Channel */}
+                        <div className="col-md-4">
+                          <label className="form-label small fw-medium">
+                            {t('gamesSocials.clashofclans.fields.donationAnnouncements')}
+                          </label>
+                          <select
+                            className="form-select form-select-sm"
+                            value={clanConfig.donationAnnounceChannelId || ''}
+                            onChange={e => {
+                              const updatedClanConfigs = {
+                                ...config.clanConfigs,
+                                [clanTag]: {
+                                  ...clanConfig,
+                                  donationAnnounceChannelId: e.target.value || null
+                                }
+                              };
+                              onChange(prev => ({ 
+                                ...prev, 
+                                clanConfigs: updatedClanConfigs
+                              }));
+                            }}
+                            disabled={!(config.trackDonationEvents || config.trackDonations || config.trackDonationLeaderboard)}
+                          >
+                            <option value="">{t('gamesSocials.common.select')}</option>
+                            {discordChannels.map(ch => (
+                              <option key={ch.id} value={ch.id}>#{ch.name}</option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+                      
+                      <div className="row g-3">
+                        {/* War Mention Targets */}
+                        <div className="col-md-4">
+                          <label className="form-label small fw-medium">
+                            {t('gamesSocials.clashofclans.clans.warMentions')}
+                          </label>
+                          <MentionTargetsPicker
+                            value={clanConfig.warMentionTargets || []}
+                            roles={guildRoles}
+                            onChange={targets => {
+                              const updatedClanConfigs = {
+                                ...config.clanConfigs,
+                                [clanTag]: {
+                                  ...clanConfig,
+                                  warMentionTargets: targets
+                                }
+                              };
+                              onChange(prev => ({ 
+                                ...prev, 
+                                clanConfigs: updatedClanConfigs
+                              }));
+                            }}
+                          />
+                          <div className="form-text small">
+                            {t('gamesSocials.clashofclans.clans.warMentionsHelp')}
+                          </div>
+                        </div>
+                        
+                        {/* Member Mention Targets */}
+                        <div className="col-md-4">
+                          <label className="form-label small fw-medium">
+                            {t('gamesSocials.clashofclans.clans.memberMentions')}
+                          </label>
+                          <MentionTargetsPicker
+                            value={clanConfig.memberMentionTargets || []}
+                            roles={guildRoles}
+                            onChange={targets => {
+                              const updatedClanConfigs = {
+                                ...config.clanConfigs,
+                                [clanTag]: {
+                                  ...clanConfig,
+                                  memberMentionTargets: targets
+                                }
+                              };
+                              onChange(prev => ({ 
+                                ...prev, 
+                                clanConfigs: updatedClanConfigs
+                              }));
+                            }}
+                          />
+                          <div className="form-text small">
+                            {t('gamesSocials.clashofclans.clans.memberMentionsHelp')}
+                          </div>
+                        </div>
+                        
+                        {/* Donation Mention Targets */}
+                        <div className="col-md-4">
+                          <label className="form-label small fw-medium">
+                            {t('gamesSocials.clashofclans.clans.donationMentions')}
+                          </label>
+                          <MentionTargetsPicker
+                            value={clanConfig.donationMentionTargets || []}
+                            roles={guildRoles}
+                            onChange={targets => {
+                              const updatedClanConfigs = {
+                                ...config.clanConfigs,
+                                [clanTag]: {
+                                  ...clanConfig,
+                                  donationMentionTargets: targets
+                                }
+                              };
+                              onChange(prev => ({ 
+                                ...prev, 
+                                clanConfigs: updatedClanConfigs
+                              }));
+                            }}
+                          />
+                          <div className="form-text small">
+                            {t('gamesSocials.clashofclans.clans.donationMentionsHelp')}
+                          </div>
+                        </div>
                       </div>
                     </div>
-                    <button
-                      className="btn btn-outline-danger btn-sm"
-                      onClick={() => removeClan(clanTag)}
-                      title="Remove clan"
-                    >
-                      ×
-                    </button>
                   </div>
                 );
               })}
@@ -605,64 +610,6 @@ export default function ClashOfClansConfig({
               {t('gamesSocials.clashofclans.clans.noClans')}
             </div>
           )}
-        </div>
-      </div>
-
-      {/* Announcement Channels */}
-      <div className="row mb-4">
-        <div className="col-lg-4">
-          <div className="card card-glass">
-            <div className="card-body">
-              <h6 className="card-title">{t('gamesSocials.clashofclans.fields.warAnnouncements')}</h6>
-              <select
-                className="form-select"
-                value={config.warAnnounceChannelId || ''}
-                onChange={e => onChange(prev => ({ ...prev, warAnnounceChannelId: e.target.value || null }))}
-              >
-                <option value="">{t('gamesSocials.common.select')}</option>
-                {discordChannels.map(ch => (
-                  <option key={ch.id} value={ch.id}>#{ch.name}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-        </div>
-
-        <div className="col-lg-4">
-          <div className="card card-glass">
-            <div className="card-body">
-              <h6 className="card-title">{t('gamesSocials.clashofclans.fields.memberAnnouncements')}</h6>
-              <select
-                className="form-select"
-                value={config.memberAnnounceChannelId || ''}
-                onChange={e => onChange(prev => ({ ...prev, memberAnnounceChannelId: e.target.value || null }))}
-              >
-                <option value="">{t('gamesSocials.common.select')}</option>
-                {discordChannels.map(ch => (
-                  <option key={ch.id} value={ch.id}>#{ch.name}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-        </div>
-
-        <div className="col-lg-4">
-          <div className="card card-glass">
-            <div className="card-body">
-              <h6 className="card-title">{t('gamesSocials.clashofclans.fields.donationAnnouncements')}</h6>
-              <select
-                className="form-select"
-                value={config.donationAnnounceChannelId || ''}
-                onChange={e => onChange(prev => ({ ...prev, donationAnnounceChannelId: e.target.value || null }))}
-                disabled={!(config.trackDonationEvents || config.trackDonations)}
-              >
-                <option value="">{t('gamesSocials.common.select')}</option>
-                {discordChannels.map(ch => (
-                  <option key={ch.id} value={ch.id}>#{ch.name}</option>
-                ))}
-              </select>
-            </div>
-          </div>
         </div>
       </div>
 

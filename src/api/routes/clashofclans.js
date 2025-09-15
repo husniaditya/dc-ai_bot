@@ -50,6 +50,8 @@ function createClashOfClansRoutes(client, store) {
         clans: Array.isArray(req.body.clans) ? req.body.clans : undefined,
         clanNames: req.body.clanNames,
         clanName: req.body.clanName,
+        // Per-clan configurations (NEW)
+        clanConfigs: req.body.clanConfigs,
         warAnnounceChannelId: req.body.warAnnounceChannelId,
         memberAnnounceChannelId: req.body.memberAnnounceChannelId,
         donationAnnounceChannelId: req.body.donationAnnounceChannelId,
@@ -106,20 +108,39 @@ function createClashOfClansRoutes(client, store) {
           if (guild) {
             const leaderboardEvents = new LeaderboardEvents(guild.client, store.sqlPool);
             
-            // Get existing message ID for updating
-            const existingMessageId = cfg.donationMessageId || null;
+            // Get donation leaderboard channel from the first clan that has one configured
+            let donationChannelId = null;
+            if (cfg.clanConfigs && typeof cfg.clanConfigs === 'object') {
+              // Find first clan with donation announce channel (which is used for leaderboard too)
+              for (const [clanTag, clanConfig] of Object.entries(cfg.clanConfigs)) {
+                if (clanConfig.donationAnnounceChannelId) {
+                  donationChannelId = clanConfig.donationAnnounceChannelId;
+                  break;
+                }
+              }
+            } else if (cfg.donationLeaderboardChannelId) {
+              // Fallback to global donation leaderboard channel
+              donationChannelId = cfg.donationLeaderboardChannelId;
+            }
             
-            // Post/update leaderboard using new system
-            const result = await leaderboardEvents.postLeaderboard(
-              guild.id, 
-              cfg.donationLeaderboardChannelId, 
-              existingMessageId
-            );
-            
-            if (result && result.success) {
-              console.log(`[API] Updated leaderboard using new canvas system for guild ${guild.id}`);
+            if (donationChannelId) {
+              // Get existing message ID for updating
+              const existingMessageId = cfg.donationMessageId || null;
+              
+              // Post/update leaderboard using new system
+              const result = await leaderboardEvents.postLeaderboard(
+                guild.id, 
+                donationChannelId, 
+                existingMessageId
+              );
+              
+              if (result && result.success) {
+                console.log(`[API] Updated leaderboard using new canvas system for guild ${guild.id}`);
+              } else {
+                console.error(`[API] Failed to update leaderboard for guild ${guild.id}:`, result?.error);
+              }
             } else {
-              console.error(`[API] Failed to update leaderboard for guild ${guild.id}:`, result?.error);
+              console.log(`[API] Donation leaderboard enabled but no donation channel configured for any clan in guild ${guildId}`);
             }
           }
         } catch (error) {

@@ -1973,10 +1973,23 @@
         "memberJoinTemplate": "新成員範本",
         "donationTemplate": "捐贈範本"
       },
+      "trackWarStats": "追蹤部落戰爭",
+      "enableAutoWarPosting": "啟用自動戰爭統計發布",
+      "trackDonationLeaderboard": "追蹤捐贈排行榜",
+      "enableAutoLeaderboardPosting": "啟用自動排行榜更新",
       "clans": {
         "addClan": "新增部落",
         "clanTagPlaceholder": "輸入部落標籤（例如：2Y0YRGG0）",
-        "noClans": "尚未新增任何部落。"
+        "noClans": "尚未新增任何部落。",
+        "mentionTargets": "部落別提及對象",
+        "memberAnnouncementChannel": "成員公告頻道",
+        "memberAnnouncementChannelHelp": "此特定部落的成員加入/離開公告頻道",
+        "warMentions": "戰爭提及",
+        "warMentionsHelp": "此部落戰爭事件時要提及的角色/用戶",
+        "memberMentions": "成員提及",
+        "memberMentionsHelp": "此部落成員事件時要提及的角色/用戶",
+        "donationMentions": "捐贈提及",
+        "donationMentionsHelp": "此部落捐贈事件時要提及的角色/用戶"
       },
       "tracking": {
         "trackWars": "追蹤部落戰爭",

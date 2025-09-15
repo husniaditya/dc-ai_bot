@@ -2,6 +2,7 @@ const { EmbedBuilder } = require('discord.js');
 const LeaderboardButtons = require('../../components/leaderboard/LeaderboardButtons');
 const LeaderboardCanvas = require('../../utils/leaderboard/LeaderboardCanvas');
 const ClashOfClansAPI = require('../services/ClashOfClansAPI');
+const clashOfClansService = require('../../config/store/services/clashofclans-updated');
 
 /**
  * Handles all leaderboard button interactions
@@ -73,7 +74,7 @@ class LeaderboardInteractionHandler {
 
             // Get current leaderboard configuration
             const config = await this.getLeaderboardConfig(guildId);
-            if (!config || !config.track_donation_leaderboard) {
+            if (!config || !config.trackDonationLeaderboard) {
                 return await this.sendError(interaction, 'Donation leaderboard is not enabled for this server');
             }
 
@@ -145,13 +146,13 @@ class LeaderboardInteractionHandler {
     async handleRefresh(interaction, config, view = 'donations', clanTag = null) {
         try {
             // Clear cached data to force fresh fetch
-            await this.clearCachedData(config.guild_id, view);
+            await this.clearCachedData(interaction.guildId, view);
 
             // Regenerate current page directly (no loading state to avoid double acknowledgment)
             const currentPage = config.donation_leaderboard_current_page || 1;
             await this.generateLeaderboardPage(interaction, config, currentPage, true, view, clanTag);
 
-            console.log(`${view} leaderboard refreshed for guild ${config.guild_id} by ${interaction.user.tag}${clanTag ? ` (clan: ${clanTag})` : ''}`);
+            console.log(`${view} leaderboard refreshed for guild ${interaction.guildId} by ${interaction.user.tag}${clanTag ? ` (clan: ${clanTag})` : ''}`);
 
         } catch (error) {
             console.error(`Error refreshing ${view} leaderboard:`, error);
@@ -210,17 +211,34 @@ class LeaderboardInteractionHandler {
      */
     async handlePagination(interaction, config, targetPage, view = 'donations', clanTag = null) {
         try {
-            const totalPages = config.donation_leaderboard_total_pages || 1;
+            // For clan-specific pagination, we need to get the actual data to determine total pages
+            let totalPages;
+            if (clanTag) {
+                // Get individual clan data to determine correct total pages
+                const clanData = view === 'war' 
+                    ? await this.getIndividualWarData(config, clanTag, false)
+                    : await this.getIndividualDonationData(config, clanTag, false);
+                
+                if (!clanData || clanData.players.length === 0) {
+                    return await this.sendError(interaction, `No ${view} data available for pagination`, view, clanTag);
+                }
+                
+                const playersPerPage = config.donation_leaderboard_players_per_page || 20;
+                totalPages = Math.max(1, Math.ceil(clanData.players.length / playersPerPage));
+            } else {
+                // Use config total pages for combined leaderboard
+                totalPages = config.donation_leaderboard_total_pages || 1;
+            }
             
             // Validate page bounds
             if (targetPage < 1 || targetPage > totalPages) {
-                return await this.sendError(interaction, 'Invalid page number');
+                return await this.sendError(interaction, `Invalid page number. Available pages: 1-${totalPages}`, view, clanTag);
             }
 
             // Generate the requested page directly (no loading state to avoid double acknowledgment)
             await this.generateLeaderboardPage(interaction, config, targetPage, false, view, clanTag);
 
-            console.log(`${view} leaderboard page changed to ${targetPage} for guild ${config.guild_id} by ${interaction.user.tag}${clanTag ? ` (clan: ${clanTag})` : ''}`);
+            console.log(`${view} leaderboard page changed to ${targetPage} for guild ${interaction.guildId} by ${interaction.user.tag}${clanTag ? ` (clan: ${clanTag})` : ''}`);
 
         } catch (error) {
             console.error('Error handling pagination:', error);
@@ -257,11 +275,13 @@ class LeaderboardInteractionHandler {
                 return await this.generateIndividualClanLeaderboard(interaction, config, page, forceRefresh, view, clanTag);
             }
 
-            // Check if multiple clans are configured - if so, send separate messages for each clan
-            const clanTags = (config.clashofclans_clans || config.clans || '').split(',').map(tag => tag.trim()).filter(Boolean);
+            // Check if multiple clans are configured using the new config structure
+            const clans = config.clans || [];
             
-            if (clanTags.length > 1) {
+            if (clans.length > 1) {
                 // Multiple clans - generate separate messages for each clan
+                // config.clans is an array of clan tag strings
+                const clanTags = clans; 
                 return await this.generateMultipleClanLeaderboards(interaction, config, page, forceRefresh, view, clanTags);
             }
 
@@ -304,7 +324,7 @@ class LeaderboardInteractionHandler {
             const pageData = clanData.players.slice(startIndex, endIndex);
 
             // Update database with current page state
-            await this.updatePageState(config.guild_id, page, totalPages);
+            await this.updatePageState(interaction.guildId, page, totalPages);
 
             // Generate canvas image
             const canvas = new LeaderboardCanvas();
@@ -318,7 +338,7 @@ class LeaderboardInteractionHandler {
                 currentPage: page,
                 totalPages,
                 isAdmin,
-                guildId: config.guild_id,
+                guildId: interaction.guildId,
                 clanTag: clanTag,
                 view: 'page',
                 dataView: view
@@ -447,7 +467,7 @@ class LeaderboardInteractionHandler {
                 currentPage: page,
                 totalPages,
                 isAdmin,
-                guildId: config.guild_id,
+                guildId: interaction.guildId,
                 clanTag: clanData.clanTag,
                 view: 'page',
                 dataView: view
@@ -565,7 +585,7 @@ class LeaderboardInteractionHandler {
                 embed = new EmbedBuilder()
                     .setTitle(`📈 Donation Leaderboard Summary${clanTag ? ` - ${clanTag}` : ''}`)
                     .setColor('#2ecc71')
-                    .setDescription(`Overview for ${leaderboardData.clanName || 'Clan'} (${config.donation_leaderboard_time_range.replace('_',' ')})`)
+                    .setDescription(`Overview for ${leaderboardData.clanName || 'Clan'} (${(config.donation_leaderboard_time_range || 'current_season').replace('_',' ')})`)
                     .addFields([
                         { name: '👥 Players Tracked', value: String(totalPlayers), inline: true },
                         { name: '📦 Total Donations', value: String(totalDonations), inline: true },
@@ -579,11 +599,16 @@ class LeaderboardInteractionHandler {
             }
 
             const isAdmin = LeaderboardButtons.hasAdminPermission(interaction.member);
+            
+            // Calculate correct total pages based on actual player data
+            const playersPerPage = config.donation_leaderboard_players_per_page || 20;
+            const totalPages = Math.max(1, Math.ceil(players.length / playersPerPage));
+            
             const buttonRow = LeaderboardButtons.createButtonRow({
                 currentPage: returnPage,
-                totalPages: config.donation_leaderboard_total_pages || 1,
+                totalPages,
                 isAdmin,
-                guildId: config.guild_id,
+                guildId: interaction.guildId,
                 clanTag: clanTag,
                 view: 'summary',
                 dataView: view
@@ -633,11 +658,11 @@ class LeaderboardInteractionHandler {
      */
 
     async getLeaderboardConfig(guildId) {
-        const [rows] = await this.db.execute(
-            'SELECT * FROM guild_clashofclans_watch WHERE guild_id = ?',
-            [guildId]
-        );
-        return rows[0] || null;
+        // Use the new multi-row service to get all clan configurations for this guild
+        const config = await clashOfClansService.getGuildClashOfClansConfig(guildId);
+        
+        // Return the config object which now contains all clans as an array
+        return config;
     }
 
     /**
@@ -747,7 +772,7 @@ class LeaderboardInteractionHandler {
             const pageData = leaderboardData.players.slice(startIndex, endIndex);
 
             // Update database with current page state
-            await this.updatePageState(config.guild_id, page, totalPages);
+            await this.updatePageState(interaction.guildId, page, totalPages);
 
             // Generate canvas image
             const canvas = new LeaderboardCanvas();
@@ -761,7 +786,7 @@ class LeaderboardInteractionHandler {
                 currentPage: page,
                 totalPages,
                 isAdmin,
-                guildId: config.guild_id,
+                guildId: interaction.guildId,
                 view: 'page',
                 dataView: view
             });
