@@ -14,7 +14,7 @@ const commandsService = require('./services/commands');
 const personalizationService = require('./services/personalization');
 const youtubeService = require('./services/youtube');
 const twitchService = require('./services/twitch');
-const clashofclansService = require('./services/clashofclans');
+const clashofclansService = require('./services/clashofclans-updated');
 const moderationService = require('./services/moderation');
 
 async function initPersistence() {

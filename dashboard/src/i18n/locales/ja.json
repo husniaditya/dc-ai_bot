@@ -1958,12 +1958,23 @@
       "clans": {
         "addClan": "クランを追加",
         "clanTagPlaceholder": "クランタグを入力（例：2Y0YRGG0）",
-        "noClans": "まだクランが追加されていません。"
+        "noClans": "まだクランが追加されていません。",
+        "mentionTargets": "クラン別メンション対象",
+        "memberAnnouncementChannel": "メンバーアナウンスチャンネル",
+        "memberAnnouncementChannelHelp": "この特定のクランのメンバー参加/脱退アナウンス用チャンネル",
+        "warMentions": "戦争メンション",
+        "warMentionsHelp": "このクランの戦争イベント時にメンションするロール/ユーザー",
+        "memberMentions": "メンバーメンション", 
+        "memberMentionsHelp": "このクランのメンバーイベント時にメンションするロール/ユーザー",
+        "donationMentions": "寄付メンション",
+        "donationMentionsHelp": "このクランの寄付イベント時にメンションするロール/ユーザー"
       },
       "tracking": {
         "trackWars": "クラン戦を追跡",
         "trackMembers": "メンバー変更を追跡",
         "trackDonations": "寄付を追跡",
+        "trackWarStats": "自動戦争統計投稿を有効にする",
+        "trackDonationLeaderboard": "自動寄付リーダーボード投稿を有効にする",
         "donationThreshold": "最小寄付閾値",
         "donationThresholdHint": "アナウンスをトリガーするための週間最小寄付数"
       },

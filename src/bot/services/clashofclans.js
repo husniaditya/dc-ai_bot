@@ -281,6 +281,35 @@ function createCOCEmbed(data, type, config) {
   return embed;
 }
 
+// Helper function to get clan-specific mention targets
+async function getClanSpecificMentionTargets(config, data, eventType) {
+  // If we have per-clan configuration and a specific clan tag, use it
+  if (data && data.clanTag && config.guild_id) {
+    try {
+      // Import the new service here to avoid circular imports
+      const clashOfClansService = require('../../config/store/services/clashofclans-updated');
+      const clanMentions = await clashOfClansService.getClanMentionTargets(config.guild_id, data.clanTag, eventType);
+      if (clanMentions && clanMentions.length > 0) {
+        return clanMentions;
+      }
+    } catch (error) {
+      console.error('Error getting clan-specific mention targets:', error);
+    }
+  }
+  
+  // Fallback to global mention targets
+  switch (eventType) {
+    case 'war':
+      return config.mentionTargets || config.warMentionTarget?.split(',').filter(Boolean) || [];
+    case 'member':
+      return config.mentionTargets || config.memberMentionTarget?.split(',').filter(Boolean) || [];
+    case 'donation':
+      return config.mentionTargets || config.donationMentionTarget?.split(',').filter(Boolean) || [];
+    default:
+      return config.mentionTargets || [];
+  }
+}
+
 // Send announcement to Discord channel
 async function announce(guild, config, data, type) {
   try {
@@ -292,23 +321,23 @@ async function announce(guild, config, data, type) {
       case 'war_end':
         channelId = config.warAnnounceChannelId;
         template = type === 'war_start' ? config.warStartTemplate : config.warEndTemplate;
-        mentionTargets = config.mentionTargets || config.warMentionTarget?.split(',').filter(Boolean) || [];
+        mentionTargets = await getClanSpecificMentionTargets(config, data, 'war');
         break;
       case 'member_join':
       case 'member_leave':
         channelId = config.memberAnnounceChannelId;
         template = config.memberJoinTemplate;
-        mentionTargets = config.mentionTargets || config.memberMentionTarget?.split(',').filter(Boolean) || [];
+        mentionTargets = await getClanSpecificMentionTargets(config, data, 'member');
         break;
       case 'donation_milestone':
         channelId = config.donationAnnounceChannelId;
         template = config.donationTemplate;
-        mentionTargets = config.mentionTargets || config.donationMentionTarget?.split(',').filter(Boolean) || [];
+        mentionTargets = await getClanSpecificMentionTargets(config, data, 'donation');
         break;
       case 'donation_leaderboard':
         channelId = config.donationLeaderboardChannelId || config.donationAnnounceChannelId;
         template = config.donationLeaderboardTemplate || 'Weekly donation leaderboard update!';
-        mentionTargets = config.mentionTargets || config.donationMentionTarget?.split(',').filter(Boolean) || [];
+        mentionTargets = await getClanSpecificMentionTargets(config, data, 'donation');
         break;
       default:
         pushDebug(`UNKNOWN_TYPE: Unknown announcement type ${type}`);

@@ -2,6 +2,7 @@ const { EmbedBuilder } = require('discord.js');
 const LeaderboardButtons = require('../../components/leaderboard/LeaderboardButtons');
 const LeaderboardCanvas = require('../../utils/leaderboard/LeaderboardCanvas');
 const ClashOfClansAPI = require('../services/ClashOfClansAPI');
+const clashOfClansService = require('../../config/store/services/clashofclans-updated');
 
 /**
  * Handles all leaderboard button interactions
@@ -73,7 +74,7 @@ class LeaderboardInteractionHandler {
 
             // Get current leaderboard configuration
             const config = await this.getLeaderboardConfig(guildId);
-            if (!config || !config.track_donation_leaderboard) {
+            if (!config || !config.trackDonationLeaderboard) {
                 return await this.sendError(interaction, 'Donation leaderboard is not enabled for this server');
             }
 
@@ -257,11 +258,12 @@ class LeaderboardInteractionHandler {
                 return await this.generateIndividualClanLeaderboard(interaction, config, page, forceRefresh, view, clanTag);
             }
 
-            // Check if multiple clans are configured - if so, send separate messages for each clan
-            const clanTags = (config.clashofclans_clans || config.clans || '').split(',').map(tag => tag.trim()).filter(Boolean);
+            // Check if multiple clans are configured using the new config structure
+            const clans = config.clans || [];
             
-            if (clanTags.length > 1) {
+            if (clans.length > 1) {
                 // Multiple clans - generate separate messages for each clan
+                const clanTags = clans.map(clan => clan.clan_tag);
                 return await this.generateMultipleClanLeaderboards(interaction, config, page, forceRefresh, view, clanTags);
             }
 
@@ -633,11 +635,11 @@ class LeaderboardInteractionHandler {
      */
 
     async getLeaderboardConfig(guildId) {
-        const [rows] = await this.db.execute(
-            'SELECT * FROM guild_clashofclans_watch WHERE guild_id = ?',
-            [guildId]
-        );
-        return rows[0] || null;
+        // Use the new multi-row service to get all clan configurations for this guild
+        const config = await clashOfClansService.getGuildClashOfClansConfig(guildId);
+        
+        // Return the config object which now contains all clans as an array
+        return config;
     }
 
     /**

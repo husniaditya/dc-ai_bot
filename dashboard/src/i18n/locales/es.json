@@ -1595,12 +1595,23 @@
       "clans": {
         "addClan": "Agregar Clan",
         "clanTagPlaceholder": "Ingrese etiqueta del clan (ej: 2Y0YRGG0)",
-        "noClans": "No se han agregado clanes aún."
+        "noClans": "No se han agregado clanes aún.",
+        "mentionTargets": "Objetivos de Mención Por-Clan",
+        "memberAnnouncementChannel": "Canal de Anuncios de Miembros",
+        "memberAnnouncementChannelHelp": "Canal para anuncios de ingreso/salida de miembros para este clan específico",
+        "warMentions": "Menciones de Guerra",
+        "warMentionsHelp": "Roles/usuarios a mencionar para eventos de guerra de este clan",
+        "memberMentions": "Menciones de Miembros", 
+        "memberMentionsHelp": "Roles/usuarios a mencionar para eventos de miembros de este clan",
+        "donationMentions": "Menciones de Donaciones",
+        "donationMentionsHelp": "Roles/usuarios a mencionar para eventos de donaciones de este clan"
       },
       "tracking": {
         "trackWars": "Rastrear Guerras de Clan",
         "trackMembers": "Rastrear Cambios de Miembros", 
         "trackDonations": "Rastrear Donaciones",
+        "trackWarStats": "Habilitar Publicación Automática de Estadísticas de Guerra",
+        "trackDonationLeaderboard": "Habilitar Publicación Automática de Tabla de Liderazgo de Donaciones",
         "donationThreshold": "Umbral Mínimo de Donaciones",
         "donationThresholdHint": "Donaciones mínimas por semana para activar anuncios"
       },
