@@ -211,11 +211,28 @@ class LeaderboardInteractionHandler {
      */
     async handlePagination(interaction, config, targetPage, view = 'donations', clanTag = null) {
         try {
-            const totalPages = config.donation_leaderboard_total_pages || 1;
+            // For clan-specific pagination, we need to get the actual data to determine total pages
+            let totalPages;
+            if (clanTag) {
+                // Get individual clan data to determine correct total pages
+                const clanData = view === 'war' 
+                    ? await this.getIndividualWarData(config, clanTag, false)
+                    : await this.getIndividualDonationData(config, clanTag, false);
+                
+                if (!clanData || clanData.players.length === 0) {
+                    return await this.sendError(interaction, `No ${view} data available for pagination`, view, clanTag);
+                }
+                
+                const playersPerPage = config.donation_leaderboard_players_per_page || 20;
+                totalPages = Math.max(1, Math.ceil(clanData.players.length / playersPerPage));
+            } else {
+                // Use config total pages for combined leaderboard
+                totalPages = config.donation_leaderboard_total_pages || 1;
+            }
             
             // Validate page bounds
             if (targetPage < 1 || targetPage > totalPages) {
-                return await this.sendError(interaction, 'Invalid page number');
+                return await this.sendError(interaction, `Invalid page number. Available pages: 1-${totalPages}`, view, clanTag);
             }
 
             // Generate the requested page directly (no loading state to avoid double acknowledgment)
@@ -582,9 +599,14 @@ class LeaderboardInteractionHandler {
             }
 
             const isAdmin = LeaderboardButtons.hasAdminPermission(interaction.member);
+            
+            // Calculate correct total pages based on actual player data
+            const playersPerPage = config.donation_leaderboard_players_per_page || 20;
+            const totalPages = Math.max(1, Math.ceil(players.length / playersPerPage));
+            
             const buttonRow = LeaderboardButtons.createButtonRow({
                 currentPage: returnPage,
-                totalPages: config.donation_leaderboard_total_pages || 1,
+                totalPages,
                 isAdmin,
                 guildId: interaction.guildId,
                 clanTag: clanTag,
