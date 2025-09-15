@@ -689,15 +689,15 @@ class LeaderboardCanvas {
         currentX += this.roleWidth;
         
         // Current War Attacks header (wider to show attack details)
-        ctx.fillText('Current War Attacks', currentX + (this.donationWidth * 1.5 / 2), y + 22);
+        ctx.fillText('War Atk', currentX + (this.donationWidth * 1.5 / 2), y + 22);
         currentX += this.donationWidth * 1.5;
         
         // Average Stars header
-        ctx.fillText('Avg Stars', currentX + (this.receivedWidth / 2), y + 22);
+        ctx.fillText('Avg', currentX + (this.receivedWidth / 2), y + 22);
         currentX += this.receivedWidth;
         
         // Win Rate header
-        ctx.fillText('Win Rate', currentX + (this.ratioWidth / 2), y + 22);
+        ctx.fillText('WR', currentX + (this.ratioWidth / 2), y + 22);
         currentX += this.ratioWidth;
         
         // War Participation header

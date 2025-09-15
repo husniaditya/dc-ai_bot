@@ -15,6 +15,7 @@ class LeaderboardButtons {
             totalPages = 1,
             isAdmin = false,
             guildId = '',
+            clanTag = '', // NEW: Support clan-specific buttons
             view = 'page', // 'page' | 'summary'
             dataView = 'donations', // 'donations' | 'war'
             showToggle = false // NEW: Control whether to show the view toggle button
@@ -22,10 +23,13 @@ class LeaderboardButtons {
 
         const buttons = [];
 
+        // Create clan-specific button ID suffix if clan tag is provided
+        const clanSuffix = clanTag ? `_${this.encodeClanTag(clanTag)}` : '';
+
         // Refresh button - always available
         buttons.push(
             new ButtonBuilder()
-                .setCustomId(`leaderboard_refresh_${dataView}_${guildId}`)
+                .setCustomId(`leaderboard_refresh_${dataView}_${guildId}${clanSuffix}`)
                 .setLabel('Refresh')
                 .setStyle(ButtonStyle.Secondary)
                 .setEmoji('🔄')
@@ -39,7 +43,7 @@ class LeaderboardButtons {
             
             buttons.push(
                 new ButtonBuilder()
-                    .setCustomId(`leaderboard_toggle_view_${currentPage}_${dataView}_${guildId}`)
+                    .setCustomId(`leaderboard_toggle_view_${currentPage}_${dataView}_${guildId}${clanSuffix}`)
                     .setLabel(toggleLabel)
                     .setStyle(ButtonStyle.Primary)
                     .setEmoji(toggleEmoji)
@@ -50,7 +54,7 @@ class LeaderboardButtons {
         if (isAdmin) {
             buttons.push(
                 new ButtonBuilder()
-                    .setCustomId(`leaderboard_edit_${dataView}_${guildId}`)
+                    .setCustomId(`leaderboard_edit_${dataView}_${guildId}${clanSuffix}`)
                     .setLabel('Edit')
                     .setStyle(ButtonStyle.Secondary)
                     .setEmoji('✏️')
@@ -61,7 +65,7 @@ class LeaderboardButtons {
             // Previous page button - disabled state version when needed to keep button positions consistent
             if (totalPages > 1) {
                 const prevButton = new ButtonBuilder()
-                    .setCustomId(`leaderboard_prev_${currentPage}_${dataView}_${guildId}`)
+                    .setCustomId(`leaderboard_prev_${currentPage}_${dataView}_${guildId}${clanSuffix}`)
                     .setLabel('Prev')
                     .setStyle(ButtonStyle.Secondary)
                     .setEmoji('◀️');
@@ -69,7 +73,7 @@ class LeaderboardButtons {
                 buttons.push(prevButton);
 
                 const nextButton = new ButtonBuilder()
-                    .setCustomId(`leaderboard_next_${currentPage}_${dataView}_${guildId}`)
+                    .setCustomId(`leaderboard_next_${currentPage}_${dataView}_${guildId}${clanSuffix}`)
                     .setLabel('Next')
                     .setStyle(ButtonStyle.Secondary)
                     .setEmoji('▶️');
@@ -80,7 +84,7 @@ class LeaderboardButtons {
             // Summary button (always available on page view)
             buttons.push(
                 new ButtonBuilder()
-                    .setCustomId(`leaderboard_summary_${currentPage}_${dataView}_${guildId}`)
+                    .setCustomId(`leaderboard_summary_${currentPage}_${dataView}_${guildId}${clanSuffix}`)
                     .setLabel('Summary')
                     .setStyle(ButtonStyle.Secondary)
                     .setEmoji('📈')
@@ -89,7 +93,7 @@ class LeaderboardButtons {
             // Back button to return to page view
             buttons.push(
                 new ButtonBuilder()
-                    .setCustomId(`leaderboard_back_${currentPage}_${dataView}_${guildId}`)
+                    .setCustomId(`leaderboard_back_${currentPage}_${dataView}_${guildId}${clanSuffix}`)
                     .setLabel('Back')
                     .setStyle(ButtonStyle.Secondary)
                     .setEmoji('🔙')
@@ -126,26 +130,53 @@ class LeaderboardButtons {
         if (parts[0] !== 'leaderboard') return null;
         
         const action = parts[1];
-        let currentPage, view, guildId;
+        let currentPage, view, guildId, clanTag;
+
+        // Check if this is a clan-specific button (has encoded clan tag at the end)
+        const hasClanTag = parts[parts.length - 1].startsWith('clan');
+        if (hasClanTag) {
+            clanTag = this.decodeClanTag(parts[parts.length - 1]);
+            parts.pop(); // Remove clan tag part
+        }
 
         if (action === 'toggle' && parts[2] === 'view') {
-            // Format: leaderboard_toggle_view_<page>_<dataView>_<guildId>
+            // Format: leaderboard_toggle_view_<page>_<dataView>_<guildId>[_<encodedClanTag>]
             currentPage = parseInt(parts[3], 10);
             view = parts[4]; // current data view (donations/war)
             guildId = parts.slice(5).join('_');
-            return { action: 'toggle_view', guildId, currentPage, view };
+            return { action: 'toggle_view', guildId, currentPage, view, clanTag };
         } else if (['prev','next','summary','back'].includes(action)) {
-            // Format: leaderboard_<action>_<page>_<dataView>_<guildId>
+            // Format: leaderboard_<action>_<page>_<dataView>_<guildId>[_<encodedClanTag>]
             currentPage = parseInt(parts[2], 10);
             view = parts[3]; // current data view (donations/war)
             guildId = parts.slice(4).join('_');
-            return { action, guildId, currentPage, view };
+            return { action, guildId, currentPage, view, clanTag };
         } else {
-            // Format: leaderboard_<action>_<dataView>_<guildId> (refresh, edit)
+            // Format: leaderboard_<action>_<dataView>_<guildId>[_<encodedClanTag>] (refresh, edit)
             view = parts[2]; // current data view (donations/war)
             guildId = parts.slice(3).join('_');
-            return { action, guildId, view };
+            return { action, guildId, view, clanTag };
         }
+    }
+
+    /**
+     * Encode clan tag for use in button IDs (remove # and special characters)
+     * @param {string} clanTag - Original clan tag (e.g., "#ABC123")
+     * @returns {string} Encoded clan tag (e.g., "clan_ABC123")
+     */
+    static encodeClanTag(clanTag) {
+        if (!clanTag) return '';
+        return `clan_${clanTag.replace('#', '').replace(/[^A-Z0-9]/gi, '')}`;
+    }
+
+    /**
+     * Decode clan tag from button ID back to original format
+     * @param {string} encodedClanTag - Encoded clan tag (e.g., "clan_ABC123")
+     * @returns {string} Original clan tag (e.g., "#ABC123")
+     */
+    static decodeClanTag(encodedClanTag) {
+        if (!encodedClanTag || !encodedClanTag.startsWith('clan_')) return null;
+        return `#${encodedClanTag.substring(5)}`;
     }
 
     /**
@@ -212,21 +243,44 @@ class LeaderboardButtons {
      * Create error button row (disabled buttons)
      * @param {string} guildId - Guild ID
      * @param {string} dataView - Current data view (donations/war)
+     * @param {string} clanTag - Optional clan tag for clan-specific buttons
      * @returns {ActionRowBuilder} Error state button row
      */
-    static createErrorButtonRow(guildId, dataView = 'donations') {
+    static createErrorButtonRow(guildId, dataView = 'donations', clanTag = '') {
         const actionRow = new ActionRowBuilder();
+        const clanSuffix = clanTag ? `_${this.encodeClanTag(clanTag)}` : '';
         
         // Disabled refresh button
         actionRow.addComponents(
             new ButtonBuilder()
-                .setCustomId(`leaderboard_refresh_${dataView}_${guildId}`)
+                .setCustomId(`leaderboard_refresh_${dataView}_${guildId}${clanSuffix}`)
                 .setLabel('Refresh')
                 .setStyle(ButtonStyle.Secondary)
                 .setEmoji('🔄')
                 .setDisabled(true)
         );
 
+        return actionRow;
+    }
+
+    /**
+     * Create a loading state button row
+     * @param {string} guildId - Guild ID
+     * @param {string} dataView - Current data view (donations/war)
+     * @param {string} clanTag - Optional clan tag for clan-specific buttons
+     */
+    static createLoadingButtonRow(guildId, dataView = 'donations', clanTag = '') {
+        const actionRow = new ActionRowBuilder();
+        const clanSuffix = clanTag ? `_${this.encodeClanTag(clanTag)}` : '';
+        
+        actionRow.addComponents(
+            new ButtonBuilder()
+                .setCustomId(`leaderboard_loading_${dataView}_${guildId}${clanSuffix}`)
+                .setLabel('Loading...')
+                .setStyle(ButtonStyle.Secondary)
+                .setEmoji('⏳')
+                .setDisabled(true)
+        );
         return actionRow;
     }
 
@@ -262,24 +316,6 @@ class LeaderboardButtons {
             back: ButtonStyle.Secondary
         };
         return styles[action] || ButtonStyle.Secondary;
-    }
-
-    /**
-     * Create a loading state button row
-     * @param {string} guildId - Guild ID
-     * @param {string} dataView - Current data view (donations/war)
-     */
-    static createLoadingButtonRow(guildId, dataView = 'donations') {
-        const actionRow = new ActionRowBuilder();
-        actionRow.addComponents(
-            new ButtonBuilder()
-                .setCustomId(`leaderboard_loading_${dataView}_${guildId}`)
-                .setLabel('Loading...')
-                .setStyle(ButtonStyle.Secondary)
-                .setEmoji('⏳')
-                .setDisabled(true)
-        );
-        return actionRow;
     }
 }
 

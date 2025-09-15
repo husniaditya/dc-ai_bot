@@ -742,6 +742,117 @@ html:not(.dark) .activity-dot {
   border: 1px solid rgba(0, 0, 0, 0.1);
 }
 
+/* Security Activity Mobile Card Styling */
+.security-activity-mobile {
+  padding: 0;
+}
+
+.security-activity-card {
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.12);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  transition: all 0.3s ease;
+}
+
+.security-activity-card:hover {
+  background: rgba(255,255,255,0.12);
+  border-color: rgba(255,255,255,0.18);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+.security-activity-card .card-body {
+  padding: 1rem !important;
+}
+
+.security-activity-card .bg-body-secondary {
+  background: rgba(255,255,255,0.05) !important;
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+/* Light theme overrides for security activity cards */
+html:not(.dark) .security-activity-card {
+  background: rgba(255,255,255,0.95);
+  border: 1px solid rgba(0,0,0,0.08);
+  color: #1f2530;
+}
+
+html:not(.dark) .security-activity-card:hover {
+  background: rgba(255,255,255,1);
+  border-color: rgba(0,0,0,0.12);
+  box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+}
+
+html:not(.dark) .security-activity-card .text-light {
+  color: #1f2530 !important;
+}
+
+html:not(.dark) .security-activity-card .bg-body-secondary {
+  background: rgba(0,0,0,0.03) !important;
+  border: 1px solid rgba(0,0,0,0.06) !important;
+  color: #1f2530 !important;
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 991.98px) {
+  .security-activity-card {
+    margin-bottom: 0.75rem !important;
+  }
+  
+  .security-activity-card .card-body {
+    padding: 0.875rem !important;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .security-activity-card .d-flex {
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 0.5rem;
+  }
+  
+  .security-activity-card .justify-content-between {
+    justify-content: flex-start !important;
+  }
+  
+  .security-activity-card .text-end {
+    text-align: left !important;
+  }
+}
+
+/* Enhanced table responsiveness */
+@media (max-width: 1199.98px) {
+  .table-responsive .table th,
+  .table-responsive .table td {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  .table-responsive .table th:nth-child(3),
+  .table-responsive .table th:nth-child(4),
+  .table-responsive .table td:nth-child(3),
+  .table-responsive .table td:nth-child(4) {
+    max-width: 120px;
+  }
+}
+
+@media (max-width: 991.98px) {
+  .table-responsive {
+    font-size: 0.8rem;
+  }
+  
+  .table-responsive .table th,
+  .table-responsive .table td {
+    padding: 0.375rem 0.5rem;
+  }
+  
+  .table-responsive .badge {
+    font-size: 0.65rem !important;
+  }
+}
+
 /* Security activity table theme support */
 html:not(.dark) .table-dark {
   --bs-table-bg: rgba(255, 255, 255, 0.95);
