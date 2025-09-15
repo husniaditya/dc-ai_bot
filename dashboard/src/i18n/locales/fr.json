@@ -1958,12 +1958,23 @@
       "clans": {
         "addClan": "Ajouter un Clan",
         "clanTagPlaceholder": "Entrez le tag du clan (ex: 2Y0YRGG0)",
-        "noClans": "Aucun clan ajouté pour le moment."
+        "noClans": "Aucun clan ajouté pour le moment.",
+        "mentionTargets": "Cibles de Mention Par-Clan",
+        "memberAnnouncementChannel": "Canal d'Annonce des Membres",
+        "memberAnnouncementChannelHelp": "Canal pour les annonces d'arrivée/départ des membres pour ce clan spécifique",
+        "warMentions": "Mentions de Guerre",
+        "warMentionsHelp": "Rôles/utilisateurs à mentionner pour les événements de guerre de ce clan",
+        "memberMentions": "Mentions de Membres", 
+        "memberMentionsHelp": "Rôles/utilisateurs à mentionner pour les événements de membres de ce clan",
+        "donationMentions": "Mentions de Dons",
+        "donationMentionsHelp": "Rôles/utilisateurs à mentionner pour les événements de dons de ce clan"
       },
       "tracking": {
         "trackWars": "Suivre les Guerres de Clan",
         "trackMembers": "Suivre les Changements de Membres", 
         "trackDonations": "Suivre les Dons",
+        "trackWarStats": "Activer la Publication Automatique des Statistiques de Guerre",
+        "trackDonationLeaderboard": "Activer la Publication Automatique du Classement des Dons",
         "donationThreshold": "Seuil Minimum de Dons",
         "donationThresholdHint": "Dons minimum par semaine pour déclencher les annonces"
       },

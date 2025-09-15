@@ -1958,12 +1958,23 @@
       "clans": {
         "addClan": "Clan hinzufügen",
         "clanTagPlaceholder": "Clan-Tag eingeben (z.B.: 2Y0YRGG0)",
-        "noClans": "Noch keine Clans hinzugefügt."
+        "noClans": "Noch keine Clans hinzugefügt.",
+        "mentionTargets": "Clan-spezifische Erwähnungsziele",
+        "memberAnnouncementChannel": "Mitglieder-Ankündigungskanal",
+        "memberAnnouncementChannelHelp": "Kanal für Mitglieder-Beitritt/Verlassen-Ankündigungen für diesen spezifischen Clan",
+        "warMentions": "Kriegs-Erwähnungen",
+        "warMentionsHelp": "Rollen/Benutzer die bei Kriegsereignissen von diesem Clan erwähnt werden",
+        "memberMentions": "Mitglieder-Erwähnungen", 
+        "memberMentionsHelp": "Rollen/Benutzer die bei Mitgliederereignissen von diesem Clan erwähnt werden",
+        "donationMentions": "Spenden-Erwähnungen",
+        "donationMentionsHelp": "Rollen/Benutzer die bei Spendenereignissen von diesem Clan erwähnt werden"
       },
       "tracking": {
         "trackWars": "Clan-Kriege verfolgen",
         "trackMembers": "Mitgliederänderungen verfolgen", 
         "trackDonations": "Spenden verfolgen",
+        "trackWarStats": "Automatische Kriegsstatistik-Veröffentlichung aktivieren",
+        "trackDonationLeaderboard": "Automatische Spenden-Bestenlisten-Veröffentlichung aktivieren",
         "donationThreshold": "Minimaler Spendenschwellenwert",
         "donationThresholdHint": "Mindestspenden pro Woche um Ankündigungen auszulösen"
       },

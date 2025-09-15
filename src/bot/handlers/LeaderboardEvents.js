@@ -46,7 +46,7 @@ class LeaderboardEvents {
 
             // Get leaderboard configuration
             const config = await this.interactionHandler.getLeaderboardConfig(guildId);
-            if (!config || !config.track_donation_leaderboard) {
+            if (!config || !config.trackDonationLeaderboard) {
                 throw new Error('Leaderboard not enabled for this guild');
             }
 

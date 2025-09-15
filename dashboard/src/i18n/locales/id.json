@@ -1634,12 +1634,23 @@
       "clans": {
         "addClan": "Tambah Clan",
         "clanTagPlaceholder": "Masukkan tag clan (contoh: 2Y0YRGG0)",
-        "noClans": "Belum ada clan yang ditambahkan."
+        "noClans": "Belum ada clan yang ditambahkan.",
+        "mentionTargets": "Target Mention Per-Clan",
+        "memberAnnouncementChannel": "Saluran Pengumuman Anggota",
+        "memberAnnouncementChannelHelp": "Saluran untuk pengumuman anggota bergabung/keluar untuk clan ini",
+        "warMentions": "Mention Perang",
+        "warMentionsHelp": "Peran/pengguna yang akan di-mention untuk acara perang dari clan ini",
+        "memberMentions": "Mention Anggota", 
+        "memberMentionsHelp": "Peran/pengguna yang akan di-mention untuk acara anggota dari clan ini",
+        "donationMentions": "Mention Donasi",
+        "donationMentionsHelp": "Peran/pengguna yang akan di-mention untuk acara donasi dari clan ini"
       },
       "tracking": {
         "trackWars": "Lacak Perang Clan",
         "trackMembers": "Lacak Perubahan Anggota", 
         "trackDonations": "Lacak Donasi",
+        "trackWarStats": "Aktifkan Posting Statistik Perang Otomatis",
+        "trackDonationLeaderboard": "Aktifkan Posting Leaderboard Donasi Otomatis",
         "donationThreshold": "Batas Minimum Donasi",
         "donationThresholdHint": "Minimum donasi per minggu untuk memicu pengumuman"
       },
