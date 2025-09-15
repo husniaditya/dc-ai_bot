@@ -263,7 +263,8 @@ class LeaderboardInteractionHandler {
             
             if (clans.length > 1) {
                 // Multiple clans - generate separate messages for each clan
-                const clanTags = clans.map(clan => clan.clan_tag);
+                // config.clans is an array of clan tag strings
+                const clanTags = clans; 
                 return await this.generateMultipleClanLeaderboards(interaction, config, page, forceRefresh, view, clanTags);
             }
 
