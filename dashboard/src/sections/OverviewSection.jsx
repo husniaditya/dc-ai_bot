@@ -1103,133 +1103,250 @@ export default function OverviewSection({ analytics, apiStatus, autos, totalEnab
                     </h6>
                     
                     {analytics?.security?.recentViolations?.length > 0 ? (
-                      <div className="table-responsive">
-                        <table className="table table-dark table-hover table-sm">
-                          <thead>
-                            <tr>
-                              <th className="border-0 small text-muted">{t('overview.security.recentActivity.user')}</th>
-                              <th className="border-0 small text-muted">{t('overview.security.recentActivity.messages.ruleName')}</th>
-                              <th className="border-0 small text-muted">{t('overview.security.recentActivity.messages.violationReason')}</th>
-                              <th className="border-0 small text-muted">{t('overview.security.recentActivity.messages.messageContent')}</th>
-                              <th className="border-0 small text-muted">{t('overview.security.recentActivity.action')}</th>
-                              <th className="border-0 small text-muted">{t('overview.security.recentActivity.severity')}</th>
-                              <th className="border-0 small text-muted">{t('overview.security.recentActivity.time')}</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {(analytics?.security?.recentViolations || []).map((violation, index) => (
-                              <tr key={index}>
-                                {/* User Column */}
-                                <td className="align-middle">
-                                  <div className="d-flex align-items-center">
-                                    <div className={`activity-dot me-2 ${
-                                      violation.severity === 'extreme' ? 'bg-danger' :
-                                      violation.severity === 'high' ? 'bg-warning' :
-                                      violation.severity === 'medium' ? 'bg-info' :
-                                      violation.severity === 'low' ? 'bg-success' : 'bg-secondary'
-                                    }`} style={{width: '8px', height: '8px', borderRadius: '50%'}}></div>
-                                    <div className="user-avatar-mini me-2" style={{
-                                      width: '20px', 
-                                      height: '20px', 
-                                      borderRadius: '50%', 
-                                      backgroundColor: '#6366f1',
-                                      display: 'flex',
-                                      alignItems: 'center',
-                                      justifyContent: 'center',
-                                      color: 'white',
-                                      fontSize: '8px',
-                                      fontWeight: 'bold'
-                                    }}>
-                                      {violation.userId ? violation.userId.slice(-2) : '??'}
-                                    </div>
-                                    <div>
-                                      <div className="small text-light fw-medium">
-                                        {violation.username || violation.userId || t('overview.security.recentActivity.messages.unknownUser')}
-                                      </div>
-                                      {(violation.channelName || violation.channelId) && (
-                                        <div className="extra-small text-info">
-                                          #{violation.channelName || violation.channelId.slice(-4)}
+                      <>
+                        {/* Desktop Table View */}
+                        <div className="d-none d-lg-block">
+                          <div className="table-responsive">
+                            <table className="table table-dark table-hover table-sm">
+                              <thead>
+                                <tr>
+                                  <th className="border-0 small text-muted">{t('overview.security.recentActivity.user')}</th>
+                                  <th className="border-0 small text-muted">{t('overview.security.recentActivity.messages.ruleName')}</th>
+                                  <th className="border-0 small text-muted d-none d-xl-table-cell">{t('overview.security.recentActivity.messages.violationReason')}</th>
+                                  <th className="border-0 small text-muted d-none d-xl-table-cell">{t('overview.security.recentActivity.messages.messageContent')}</th>
+                                  <th className="border-0 small text-muted">{t('overview.security.recentActivity.action')}</th>
+                                  <th className="border-0 small text-muted">{t('overview.security.recentActivity.severity')}</th>
+                                  <th className="border-0 small text-muted">{t('overview.security.recentActivity.time')}</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {(analytics?.security?.recentViolations || []).map((violation, index) => (
+                                  <tr key={index}>
+                                    {/* User Column */}
+                                    <td className="align-middle">
+                                      <div className="d-flex align-items-center">
+                                        <div className={`activity-dot me-2 ${
+                                          violation.severity === 'extreme' ? 'bg-danger' :
+                                          violation.severity === 'high' ? 'bg-warning' :
+                                          violation.severity === 'medium' ? 'bg-info' :
+                                          violation.severity === 'low' ? 'bg-success' : 'bg-secondary'
+                                        }`} style={{width: '8px', height: '8px', borderRadius: '50%'}}></div>
+                                        <div className="user-avatar-mini me-2" style={{
+                                          width: '20px', 
+                                          height: '20px', 
+                                          borderRadius: '50%', 
+                                          backgroundColor: '#6366f1',
+                                          display: 'flex',
+                                          alignItems: 'center',
+                                          justifyContent: 'center',
+                                          color: 'white',
+                                          fontSize: '8px',
+                                          fontWeight: 'bold'
+                                        }}>
+                                          {violation.userId ? violation.userId.slice(-2) : '??'}
                                         </div>
+                                        <div>
+                                          <div className="small text-light fw-medium text-truncate" style={{maxWidth: '120px'}}>
+                                            {violation.username || violation.userId || t('overview.security.recentActivity.messages.unknownUser')}
+                                          </div>
+                                          {(violation.channelName || violation.channelId) && (
+                                            <div className="extra-small text-info text-truncate" style={{maxWidth: '120px'}}>
+                                              #{violation.channelName || violation.channelId.slice(-4)}
+                                            </div>
+                                          )}
+                                        </div>
+                                      </div>
+                                    </td>
+                                    
+                                    {/* Rule Column */}
+                                    <td className="align-middle">
+                                      <div className="small text-light text-truncate" style={{maxWidth: '150px'}}>
+                                        {violation.ruleName || t(`overview.security.ruleTypes.${violation.ruleType}`) || violation.ruleType}
+                                      </div>
+                                    </td>
+                                    
+                                    {/* Reason Column - Hidden on smaller screens */}
+                                    <td className="align-middle d-none d-xl-table-cell">
+                                      <div className="small text-light" style={{maxWidth: '180px'}}>
+                                        {violation.reason ? (
+                                          <span className="text-truncate d-block" title={violation.reason}>
+                                            {violation.reason}
+                                          </span>
+                                        ) : (
+                                          <span className="text-muted">-</span>
+                                        )}
+                                      </div>
+                                    </td>
+                                    
+                                    {/* Message Content Column - Hidden on smaller screens */}
+                                    <td className="align-middle d-none d-xl-table-cell">
+                                      <div className="small text-light" style={{maxWidth: '200px'}}>
+                                        {violation.messageContent ? (
+                                          <span className="text-truncate d-block" title={violation.messageContent}>
+                                            "{violation.messageContent}"
+                                          </span>
+                                        ) : (
+                                          <span className="text-muted">-</span>
+                                        )}
+                                      </div>
+                                    </td>
+                                    
+                                    {/* Action Column */}
+                                    <td className="align-middle">
+                                      <div className="d-flex align-items-center flex-wrap gap-1">
+                                        <span className={`badge ${
+                                          violation.action === 'ban' ? 'bg-danger' :
+                                          violation.action === 'kick' ? 'bg-warning' :
+                                          violation.action === 'mute' ? 'bg-info' :
+                                          violation.action === 'warn' ? 'bg-secondary' : 'bg-primary'
+                                        }`} style={{fontSize: '9px'}}>
+                                          {t(`overview.security.actions.${violation.action}`) || violation.action}
+                                        </span>
+                                        {violation.isAutoMod && (
+                                          <span className="badge bg-success" style={{fontSize: '8px'}}>
+                                            {t('overview.security.recentActivity.autoMod')}
+                                          </span>
+                                        )}
+                                      </div>
+                                    </td>
+                                    
+                                    {/* Severity Column */}
+                                    <td className="align-middle">
+                                      <span className={`badge ${
+                                        violation.severity === 'extreme' ? 'bg-danger' :
+                                        violation.severity === 'high' ? 'bg-warning' :
+                                        violation.severity === 'medium' ? 'bg-info' :
+                                        violation.severity === 'low' ? 'bg-success' : 'bg-secondary'
+                                      }`} style={{fontSize: '8px'}}>
+                                        {t(`overview.security.recentActivity.severityLevels.${violation.severity}`) || violation.severity}
+                                      </span>
+                                    </td>
+                                    
+                                    {/* Time Column */}
+                                    <td className="align-middle">
+                                      <div className="small text-muted">
+                                        {violation.timestamp ? new Date(violation.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'N/A'}
+                                      </div>
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+
+                        {/* Mobile Card View */}
+                        <div className="d-lg-none">
+                          <div className="security-activity-mobile">
+                            {(analytics?.security?.recentViolations || []).map((violation, index) => (
+                              <div key={index} className="security-activity-card card mb-3">
+                                <div className="card-body p-3">
+                                  {/* Header Row */}
+                                  <div className="d-flex align-items-center justify-content-between mb-2">
+                                    <div className="d-flex align-items-center">
+                                      <div className={`activity-dot me-2 ${
+                                        violation.severity === 'extreme' ? 'bg-danger' :
+                                        violation.severity === 'high' ? 'bg-warning' :
+                                        violation.severity === 'medium' ? 'bg-info' :
+                                        violation.severity === 'low' ? 'bg-success' : 'bg-secondary'
+                                      }`} style={{width: '10px', height: '10px', borderRadius: '50%'}}></div>
+                                      <div className="user-avatar-mini me-2" style={{
+                                        width: '24px', 
+                                        height: '24px', 
+                                        borderRadius: '50%', 
+                                        backgroundColor: '#6366f1',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        color: 'white',
+                                        fontSize: '10px',
+                                        fontWeight: 'bold'
+                                      }}>
+                                        {violation.userId ? violation.userId.slice(-2) : '??'}
+                                      </div>
+                                      <div>
+                                        <div className="fw-medium text-light" style={{fontSize: '0.875rem'}}>
+                                          {violation.username || violation.userId || t('overview.security.recentActivity.messages.unknownUser')}
+                                        </div>
+                                        {(violation.channelName || violation.channelId) && (
+                                          <div className="text-info" style={{fontSize: '0.75rem'}}>
+                                            #{violation.channelName || violation.channelId.slice(-4)}
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+                                    <div className="text-end">
+                                      <div className="small text-muted">
+                                        {violation.timestamp ? new Date(violation.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'N/A'}
+                                      </div>
+                                      <span className={`badge ${
+                                        violation.severity === 'extreme' ? 'bg-danger' :
+                                        violation.severity === 'high' ? 'bg-warning' :
+                                        violation.severity === 'medium' ? 'bg-info' :
+                                        violation.severity === 'low' ? 'bg-success' : 'bg-secondary'
+                                      }`} style={{fontSize: '9px'}}>
+                                        {t(`overview.security.recentActivity.severityLevels.${violation.severity}`) || violation.severity}
+                                      </span>
+                                    </div>
+                                  </div>
+
+                                  {/* Rule and Action Row */}
+                                  <div className="d-flex align-items-center justify-content-between mb-2">
+                                    <div className="text-light" style={{fontSize: '0.875rem'}}>
+                                      <strong>{t('overview.security.recentActivity.messages.ruleName')}:</strong> {violation.ruleName || t(`overview.security.ruleTypes.${violation.ruleType}`) || violation.ruleType}
+                                    </div>
+                                    <div className="d-flex align-items-center gap-1">
+                                      <span className={`badge ${
+                                        violation.action === 'ban' ? 'bg-danger' :
+                                        violation.action === 'kick' ? 'bg-warning' :
+                                        violation.action === 'mute' ? 'bg-info' :
+                                        violation.action === 'warn' ? 'bg-secondary' : 'bg-primary'
+                                      }`} style={{fontSize: '10px'}}>
+                                        {t(`overview.security.actions.${violation.action}`) || violation.action}
+                                      </span>
+                                      {violation.isAutoMod && (
+                                        <span className="badge bg-success" style={{fontSize: '9px'}}>
+                                          {t('overview.security.recentActivity.autoMod')}
+                                        </span>
                                       )}
                                     </div>
                                   </div>
-                                </td>
-                                
-                                {/* Rule Column */}
-                                <td className="align-middle">
-                                  <div className="small text-light">
-                                    {violation.ruleName || t(`overview.security.ruleTypes.${violation.ruleType}`) || violation.ruleType}
-                                  </div>
-                                </td>
-                                
-                                {/* Reason Column */}
-                                <td className="align-middle">
-                                  <div className="small text-light" style={{maxWidth: '200px'}}>
-                                    {violation.reason ? (
-                                      <span className="text-truncate d-block" title={violation.reason}>
+
+                                  {/* Reason Row */}
+                                  {violation.reason && (
+                                    <div className="mb-2">
+                                      <div className="text-light" style={{fontSize: '0.8rem'}}>
+                                        <strong>{t('overview.security.recentActivity.messages.violationReason')}:</strong>
+                                      </div>
+                                      <div className="text-light" style={{fontSize: '0.8rem', wordBreak: 'break-word'}}>
                                         {violation.reason}
-                                      </span>
-                                    ) : (
-                                      <span className="text-muted">-</span>
-                                    )}
-                                  </div>
-                                </td>
-                                
-                                {/* Message Content Column */}
-                                <td className="align-middle">
-                                  <div className="small text-light" style={{maxWidth: '250px'}}>
-                                    {violation.messageContent ? (
-                                      <span className="text-truncate d-block" title={violation.messageContent}>
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {/* Message Content Row */}
+                                  {violation.messageContent && (
+                                    <div className="mb-0">
+                                      <div className="text-light" style={{fontSize: '0.8rem'}}>
+                                        <strong>{t('overview.security.recentActivity.messages.messageContent')}:</strong>
+                                      </div>
+                                      <div className="text-light bg-body-secondary p-2 rounded" style={{
+                                        fontSize: '0.8rem', 
+                                        wordBreak: 'break-word',
+                                        fontStyle: 'italic',
+                                        maxHeight: '80px',
+                                        overflowY: 'auto'
+                                      }}>
                                         "{violation.messageContent}"
-                                      </span>
-                                    ) : (
-                                      <span className="text-muted">-</span>
-                                    )}
-                                  </div>
-                                </td>
-                                
-                                {/* Action Column */}
-                                <td className="align-middle">
-                                  <div className="d-flex align-items-center">
-                                    <span className={`badge ${
-                                      violation.action === 'ban' ? 'bg-danger' :
-                                      violation.action === 'kick' ? 'bg-warning' :
-                                      violation.action === 'mute' ? 'bg-info' :
-                                      violation.action === 'warn' ? 'bg-secondary' : 'bg-primary'
-                                    } me-1`} style={{fontSize: '9px'}}>
-                                      {t(`overview.security.actions.${violation.action}`) || violation.action}
-                                    </span>
-                                    {violation.isAutoMod && (
-                                      <span className="badge bg-success" style={{fontSize: '8px'}}>
-                                        {t('overview.security.recentActivity.autoMod')}
-                                      </span>
-                                    )}
-                                  </div>
-                                </td>
-                                
-                                {/* Severity Column */}
-                                <td className="align-middle">
-                                  <span className={`badge ${
-                                    violation.severity === 'extreme' ? 'bg-danger' :
-                                    violation.severity === 'high' ? 'bg-warning' :
-                                    violation.severity === 'medium' ? 'bg-info' :
-                                    violation.severity === 'low' ? 'bg-success' : 'bg-secondary'
-                                  }`} style={{fontSize: '8px'}}>
-                                    {t(`overview.security.recentActivity.severityLevels.${violation.severity}`) || violation.severity}
-                                  </span>
-                                </td>
-                                
-                                {/* Time Column */}
-                                <td className="align-middle">
-                                  <div className="small text-muted">
-                                    {violation.timestamp ? new Date(violation.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'N/A'}
-                                  </div>
-                                </td>
-                              </tr>
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
                             ))}
-                          </tbody>
-                        </table>
-                      </div>
+                          </div>
+                        </div>
+                      </>
                     ) : (
                       <div className="text-center py-4">
                         <i className="fas fa-shield-check text-muted mb-2" style={{fontSize: '2rem', opacity: 0.5}}></i>
