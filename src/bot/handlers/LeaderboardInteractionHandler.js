@@ -307,7 +307,7 @@ class LeaderboardInteractionHandler {
             const pageData = clanData.players.slice(startIndex, endIndex);
 
             // Update database with current page state
-            await this.updatePageState(config.guild_id, page, totalPages);
+            await this.updatePageState(interaction.guildId, page, totalPages);
 
             // Generate canvas image
             const canvas = new LeaderboardCanvas();
@@ -321,7 +321,7 @@ class LeaderboardInteractionHandler {
                 currentPage: page,
                 totalPages,
                 isAdmin,
-                guildId: config.guild_id,
+                guildId: interaction.guildId,
                 clanTag: clanTag,
                 view: 'page',
                 dataView: view
@@ -450,7 +450,7 @@ class LeaderboardInteractionHandler {
                 currentPage: page,
                 totalPages,
                 isAdmin,
-                guildId: config.guild_id,
+                guildId: interaction.guildId,
                 clanTag: clanData.clanTag,
                 view: 'page',
                 dataView: view
@@ -586,7 +586,7 @@ class LeaderboardInteractionHandler {
                 currentPage: returnPage,
                 totalPages: config.donation_leaderboard_total_pages || 1,
                 isAdmin,
-                guildId: config.guild_id,
+                guildId: interaction.guildId,
                 clanTag: clanTag,
                 view: 'summary',
                 dataView: view
@@ -750,7 +750,7 @@ class LeaderboardInteractionHandler {
             const pageData = leaderboardData.players.slice(startIndex, endIndex);
 
             // Update database with current page state
-            await this.updatePageState(config.guild_id, page, totalPages);
+            await this.updatePageState(interaction.guildId, page, totalPages);
 
             // Generate canvas image
             const canvas = new LeaderboardCanvas();
@@ -764,7 +764,7 @@ class LeaderboardInteractionHandler {
                 currentPage: page,
                 totalPages,
                 isAdmin,
-                guildId: config.guild_id,
+                guildId: interaction.guildId,
                 view: 'page',
                 dataView: view
             });
