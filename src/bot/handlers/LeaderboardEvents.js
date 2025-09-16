@@ -146,11 +146,25 @@ class LeaderboardEvents {
                                 );
                             }
                         } else {
-                            // For donations, all clan rows share the same leaderboard message
-                            await this.interactionHandler.db.execute(
-                                `UPDATE guild_clashofclans_watch SET ${messageIdField} = ? WHERE guild_id = ?`,
-                                [newMessage.id, guildId]
-                            );
+                            // For donations, update specific clan row if clan tag provided, otherwise update first clan row
+                            if (clanTag) {
+                                await this.interactionHandler.db.execute(
+                                    `UPDATE guild_clashofclans_watch SET ${messageIdField} = ? WHERE guild_id = ? AND clan_tag = ?`,
+                                    [newMessage.id, guildId, clanTag]
+                                );
+                            } else {
+                                // Fallback: Update first clan row if no clan tag provided
+                                const [configRows] = await this.interactionHandler.db.execute(
+                                    'SELECT clan_tag FROM guild_clashofclans_watch WHERE guild_id = ? AND donation_leaderboard_channel_id IS NOT NULL LIMIT 1',
+                                    [guildId]
+                                );
+                                if (configRows.length > 0) {
+                                    await this.interactionHandler.db.execute(
+                                        `UPDATE guild_clashofclans_watch SET ${messageIdField} = ? WHERE guild_id = ? AND clan_tag = ?`,
+                                        [newMessage.id, guildId, configRows[0].clan_tag]
+                                    );
+                                }
+                            }
                         }
                         
                         return newMessage;

@@ -298,15 +298,15 @@ async function pollGuild(guild) {
                     existingMessageId = existingMessage.id;
                     console.log(`[COC] Found existing leaderboard message ${existingMessageId} for guild ${guild.id}`);
                     
-                    // Update database with found message ID (direct update to avoid recreating all rows)
+                    // Update database with found message ID (for first clan only, since donations are shared)
                     try {
                       await store.sqlPool.execute(
-                        'UPDATE guild_clashofclans_watch SET donation_message_id = ? WHERE guild_id = ? LIMIT 1',
-                        [existingMessageId, guild.id]
+                        'UPDATE guild_clashofclans_watch SET donation_message_id = ? WHERE guild_id = ? AND clan_tag = ? LIMIT 1',
+                        [existingMessageId, guild.id, cleanTag]
                       );
-                      console.log(`[COC] Updated donation message ID in database for guild ${guild.id}`);
+                      console.log(`[COC] Updated donation message ID in database for guild ${guild.id}, clan ${cleanTag}`);
                     } catch (updateError) {
-                      console.warn(`[COC] Failed to update donation message ID for guild ${guild.id}:`, updateError.message);
+                      console.warn(`[COC] Failed to update donation message ID for guild ${guild.id}, clan ${cleanTag}:`, updateError.message);
                     }
                   }
                 }
