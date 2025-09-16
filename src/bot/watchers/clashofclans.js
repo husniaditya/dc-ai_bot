@@ -484,15 +484,15 @@ async function autoRefreshWarLeaderboard(guild, cfg, clanTag, warInfo, clanState
                 existingMessageId = existingMessage.id;
                 console.log(`[COC] Found existing war leaderboard message ${existingMessageId} for guild ${guild.id}`);
                 
-                // Update database with found message ID (direct update to avoid recreating all rows)
+                // Update database with found message ID for this specific clan
                 try {
                   await store.sqlPool.execute(
-                    'UPDATE guild_clashofclans_watch SET war_leaderboard_message_id = ? WHERE guild_id = ? LIMIT 1',
-                    [existingMessageId, guild.id]
+                    'UPDATE guild_clashofclans_watch SET war_leaderboard_message_id = ? WHERE guild_id = ? AND clan_tag = ?',
+                    [existingMessageId, guild.id, clanTag]
                   );
-                  console.log(`[COC] Updated war message ID in database for guild ${guild.id}`);
+                  console.log(`[COC] Updated war message ID in database for guild ${guild.id}, clan ${clanTag}`);
                 } catch (updateError) {
-                  console.warn(`[COC] Failed to update war message ID for guild ${guild.id}:`, updateError.message);
+                  console.warn(`[COC] Failed to update war message ID for guild ${guild.id}, clan ${clanTag}:`, updateError.message);
                 }
               }
             }
@@ -506,7 +506,8 @@ async function autoRefreshWarLeaderboard(guild, cfg, clanTag, warInfo, clanState
           guild.id, 
           cfg.warLeaderboardChannelId, 
           existingMessageId,
-          'war'
+          'war',
+          clanTag  // Pass clan tag for proper database updates
         );
         
         if (result && result.success) {

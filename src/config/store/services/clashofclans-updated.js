@@ -28,8 +28,7 @@ async function getGuildClashOfClansConfig(guildId) {
                enabled, interval_sec, track_wars, track_members, track_donations, track_donation_leaderboard,
                donation_threshold, donation_leaderboard_schedule, donation_leaderboard_time, 
                war_start_template, war_end_template, member_join_template, donation_template, 
-               donation_leaderboard_template, embed_enabled, clan_data,
-               CASE WHEN war_leaderboard_channel_id IS NOT NULL THEN 1 ELSE 0 END as track_war_leaderboard
+               donation_leaderboard_template, embed_enabled, clan_data
         FROM guild_clashofclans_watch 
         WHERE guild_id = ?
         ORDER BY clan_order ASC, id ASC
@@ -229,12 +228,12 @@ async function setGuildClashOfClansConfig(guildId, partial) {
     next.trackDonationEvents = partial.trackDonations;
   }
   
-  // Handle war leaderboard tracking
+  // Handle war leaderboard tracking - maps to track_wars column since war leaderboards depend on war tracking
   if (partial.trackWarLeaderboard !== undefined) {
-    next.trackWarLeaderboard = partial.trackWarLeaderboard;
+    next.trackWars = partial.trackWarLeaderboard;
   }
   if (partial.track_war_leaderboard !== undefined) {
-    next.trackWarLeaderboard = partial.track_war_leaderboard;
+    next.trackWars = partial.track_war_leaderboard;
   }
   
   // Handle templates
