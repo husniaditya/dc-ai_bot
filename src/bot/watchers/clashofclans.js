@@ -298,10 +298,16 @@ async function pollGuild(guild) {
                     existingMessageId = existingMessage.id;
                     console.log(`[COC] Found existing leaderboard message ${existingMessageId} for guild ${guild.id}`);
                     
-                    // Update database with found message ID
-                    await store.setGuildClashOfClansConfig(guild.id, {
-                      donationMessageId: existingMessageId
-                    });
+                    // Update database with found message ID (direct update to avoid recreating all rows)
+                    try {
+                      await store.sqlPool.execute(
+                        'UPDATE guild_clashofclans_watch SET donation_message_id = ? WHERE guild_id = ? LIMIT 1',
+                        [existingMessageId, guild.id]
+                      );
+                      console.log(`[COC] Updated donation message ID in database for guild ${guild.id}`);
+                    } catch (updateError) {
+                      console.warn(`[COC] Failed to update donation message ID for guild ${guild.id}:`, updateError.message);
+                    }
                   }
                 }
               } catch (findError) {
@@ -478,10 +484,16 @@ async function autoRefreshWarLeaderboard(guild, cfg, clanTag, warInfo, clanState
                 existingMessageId = existingMessage.id;
                 console.log(`[COC] Found existing war leaderboard message ${existingMessageId} for guild ${guild.id}`);
                 
-                // Update database with found message ID
-                await store.setGuildClashOfClansConfig(guild.id, {
-                  warLeaderboardMessageId: existingMessageId
-                });
+                // Update database with found message ID (direct update to avoid recreating all rows)
+                try {
+                  await store.sqlPool.execute(
+                    'UPDATE guild_clashofclans_watch SET war_leaderboard_message_id = ? WHERE guild_id = ? LIMIT 1',
+                    [existingMessageId, guild.id]
+                  );
+                  console.log(`[COC] Updated war message ID in database for guild ${guild.id}`);
+                } catch (updateError) {
+                  console.warn(`[COC] Failed to update war message ID for guild ${guild.id}:`, updateError.message);
+                }
               }
             }
           } catch (findError) {

@@ -864,6 +864,24 @@ class LeaderboardInteractionHandler {
                 
                 // Use cache if less than 30 minutes old
                 if (cacheAge < 30 * 60 * 1000) {
+                    // Even for cached data, enhance with activity tracking to ensure lastSeen is populated
+                    if (cached.players && cached.players.length > 0) {
+                        console.log('Enhancing cached players with activity tracking...');
+                        
+                        // Get previous player data for comparison
+                        let previousPlayers = [];
+                        try {
+                            // Use the cached data itself as previous data
+                            previousPlayers = cached.players || [];
+                        } catch (error) {
+                            console.warn('Failed to parse cached player data:', error);
+                        }
+                        
+                        cached.players = await ClashOfClansAPI.enhancePlayersWithActivity(
+                            cached.players, 
+                            previousPlayers
+                        );
+                    }
                     return cached;
                 }
             } catch (error) {
@@ -944,6 +962,24 @@ class LeaderboardInteractionHandler {
                 
                 // Use cache if less than 30 minutes old
                 if (cacheAge < 30 * 60 * 1000) {
+                    // Even for cached data, enhance with activity tracking to ensure lastSeen is populated
+                    if (cached.players && cached.players.length > 0) {
+                        console.log('Enhancing cached war players with activity tracking...');
+                        
+                        // Get previous player data for comparison
+                        let previousPlayers = [];
+                        try {
+                            // Use the cached data itself as previous data
+                            previousPlayers = cached.players || [];
+                        } catch (error) {
+                            console.warn('Failed to parse cached war player data:', error);
+                        }
+                        
+                        cached.players = await ClashOfClansAPI.enhancePlayersWithActivity(
+                            cached.players, 
+                            previousPlayers
+                        );
+                    }
                     return cached;
                 }
             } catch (error) {

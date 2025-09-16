@@ -75,7 +75,7 @@ class LeaderboardEvents {
                                 // Update database with new message ID (different field based on type)
                                 const messageIdField = type === 'war' ? 'war_leaderboard_message_id' : 'donation_message_id';
                                 await this.interactionHandler.db.execute(
-                                    `UPDATE guild_clashofclans_watch SET ${messageIdField} = ? WHERE guild_id = ?`,
+                                    `UPDATE guild_clashofclans_watch SET ${messageIdField} = ? WHERE guild_id = ? LIMIT 1`,
                                     [newMessage.id, guildId]
                                 );
                                 
@@ -90,7 +90,7 @@ class LeaderboardEvents {
                         // Update database with new message ID (different field based on type)
                         const messageIdField = type === 'war' ? 'war_leaderboard_message_id' : 'donation_message_id';
                         await this.interactionHandler.db.execute(
-                            `UPDATE guild_clashofclans_watch SET ${messageIdField} = ? WHERE guild_id = ?`,
+                            `UPDATE guild_clashofclans_watch SET ${messageIdField} = ? WHERE guild_id = ? LIMIT 1`,
                             [newMessage.id, guildId]
                         );
                         
