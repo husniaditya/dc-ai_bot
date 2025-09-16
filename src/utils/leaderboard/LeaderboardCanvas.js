@@ -600,27 +600,30 @@ class LeaderboardCanvas {
         const headerY = this.padding;
         
         // Header background with war theme
-        const gradient = ctx.createLinearGradient(0, headerY, 0, headerY + this.headerHeight);
-        gradient.addColorStop(0, 'rgba(231, 76, 60, 0.8)'); // Red war theme
-        gradient.addColorStop(1, 'rgba(192, 57, 43, 0.6)');
-        ctx.fillStyle = gradient;
+        const headerGradient = ctx.createLinearGradient(0, headerY, this.width, headerY + this.headerHeight);
+        headerGradient.addColorStop(0, 'rgba(231, 76, 60, 0.8)'); // Red war theme
+        headerGradient.addColorStop(1, 'rgba(192, 57, 43, 0.6)');
+        
+        ctx.fillStyle = headerGradient;
         ctx.fillRect(this.padding, headerY, this.width - (this.padding * 2), this.headerHeight);
 
-        // Title
+        // Add rounded corners effect
+        ctx.beginPath();
+        ctx.roundRect(this.padding, headerY, this.width - (this.padding * 2), this.headerHeight, 15);
+        ctx.fill();
+
+        // Draw title
         ctx.fillStyle = this.textColor;
         ctx.font = this.titleFont;
         ctx.textAlign = 'center';
         
-        const centerX = this.width / 2;
-        const titleY = headerY + 40;
-        
         const clanName = config.clan_name || (warData.clanName || 'Clan');
-        ctx.fillText(`⚔️ ${clanName} War Statistics`, centerX, titleY);
+        const title = `⚔️ ${clanName} War Statistics`;
+        const titleY = headerY + 70; // Moved to match donation header position
+        ctx.fillText(title, this.width / 2, titleY);
 
-        // War status and current war info
-        ctx.font = '16px Arial';
-        ctx.fillStyle = this.secondaryColor;
-        
+        // War status and current war info with much more gap
+        ctx.font = this.headerFont; // Use headerFont (38px) instead of 16px
         let warStatus = 'Historical War Performance';
         if (warData.currentWar) {
             const war = warData.currentWar;
@@ -631,12 +634,23 @@ class LeaderboardCanvas {
             }
         }
         
-        ctx.fillText(warStatus, centerX, titleY + 25);
+        const subtitleY = titleY + 60; // Increased from 25 to 60 for much bigger gap
+        ctx.fillText(warStatus, this.width / 2, subtitleY);
 
-        // Page indicator for war stats
+        // Draw page indicator with much bigger font
         if (totalPages > 1) {
-            ctx.font = '14px Arial';
-            ctx.fillText(`Page ${page} of ${totalPages}`, centerX, titleY + 45);
+            ctx.font = 'bold 24px Arial'; // Increased from 14px to 24px and made bold
+            ctx.textAlign = 'right';
+            const pageText = `Page ${page} of ${totalPages}`;
+            ctx.fillText(pageText, this.width - this.padding - 10, subtitleY);
+        }
+
+        // Draw clan tag if available with bigger font
+        if (config.clan_tag) {
+            ctx.font = '18px Arial'; // Increased from 14px to 18px
+            ctx.textAlign = 'left';
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+            ctx.fillText(config.clan_tag, this.padding + 10, subtitleY);
         }
     }
 
@@ -794,54 +808,50 @@ class LeaderboardCanvas {
         if (attackDetails.length === 0) {
             // No attacks yet
             ctx.fillStyle = '#95a5a6'; // Gray
-            ctx.font = this.playerFont; // Use consistent larger font
+            ctx.font = '27px Arial'; // Smaller font for "No attacks"
             ctx.textAlign = 'center';
-            ctx.fillText('No attacks', x + (this.donationWidth * 1.5 / 2), y + 52); // Adjusted from 45 to 52
+            ctx.fillText('No attacks', x + (this.donationWidth * 1.5 / 2), y + 52);
             return;
         }
 
-        // Draw each attack (similar to your image: 10 ⚔️ / 1 ⭐⭐⭐100%)
-        ctx.font = this.playerFont; // Use consistent larger font
-        ctx.textAlign = 'left';
+        // Use smaller, more compact font for war attacks
+        ctx.font = '27px Arial'; // Compact font size for war attacks
+        ctx.textAlign = 'center';
         
         const attackAreaWidth = this.donationWidth * 1.5;
-        const attackSpacing = 20; // Space between attacks
+        const centerX = x + (attackAreaWidth / 2); // Center point of the column
+        const baseY = y + 35; // Start position
+        const attackSpacing = 41; // Increased spacing between attacks for larger font
         
         for (let i = 0; i < Math.min(attackDetails.length, 2); i++) {
             const attack = attackDetails[i];
-            const attackX = x + 10;
-            const attackY = y + 20 + (i * 20); // Stack attacks vertically
+            const attackY = baseY + (i * attackSpacing);
             
-            // Position and attack number (like "10 ⚔️")
-            ctx.fillStyle = '#e74c3c'; // Red for position
-            ctx.fillText(`${attack.defenderPosition || '?'}`, attackX, attackY);
+            // Create compact attack string: "10/1 ⭐⭐⭐ 100%"
+            let attackText = '';
             
-            // Sword emoji
-            ctx.fillStyle = '#95a5a6';
-            ctx.fillText('⚔️', attackX + 25, attackY);
+            // Position and attack number (more compact)
+            attackText += `${attack.defenderPosition || '?'}/${attack.attackNumber} `;
             
-            // Attack number
-            ctx.fillStyle = '#3498db'; // Blue for attack number
-            ctx.fillText(`/${attack.attackNumber}`, attackX + 40, attackY);
-            
-            // Stars (⭐⭐⭐)
-            ctx.fillStyle = '#f1c40f'; // Gold for stars
-            let starsText = '';
+            // Stars (using smaller star symbols if possible)
             for (let s = 0; s < 3; s++) {
-                starsText += s < attack.stars ? '⭐' : '☆';
+                attackText += s < attack.stars ? '⭐' : '☆';
             }
-            ctx.fillText(starsText, attackX + 65, attackY);
             
-            // Destruction percentage
-            ctx.fillStyle = '#e67e22'; // Orange for destruction
-            ctx.fillText(`${attack.destructionPercentage.toFixed(0)}%`, attackX + 120, attackY);
+            // Destruction percentage (more compact)
+            attackText += ` ${attack.destructionPercentage}%`;
+            
+            // Draw the complete attack string centered
+            ctx.fillStyle = this.textColor;
+            ctx.fillText(attackText, centerX, attackY);
         }
         
-        // If more than 2 attacks, show count
+        // If more than 2 attacks, show count at bottom
         if (attackDetails.length > 2) {
             ctx.fillStyle = '#95a5a6';
-            ctx.font = '12px Arial';
-            ctx.fillText(`+${attackDetails.length - 2} more`, x + 10, y + 60);
+            ctx.font = '11px Arial'; // Even smaller for "more" text
+            ctx.textAlign = 'center';
+            ctx.fillText(`+${attackDetails.length - 2} more`, centerX, y + 72);
         }
     }
 
