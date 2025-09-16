@@ -775,6 +775,8 @@ class ClashOfClansAPI {
         const enhancedPlayers = [];
         const currentTime = new Date();
         
+        console.log(`[COC API] Enhancing ${players.length} players with activity data...`);
+        
         for (const player of players) {
             const previousPlayer = previousPlayers.find(p => p.tag === player.tag);
             let estimatedLastSeen = null;
@@ -791,20 +793,24 @@ class ClashOfClansAPI {
                 if (hasActivity) {
                     // Player has been active recently
                     estimatedLastSeen = currentTime.toISOString();
+                    console.log(`[COC API] Player ${player.name} (${player.tag}) has recent activity, setting lastSeen to now`);
                 } else if (previousPlayer.lastSeen) {
                     // Keep previous last seen time
                     estimatedLastSeen = previousPlayer.lastSeen;
+                    console.log(`[COC API] Player ${player.name} (${player.tag}) keeping previous lastSeen: ${estimatedLastSeen}`);
                 } else {
                     // Simulate realistic last seen times for better display variety
                     const hoursAgo = Math.floor(Math.random() * 48); // 0-48 hours ago
                     const lastSeenTime = new Date(currentTime.getTime() - (hoursAgo * 60 * 60 * 1000));
                     estimatedLastSeen = lastSeenTime.toISOString();
+                    console.log(`[COC API] Player ${player.name} (${player.tag}) generating random lastSeen: ${estimatedLastSeen} (${hoursAgo}h ago)`);
                 }
             } else {
                 // New player - simulate varied activity times for realistic display
                 const hoursAgo = Math.floor(Math.random() * 24); // 0-24 hours ago for new players
                 const lastSeenTime = new Date(currentTime.getTime() - (hoursAgo * 60 * 60 * 1000));
                 estimatedLastSeen = lastSeenTime.toISOString();
+                console.log(`[COC API] New player ${player.name} (${player.tag}) generating lastSeen: ${estimatedLastSeen} (${hoursAgo}h ago)`);
             }
             
             enhancedPlayers.push({
@@ -813,6 +819,7 @@ class ClashOfClansAPI {
             });
         }
         
+        console.log(`[COC API] Enhanced ${enhancedPlayers.length} players with lastSeen values`);
         return enhancedPlayers;
     }
 

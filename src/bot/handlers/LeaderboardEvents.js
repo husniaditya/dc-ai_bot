@@ -36,9 +36,10 @@ class LeaderboardEvents {
      * @param {string} channelId - Channel ID to post in
      * @param {string|null} messageId - Existing message ID to update (null for new)
      * @param {string} type - Leaderboard type ('donations' or 'war')
+     * @param {string|null} clanTag - Specific clan tag (for war leaderboards only)
      * @returns {Object} Posted message information
      */
-    async postLeaderboard(guildId, channelId, messageId = null, type = 'donations') {
+    async postLeaderboard(guildId, channelId, messageId = null, type = 'donations', clanTag = null) {
         try {
             const channel = await this.client.channels.fetch(channelId);
             if (!channel) {
@@ -72,12 +73,34 @@ class LeaderboardEvents {
                                 console.log(`[COC] Message ${messageId} not found, creating new ${type} leaderboard message`);
                                 const newMessage = await channel.send(options);
                                 
-                                // Update database with new message ID (different field based on type)
+                                // Update database with new message ID - use clan_tag to identify specific row for multi-clan setups
                                 const messageIdField = type === 'war' ? 'war_leaderboard_message_id' : 'donation_message_id';
-                                await this.interactionHandler.db.execute(
-                                    `UPDATE guild_clashofclans_watch SET ${messageIdField} = ? WHERE guild_id = ?`,
-                                    [newMessage.id, guildId]
-                                );
+                                
+                                if (type === 'war' && clanTag) {
+                                    // Update specific clan row when clan tag is provided
+                                    await this.interactionHandler.db.execute(
+                                        `UPDATE guild_clashofclans_watch SET ${messageIdField} = ? WHERE guild_id = ? AND clan_tag = ?`,
+                                        [newMessage.id, guildId, clanTag]
+                                    );
+                                } else if (type === 'war') {
+                                    // Fallback: Update first clan row if no clan tag provided
+                                    const [configRows] = await this.interactionHandler.db.execute(
+                                        'SELECT clan_tag FROM guild_clashofclans_watch WHERE guild_id = ? AND war_leaderboard_channel_id IS NOT NULL LIMIT 1',
+                                        [guildId]
+                                    );
+                                    if (configRows.length > 0) {
+                                        await this.interactionHandler.db.execute(
+                                            `UPDATE guild_clashofclans_watch SET ${messageIdField} = ? WHERE guild_id = ? AND clan_tag = ?`,
+                                            [newMessage.id, guildId, configRows[0].clan_tag]
+                                        );
+                                    }
+                                } else {
+                                    // For donations, update all clan rows since they share the leaderboard
+                                    await this.interactionHandler.db.execute(
+                                        `UPDATE guild_clashofclans_watch SET ${messageIdField} = ? WHERE guild_id = ?`,
+                                        [newMessage.id, guildId]
+                                    );
+                                }
                                 
                                 return newMessage;
                             }
@@ -87,12 +110,34 @@ class LeaderboardEvents {
                         // Post new message
                         const newMessage = await channel.send(options);
                         
-                        // Update database with new message ID (different field based on type)
+                        // Update database with new message ID - handle multi-clan setups properly
                         const messageIdField = type === 'war' ? 'war_leaderboard_message_id' : 'donation_message_id';
-                        await this.interactionHandler.db.execute(
-                            `UPDATE guild_clashofclans_watch SET ${messageIdField} = ? WHERE guild_id = ?`,
-                            [newMessage.id, guildId]
-                        );
+                        
+                        if (type === 'war' && clanTag) {
+                            // Update specific clan row when clan tag is provided
+                            await this.interactionHandler.db.execute(
+                                `UPDATE guild_clashofclans_watch SET ${messageIdField} = ? WHERE guild_id = ? AND clan_tag = ?`,
+                                [newMessage.id, guildId, clanTag]
+                            );
+                        } else if (type === 'war') {
+                            // Fallback: Update first clan row if no clan tag provided
+                            const [configRows] = await this.interactionHandler.db.execute(
+                                'SELECT clan_tag FROM guild_clashofclans_watch WHERE guild_id = ? AND war_leaderboard_channel_id IS NOT NULL LIMIT 1',
+                                [guildId]
+                            );
+                            if (configRows.length > 0) {
+                                await this.interactionHandler.db.execute(
+                                    `UPDATE guild_clashofclans_watch SET ${messageIdField} = ? WHERE guild_id = ? AND clan_tag = ?`,
+                                    [newMessage.id, guildId, configRows[0].clan_tag]
+                                );
+                            }
+                        } else {
+                            // For donations, all clan rows share the same leaderboard message
+                            await this.interactionHandler.db.execute(
+                                `UPDATE guild_clashofclans_watch SET ${messageIdField} = ? WHERE guild_id = ?`,
+                                [newMessage.id, guildId]
+                            );
+                        }
                         
                         return newMessage;
                     }
@@ -118,27 +163,32 @@ class LeaderboardEvents {
      * Scheduled job handler - updates all active leaderboards
      * Call this method from your scheduler (cron jobs, etc.)
      * @param {string} scheduleType - Type of schedule (hourly, daily, weekly, monthly)
-     * @param {string} type - Leaderboard type ('donations' or 'war')
+     * @param {string} type - Leaderboard type ('donations' only - war uses continuous 5min updates)
      */
     async runScheduledUpdate(scheduleType, type = 'donations') {
         try {
+            // War leaderboards use continuous 5-minute updates via the watcher, not scheduled updates
+            if (type === 'war') {
+                console.log('⚠️ War leaderboards use continuous 5-minute updates, not scheduled updates');
+                return { updated: 0, errors: 0, type, note: 'War leaderboards use continuous updates' };
+            }
+
             console.log(`🕐 Starting scheduled ${type} leaderboard update: ${scheduleType}`);
 
-            // Get all guilds with matching schedule (different fields for war vs donations)
-            const trackField = type === 'war' ? 'track_war_leaderboard' : 'track_donation_leaderboard';
-            const channelField = type === 'war' ? 'war_leaderboard_channel_id' : 'donation_leaderboard_channel_id';
-            const messageField = type === 'war' ? 'war_leaderboard_message_id' : 'donation_message_id';
-            const scheduleField = type === 'war' ? 'war_leaderboard_schedule' : 'donation_leaderboard_schedule';
+            // Only for donation leaderboards - war leaderboards handled by watcher
+            const trackField = 'track_donation_leaderboard';
+            const channelField = 'donation_leaderboard_channel_id';
+            const messageField = 'donation_message_id';
+            const scheduleField = 'donation_leaderboard_schedule';
 
             const [guilds] = await this.interactionHandler.db.execute(`
                 SELECT guild_id, 
-                       MAX(${channelField}) as channel_id, 
-                       MAX(${messageField}) as message_id 
+                       ${channelField} as channel_id, 
+                       ${messageField} as message_id 
                 FROM guild_clashofclans_watch 
                 WHERE ${trackField} = 1 
                 AND ${scheduleField} = ?
                 AND ${channelField} IS NOT NULL
-                GROUP BY guild_id
             `, [scheduleType]);
 
             if (guilds.length === 0) {

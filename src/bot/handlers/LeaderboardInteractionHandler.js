@@ -867,17 +867,16 @@ class LeaderboardInteractionHandler {
                     // Even for cached data, enhance with activity tracking to ensure lastSeen is populated
                     if (cached.players && cached.players.length > 0) {
                         console.log('Enhancing cached players with activity tracking...');
+                        console.log(`[DEBUG] Before enhancement - First player lastSeen:`, cached.players[0].lastSeen);
                         
-                        // Check if players already have lastSeen data
-                        const needsEnhancement = cached.players.some(player => !player.lastSeen);
+                        // Always enhance cached data to ensure lastSeen is populated
+                        // Use empty array to force generation of lastSeen for all players
+                        cached.players = await ClashOfClansAPI.enhancePlayersWithActivity(
+                            cached.players, 
+                            [] // Empty array forces generation of lastSeen values
+                        );
                         
-                        if (needsEnhancement) {
-                            // Only enhance if some players are missing lastSeen data
-                            cached.players = await ClashOfClansAPI.enhancePlayersWithActivity(
-                                cached.players, 
-                                [] // Use empty array to force generation of lastSeen for all players
-                            );
-                        }
+                        console.log(`[DEBUG] After enhancement - First player lastSeen:`, cached.players[0].lastSeen);
                     }
                     return cached;
                 }
@@ -962,17 +961,16 @@ class LeaderboardInteractionHandler {
                     // Even for cached data, enhance with activity tracking to ensure lastSeen is populated
                     if (cached.players && cached.players.length > 0) {
                         console.log('Enhancing cached war players with activity tracking...');
+                        console.log(`[DEBUG] Before enhancement - First war player lastSeen:`, cached.players[0].lastSeen);
                         
-                        // Check if players already have lastSeen data
-                        const needsEnhancement = cached.players.some(player => !player.lastSeen);
+                        // Always enhance cached data to ensure lastSeen is populated
+                        // Use empty array to force generation of lastSeen for all players
+                        cached.players = await ClashOfClansAPI.enhancePlayersWithActivity(
+                            cached.players, 
+                            [] // Empty array forces generation of lastSeen values
+                        );
                         
-                        if (needsEnhancement) {
-                            // Only enhance if some players are missing lastSeen data
-                            cached.players = await ClashOfClansAPI.enhancePlayersWithActivity(
-                                cached.players, 
-                                [] // Use empty array to force generation of lastSeen for all players
-                            );
-                        }
+                        console.log(`[DEBUG] After enhancement - First war player lastSeen:`, cached.players[0].lastSeen);
                     }
                     return cached;
                 }
