@@ -70,7 +70,6 @@ class LeaderboardEvents {
                         } catch (error) {
                             // If message not found (deleted), create new one and update DB
                             if (error.code === 10008 || error.message.includes('Unknown Message')) {
-                                console.log(`[COC] Message ${messageId} not found, creating new ${type} leaderboard message`);
                                 const newMessage = await channel.send(options);
                                 
                                 // Update database with new message ID - use clan_tag to identify specific row for multi-clan setups
@@ -178,7 +177,6 @@ class LeaderboardEvents {
             // Generate page 1 of the leaderboard
             await this.interactionHandler.generateLeaderboardPage(mockInteraction, config, 1, true, type, clanTag);
 
-            console.log(`📊 ${type} leaderboard posted/updated for ${clanTag ? `clan ${clanTag}` : 'guild'} ${guildId}`);
             return { success: true, guildId, channelId, type };
 
         } catch (error) {
@@ -221,7 +219,6 @@ class LeaderboardEvents {
             `, [scheduleType]);
 
             if (clans.length === 0) {
-                console.log(`No clans found for ${scheduleType} ${type} schedule`);
                 return { updated: 0, errors: 0, type };
             }
 
@@ -249,7 +246,6 @@ class LeaderboardEvents {
                 }
             }
 
-            console.log(`✅ Scheduled ${type} update complete: ${updated} updated, ${errors} errors`);
             return { updated, errors, scheduleType, type };
 
         } catch (error) {

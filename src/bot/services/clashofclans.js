@@ -529,23 +529,39 @@ async function generateDonationLeaderboard(clanInfo, options = {}) {
       ctx.fillText(ratio, x + 240, rowY + 12);
       
       // Last online (simplified)
-      const lastSeen = member.lastSeen || 'Unknown';
-      let lastSeenText = lastSeen;
-      if (lastSeen.includes('T')) {
-        // Parse ISO date
-        const date = new Date(lastSeen);
-        const now = new Date();
-        const diffDays = Math.floor((now - date) / (1000 * 60 * 60 * 24));
-        if (diffDays === 0) {
-          lastSeenText = 'Today';
-        } else if (diffDays === 1) {
-          lastSeenText = '1d ago';
-        } else if (diffDays < 30) {
-          lastSeenText = `${diffDays}d ago`;
-        } else {
-          lastSeenText = `${Math.floor(diffDays / 30)}mo ago`;
+      const lastSeen = member.lastSeen;
+      let lastSeenText = 'Unknown';
+      
+      if (lastSeen && lastSeen !== 'Unknown') {
+        try {
+          // Parse ISO date or other format
+          const date = new Date(lastSeen);
+          if (!isNaN(date.getTime())) {
+            const now = new Date();
+            const diffMs = now - date;
+            const diffMinutes = Math.floor(diffMs / (1000 * 60));
+            const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+            const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+            
+            if (diffMinutes < 60) {
+              lastSeenText = diffMinutes <= 1 ? 'Now' : `${diffMinutes}m ago`;
+            } else if (diffHours < 24) {
+              lastSeenText = `${diffHours}h ago`;
+            } else if (diffDays === 1) {
+              lastSeenText = '1d ago';
+            } else if (diffDays < 30) {
+              lastSeenText = `${diffDays}d ago`;
+            } else {
+              const diffMonths = Math.floor(diffDays / 30);
+              lastSeenText = `${diffMonths}mo ago`;
+            }
+          }
+        } catch (error) {
+          console.warn('Error parsing lastSeen date:', lastSeen, error);
+          lastSeenText = 'Unknown';
         }
       }
+      
       ctx.fillText(lastSeenText, x + 360, rowY + 12);
     }
     

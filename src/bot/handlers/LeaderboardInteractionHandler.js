@@ -884,8 +884,6 @@ class LeaderboardInteractionHandler {
                 if (cacheAge < 30 * 60 * 1000) {
                     // Even for cached data, enhance with activity tracking to ensure lastSeen is populated
                     if (cached.players && cached.players.length > 0) {
-                        console.log('Enhancing cached players with activity tracking...');
-                        console.log(`[DEBUG] Before enhancement - First player lastSeen:`, cached.players[0].lastSeen);
                         
                         // Always enhance cached data to ensure lastSeen is populated
                         // Use empty array to force generation of lastSeen for all players
@@ -894,7 +892,6 @@ class LeaderboardInteractionHandler {
                             [] // Empty array forces generation of lastSeen values
                         );
                         
-                        console.log(`[DEBUG] After enhancement - First player lastSeen:`, cached.players[0].lastSeen);
                     }
                     return cached;
                 }
@@ -912,7 +909,6 @@ class LeaderboardInteractionHandler {
 
             // Enhance top players with real last seen data (limited to top 10 to avoid rate limits)
             if (freshData && freshData.players && freshData.players.length > 0) {
-                console.log('Enhancing players with activity tracking...');
                 
                 // Get previous player data for comparison
                 let previousPlayers = [];
@@ -978,8 +974,6 @@ class LeaderboardInteractionHandler {
                 if (cacheAge < 30 * 60 * 1000) {
                     // Even for cached data, enhance with activity tracking to ensure lastSeen is populated
                     if (cached.players && cached.players.length > 0) {
-                        console.log('Enhancing cached war players with activity tracking...');
-                        console.log(`[DEBUG] Before enhancement - First war player lastSeen:`, cached.players[0].lastSeen);
                         
                         // Always enhance cached data to ensure lastSeen is populated
                         // Use empty array to force generation of lastSeen for all players
@@ -988,7 +982,6 @@ class LeaderboardInteractionHandler {
                             [] // Empty array forces generation of lastSeen values
                         );
                         
-                        console.log(`[DEBUG] After enhancement - First war player lastSeen:`, cached.players[0].lastSeen);
                     }
                     return cached;
                 }
@@ -1004,7 +997,6 @@ class LeaderboardInteractionHandler {
 
             // Enhance top players with real last seen data (limited to top 10 to avoid rate limits)
             if (freshData && freshData.players && freshData.players.length > 0) {
-                console.log('Enhancing war players with activity tracking...');
                 
                 // Get previous player data for comparison
                 let previousPlayers = [];
