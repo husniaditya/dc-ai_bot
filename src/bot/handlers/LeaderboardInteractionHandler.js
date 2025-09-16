@@ -868,19 +868,16 @@ class LeaderboardInteractionHandler {
                     if (cached.players && cached.players.length > 0) {
                         console.log('Enhancing cached players with activity tracking...');
                         
-                        // Get previous player data for comparison
-                        let previousPlayers = [];
-                        try {
-                            // Use the cached data itself as previous data
-                            previousPlayers = cached.players || [];
-                        } catch (error) {
-                            console.warn('Failed to parse cached player data:', error);
-                        }
+                        // Check if players already have lastSeen data
+                        const needsEnhancement = cached.players.some(player => !player.lastSeen);
                         
-                        cached.players = await ClashOfClansAPI.enhancePlayersWithActivity(
-                            cached.players, 
-                            previousPlayers
-                        );
+                        if (needsEnhancement) {
+                            // Only enhance if some players are missing lastSeen data
+                            cached.players = await ClashOfClansAPI.enhancePlayersWithActivity(
+                                cached.players, 
+                                [] // Use empty array to force generation of lastSeen for all players
+                            );
+                        }
                     }
                     return cached;
                 }
@@ -966,19 +963,16 @@ class LeaderboardInteractionHandler {
                     if (cached.players && cached.players.length > 0) {
                         console.log('Enhancing cached war players with activity tracking...');
                         
-                        // Get previous player data for comparison
-                        let previousPlayers = [];
-                        try {
-                            // Use the cached data itself as previous data
-                            previousPlayers = cached.players || [];
-                        } catch (error) {
-                            console.warn('Failed to parse cached war player data:', error);
-                        }
+                        // Check if players already have lastSeen data
+                        const needsEnhancement = cached.players.some(player => !player.lastSeen);
                         
-                        cached.players = await ClashOfClansAPI.enhancePlayersWithActivity(
-                            cached.players, 
-                            previousPlayers
-                        );
+                        if (needsEnhancement) {
+                            // Only enhance if some players are missing lastSeen data
+                            cached.players = await ClashOfClansAPI.enhancePlayersWithActivity(
+                                cached.players, 
+                                [] // Use empty array to force generation of lastSeen for all players
+                            );
+                        }
                     }
                     return cached;
                 }

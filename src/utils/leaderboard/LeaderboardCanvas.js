@@ -827,15 +827,15 @@ class LeaderboardCanvas {
             const attack = attackDetails[i];
             const attackY = baseY + (i * attackSpacing);
             
-            // Create compact attack string: "10/1 ⭐⭐⭐ 100%"
+            // Create compact attack string: "10/1 ★★★ 100%"
             let attackText = '';
             
             // Position and attack number (more compact)
             attackText += `${attack.defenderPosition || '?'}/${attack.attackNumber} `;
             
-            // Stars (using smaller star symbols if possible)
+            // Stars (using standard star symbols that render better in canvas)
             for (let s = 0; s < 3; s++) {
-                attackText += s < attack.stars ? '⭐' : '☆';
+                attackText += s < attack.stars ? '★' : '☆';
             }
             
             // Destruction percentage (more compact)

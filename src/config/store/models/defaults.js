@@ -118,7 +118,7 @@ const defaultConfigs = {
     trackDonationEvents: true,
     donationThreshold: 100,
     minDonationThreshold: 100, // Map frontend field name
-    donationLeaderboardSchedule: 'weekly',
+    donationLeaderboardSchedule: 'hourly',
     donationLeaderboardTime: '20:00',
     donationLeaderboardTemplate: '',
     warStartTemplate: '🛡️ War started against {warOpponent}! Preparation ends {warEndTime}. Good luck {roleMention}!',

@@ -75,7 +75,7 @@ class LeaderboardEvents {
                                 // Update database with new message ID (different field based on type)
                                 const messageIdField = type === 'war' ? 'war_leaderboard_message_id' : 'donation_message_id';
                                 await this.interactionHandler.db.execute(
-                                    `UPDATE guild_clashofclans_watch SET ${messageIdField} = ? WHERE guild_id = ? LIMIT 1`,
+                                    `UPDATE guild_clashofclans_watch SET ${messageIdField} = ? WHERE guild_id = ?`,
                                     [newMessage.id, guildId]
                                 );
                                 
@@ -90,7 +90,7 @@ class LeaderboardEvents {
                         // Update database with new message ID (different field based on type)
                         const messageIdField = type === 'war' ? 'war_leaderboard_message_id' : 'donation_message_id';
                         await this.interactionHandler.db.execute(
-                            `UPDATE guild_clashofclans_watch SET ${messageIdField} = ? WHERE guild_id = ? LIMIT 1`,
+                            `UPDATE guild_clashofclans_watch SET ${messageIdField} = ? WHERE guild_id = ?`,
                             [newMessage.id, guildId]
                         );
                         
@@ -131,11 +131,14 @@ class LeaderboardEvents {
             const scheduleField = type === 'war' ? 'war_leaderboard_schedule' : 'donation_leaderboard_schedule';
 
             const [guilds] = await this.interactionHandler.db.execute(`
-                SELECT guild_id, ${channelField} as channel_id, ${messageField} as message_id 
+                SELECT guild_id, 
+                       MAX(${channelField}) as channel_id, 
+                       MAX(${messageField}) as message_id 
                 FROM guild_clashofclans_watch 
                 WHERE ${trackField} = 1 
                 AND ${scheduleField} = ?
                 AND ${channelField} IS NOT NULL
+                GROUP BY guild_id
             `, [scheduleType]);
 
             if (guilds.length === 0) {

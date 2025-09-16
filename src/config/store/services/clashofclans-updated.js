@@ -111,7 +111,7 @@ async function getGuildClashOfClansConfig(guildId) {
           trackDonationEvents: !!firstRow.track_donations,
           donationThreshold: firstRow.donation_threshold || 100,
           minDonationThreshold: firstRow.donation_threshold || 100,
-          donationLeaderboardSchedule: firstRow.donation_leaderboard_schedule || 'weekly',
+          donationLeaderboardSchedule: firstRow.donation_leaderboard_schedule || 'hourly',
           donationLeaderboardTime: firstRow.donation_leaderboard_time || '20:00',
           
           // Templates
@@ -353,7 +353,7 @@ async function setGuildClashOfClansConfig(guildId, partial) {
         next.warMentionTarget || '', next.memberMentionTarget || '', next.donationMentionTarget || '',
         next.enabled ? 1 : 0, next.intervalSec || 3600, 
         next.trackWars ? 1 : 0, next.trackMembers ? 1 : 0, next.trackDonations ? 1 : 0, next.trackDonationLeaderboard ? 1 : 0,
-        next.donationThreshold || 100, next.donationLeaderboardSchedule || 'weekly', next.donationLeaderboardTime || '20:00',
+        next.donationThreshold || 100, next.donationLeaderboardSchedule || 'hourly', next.donationLeaderboardTime || '20:00',
         next.warStartTemplate, next.warEndTemplate, next.memberJoinTemplate, next.donationTemplate,
         next.donationLeaderboardTemplate, next.embedEnabled ? 1 : 0, JSON.stringify(next.clanData || {})
       ]);
@@ -386,7 +386,7 @@ async function setGuildClashOfClansConfig(guildId, partial) {
           Array.isArray(clan.donationMentionTargets) ? clan.donationMentionTargets.join(',') : '',
           next.enabled ? 1 : 0, next.intervalSec || 3600, 
           next.trackWars ? 1 : 0, next.trackMembers ? 1 : 0, next.trackDonations ? 1 : 0, next.trackDonationLeaderboard ? 1 : 0,
-          next.donationThreshold || 100, next.donationLeaderboardSchedule || 'weekly', next.donationLeaderboardTime || '20:00',
+          next.donationThreshold || 100, next.donationLeaderboardSchedule || 'hourly', next.donationLeaderboardTime || '20:00',
           next.warStartTemplate, next.warEndTemplate, next.memberJoinTemplate, next.donationTemplate,
           next.donationLeaderboardTemplate, next.embedEnabled ? 1 : 0, JSON.stringify(next.clanData || {})
         ]);
