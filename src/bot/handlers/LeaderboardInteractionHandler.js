@@ -146,7 +146,7 @@ class LeaderboardInteractionHandler {
     async handleRefresh(interaction, config, view = 'donations', clanTag = null) {
         try {
             // Clear cached data to force fresh fetch
-            await this.clearCachedData(interaction.guildId, view);
+            await this.clearCachedData(interaction.guildId, view, clanTag);
 
             // Regenerate current page directly (no loading state to avoid double acknowledgment)
             const currentPage = config.donation_leaderboard_current_page || 1;
@@ -324,7 +324,7 @@ class LeaderboardInteractionHandler {
             const pageData = clanData.players.slice(startIndex, endIndex);
 
             // Update database with current page state
-            await this.updatePageState(interaction.guildId, page, totalPages);
+            await this.updatePageState(interaction.guildId, page, totalPages, clanTag);
 
             // Generate canvas image
             const canvas = new LeaderboardCanvas();
@@ -840,19 +840,37 @@ class LeaderboardInteractionHandler {
         }
     }
 
-    async updatePageState(guildId, currentPage, totalPages) {
-        await this.db.execute(
-            'UPDATE guild_clashofclans_watch SET donation_leaderboard_current_page = ?, donation_leaderboard_total_pages = ? WHERE guild_id = ?',
-            [currentPage, totalPages, guildId]
-        );
+    async updatePageState(guildId, currentPage, totalPages, clanTag = null) {
+        if (clanTag) {
+            // Update page state for specific clan
+            await this.db.execute(
+                'UPDATE guild_clashofclans_watch SET donation_leaderboard_current_page = ?, donation_leaderboard_total_pages = ? WHERE guild_id = ? AND clan_tag = ?',
+                [currentPage, totalPages, guildId, clanTag]
+            );
+        } else {
+            // Update page state for all clans in guild (legacy behavior)
+            await this.db.execute(
+                'UPDATE guild_clashofclans_watch SET donation_leaderboard_current_page = ?, donation_leaderboard_total_pages = ? WHERE guild_id = ?',
+                [currentPage, totalPages, guildId]
+            );
+        }
     }
 
-    async clearCachedData(guildId, view = 'donations') {
+    async clearCachedData(guildId, view = 'donations', clanTag = null) {
         const column = view === 'war' ? 'war_leaderboard_cached_data' : 'donation_leaderboard_cached_data';
-        await this.db.execute(
-            `UPDATE guild_clashofclans_watch SET ${column} = NULL WHERE guild_id = ?`,
-            [guildId]
-        );
+        if (clanTag) {
+            // Clear cache for specific clan
+            await this.db.execute(
+                `UPDATE guild_clashofclans_watch SET ${column} = NULL WHERE guild_id = ? AND clan_tag = ?`,
+                [guildId, clanTag]
+            );
+        } else {
+            // Clear cache for all clans in guild (legacy behavior)
+            await this.db.execute(
+                `UPDATE guild_clashofclans_watch SET ${column} = NULL WHERE guild_id = ?`,
+                [guildId]
+            );
+        }
     }
 
     async getDonationData(config, forceRefresh = false) {
@@ -1008,7 +1026,7 @@ class LeaderboardInteractionHandler {
             // Cache the fresh data
             if (freshData) {
                 await this.db.execute(
-                    'UPDATE guild_clashofclans_watch SET war_leaderboard_cached_data = ?, donation_leaderboard_last_update = CURRENT_TIMESTAMP WHERE guild_id = ?',
+                    'UPDATE guild_clashofclans_watch SET war_leaderboard_cached_data = ?, war_leaderboard_last_update = CURRENT_TIMESTAMP WHERE guild_id = ?',
                     [JSON.stringify({ ...freshData, last_fetched: new Date().toISOString() }), config.guild_id]
                 );
             }
