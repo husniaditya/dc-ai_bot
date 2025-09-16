@@ -131,7 +131,8 @@ function createClashOfClansRoutes(client, store) {
               const result = await leaderboardEvents.postLeaderboard(
                 guild.id, 
                 donationChannelId, 
-                existingMessageId
+                existingMessageId,
+                'donations'
               );
               
               if (result && result.success) {
