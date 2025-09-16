@@ -95,11 +95,25 @@ class LeaderboardEvents {
                                         );
                                     }
                                 } else {
-                                    // For donations, update all clan rows since they share the leaderboard
-                                    await this.interactionHandler.db.execute(
-                                        `UPDATE guild_clashofclans_watch SET ${messageIdField} = ? WHERE guild_id = ?`,
-                                        [newMessage.id, guildId]
-                                    );
+                                    // For donations, update specific clan row if clan tag provided, otherwise update first clan row
+                                    if (clanTag) {
+                                        await this.interactionHandler.db.execute(
+                                            `UPDATE guild_clashofclans_watch SET ${messageIdField} = ? WHERE guild_id = ? AND clan_tag = ?`,
+                                            [newMessage.id, guildId, clanTag]
+                                        );
+                                    } else {
+                                        // Fallback: Update first clan row if no clan tag provided
+                                        const [configRows] = await this.interactionHandler.db.execute(
+                                            'SELECT clan_tag FROM guild_clashofclans_watch WHERE guild_id = ? AND donation_leaderboard_channel_id IS NOT NULL LIMIT 1',
+                                            [guildId]
+                                        );
+                                        if (configRows.length > 0) {
+                                            await this.interactionHandler.db.execute(
+                                                `UPDATE guild_clashofclans_watch SET ${messageIdField} = ? WHERE guild_id = ? AND clan_tag = ?`,
+                                                [newMessage.id, guildId, configRows[0].clan_tag]
+                                            );
+                                        }
+                                    }
                                 }
                                 
                                 return newMessage;
@@ -148,9 +162,9 @@ class LeaderboardEvents {
             };
 
             // Generate page 1 of the leaderboard
-            await this.interactionHandler.generateLeaderboardPage(mockInteraction, config, 1, true, type);
+            await this.interactionHandler.generateLeaderboardPage(mockInteraction, config, 1, true, type, clanTag);
 
-            console.log(`📊 ${type} leaderboard posted/updated for guild ${guildId}`);
+            console.log(`📊 ${type} leaderboard posted/updated for ${clanTag ? `clan ${clanTag}` : 'guild'} ${guildId}`);
             return { success: true, guildId, channelId, type };
 
         } catch (error) {
@@ -181,8 +195,9 @@ class LeaderboardEvents {
             const messageField = 'donation_message_id';
             const scheduleField = 'donation_leaderboard_schedule';
 
-            const [guilds] = await this.interactionHandler.db.execute(`
+            const [clans] = await this.interactionHandler.db.execute(`
                 SELECT guild_id, 
+                       clan_tag,
                        ${channelField} as channel_id, 
                        ${messageField} as message_id 
                 FROM guild_clashofclans_watch 
@@ -191,22 +206,23 @@ class LeaderboardEvents {
                 AND ${channelField} IS NOT NULL
             `, [scheduleType]);
 
-            if (guilds.length === 0) {
-                console.log(`No guilds found for ${scheduleType} ${type} schedule`);
+            if (clans.length === 0) {
+                console.log(`No clans found for ${scheduleType} ${type} schedule`);
                 return { updated: 0, errors: 0, type };
             }
 
             let updated = 0;
             let errors = 0;
 
-            // Process each guild
-            for (const guild of guilds) {
+            // Process each clan
+            for (const clan of clans) {
                 try {
                     await this.postLeaderboard(
-                        guild.guild_id,
-                        guild.channel_id,
-                        guild.message_id,
-                        type
+                        clan.guild_id,
+                        clan.channel_id,
+                        clan.message_id,
+                        type,
+                        clan.clan_tag  // Pass clan_tag for per-clan leaderboards
                     );
                     updated++;
                     
@@ -214,7 +230,7 @@ class LeaderboardEvents {
                     await new Promise(resolve => setTimeout(resolve, 1000));
                     
                 } catch (error) {
-                    console.error(`Failed to update ${type} leaderboard for guild ${guild.guild_id}:`, error);
+                    console.error(`Failed to update ${type} leaderboard for clan ${clan.clan_tag} in guild ${clan.guild_id}:`, error);
                     errors++;
                 }
             }
