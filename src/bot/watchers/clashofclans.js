@@ -273,30 +273,63 @@ async function pollGuild(guild) {
               console.warn(`[COC] Skipping leaderboard update for guild ${guild.id} (no donationLeaderboardChannelId set)`);
               continue;
             }
-            // Use the new LeaderboardEvents system instead of old generateDonationLeaderboard
-            const LeaderboardEvents = require('../handlers/LeaderboardEvents');
-            const leaderboardEvents = new LeaderboardEvents(guild.client, store.sqlPool);
             
             // Get existing message ID for updating
             const currentConfig = await store.getGuildClashOfClansConfig(guild.id);
-            const existingMessageId = currentConfig.donationMessageId || null;
+            let existingMessageId = currentConfig.donationMessageId || null;
+            
+            // If no message ID stored, try to find existing leaderboard message in channel
+            if (!existingMessageId) {
+              try {
+                const channel = guild.channels.cache.get(cfg.donationLeaderboardChannelId);
+                if (channel) {
+                  // Search recent messages for existing leaderboard (last 50 messages)
+                  const messages = await channel.messages.fetch({ limit: 50 });
+                  const existingMessage = messages.find(msg => 
+                    msg.author.id === guild.client.user.id && 
+                    msg.embeds.length > 0 && 
+                    (msg.embeds[0].title?.includes('Donation Leaderboard') || 
+                     msg.embeds[0].title?.includes('War Statistics')) &&
+                    msg.components.length > 0 &&
+                    msg.components[0].components?.some(btn => btn.customId?.startsWith('leaderboard_'))
+                  );
+                  
+                  if (existingMessage) {
+                    existingMessageId = existingMessage.id;
+                    console.log(`[COC] Found existing leaderboard message ${existingMessageId} for guild ${guild.id}`);
+                    
+                    // Update database with found message ID
+                    await store.setGuildClashOfClansConfig(guild.id, {
+                      donationMessageId: existingMessageId
+                    });
+                  }
+                }
+              } catch (findError) {
+                console.warn(`[COC] Could not search for existing message in guild ${guild.id}:`, findError.message);
+              }
+            }
+            
+            // Use the new LeaderboardEvents system instead of old generateDonationLeaderboard
+            const LeaderboardEvents = require('../handlers/LeaderboardEvents');
+            const leaderboardEvents = new LeaderboardEvents(guild.client, store.sqlPool);
             
             // Post/update leaderboard using new system
             const result = await leaderboardEvents.postLeaderboard(
               guild.id, 
               cfg.donationLeaderboardChannelId, 
-              existingMessageId
+              existingMessageId,
+              'donations'
             );
             
             if (result && result.success) {
-              console.log(`[COC] Updated leaderboard using new canvas system for clan ${clanTag}`);
+              console.log(`[COC] ${existingMessageId ? 'Updated' : 'Created'} leaderboard using new canvas system for guild ${guild.id}`);
               clanState.lastLeaderboardPost = now.toISOString();
             } else {
-              console.error(`[COC] Failed to update leaderboard for ${clanTag}:`, result?.error);
+              console.error(`[COC] Failed to update leaderboard for guild ${guild.id}:`, result?.error);
             }
               
           } catch (error) {
-            console.error(`[COC] Error generating scheduled donation leaderboard for ${clanTag}:`, error.message);
+            console.error(`[COC] Error generating scheduled donation leaderboard for guild ${guild.id}:`, error.message);
           }
         }
       }
@@ -418,43 +451,59 @@ async function autoRefreshWarLeaderboard(guild, cfg, clanTag, warInfo, clanState
       
       console.log(`[COC] Auto-refreshing war leaderboard for ${guild.name} - attacks changed: ${attacksChanged}`);
       
-      // Find and update war leaderboard message
-      const channel = guild.channels.cache.get(cfg.warLeaderboardChannelId);
-      if (channel) {
-        const messageId = cfg.warLeaderboardMessageId;
-        if (messageId) {
+      // Use the unified LeaderboardEvents system for consistency
+      try {
+        const LeaderboardEvents = require('../handlers/LeaderboardEvents');
+        const leaderboardEvents = new LeaderboardEvents(guild.client, store.sqlPool);
+        
+        // Get existing war message ID for updating
+        let existingMessageId = cfg.warLeaderboardMessageId || null;
+        
+        // If no message ID stored, try to find existing war leaderboard message in channel
+        if (!existingMessageId && cfg.warLeaderboardChannelId) {
           try {
-            const message = await channel.messages.fetch(messageId);
-            if (message) {
-              // Import the handler
-              const LeaderboardInteractionHandler = require('../handlers/LeaderboardInteractionHandler');
-              const handler = new LeaderboardInteractionHandler(store.db);
+            const channel = guild.channels.cache.get(cfg.warLeaderboardChannelId);
+            if (channel) {
+              // Search recent messages for existing war leaderboard (last 50 messages)
+              const messages = await channel.messages.fetch({ limit: 50 });
+              const existingMessage = messages.find(msg => 
+                msg.author.id === guild.client.user.id && 
+                msg.embeds.length > 0 && 
+                msg.embeds[0].title?.includes('War Statistics') &&
+                msg.components.length > 0 &&
+                msg.components[0].components?.some(btn => btn.customId?.startsWith('leaderboard_'))
+              );
               
-              // Create a mock interaction for auto-refresh
-              const mockInteraction = {
-                guildId: guild.id,
-                editReply: async (data) => {
-                  await message.edit(data);
-                },
-                user: { tag: 'War Auto-Refresh' },
-                member: null
-              };
-              
-              // Force refresh war data
-              await handler.clearCachedData(guild.id, 'war');
-              
-              // Get current config
-              const currentConfig = await store.getGuildClashOfClansConfig(guild.id);
-              
-              // Generate new war leaderboard page
-              await handler.generateLeaderboardPage(mockInteraction, currentConfig, 1, true, 'war');
-              
-              console.log(`[COC] War leaderboard auto-refreshed for ${guild.name}`);
+              if (existingMessage) {
+                existingMessageId = existingMessage.id;
+                console.log(`[COC] Found existing war leaderboard message ${existingMessageId} for guild ${guild.id}`);
+                
+                // Update database with found message ID
+                await store.setGuildClashOfClansConfig(guild.id, {
+                  warLeaderboardMessageId: existingMessageId
+                });
+              }
             }
-          } catch (error) {
-            console.error(`[COC] Failed to auto-refresh war leaderboard for ${guild.name}:`, error.message);
+          } catch (findError) {
+            console.warn(`[COC] Could not search for existing war message in guild ${guild.id}:`, findError.message);
           }
         }
+        
+        // Post/update war leaderboard using unified system
+        const result = await leaderboardEvents.postLeaderboard(
+          guild.id, 
+          cfg.warLeaderboardChannelId, 
+          existingMessageId,
+          'war'
+        );
+        
+        if (result && result.success) {
+          console.log(`[COC] ${existingMessageId ? 'Updated' : 'Created'} war leaderboard for guild ${guild.id}`);
+        } else {
+          console.error(`[COC] Failed to update war leaderboard for guild ${guild.id}:`, result?.error);
+        }
+      } catch (error) {
+        console.error(`[COC] Error auto-refreshing war leaderboard for ${guild.name}:`, error.message);
       }
       
       // Update last refresh time and attack data

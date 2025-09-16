@@ -35,9 +35,10 @@ class LeaderboardEvents {
      * @param {string} guildId - Guild ID
      * @param {string} channelId - Channel ID to post in
      * @param {string|null} messageId - Existing message ID to update (null for new)
+     * @param {string} type - Leaderboard type ('donations' or 'war')
      * @returns {Object} Posted message information
      */
-    async postLeaderboard(guildId, channelId, messageId = null) {
+    async postLeaderboard(guildId, channelId, messageId = null, type = 'donations') {
         try {
             const channel = await this.client.channels.fetch(channelId);
             if (!channel) {
@@ -46,8 +47,9 @@ class LeaderboardEvents {
 
             // Get leaderboard configuration
             const config = await this.interactionHandler.getLeaderboardConfig(guildId);
-            if (!config || !config.trackDonationLeaderboard) {
-                throw new Error('Leaderboard not enabled for this guild');
+            const isEnabled = type === 'war' ? config.trackWarLeaderboard : config.trackDonationLeaderboard;
+            if (!config || !isEnabled) {
+                throw new Error(`${type} leaderboard not enabled for this guild`);
             }
 
             // Create a mock interaction for posting
@@ -67,12 +69,13 @@ class LeaderboardEvents {
                         } catch (error) {
                             // If message not found (deleted), create new one and update DB
                             if (error.code === 10008 || error.message.includes('Unknown Message')) {
-                                console.log(`[COC] Message ${messageId} not found, creating new leaderboard message`);
+                                console.log(`[COC] Message ${messageId} not found, creating new ${type} leaderboard message`);
                                 const newMessage = await channel.send(options);
                                 
-                                // Update database with new message ID
+                                // Update database with new message ID (different field based on type)
+                                const messageIdField = type === 'war' ? 'war_leaderboard_message_id' : 'donation_message_id';
                                 await this.interactionHandler.db.execute(
-                                    'UPDATE guild_clashofclans_watch SET donation_message_id = ? WHERE guild_id = ?',
+                                    `UPDATE guild_clashofclans_watch SET ${messageIdField} = ? WHERE guild_id = ?`,
                                     [newMessage.id, guildId]
                                 );
                                 
@@ -84,9 +87,10 @@ class LeaderboardEvents {
                         // Post new message
                         const newMessage = await channel.send(options);
                         
-                        // Update database with new message ID
+                        // Update database with new message ID (different field based on type)
+                        const messageIdField = type === 'war' ? 'war_leaderboard_message_id' : 'donation_message_id';
                         await this.interactionHandler.db.execute(
-                            'UPDATE guild_clashofclans_watch SET donation_message_id = ? WHERE guild_id = ?',
+                            `UPDATE guild_clashofclans_watch SET ${messageIdField} = ? WHERE guild_id = ?`,
                             [newMessage.id, guildId]
                         );
                         
@@ -99,14 +103,14 @@ class LeaderboardEvents {
             };
 
             // Generate page 1 of the leaderboard
-            await this.interactionHandler.generateLeaderboardPage(mockInteraction, config, 1, true);
+            await this.interactionHandler.generateLeaderboardPage(mockInteraction, config, 1, true, type);
 
-            console.log(`📊 Leaderboard posted/updated for guild ${guildId}`);
-            return { success: true, guildId, channelId };
+            console.log(`📊 ${type} leaderboard posted/updated for guild ${guildId}`);
+            return { success: true, guildId, channelId, type };
 
         } catch (error) {
-            console.error(`Failed to post leaderboard for guild ${guildId}:`, error);
-            return { success: false, error: error.message, guildId, channelId };
+            console.error(`Failed to post ${type} leaderboard for guild ${guildId}:`, error);
+            return { success: false, error: error.message, guildId, channelId, type };
         }
     }
 
@@ -114,23 +118,29 @@ class LeaderboardEvents {
      * Scheduled job handler - updates all active leaderboards
      * Call this method from your scheduler (cron jobs, etc.)
      * @param {string} scheduleType - Type of schedule (hourly, daily, weekly, monthly)
+     * @param {string} type - Leaderboard type ('donations' or 'war')
      */
-    async runScheduledUpdate(scheduleType) {
+    async runScheduledUpdate(scheduleType, type = 'donations') {
         try {
-            console.log(`🕐 Starting scheduled leaderboard update: ${scheduleType}`);
+            console.log(`🕐 Starting scheduled ${type} leaderboard update: ${scheduleType}`);
 
-            // Get all guilds with matching schedule
+            // Get all guilds with matching schedule (different fields for war vs donations)
+            const trackField = type === 'war' ? 'track_war_leaderboard' : 'track_donation_leaderboard';
+            const channelField = type === 'war' ? 'war_leaderboard_channel_id' : 'donation_leaderboard_channel_id';
+            const messageField = type === 'war' ? 'war_leaderboard_message_id' : 'donation_message_id';
+            const scheduleField = type === 'war' ? 'war_leaderboard_schedule' : 'donation_leaderboard_schedule';
+
             const [guilds] = await this.interactionHandler.db.execute(`
-                SELECT guild_id, donation_leaderboard_channel_id, donation_message_id 
+                SELECT guild_id, ${channelField} as channel_id, ${messageField} as message_id 
                 FROM guild_clashofclans_watch 
-                WHERE track_donation_leaderboard = 1 
-                AND donation_leaderboard_schedule = ?
-                AND donation_leaderboard_channel_id IS NOT NULL
+                WHERE ${trackField} = 1 
+                AND ${scheduleField} = ?
+                AND ${channelField} IS NOT NULL
             `, [scheduleType]);
 
             if (guilds.length === 0) {
-                console.log(`No guilds found for ${scheduleType} schedule`);
-                return { updated: 0, errors: 0 };
+                console.log(`No guilds found for ${scheduleType} ${type} schedule`);
+                return { updated: 0, errors: 0, type };
             }
 
             let updated = 0;
@@ -141,8 +151,9 @@ class LeaderboardEvents {
                 try {
                     await this.postLeaderboard(
                         guild.guild_id,
-                        guild.donation_leaderboard_channel_id,
-                        guild.donation_message_id
+                        guild.channel_id,
+                        guild.message_id,
+                        type
                     );
                     updated++;
                     
@@ -150,25 +161,26 @@ class LeaderboardEvents {
                     await new Promise(resolve => setTimeout(resolve, 1000));
                     
                 } catch (error) {
-                    console.error(`Failed to update leaderboard for guild ${guild.guild_id}:`, error);
+                    console.error(`Failed to update ${type} leaderboard for guild ${guild.guild_id}:`, error);
                     errors++;
                 }
             }
 
-            console.log(`✅ Scheduled update complete: ${updated} updated, ${errors} errors`);
-            return { updated, errors, scheduleType };
+            console.log(`✅ Scheduled ${type} update complete: ${updated} updated, ${errors} errors`);
+            return { updated, errors, scheduleType, type };
 
         } catch (error) {
-            console.error('Error in scheduled leaderboard update:', error);
-            return { updated: 0, errors: 1, error: error.message };
+            console.error(`Error in scheduled ${type} leaderboard update:`, error);
+            return { updated: 0, errors: 1, error: error.message, type };
         }
     }
 
     /**
      * Admin command to manually trigger leaderboard update
      * @param {CommandInteraction} interaction - Discord slash command interaction
+     * @param {string} type - Leaderboard type ('donations' or 'war')
      */
-    async handleAdminCommand(interaction) {
+    async handleAdminCommand(interaction, type = 'donations') {
         try {
             if (!interaction.member.permissions.has('ManageGuild')) {
                 return await interaction.reply({
@@ -181,18 +193,20 @@ class LeaderboardEvents {
 
             const result = await this.postLeaderboard(
                 interaction.guildId,
-                interaction.channelId
+                interaction.channelId,
+                null,
+                type
             );
 
             if (result.success) {
-                await interaction.editReply('✅ Leaderboard updated successfully!');
+                await interaction.editReply(`✅ ${type} leaderboard updated successfully!`);
             } else {
-                await interaction.editReply(`❌ Failed to update leaderboard: ${result.error}`);
+                await interaction.editReply(`❌ Failed to update ${type} leaderboard: ${result.error}`);
             }
 
         } catch (error) {
-            console.error('Error in admin leaderboard command:', error);
-            await interaction.editReply('❌ An error occurred while updating the leaderboard.');
+            console.error(`Error in admin ${type} leaderboard command:`, error);
+            await interaction.editReply(`❌ An error occurred while updating the ${type} leaderboard.`);
         }
     }
 }

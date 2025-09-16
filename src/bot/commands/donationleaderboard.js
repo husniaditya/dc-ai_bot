@@ -32,7 +32,7 @@ module.exports = {
       const LeaderboardEvents = require('../handlers/LeaderboardEvents');
       const lb = new LeaderboardEvents(client, store.sqlPool);
       const existingMessageId = cfg.donationMessageId || null;
-      const result = await lb.postLeaderboard(interaction.guildId, cfg.donationLeaderboardChannelId, existingMessageId);
+      const result = await lb.postLeaderboard(interaction.guildId, cfg.donationLeaderboardChannelId, existingMessageId, 'donations');
 
       if (result.success) {
         await interaction.editReply('✅ Donation leaderboard refreshed.');
