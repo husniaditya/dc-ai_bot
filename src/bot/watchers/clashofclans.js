@@ -8,6 +8,90 @@ const STATE_PATH = path.join(__dirname, 'clashofclans-state.json');
 let state = { clans: {} };
 try { state = JSON.parse(fs.readFileSync(STATE_PATH,'utf8')); } catch { /* ignore */ }
 
+// Centralized DB update for message ids with logging
+async function persistMessageId(guildId, clanTag, field, messageId){
+  try {
+    const [result] = await store.sqlPool.execute(
+      `UPDATE guild_clashofclans_watch SET ${field} = ? WHERE guild_id = ? AND clan_tag = ?`,
+      [messageId, guildId, clanTag]
+    );
+    // mysql2 returns an object with affectedRows
+    if(result && typeof result.affectedRows !== 'undefined' && result.affectedRows === 0){
+      console.warn(`[COC] persistMessageId: no row updated field=${field} guild=${guildId} clan=${clanTag}`);
+    } else if(process.env.COC_DEBUG==='1') {
+      console.log(`[COC] Stored ${field} guild=${guildId} clan=${clanTag} id=${messageId}`);
+    }
+  } catch(err){
+    console.warn(`[COC] Failed to persist ${field} guild=${guildId} clan=${clanTag}: ${err.message}`);
+  }
+}
+
+// Helper: discover existing leaderboard message for a clan (embed footer contains clan tag) or create placeholder
+async function ensureLeaderboardMessage(guild, cfg, type, cleanTag, clanInfo){
+  try {
+    const isWar = type === 'war';
+    const channelId = isWar
+      ? (cfg.warLeaderboardChannelId || cfg.warAnnounceChannelId || null)
+      : cfg.donationLeaderboardChannelId;
+    if(!channelId) return null;
+
+    const messageIdField = isWar ? 'war_leaderboard_message_id' : 'donation_message_id';
+    // Check DB first
+    let existingId = null;
+    try {
+      const [rows] = await store.sqlPool.execute(
+        `SELECT ${messageIdField} FROM guild_clashofclans_watch WHERE guild_id = ? AND clan_tag = ? LIMIT 1`,
+        [guild.id, cleanTag]
+      );
+      if(rows.length && rows[0][messageIdField]) return rows[0][messageIdField];
+    } catch(dbErr){
+      console.warn(`[COC] ensureLeaderboardMessage DB read failed ${dbErr.message}`);
+    }
+
+    let channel = guild.channels.cache.get(channelId);
+    if(!channel){
+      try { channel = await guild.channels.fetch(channelId); } catch { /* ignore */ }
+    }
+    if(!channel) return null;
+
+    // Try to discover by scanning recent messages
+    try {
+      const messages = await channel.messages.fetch({ limit: 50 });
+      const match = messages.find(m => {
+        if(m.author.id !== guild.client.user.id) return false;
+        if(!m.embeds.length) return false;
+        const embed = m.embeds[0];
+        const footerText = embed.footer?.text || '';
+        return footerText.includes(cleanTag);
+      });
+      if(match){
+        existingId = match.id;
+        await persistMessageId(guild.id, cleanTag, messageIdField, existingId);
+        if(process.env.COC_DEBUG==='1') console.log(`[COC] Discovered existing ${type} leaderboard message guild=${guild.id} clan=${cleanTag} id=${existingId}`);
+        return existingId;
+      }
+    } catch(scanErr){
+      console.warn(`[COC] Failed discovery scan (${type}) guild=${guild.id} clan=${cleanTag}: ${scanErr.message}`);
+    }
+
+    // Create placeholder to stabilize message id before first real render
+    try {
+      const placeholderText = isWar
+        ? `⚔️ War statistics for ${clanInfo?.name || cleanTag} will appear here once data is available.`
+        : `📊 Donation leaderboard for ${clanInfo?.name || cleanTag} will appear soon.`;
+      const placeholder = await channel.send(placeholderText);
+      await persistMessageId(guild.id, cleanTag, messageIdField, placeholder.id);
+      if(process.env.COC_DEBUG==='1') console.log(`[COC] Created placeholder ${type} leaderboard message guild=${guild.id} clan=${cleanTag} id=${placeholder.id}`);
+      return placeholder.id;
+    } catch(phErr){
+      console.warn(`[COC] Failed to create placeholder ${type} leaderboard guild=${guild.id} clan=${cleanTag}: ${phErr.message}`);
+    }
+  } catch(err){
+    console.warn(`[COC] ensureLeaderboardMessage error (${type}) guild=${guild.id} clan=${cleanTag}: ${err.message}`);
+  }
+  return null;
+}
+
 // Import COC service functions
 const { 
   fetchClanInfo, 
@@ -18,6 +102,20 @@ const {
   getCOCStats,
   cocStats 
 } = require('../services/clashofclans');
+
+// Lazy singleton for LeaderboardEvents to avoid registering multiple listeners
+let _leaderboardEventsInstance = null;
+function getLeaderboardEventsInstance(client) {
+  if (!_leaderboardEventsInstance) {
+    try {
+      const LeaderboardEvents = require('../handlers/LeaderboardEvents');
+      _leaderboardEventsInstance = new LeaderboardEvents(client, store.sqlPool);
+    } catch (err) {
+      console.warn('[COC] Failed to initialize LeaderboardEvents singleton:', err.message);
+    }
+  }
+  return _leaderboardEventsInstance;
+}
 
 function saveStateDebounced(){
 	if(saveStateDebounced._t) clearTimeout(saveStateDebounced._t);
@@ -100,7 +198,9 @@ async function pollGuild(guild) {
           lastWarState: null,
           lastWarEndTime: null,
           knownDonationMilestones: new Map(),
-          lastLeaderboardPost: null
+          // Track last donation leaderboard post per clan (was lastLeaderboardPost)
+          lastDonationLeaderboardPost: null,
+          lastLeaderboardPost: null // backward compat load
         };
       }
       
@@ -113,6 +213,64 @@ async function pollGuild(guild) {
       }
       const currentMembers = clanInfo.memberList || [];
       const currentMemberTags = currentMembers.map(m => m.tag);
+
+      // ------------------------------------------------------------------
+      // Ensure initial war leaderboard message exists (one per clan row)
+      // Donation leaderboard gets created on first scheduled update; war
+      // leaderboard previously only appeared once a war was active. This
+      // block creates an initial (placeholder) war leaderboard message so
+      // the channel has a persistent message whose ID can be updated later.
+      // ------------------------------------------------------------------
+      // Determine effective war leaderboard channel (explicit warLeaderboardChannelId or fallback to warAnnounceChannelId)
+      const effectiveWarLeaderboardChannelId = cfg.warLeaderboardChannelId || cfg.warAnnounceChannelId || null;
+
+      if (cfg.trackWarLeaderboard && effectiveWarLeaderboardChannelId) {
+        try {
+          const [rows] = await store.sqlPool.execute(
+            'SELECT war_leaderboard_message_id FROM guild_clashofclans_watch WHERE guild_id = ? AND clan_tag = ? LIMIT 1',
+            [guild.id, cleanTag]
+          );
+          const existingMsgId = rows.length ? rows[0].war_leaderboard_message_id : null;
+          if (!existingMsgId) {
+            // Attempt to post real war leaderboard via unified system
+            const leaderboardEvents = getLeaderboardEventsInstance(guild.client);
+            let posted = false;
+            if (leaderboardEvents) {
+              try {
+                const result = await leaderboardEvents.postLeaderboard(
+                  guild.id,
+                  effectiveWarLeaderboardChannelId,
+                  null,
+                  'war',
+                  cleanTag
+                );
+                posted = result && result.success;
+              } catch (postErr) {
+                console.warn(`[COC] Initial war leaderboard generation failed for ${cleanTag}:`, postErr.message);
+              }
+            }
+            if (!posted) {
+              // Fallback placeholder so message id is stored for later updates
+              try {
+                const channel = guild.channels.cache.get(effectiveWarLeaderboardChannelId);
+                if (channel) {
+                  const placeholder = await channel.send(`⚔️ War statistics for ${clanInfo.name} will appear here once war data is available.`);
+                  await persistMessageId(guild.id, cleanTag, 'war_leaderboard_message_id', placeholder.id);
+                }
+              } catch (phErr) {
+                console.warn(`[COC] Failed to create placeholder war leaderboard message for ${cleanTag}:`, phErr.message);
+              }
+            }
+          }
+        } catch (initErr) {
+          console.warn('[COC] Error ensuring initial war leaderboard message:', initErr.message);
+        }
+      }
+      else if (cfg.trackWarLeaderboard && !effectiveWarLeaderboardChannelId) {
+        if (process.env.COC_DEBUG === '1') {
+          console.warn(`[COC] War leaderboard enabled but no channel configured (guild=${guild.id}, clan=${cleanTag}).`);
+        }
+      }
       
       // Check for member changes if tracking is enabled
       if (cfg.trackMembers || cfg.trackMemberEvents) {
@@ -188,6 +346,35 @@ async function pollGuild(guild) {
               warEndTime: getWarTimeRemaining(warEndTime),
               memberCount: `${currentMembers.length}/50`
             }, 'war_start');
+
+            // Create NEW war leaderboard message for each new war
+            if (cfg.trackWarLeaderboard && (cfg.warLeaderboardChannelId || cfg.warAnnounceChannelId)) {
+              try {
+                const leaderboardEvents = getLeaderboardEventsInstance(guild.client);
+                if (leaderboardEvents) {
+                  const effectiveChannelId = cfg.warLeaderboardChannelId || cfg.warAnnounceChannelId;
+                  
+                  // Force creation of a NEW message by passing null messageId
+                  const result = await leaderboardEvents.postLeaderboard(
+                    guild.id,
+                    effectiveChannelId,
+                    null, // null forces creation of new message
+                    'war',
+                    cleanTag
+                  );
+                  
+                  if (result && result.success) {
+                    console.log(`[COC] Created NEW war leaderboard message for new war (clan ${cleanTag}, guild ${guild.id})`);
+                    // Reset the war refresh timer so it doesn't immediately update again
+                    clanState.lastWarLeaderboardRefresh = Date.now();
+                  } else {
+                    console.error(`[COC] Failed to create new war leaderboard message for clan ${cleanTag}:`, result?.error);
+                  }
+                }
+              } catch (newWarError) {
+                console.error(`[COC] Error creating new war leaderboard message for new war:`, newWarError.message);
+              }
+            }
           }
           
           // War ended (was in war, now not in war, or preparation ended)
@@ -226,7 +413,7 @@ async function pollGuild(guild) {
           clanState.lastWarEndTime = warEndTime;
 
           // Auto-refresh war statistics during active wars
-          if (warState === 'inWar' && cfg.warLeaderboardChannelId) {
+          if (warState === 'inWar' && (cfg.warLeaderboardChannelId || cfg.warAnnounceChannelId)) {
             await autoRefreshWarLeaderboard(guild, cfg, cleanTag, warInfo, clanState);
           }
         } else {
@@ -238,101 +425,114 @@ async function pollGuild(guild) {
       }
       
       clanState.lastMemberCount = currentMembers.length;
-      
-      // Check if we should update donation leaderboard based on schedule
-      if (cfg.trackDonationLeaderboard && cfg.donationLeaderboardSchedule) {
+
+      // Ensure donation leaderboard message id exists early (even before schedule triggers) to prevent duplicate messages
+      if (cfg.trackDonationLeaderboard && cfg.donationLeaderboardChannelId) {
+        await ensureLeaderboardMessage(guild, cfg, 'donations', cleanTag, clanInfo);
+      }
+
+      // Per-clan donation leaderboard scheduling (replaces single primary-only logic)
+      if (cfg.trackDonationLeaderboard && cfg.donationLeaderboardSchedule && cfg.donationLeaderboardChannelId) {
         const now = new Date();
-        const lastLeaderboardPost = clanState.lastLeaderboardPost ? new Date(clanState.lastLeaderboardPost) : null;
-        
+        // Backward compatibility: migrate old field name the first time
+        if (!clanState.lastDonationLeaderboardPost && clanState.lastLeaderboardPost) {
+          clanState.lastDonationLeaderboardPost = clanState.lastLeaderboardPost;
+        }
+        const lastPost = clanState.lastDonationLeaderboardPost ? new Date(clanState.lastDonationLeaderboardPost) : null;
         let shouldUpdate = false;
-        
-        // Check if it's time to update based on schedule
         switch (cfg.donationLeaderboardSchedule) {
           case 'hourly':
-            shouldUpdate = !lastLeaderboardPost || 
-              (now.getTime() - lastLeaderboardPost.getTime()) >= (60 * 60 * 1000);
-            break;
+            shouldUpdate = !lastPost || (now - lastPost) >= 60 * 60 * 1000; break;
           case 'daily':
-            shouldUpdate = !lastLeaderboardPost || 
-              (now.getTime() - lastLeaderboardPost.getTime()) >= (24 * 60 * 60 * 1000);
-            break;
+            shouldUpdate = !lastPost || (now - lastPost) >= 24 * 60 * 60 * 1000; break;
           case 'weekly':
-            shouldUpdate = !lastLeaderboardPost || 
-              (now.getTime() - lastLeaderboardPost.getTime()) >= (7 * 24 * 60 * 60 * 1000);
-            break;
+            shouldUpdate = !lastPost || (now - lastPost) >= 7 * 24 * 60 * 60 * 1000; break;
           case 'monthly':
-            shouldUpdate = !lastLeaderboardPost || 
-              (now.getMonth() !== lastLeaderboardPost.getMonth() || 
-               now.getFullYear() !== lastLeaderboardPost.getFullYear());
-            break;
+            shouldUpdate = !lastPost || now.getMonth() !== lastPost.getMonth() || now.getFullYear() !== lastPost.getFullYear(); break;
         }
-        
+        // Force update if database row lacks donation_message_id even if schedule not yet due
+        if (!shouldUpdate) {
+          try {
+            const [rowCheck] = await store.sqlPool.execute(
+              'SELECT donation_message_id FROM guild_clashofclans_watch WHERE guild_id = ? AND clan_tag = ? LIMIT 1',
+              [guild.id, cleanTag]
+            );
+            if (rowCheck.length && !rowCheck[0].donation_message_id) {
+              if (process.env.COC_DEBUG === '1') {
+                console.log(`[COC] Forcing donation leaderboard update (missing message id) guild=${guild.id} clan=${cleanTag}`);
+              }
+              shouldUpdate = true;
+            }
+          } catch (forceErr) {
+            console.warn(`[COC] Could not verify donation_message_id for force-update check (guild=${guild.id} clan=${cleanTag}):`, forceErr.message);
+          }
+        }
         if (shouldUpdate) {
           try {
-            if (!cfg.donationLeaderboardChannelId) {
-              console.warn(`[COC] Skipping leaderboard update for guild ${guild.id} (no donationLeaderboardChannelId set)`);
-              continue;
+            // Fetch existing per-row donation message id
+            let existingMessageId = null;
+            try {
+              const [rows] = await store.sqlPool.execute(
+                'SELECT donation_message_id FROM guild_clashofclans_watch WHERE guild_id = ? AND clan_tag = ? LIMIT 1',
+                [guild.id, cleanTag]
+              );
+              if (rows.length && rows[0].donation_message_id) {
+                existingMessageId = rows[0].donation_message_id;
+              }
+            } catch (idErr) {
+              console.warn(`[COC] Failed to read donation message id (guild=${guild.id} clan=${cleanTag}):`, idErr.message);
             }
-            
-            // Get existing message ID for updating
-            const currentConfig = await store.getGuildClashOfClansConfig(guild.id);
-            let existingMessageId = currentConfig.donationMessageId || null;
-            
-            // If no message ID stored, try to find existing leaderboard message in channel
+            // Attempt discovery ONLY if not stored and earlier ensureLeaderboardMessage did not already do it.
+            // Tight filter: embed footer must contain the exact clan tag to avoid sharing one message across clans.
             if (!existingMessageId) {
               try {
                 const channel = guild.channels.cache.get(cfg.donationLeaderboardChannelId);
                 if (channel) {
-                  // Search recent messages for existing leaderboard (last 50 messages)
                   const messages = await channel.messages.fetch({ limit: 50 });
-                  const existingMessage = messages.find(msg => 
-                    msg.author.id === guild.client.user.id && 
-                    msg.embeds.length > 0 && 
-                    (msg.embeds[0].title?.includes('Donation Leaderboard') || 
-                     msg.embeds[0].title?.includes('War Statistics')) &&
-                    msg.components.length > 0 &&
-                    msg.components[0].components?.some(btn => btn.customId?.startsWith('leaderboard_'))
-                  );
-                  
+                  const existingMessage = messages.find(msg => {
+                    if (msg.author.id !== guild.client.user.id) return false;
+                    if (!msg.embeds.length) return false;
+                    const embed = msg.embeds[0];
+                    const footerText = embed.footer?.text || '';
+                    // require exact tag token boundary to reduce false positives
+                    return footerText.includes(cleanTag);
+                  });
                   if (existingMessage) {
                     existingMessageId = existingMessage.id;
-                    
-                    // Update database with found message ID (for first clan only, since donations are shared)
                     try {
-                      await store.sqlPool.execute(
-                        'UPDATE guild_clashofclans_watch SET donation_message_id = ? WHERE guild_id = ? AND clan_tag = ? LIMIT 1',
-                        [existingMessageId, guild.id, cleanTag]
-                      );
-                    } catch (updateError) {
-                      console.warn(`[COC] Failed to update donation message ID for guild ${guild.id}, clan ${cleanTag}:`, updateError.message);
+                      await persistMessageId(guild.id, cleanTag, 'donation_message_id', existingMessageId);
+                      if (process.env.COC_DEBUG==='1') console.log(`[COC] Clan-specific donation message discovered guild=${guild.id} clan=${cleanTag} id=${existingMessageId}`);
+                    } catch (upErr) {
+                      console.warn(`[COC] Could not persist discovered donation message id (guild=${guild.id} clan=${cleanTag}):`, upErr.message);
                     }
                   }
                 }
-              } catch (findError) {
-                console.warn(`[COC] Could not search for existing message in guild ${guild.id}:`, findError.message);
+              } catch (discoverErr) {
+                console.warn(`[COC] Discovery of donation message failed (guild=${guild.id} clan=${cleanTag}):`, discoverErr.message);
               }
             }
-            
-            // Use the new LeaderboardEvents system instead of old generateDonationLeaderboard
-            const LeaderboardEvents = require('../handlers/LeaderboardEvents');
-            const leaderboardEvents = new LeaderboardEvents(guild.client, store.sqlPool);
-            
-            // Post/update leaderboard using new system
-            const result = await leaderboardEvents.postLeaderboard(
-              guild.id, 
-              cfg.donationLeaderboardChannelId, 
-              existingMessageId,
-              'donations'
-            );
-            
-            if (result && result.success) {
-              clanState.lastLeaderboardPost = now.toISOString();
+            const leaderboardEvents = getLeaderboardEventsInstance(guild.client);
+            if (!leaderboardEvents) {
+              console.warn('[COC] LeaderboardEvents unavailable; skipping donation leaderboard post');
             } else {
-              console.error(`[COC] Failed to update leaderboard for guild ${guild.id}:`, result?.error);
+              const result = await leaderboardEvents.postLeaderboard(
+                guild.id,
+                cfg.donationLeaderboardChannelId,
+                existingMessageId,
+                'donations',
+                cleanTag // pass clanTag to persist per-row id
+              );
+              if (result && result.success) {
+                clanState.lastDonationLeaderboardPost = now.toISOString();
+                if (process.env.COC_DEBUG === '1') {
+                  console.log(`[COC] Donation leaderboard updated guild=${guild.id} clan=${cleanTag} msgId=${existingMessageId || 'new'}`);
+                }
+              } else {
+                console.error(`[COC] Donation leaderboard update failed (guild=${guild.id} clan=${cleanTag}):`, result?.error);
+              }
             }
-              
-          } catch (error) {
-            console.error(`[COC] Error generating scheduled donation leaderboard for guild ${guild.id}:`, error.message);
+          } catch (donErr) {
+            console.error(`[COC] Error updating donation leaderboard (guild=${guild.id} clan=${cleanTag}):`, donErr.message);
           }
         }
       }
@@ -392,9 +592,15 @@ function startCOCWatcher(client) {
  */
 async function autoRefreshWarLeaderboard(guild, cfg, clanTag, warInfo, clanState) {
   try {
-    // Check if war leaderboard is enabled and has a separate channel
-    if (!cfg.warLeaderboardChannelId) {
-      return; // No war leaderboard channel configured
+    // Determine effective channel (explicit war leaderboard channel, else fallback to war announce channel)
+    const effectiveChannelId = cfg.warLeaderboardChannelId || cfg.warAnnounceChannelId || null;
+
+    // Check if war leaderboard is enabled and has a channel
+    if (!effectiveChannelId) {
+      if (process.env.COC_DEBUG === '1') {
+        console.warn(`[COC] Skipping war leaderboard refresh (no channel) guild=${guild.id} clan=${clanTag}`);
+      }
+      return; // No channel configured
     }
 
     if (!clanState) return;
@@ -472,9 +678,9 @@ async function autoRefreshWarLeaderboard(guild, cfg, clanTag, warInfo, clanState
         }
         
         // If no message ID stored, try to find existing war leaderboard message in channel
-        if (!existingMessageId && cfg.warLeaderboardChannelId) {
+        if (!existingMessageId && effectiveChannelId) {
           try {
-            const channel = guild.channels.cache.get(cfg.warLeaderboardChannelId);
+            const channel = guild.channels.cache.get(effectiveChannelId);
             if (channel) {
               // Search recent messages for existing war leaderboard (last 50 messages)
               const messages = await channel.messages.fetch({ limit: 50 });
@@ -508,7 +714,7 @@ async function autoRefreshWarLeaderboard(guild, cfg, clanTag, warInfo, clanState
         // Post/update war leaderboard using unified system
         const result = await leaderboardEvents.postLeaderboard(
           guild.id, 
-          cfg.warLeaderboardChannelId, 
+          effectiveChannelId, 
           existingMessageId,
           'war',
           clanTag  // Pass clan tag for proper database updates
@@ -516,10 +722,10 @@ async function autoRefreshWarLeaderboard(guild, cfg, clanTag, warInfo, clanState
         
         if (result && result.success) {
         } else {
-          console.error(`[COC] Failed to update war leaderboard for guild ${guild.id}:`, result?.error);
+          console.error(`[COC] Failed to update war leaderboard for guild ${guild.id}, clan ${clanTag}:`, result?.error);
         }
       } catch (error) {
-        console.error(`[COC] Error auto-refreshing war leaderboard for ${guild.name}:`, error.message);
+        console.error(`[COC] Error auto-refreshing war leaderboard for ${guild.name} (clan ${clanTag}):`, error.message);
       }
       
       // Update last refresh time and attack data

@@ -182,6 +182,7 @@ class ClashOfClansAPI {
                             versusTrophies: member.versusTrophies || 0,
                             clanRank: member.clanRank || 0,
                             previousClanRank: member.previousClanRank || 0,
+                            townHallLevel: member.townHallLevel || 1, // Add town hall level
                             // Note: lastSeen is not available in clan members endpoint
                             // Would require individual player API calls which are rate-limited
                             // Consider implementing a background job to periodically fetch and cache this data
@@ -273,6 +274,7 @@ class ClashOfClansAPI {
                             versusTrophies: member.versusTrophies || 0,
                             clanRank: member.clanRank || 0,
                             previousClanRank: member.previousClanRank || 0,
+                            townHallLevel: member.townHallLevel || 1, // Add town hall level
                             lastSeen: null
                         };
 
@@ -521,11 +523,22 @@ class ClashOfClansAPI {
             // Fetch data for each clan separately
             for (const clanTag of clanTags) {
                 try {
-                    const [clanInfo, currentWar, warLog] = await Promise.all([
+                    const [clanInfo, currentWar, warLog, clanMembers] = await Promise.all([
                         this.getClan(clanTag),
                         this.getCurrentWar(clanTag).catch(() => null), // War might not be active
-                        this.getWarLog(clanTag).catch(() => null) // War log might be private
+                        this.getWarLog(clanTag).catch(() => null), // War log might be private
+                        this.getClanMembers(clanTag) // Fetch current clan members for roles
                     ]);
+
+                    // Create a map of current member roles and town hall levels for accurate display
+                    const currentMemberRoles = new Map();
+                    const currentMemberTownHalls = new Map();
+                    if (clanMembers && clanMembers.items) {
+                        for (const member of clanMembers.items) {
+                            currentMemberRoles.set(member.tag, member.role);
+                            currentMemberTownHalls.set(member.tag, member.townHallLevel || 1);
+                        }
+                    }
 
                     const clanWarData = [];
 
@@ -563,10 +576,15 @@ class ClashOfClansAPI {
                             const tag = member.tag;
                             
                             if (!playerStats.has(tag)) {
+                                // Use current clan role if available, otherwise fall back to war role
+                                const currentRole = currentMemberRoles.get(tag) || member.role || 'member';
+                                const currentTownHall = currentMemberTownHalls.get(tag) || member.townHallLevel || 1;
+                                
                                 playerStats.set(tag, {
                                     tag: member.tag,
                                     name: member.name,
-                                    role: member.role || 'member',
+                                    role: currentRole,
+                                    townHallLevel: currentTownHall,
                                     // War statistics
                                     warsParticipated: 0,
                                     warsWon: 0,

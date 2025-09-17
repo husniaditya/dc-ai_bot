@@ -68,7 +68,10 @@ async function getGuildClashOfClansConfig(guildId) {
               donationMentionTargets: row.donation_mention_target ? row.donation_mention_target.split(',').filter(Boolean) : [],
               warAnnounceChannelId: row.war_announce_channel_id,
               memberAnnouncementChannelId: row.member_announce_channel_id,
-              donationAnnounceChannelId: row.donation_announce_channel_id
+              donationAnnounceChannelId: row.donation_announce_channel_id,
+              // Preserve per-clan message ids so we don't overwrite them on save
+              warLeaderboardMessageId: row.war_leaderboard_message_id || null,
+              donationMessageId: row.donation_message_id || null
             };
           }
         });
@@ -280,7 +283,9 @@ async function setGuildClashOfClansConfig(guildId, partial) {
             donationMentionTargets: clanConfig.donationMentionTargets || clanConfig.donationMentionTarget ? [clanConfig.donationMentionTarget] : [],
             warAnnounceChannelId: clanConfig.warAnnounceChannelId || null,
             memberAnnouncementChannelId: clanConfig.memberAnnouncementChannelId || null,
-            donationAnnounceChannelId: clanConfig.donationAnnounceChannelId || null
+            donationAnnounceChannelId: clanConfig.donationAnnounceChannelId || null,
+            warLeaderboardMessageId: clanConfig.warLeaderboardMessageId || clanConfig.war_leaderboard_message_id || null,
+            donationMessageId: clanConfig.donationMessageId || clanConfig.donation_message_id || null
           });
         });
       } else {
@@ -302,7 +307,9 @@ async function setGuildClashOfClansConfig(guildId, partial) {
             donationMentionTargets: clanConfig.donationMentionTargets || [],
             warAnnounceChannelId: clanConfig.warAnnounceChannelId || null,
             memberAnnouncementChannelId: clanConfig.memberAnnouncementChannelId || null,
-            donationAnnounceChannelId: clanConfig.donationAnnounceChannelId || null
+            donationAnnounceChannelId: clanConfig.donationAnnounceChannelId || null,
+            warLeaderboardMessageId: clanConfig.warLeaderboardMessageId || clanConfig.war_leaderboard_message_id || null,
+            donationMessageId: clanConfig.donationMessageId || clanConfig.donation_message_id || null
           });
         }
       }
@@ -325,7 +332,10 @@ async function setGuildClashOfClansConfig(guildId, partial) {
           donationMentionTargets: [],
           warAnnounceChannelId: null,
           memberAnnouncementChannelId: null,
-          donationAnnounceChannelId: null
+          donationAnnounceChannelId: null,
+          // For legacy arrays, reuse global message ids only for first clan; others remain null to avoid duplication
+          warLeaderboardMessageId: index === 0 ? (next.warLeaderboardMessageId || null) : null,
+          donationMessageId: index === 0 ? (next.donationMessageId || null) : null
         });
       });
     }
@@ -379,7 +389,9 @@ async function setGuildClashOfClansConfig(guildId, partial) {
           guildId, clan.tag, clan.name, clan.order,
           clan.warAnnounceChannelId || null, clan.memberAnnouncementChannelId || null, clan.donationAnnounceChannelId || null,
           donationLeaderboardChannelId || null, warLeaderboardChannelId || null,
-          next.donationMessageId || null, next.warLeaderboardMessageId || null,
+          // Preserve per-clan message ids. Fall back to global ids only if clan-specific not provided
+          (clan.donationMessageId !== undefined ? clan.donationMessageId : (clan.order === 0 ? next.donationMessageId : null)) || null,
+          (clan.warLeaderboardMessageId !== undefined ? clan.warLeaderboardMessageId : (clan.order === 0 ? next.warLeaderboardMessageId : null)) || null,
           Array.isArray(clan.warMentionTargets) ? clan.warMentionTargets.join(',') : '',
           Array.isArray(clan.memberMentionTargets) ? clan.memberMentionTargets.join(',') : '',
           Array.isArray(clan.donationMentionTargets) ? clan.donationMentionTargets.join(',') : '',

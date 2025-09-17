@@ -97,57 +97,100 @@ function createClashOfClansRoutes(client, store) {
       
       audit(req, { action: 'update-clashofclans-config', guildId });
 
-      // Trigger immediate leaderboard posting whenever donation leaderboard is enabled
-      // Note: Watcher also handles automatic scheduled updates based on donationLeaderboardSchedule
-      if (partial.trackDonationLeaderboard) {
-        try {
-          // Use the new LeaderboardEvents system (moved to handlers directory)
-          const LeaderboardEvents = require('../../bot/handlers/LeaderboardEvents');
+      // Trigger immediate leaderboard posting after configuration save
+      try {
+        const LeaderboardEvents = require('../../bot/handlers/LeaderboardEvents');
+        
+        const guild = client.guilds.cache.get(guildId);
+        if (guild) {
+          const leaderboardEvents = new LeaderboardEvents(guild.client, store.sqlPool);
           
-          const guild = client.guilds.cache.get(guildId);
-          if (guild) {
-            const leaderboardEvents = new LeaderboardEvents(guild.client, store.sqlPool);
-            
-            // Get donation leaderboard channel from the first clan that has one configured
-            let donationChannelId = null;
-            if (cfg.clanConfigs && typeof cfg.clanConfigs === 'object') {
-              // Find first clan with donation announce channel (which is used for leaderboard too)
-              for (const [clanTag, clanConfig] of Object.entries(cfg.clanConfigs)) {
-                if (clanConfig.donationAnnounceChannelId) {
-                  donationChannelId = clanConfig.donationAnnounceChannelId;
-                  break;
+          // Get all clan configurations and create leaderboard messages for each clan
+          if (cfg.clanConfigs && typeof cfg.clanConfigs === 'object') {
+            // Process each clan individually
+            for (const [clanTag, clanConfig] of Object.entries(cfg.clanConfigs)) {
+              try {
+                // Create donation leaderboard message if tracking is enabled and channel is configured
+                if (partial.trackDonationLeaderboard && clanConfig.donationAnnounceChannelId) {
+                  const donationResult = await leaderboardEvents.postLeaderboard(
+                    guild.id, 
+                    clanConfig.donationAnnounceChannelId, 
+                    clanConfig.donationMessageId || null,
+                    'donations',
+                    clanTag  // Pass clan tag to update specific clan row
+                  );
+                  
+                  if (donationResult && donationResult.success) {
+                    console.log(`[API] Created/updated donation leaderboard for clan ${clanTag} in guild ${guild.id}`);
+                  } else {
+                    console.error(`[API] Failed to create donation leaderboard for clan ${clanTag} in guild ${guild.id}:`, donationResult?.error);
+                  }
                 }
+                
+                // Create war leaderboard message if tracking is enabled and channel is configured
+                if (partial.trackWarLeaderboard && clanConfig.warAnnounceChannelId) {
+                  const warResult = await leaderboardEvents.postLeaderboard(
+                    guild.id, 
+                    clanConfig.warAnnounceChannelId, 
+                    clanConfig.warLeaderboardMessageId || null,
+                    'war',
+                    clanTag  // Pass clan tag to update specific clan row
+                  );
+                  
+                  if (warResult && warResult.success) {
+                    console.log(`[API] Created/updated war leaderboard for clan ${clanTag} in guild ${guild.id}`);
+                  } else {
+                    console.error(`[API] Failed to create war leaderboard for clan ${clanTag} in guild ${guild.id}:`, warResult?.error);
+                  }
+                }
+                
+                // Add delay between clans to avoid rate limits
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
+              } catch (clanError) {
+                console.error(`[API] Error processing leaderboards for clan ${clanTag}:`, clanError.message);
               }
-            } else if (cfg.donationLeaderboardChannelId) {
-              // Fallback to global donation leaderboard channel
-              donationChannelId = cfg.donationLeaderboardChannelId;
             }
-            
-            if (donationChannelId) {
-              // Get existing message ID for updating
-              const existingMessageId = cfg.donationMessageId || null;
-              
-              // Post/update leaderboard using new system
-              const result = await leaderboardEvents.postLeaderboard(
+          } else {
+            // Fallback: handle legacy single-clan configuration
+            if (partial.trackDonationLeaderboard && cfg.donationLeaderboardChannelId) {
+              const firstClanTag = cfg.clans && cfg.clans.length > 0 ? cfg.clans[0] : null;
+              const donationResult = await leaderboardEvents.postLeaderboard(
                 guild.id, 
-                donationChannelId, 
-                existingMessageId,
-                'donations'
+                cfg.donationLeaderboardChannelId, 
+                cfg.donationMessageId || null,
+                'donations',
+                firstClanTag
               );
               
-              if (result && result.success) {
-                console.log(`[API] Updated leaderboard using new canvas system for guild ${guild.id}`);
+              if (donationResult && donationResult.success) {
+                console.log(`[API] Created/updated donation leaderboard (legacy) for guild ${guild.id}`);
               } else {
-                console.error(`[API] Failed to update leaderboard for guild ${guild.id}:`, result?.error);
+                console.error(`[API] Failed to create donation leaderboard (legacy) for guild ${guild.id}:`, donationResult?.error);
               }
-            } else {
-              console.log(`[API] Donation leaderboard enabled but no donation channel configured for any clan in guild ${guildId}`);
+            }
+            
+            if (partial.trackWarLeaderboard && cfg.warLeaderboardChannelId) {
+              const firstClanTag = cfg.clans && cfg.clans.length > 0 ? cfg.clans[0] : null;
+              const warResult = await leaderboardEvents.postLeaderboard(
+                guild.id, 
+                cfg.warLeaderboardChannelId, 
+                cfg.warLeaderboardMessageId || null,
+                'war',
+                firstClanTag
+              );
+              
+              if (warResult && warResult.success) {
+                console.log(`[API] Created/updated war leaderboard (legacy) for guild ${guild.id}`);
+              } else {
+                console.error(`[API] Failed to create war leaderboard (legacy) for guild ${guild.id}:`, warResult?.error);
+              }
             }
           }
-        } catch (error) {
-          console.error(`[API] Error triggering leaderboard posting:`, error.message);
-          // Don't fail the API request if leaderboard posting fails
         }
+      } catch (error) {
+        console.error(`[API] Error triggering leaderboard posting:`, error.message);
+        // Don't fail the API request if leaderboard posting fails
       }
 
       // Re-fetch to ensure values reflect DB authoritative columns
