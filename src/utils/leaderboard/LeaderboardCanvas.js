@@ -33,12 +33,12 @@ class LeaderboardCanvas {
         this.footerHeight = 100; // Increased from 80
         
         // War leaderboard specific layout constants
-        this.warNameWidth = 380; // Player name column for war leaderboard - optimized for attack data
-        this.warRoleWidth = 180; // Role column for war leaderboard - more compact
+        this.warNameWidth = 450; // Player name column for war leaderboard - expanded for better readability
+        this.warRoleWidth = 220; // Role column for war leaderboard - expanded for better readability
         this.warAttackWidth = 380; // Width for war attack details column - increased for better star spacing
-        this.warAvgStarsWidth = 190; // Width for average stars column - optimized for number + star
-        this.warWinRateWidth = 120; // Width for win rate column - compact for percentage
-        this.warParticipationWidth = 250; // Width for wars participated column - compact for numbers
+        this.warAvgStarsWidth = 140; // Width for average stars column - more compact
+        this.warWinRateWidth = 100; // Width for win rate column - more compact for percentage
+        this.warParticipationWidth = 180; // Width for wars participated column - more compact for numbers
         
         // Legacy compatibility (will be deprecated)
         this.nameWidth = this.donationNameWidth; // Default to donation leaderboard sizing
@@ -1049,7 +1049,6 @@ class LeaderboardCanvas {
 
         // Use smaller, more compact font for war attacks
         ctx.font = '27px Arial'; // Compact font size for war attacks
-        ctx.textAlign = 'center';
         
         const attackAreaWidth = this.warAttackWidth;
         const centerX = x + (attackAreaWidth / 2); // Center point of the column
@@ -1060,28 +1059,33 @@ class LeaderboardCanvas {
             const attack = attackDetails[i];
             const attackY = baseY + (i * attackSpacing);
             
-            // Position and attack number (more compact)
-            let attackText = `${attack.defenderPosition || '?'}/${attack.attackNumber} `;
+            // Calculate total width of the attack display (text + stars + percentage)
+            const attackText = `${attack.defenderPosition || '?'}/${attack.attackNumber} `;
+            const percentText = ` ${attack.destructionPercentage}%`;
+            
+            ctx.font = '27px Arial';
+            const textWidth = ctx.measureText(attackText).width;
+            const percentWidth = ctx.measureText(percentText).width;
+            const starsWidth = 3 * 28 + 2 * 6; // 3 stars * 28px each + 2 gaps * 6px
+            const totalWidth = textWidth + starsWidth + percentWidth + 10; // 10px for spacing
+            
+            // Calculate starting position to center the entire attack display
+            const startX = centerX - (totalWidth / 2);
             
             // Draw position/attack number part
             ctx.fillStyle = this.textColor;
-            ctx.font = '27px Arial';
             ctx.textAlign = 'left';
-            const textWidth = ctx.measureText(attackText).width;
-            const textStartX = centerX - (textWidth / 2) - 35; // Position text to left of center
-            ctx.fillText(attackText, textStartX, attackY);
+            ctx.fillText(attackText, startX, attackY);
             
             // Draw stars using SVG images
-            const starStartX = textStartX + textWidth + 5; // Start stars after text with small gap
+            const starStartX = startX + textWidth + 5; // Start stars after text with small gap
             const starY = attackY - 20; // Adjust Y to align stars with text baseline - adjusted for bigger stars
             await this.drawStars(ctx, attack.stars || 0, 3, starStartX, starY, 28);
             
             // Destruction percentage (right side)
-            const percentText = ` ${attack.destructionPercentage}%`;
             ctx.fillStyle = this.textColor;
-            ctx.font = '27px Arial';
             ctx.textAlign = 'left';
-            const percentStartX = starStartX + 110; // Increased space for much larger stars
+            const percentStartX = starStartX + starsWidth + 5; // Start percentage after stars with gap
             ctx.fillText(percentText, percentStartX, attackY);
         }
         

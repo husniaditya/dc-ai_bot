@@ -576,11 +576,11 @@ class LeaderboardInteractionHandler {
             } else {
                 // Donation statistics summary  
                 const totalDonations = players.reduce((sum, p) => sum + (p.donations || 0), 0);
-                const totalReceived = players.reduce((sum, p) => sum + (p.received || 0), 0);
+                const totalReceived = players.reduce((sum, p) => sum + (p.donationsReceived || 0), 0);
                 const avgDonation = totalPlayers ? (totalDonations / totalPlayers) : 0;
                 const avgReceived = totalPlayers ? (totalReceived / totalPlayers) : 0;
                 const topDonors = [...players].sort((a,b) => (b.donations||0) - (a.donations||0)).slice(0,3);
-                const topReceivers = [...players].sort((a,b) => (b.received||0) - (a.received||0)).slice(0,3);
+                const topReceivers = [...players].sort((a,b) => (b.donationsReceived||0) - (a.donationsReceived||0)).slice(0,3);
 
                 embed = new EmbedBuilder()
                     .setTitle(`📈 Donation Leaderboard Summary${clanTag ? ` - ${clanTag}` : ''}`)
@@ -593,7 +593,7 @@ class LeaderboardInteractionHandler {
                         { name: '📊 Avg Donations', value: avgDonation.toFixed(1), inline: true },
                         { name: '📊 Avg Received', value: avgReceived.toFixed(1), inline: true },
                         { name: '🏆 Top Donors', value: topDonors.map((p,i)=>`**${i+1}.** ${p.name} - ${p.donations}`).join('\n') || 'N/A', inline: false },
-                        { name: '📥 Top Receivers', value: topReceivers.map((p,i)=>`**${i+1}.** ${p.name} - ${p.received}`).join('\n') || 'N/A', inline: false }
+                        { name: '📥 Top Receivers', value: topReceivers.map((p,i)=>`**${i+1}.** ${p.name} - ${p.donationsReceived}`).join('\n') || 'N/A', inline: false }
                     ])
                     .setTimestamp();
             }
