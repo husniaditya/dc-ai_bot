@@ -285,7 +285,33 @@ async function handleButtonInteraction(interaction, client, commandMap) {
         return;
       } catch (error) {
         console.error('Leaderboard button error:', error);
+        // Try to send error message if interaction is still valid
+        if (!interaction.replied && !interaction.deferred) {
+          try {
+            await interaction.reply({ 
+              content: '❌ Leaderboard interaction failed. Please try again.', 
+              ephemeral: true 
+            });
+          } catch (replyError) {
+            console.error('Failed to send leaderboard error reply:', replyError);
+          }
+        }
+        return;
       }
+    } else {
+      console.error('Leaderboard events not properly initialized on client');
+      // Try to send error message if interaction is still valid
+      if (!interaction.replied && !interaction.deferred) {
+        try {
+          await interaction.reply({ 
+            content: '❌ Leaderboard system not ready. Please try again later.', 
+            ephemeral: true 
+          });
+        } catch (replyError) {
+          console.error('Failed to send leaderboard initialization error reply:', replyError);
+        }
+      }
+      return;
     }
   }
   

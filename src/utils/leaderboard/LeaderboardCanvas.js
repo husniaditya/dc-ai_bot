@@ -19,16 +19,30 @@ class LeaderboardCanvas {
         this.padding = 40; // Reduced padding for more table space
         this.headerHeight = 160; // Increased from 140 for larger fonts
         this.playerRowHeight = 95; // Increased from 85 for larger fonts
-        this.avatarSize = 60; // Increased from 50
-        this.townHallSize = 24; // Size for town hall images
+        // this.avatarSize = 60; // Removed - no longer using avatars
+        this.townHallSize = 57; // Size for town hall images - increased from 24
         this.rankWidth = 140; // Expanded rank column
-        this.nameWidth = 420; // Expanded name column for longer names
-        this.roleWidth = 200; // Expanded role column
-        this.donationWidth = 180; // Expanded donated column
-        this.receivedWidth = 180; // Expanded received column
-        this.ratioWidth = 160; // Expanded ratio column
-        this.lastOnlineWidth = 280; // Significantly expanded last online column
+        
+        // Donation leaderboard specific layout constants
+        this.donationNameWidth = 450; // Player name column for donation leaderboard
+        this.donationRoleWidth = 200; // Role column for donation leaderboard
+        this.donationWidth = 200; // Expanded donated column
+        this.receivedWidth = 200; // Expanded received column
+        this.ratioWidth = 180; // Expanded ratio column
+        this.lastOnlineWidth = 300; // Significantly expanded last online column
         this.footerHeight = 100; // Increased from 80
+        
+        // War leaderboard specific layout constants
+        this.warNameWidth = 380; // Player name column for war leaderboard - optimized for attack data
+        this.warRoleWidth = 180; // Role column for war leaderboard - more compact
+        this.warAttackWidth = 380; // Width for war attack details column - increased for better star spacing
+        this.warAvgStarsWidth = 190; // Width for average stars column - optimized for number + star
+        this.warWinRateWidth = 120; // Width for win rate column - compact for percentage
+        this.warParticipationWidth = 250; // Width for wars participated column - compact for numbers
+        
+        // Legacy compatibility (will be deprecated)
+        this.nameWidth = this.donationNameWidth; // Default to donation leaderboard sizing
+        this.roleWidth = this.donationRoleWidth; // Default to donation leaderboard sizing
         
         // Font settings - significantly increased for maximum readability
         this.titleFont = 'bold 48px Arial'; // Increased from 40px
@@ -38,6 +52,12 @@ class LeaderboardCanvas {
         
         // Town hall images cache
         this.townHallImages = new Map();
+        
+        // Medal images cache for donation leaderboard
+        this.medalImages = new Map();
+        
+        // Star images cache for war leaderboard
+        this.starImages = new Map();
     }
 
     /**
@@ -270,13 +290,13 @@ class LeaderboardCanvas {
         currentX += this.rankWidth;
         
         // Player header - centered in the name area
-        const playerHeaderX = currentX + 15 + this.avatarSize + (this.nameWidth / 2); // Align with centered names
+        const playerHeaderX = currentX + (this.donationNameWidth / 2); // Use donation-specific name width
         ctx.fillText('Player', playerHeaderX, y + 25);
-        currentX += this.nameWidth + this.avatarSize + 30;
+        currentX += this.donationNameWidth; // Use donation-specific name width
         
         // Role header - centered
-        ctx.fillText('Role', currentX + (this.roleWidth / 2), y + 25);
-        currentX += this.roleWidth;
+        ctx.fillText('Role', currentX + (this.donationRoleWidth / 2), y + 25);
+        currentX += this.donationRoleWidth;
         
         // Donations header
         ctx.fillText('Don', currentX + (this.donationWidth / 2), y + 25);
@@ -309,26 +329,16 @@ class LeaderboardCanvas {
 
         let currentX = this.padding;
 
-        // Rank - centered better
-        ctx.fillStyle = this.getRankColor(player.rank);
-        ctx.font = this.donationFont;
-        ctx.textAlign = 'center';
-        
-        const rankText = this.getRankDisplay(player.rank);
-        ctx.fillText(rankText, currentX + (this.rankWidth / 2), y + 52); // Centered vertically
+        // Rank - centered better with SVG medals for top 3
+        await this.drawRankWithMedal(ctx, player.rank, currentX, y, false); // false = donation leaderboard
         currentX += this.rankWidth;
 
-        // Player avatar - better positioning
-        const avatarX = currentX + 15; // More space from rank
-        const avatarY = y + (this.playerRowHeight - this.avatarSize) / 2; // Center avatar in the taller row
-        await this.drawPlayerAvatar(ctx, player, avatarX, avatarY);
-
-        // Player name with town hall level
+        // Player name with town hall level (no avatar)
         ctx.fillStyle = this.textColor;
         ctx.font = this.playerFont;
         ctx.textAlign = 'left'; // Change to left align for better layout with TH image
         
-        const nameStartX = avatarX + this.avatarSize + 15; // Start position for name area
+        const nameStartX = currentX + 15; // Start position for name area (removed avatar spacing)
         const nameY = y + 52; // Aligned with other elements
         
         // Draw town hall image first
@@ -340,7 +350,7 @@ class LeaderboardCanvas {
         
         // Truncate name if too long (account for space taken by TH image)
         let displayName = player.name || 'Unknown Player';
-        const maxNameWidth = this.nameWidth - thSpacing - 20; // Account for TH space and padding
+        const maxNameWidth = this.donationNameWidth - thSpacing - 20; // Use donation-specific name width
         ctx.font = this.playerFont;
         let nameWidth = ctx.measureText(displayName).width;
         
@@ -353,7 +363,7 @@ class LeaderboardCanvas {
         }
         
         ctx.fillText(displayName, nameX, nameY);
-        currentX += this.nameWidth + this.avatarSize + 30;
+        currentX += this.donationNameWidth; // Use donation-specific name width
 
         // Player role
         ctx.fillStyle = this.getRoleColor(player.role);
@@ -361,8 +371,8 @@ class LeaderboardCanvas {
         ctx.textAlign = 'center';
         
         const roleText = this.formatRole(player.role);
-        ctx.fillText(roleText, currentX + (this.roleWidth / 2), y + 52); // Adjusted from 45 to 52
-        currentX += this.roleWidth;
+        ctx.fillText(roleText, currentX + (this.donationRoleWidth / 2), y + 52); // Use donation-specific role width
+        currentX += this.donationRoleWidth;
 
         // Donation count
         ctx.fillStyle = this.accentColor;
@@ -395,8 +405,49 @@ class LeaderboardCanvas {
     }
 
     /**
-     * Draw player avatar
+     * Draw rank with medal for donation leaderboard or number for war leaderboard
      */
+    async drawRankWithMedal(ctx, rank, x, y, isWarLeaderboard = false) {
+        const centerX = x + (this.rankWidth / 2);
+        const centerY = y + 52; // Aligned with other elements
+        
+        if (isWarLeaderboard) {
+            // War leaderboard: show numbers only
+            ctx.fillStyle = this.getRankColor(rank);
+            ctx.font = this.donationFont;
+            ctx.textAlign = 'center';
+            ctx.fillText(rank.toString(), centerX, centerY);
+        } else {
+            // Donation leaderboard: show SVG medals for top 3, numbers for others
+            if (rank <= 3) {
+                try {
+                    const medalImage = await this.loadMedalImage(rank);
+                    if (medalImage) {
+                        // Draw SVG medal
+                        const medalSize = 50; // Size of the medal
+                        const medalX = centerX - medalSize / 2;
+                        const medalY = y + (this.playerRowHeight - medalSize) / 2;
+                        ctx.drawImage(medalImage, medalX, medalY, medalSize, medalSize);
+                        return; // Exit early if medal was drawn successfully
+                    }
+                } catch (error) {
+                    console.warn('Failed to draw medal image:', error);
+                }
+            }
+            
+            // Fallback: show text (emoji or number)
+            ctx.fillStyle = this.getRankColor(rank);
+            ctx.font = this.donationFont;
+            ctx.textAlign = 'center';
+            const rankText = this.getRankDisplay(rank, false);
+            ctx.fillText(rankText, centerX, centerY);
+        }
+    }
+
+    /**
+     * Draw player avatar - COMMENTED OUT (avatars removed from leaderboards)
+     */
+    /*
     async drawPlayerAvatar(ctx, player, x, y) {
         try {
             // Try to load player avatar if URL provided
@@ -421,10 +472,12 @@ class LeaderboardCanvas {
             await this.drawAvatarPlaceholder(ctx, player, x, y);
         }
     }
+    */
 
     /**
-     * Draw avatar placeholder
+     * Draw avatar placeholder - COMMENTED OUT (avatars removed from leaderboards)
      */
+    /*
     async drawAvatarPlaceholder(ctx, player, x, y) {
         // Circle background
         const centerX = x + this.avatarSize / 2;
@@ -443,6 +496,87 @@ class LeaderboardCanvas {
         const name = player.name || 'U';
         const initials = name.split(' ').map(word => word[0]).join('').substring(0, 2).toUpperCase();
         ctx.fillText(initials, centerX, centerY + 6);
+    }
+    */
+
+    /**
+     * Load star SVG image (filled or empty)
+     */
+    async loadStarImage(isFilled = true) {
+        const starType = isFilled ? 'filled' : 'empty';
+        
+        if (this.starImages.has(starType)) {
+            return this.starImages.get(starType);
+        }
+
+        try {
+            const starFileName = isFilled ? 'star_fill.svg' : 'star_empty.svg';
+            const starPath = path.join(__dirname, '..', '..', 'assets', 'clashofclans', 'stars', starFileName);
+            const starImage = await loadImage(starPath);
+            this.starImages.set(starType, starImage);
+            return starImage;
+        } catch (error) {
+            console.warn(`Failed to load star image (${starType}):`, error.message);
+            return null;
+        }
+    }
+
+    /**
+     * Draw stars for war attacks using SVG images
+     */
+    async drawStars(ctx, starCount, maxStars, x, y, starSize = 90) {
+        const starSpacing = starSize + 6; // Increased gap between stars for larger icons
+        
+        for (let i = 0; i < maxStars; i++) {
+            const starX = x + (i * starSpacing);
+            const isFilled = i < starCount;
+            
+            try {
+                const starImage = await this.loadStarImage(isFilled);
+                if (starImage) {
+                    ctx.drawImage(starImage, starX, y, starSize, starSize);
+                } else {
+                    // Fallback to text stars if image loading fails
+                    ctx.fillStyle = isFilled ? '#f1c40f' : '#555555';
+                    ctx.font = `${starSize}px Arial`;
+                    ctx.textAlign = 'left';
+                    ctx.fillText(isFilled ? '★' : '☆', starX, y + starSize);
+                }
+            } catch (error) {
+                // Fallback to text stars
+                ctx.fillStyle = isFilled ? '#f1c40f' : '#555555';
+                ctx.font = `${starSize}px Arial`;
+                ctx.textAlign = 'left';
+                ctx.fillText(isFilled ? '★' : '☆', starX, y + starSize);
+            }
+        }
+        
+        return maxStars * starSpacing; // Return total width used
+    }
+
+    /**
+     * Load medal SVG image for a specific rank
+     */
+    async loadMedalImage(rank) {
+        if (this.medalImages.has(rank)) {
+            return this.medalImages.get(rank);
+        }
+
+        try {
+            let medalFileName;
+            if (rank === 1) medalFileName = 'gold_medal.svg';
+            else if (rank === 2) medalFileName = 'silver_medal.svg';
+            else if (rank === 3) medalFileName = 'bronze_medal.svg';
+            else return null; // No medal for ranks > 3
+            
+            const medalPath = path.join(__dirname, '..', '..', 'assets', 'clashofclans', 'medals', medalFileName);
+            const image = await loadImage(medalPath);
+            this.medalImages.set(rank, image);
+            return image;
+        } catch (error) {
+            console.warn(`Medal image not found for rank ${rank}, using fallback`);
+            return null;
+        }
     }
 
     /**
@@ -472,7 +606,7 @@ class LeaderboardCanvas {
             const thImage = await this.loadTownHallImage(townHallLevel);
             if (thImage) {
                 ctx.drawImage(thImage, x, y, this.townHallSize, this.townHallSize);
-                return this.townHallSize + 5; // Return width used including spacing
+                return this.townHallSize + 8; // Return width used including spacing - increased from 5
             }
         } catch (error) {
             console.warn('Failed to draw town hall image:', error);
@@ -497,7 +631,7 @@ class LeaderboardCanvas {
         ctx.fillText(thText, x + this.townHallSize/2, y + this.townHallSize/2 + 5);
         ctx.restore();
         
-        return this.townHallSize + 5;
+        return this.townHallSize + 8; // Increased spacing to match image spacing
     }
 
     /**
@@ -571,7 +705,13 @@ class LeaderboardCanvas {
         return this.textColor;
     }
 
-    getRankDisplay(rank) {
+    getRankDisplay(rank, isWarLeaderboard = false) {
+        if (isWarLeaderboard) {
+            // War leaderboard uses numbers only
+            return rank.toString();
+        }
+        
+        // Donation leaderboard uses medal emojis (will be replaced with SVG)
         if (rank === 1) return '🥇';
         if (rank === 2) return '🥈';
         if (rank === 3) return '🥉';
@@ -769,27 +909,27 @@ class LeaderboardCanvas {
         // Player header
         ctx.textAlign = 'left';
         ctx.fillText('Player', currentX + 20, y + 22);
-        currentX += this.nameWidth + this.avatarSize + 30;
+        currentX += this.warNameWidth; // Use war-specific name width
         
         // Role header
         ctx.textAlign = 'center';
-        ctx.fillText('Role', currentX + (this.roleWidth / 2), y + 22);
-        currentX += this.roleWidth;
+        ctx.fillText('Role', currentX + (this.warRoleWidth / 2), y + 22);
+        currentX += this.warRoleWidth;
         
         // Current War Attacks header (wider to show attack details)
-        ctx.fillText('War Atk', currentX + (this.donationWidth * 1.5 / 2), y + 22);
-        currentX += this.donationWidth * 1.5;
+        ctx.fillText('War Atk', currentX + (this.warAttackWidth / 2), y + 22);
+        currentX += this.warAttackWidth;
         
         // Average Stars header
-        ctx.fillText('Avg', currentX + (this.receivedWidth / 2), y + 22);
-        currentX += this.receivedWidth;
-        
-        // Win Rate header
-        ctx.fillText('WR', currentX + (this.ratioWidth / 2), y + 22);
-        currentX += this.ratioWidth;
+        ctx.fillText('Avg', currentX + (this.warAvgStarsWidth / 2), y + 22);
+        currentX += this.warAvgStarsWidth;
         
         // War Participation header
-        ctx.fillText('Wars', currentX + (this.lastOnlineWidth / 2), y + 22);
+        ctx.fillText('Wars', currentX + (this.warParticipationWidth / 2), y + 22);
+        currentX += this.warParticipationWidth;
+        
+        // Win Rate header
+        ctx.fillText('WR', currentX + (this.warWinRateWidth / 2), y + 22);
     }
 
     /**
@@ -804,26 +944,16 @@ class LeaderboardCanvas {
 
         let currentX = this.padding;
 
-        // Rank
-        ctx.fillStyle = this.getRankColor(player.rank || index + 1);
-        ctx.font = this.donationFont;
-        ctx.textAlign = 'center';
-        
-        const rankText = this.getRankDisplay(player.rank || index + 1);
-        ctx.fillText(rankText, currentX + (this.rankWidth / 2), y + 52); // Adjusted from 45 to 52
+        // Rank - numbers only for war leaderboard
+        await this.drawRankWithMedal(ctx, player.rank || index + 1, currentX, y, true); // true = war leaderboard
         currentX += this.rankWidth;
 
-        // Player avatar
-        const avatarX = currentX + 10;
-        const avatarY = y + (this.playerRowHeight - this.avatarSize) / 2; // Center avatar in the taller row
-        await this.drawPlayerAvatar(ctx, player, avatarX, avatarY);
-
-        // Player name with town hall level
+        // Player name with town hall level (no avatar)
         ctx.fillStyle = this.textColor;
         ctx.font = this.playerFont;
         ctx.textAlign = 'left';
         
-        const nameStartX = avatarX + this.avatarSize + 15;
+        const nameStartX = currentX + 15; // Start position for name area (removed avatar)
         const nameY = y + 52; // Adjusted from 45 to 52
         
         // Draw town hall image first
@@ -835,7 +965,7 @@ class LeaderboardCanvas {
         
         // Truncate name if too long (account for space taken by TH image)
         let displayName = player.name || 'Unknown Player';
-        const maxNameWidth = this.nameWidth - thSpacing - 30; // Account for TH space and padding
+        const maxNameWidth = this.warNameWidth - thSpacing - 30; // Use war-specific name width
         ctx.font = this.playerFont;
         let nameWidth = ctx.measureText(displayName).width;
         
@@ -848,7 +978,7 @@ class LeaderboardCanvas {
         }
         
         ctx.fillText(displayName, nameX, nameY);
-        currentX += this.nameWidth + this.avatarSize + 30;
+        currentX += this.warNameWidth; // Use war-specific name width
 
         // Player role
         ctx.fillStyle = this.getRoleColor(player.role);
@@ -856,35 +986,49 @@ class LeaderboardCanvas {
         ctx.textAlign = 'center';
         
         const roleText = this.formatRole(player.role);
-        ctx.fillText(roleText, currentX + (this.roleWidth / 2), y + 52); // Adjusted from 45 to 52
-        currentX += this.roleWidth;
+        ctx.fillText(roleText, currentX + (this.warRoleWidth / 2), y + 52); // Use war-specific role width
+        currentX += this.warRoleWidth;
 
         // Current War Attack Details (like your image example)
         await this.drawCurrentWarAttacks(ctx, player, currentX, y);
-        currentX += this.donationWidth * 1.5;
+        currentX += this.warAttackWidth;
 
-        // Average Stars (historical)
-        ctx.fillStyle = '#f1c40f'; // Gold color for stars
+        // Average Stars (historical) - with SVG star icon
+        ctx.fillStyle = '#f1c40f'; // Gold color for text
         ctx.font = this.donationFont;
-        ctx.textAlign = 'center';
+        ctx.textAlign = 'left';
         
         const avgStars = player.averageStars || '0.00';
-        ctx.fillText(`${avgStars}⭐`, currentX + (this.receivedWidth / 2), y + 52); // Adjusted from 45 to 52
-        currentX += this.receivedWidth;
-
-        // Win Rate
-        ctx.fillStyle = this.secondaryColor;
-        ctx.font = this.playerFont;
-        const winRate = player.winRate || '0.0';
-        ctx.fillText(`${winRate}%`, currentX + (this.ratioWidth / 2), y + 52); // Adjusted from 45 to 52
-        currentX += this.ratioWidth;
+        const avgStarsText = avgStars;
+        
+        // Calculate text width to position star icon after
+        const textWidth = ctx.measureText(avgStarsText).width;
+        const textStartX = currentX + (this.warAvgStarsWidth / 2) - (textWidth / 2) - 12; // Center the text+star combo
+        
+        // Draw average stars text
+        ctx.fillText(avgStarsText, textStartX, y + 52);
+        
+        // Draw star icon after text
+        const starX = textStartX + textWidth + 5; // Small gap after text
+        const starY = y + 52 - 20; // Align with text baseline - adjusted for bigger star
+        await this.drawStars(ctx, 1, 1, starX, starY, 32); // Single filled star - much bigger size
+        
+        currentX += this.warAvgStarsWidth;
 
         // Wars Participated
         ctx.fillStyle = '#9b59b6'; // Purple for participation
         ctx.font = this.playerFont;
         ctx.textAlign = 'center';
         const participation = player.warsParticipated || 0;
-        ctx.fillText(participation.toString(), currentX + (this.lastOnlineWidth / 2), y + 52); // Adjusted from 45 to 52
+        ctx.fillText(participation.toString(), currentX + (this.warParticipationWidth / 2), y + 52); // Adjusted from 45 to 52
+        currentX += this.warParticipationWidth;
+
+        // Win Rate
+        ctx.fillStyle = this.secondaryColor;
+        ctx.font = this.playerFont;
+        ctx.textAlign = 'center';
+        const winRate = player.winRate || '0.0';
+        ctx.fillText(`${winRate}%`, currentX + (this.warWinRateWidth / 2), y + 52); // Adjusted from 45 to 52
     }
 
     /**
@@ -899,7 +1043,7 @@ class LeaderboardCanvas {
             ctx.fillStyle = '#95a5a6'; // Gray
             ctx.font = '27px Arial'; // Smaller font for "No attacks"
             ctx.textAlign = 'center';
-            ctx.fillText('No attacks', x + (this.donationWidth * 1.5 / 2), y + 52);
+            ctx.fillText('No attacks', x + (this.warAttackWidth / 2), y + 52);
             return;
         }
 
@@ -907,7 +1051,7 @@ class LeaderboardCanvas {
         ctx.font = '27px Arial'; // Compact font size for war attacks
         ctx.textAlign = 'center';
         
-        const attackAreaWidth = this.donationWidth * 1.5;
+        const attackAreaWidth = this.warAttackWidth;
         const centerX = x + (attackAreaWidth / 2); // Center point of the column
         const baseY = y + 35; // Start position
         const attackSpacing = 41; // Increased spacing between attacks for larger font
@@ -916,23 +1060,29 @@ class LeaderboardCanvas {
             const attack = attackDetails[i];
             const attackY = baseY + (i * attackSpacing);
             
-            // Create compact attack string: "10/1 ★★★ 100%"
-            let attackText = '';
-            
             // Position and attack number (more compact)
-            attackText += `${attack.defenderPosition || '?'}/${attack.attackNumber} `;
+            let attackText = `${attack.defenderPosition || '?'}/${attack.attackNumber} `;
             
-            // Stars (using standard star symbols that render better in canvas)
-            for (let s = 0; s < 3; s++) {
-                attackText += s < attack.stars ? '★' : '☆';
-            }
-            
-            // Destruction percentage (more compact)
-            attackText += ` ${attack.destructionPercentage}%`;
-            
-            // Draw the complete attack string centered
+            // Draw position/attack number part
             ctx.fillStyle = this.textColor;
-            ctx.fillText(attackText, centerX, attackY);
+            ctx.font = '27px Arial';
+            ctx.textAlign = 'left';
+            const textWidth = ctx.measureText(attackText).width;
+            const textStartX = centerX - (textWidth / 2) - 35; // Position text to left of center
+            ctx.fillText(attackText, textStartX, attackY);
+            
+            // Draw stars using SVG images
+            const starStartX = textStartX + textWidth + 5; // Start stars after text with small gap
+            const starY = attackY - 20; // Adjust Y to align stars with text baseline - adjusted for bigger stars
+            await this.drawStars(ctx, attack.stars || 0, 3, starStartX, starY, 28);
+            
+            // Destruction percentage (right side)
+            const percentText = ` ${attack.destructionPercentage}%`;
+            ctx.fillStyle = this.textColor;
+            ctx.font = '27px Arial';
+            ctx.textAlign = 'left';
+            const percentStartX = starStartX + 110; // Increased space for much larger stars
+            ctx.fillText(percentText, percentStartX, attackY);
         }
         
         // If more than 2 attacks, show count at bottom
