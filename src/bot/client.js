@@ -34,6 +34,9 @@ function createDiscordClient(store, startTimestamp) {
     partials: [Partials.Channel, Partials.Message, Partials.Reaction] 
   });
 
+  // Increase max listeners to prevent warning (we have multiple legitimate event handlers)
+  client.setMaxListeners(20);
+
   // Load commands dynamically
   const commandMap = loadCommands(client, startTimestamp);
 

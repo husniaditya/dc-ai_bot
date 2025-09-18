@@ -9,24 +9,8 @@ class LeaderboardEvents {
     constructor(client, database) {
         this.client = client;
         this.interactionHandler = new LeaderboardInteractionHandler(database);
-        this.setupEventListeners();
-    }
-
-    /**
-     * Sets up Discord.js event listeners for leaderboard interactions
-     */
-    setupEventListeners() {
-        // Handle button interactions
-        this.client.on(Events.InteractionCreate, async (interaction) => {
-            if (!interaction.isButton()) return;
-
-            // Check if this is a leaderboard button
-            if (interaction.customId.startsWith('leaderboard_')) {
-                await this.interactionHandler.handleButtonInteraction(interaction);
-            }
-        });
-
-        console.log('🎮 Leaderboard button interactions registered');
+        // Remove the automatic event listener setup
+        console.log('🎮 Leaderboard Events initialized (manual handler mode)');
     }
 
     /**

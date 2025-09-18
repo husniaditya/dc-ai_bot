@@ -20,6 +20,7 @@ class LeaderboardCanvas {
         this.headerHeight = 160; // Increased from 140 for larger fonts
         this.playerRowHeight = 95; // Increased from 85 for larger fonts
         this.avatarSize = 60; // Increased from 50
+        this.townHallSize = 24; // Size for town hall images
         this.rankWidth = 140; // Expanded rank column
         this.nameWidth = 420; // Expanded name column for longer names
         this.roleWidth = 200; // Expanded role column
@@ -34,6 +35,9 @@ class LeaderboardCanvas {
         this.headerFont = 'bold 38px Arial'; // Increased from 32px
         this.playerFont = '34px Arial'; // Increased from 28px
         this.donationFont = 'bold 34px Arial'; // Increased from 28px
+        
+        // Town hall images cache
+        this.townHallImages = new Map();
     }
 
     /**
@@ -319,18 +323,33 @@ class LeaderboardCanvas {
         const avatarY = y + (this.playerRowHeight - this.avatarSize) / 2; // Center avatar in the taller row
         await this.drawPlayerAvatar(ctx, player, avatarX, avatarY);
 
-        // Player name - centered in available space
+        // Player name with town hall level
         ctx.fillStyle = this.textColor;
         ctx.font = this.playerFont;
-        ctx.textAlign = 'center'; // Center the name
+        ctx.textAlign = 'left'; // Change to left align for better layout with TH image
         
-        const nameX = avatarX + this.avatarSize + (this.nameWidth / 2); // Center in name column
+        const nameStartX = avatarX + this.avatarSize + 15; // Start position for name area
         const nameY = y + 52; // Aligned with other elements
         
-        // Truncate name if too long
+        // Draw town hall image first
+        const thY = y + (this.playerRowHeight - this.townHallSize) / 2; // Center TH image vertically
+        const thSpacing = await this.drawTownHallLevel(ctx, player.townHallLevel || 1, nameStartX, thY);
+        
+        // Draw player name after town hall image
+        const nameX = nameStartX + thSpacing;
+        
+        // Truncate name if too long (account for space taken by TH image)
         let displayName = player.name || 'Unknown Player';
-        if (displayName.length > 20) { // Allow longer names with more space
-            displayName = displayName.substring(0, 17) + '...';
+        const maxNameWidth = this.nameWidth - thSpacing - 20; // Account for TH space and padding
+        ctx.font = this.playerFont;
+        let nameWidth = ctx.measureText(displayName).width;
+        
+        if (nameWidth > maxNameWidth) {
+            // Truncate until it fits
+            while (nameWidth > maxNameWidth && displayName.length > 3) {
+                displayName = displayName.substring(0, displayName.length - 4) + '...';
+                nameWidth = ctx.measureText(displayName).width;
+            }
         }
         
         ctx.fillText(displayName, nameX, nameY);
@@ -424,6 +443,61 @@ class LeaderboardCanvas {
         const name = player.name || 'U';
         const initials = name.split(' ').map(word => word[0]).join('').substring(0, 2).toUpperCase();
         ctx.fillText(initials, centerX, centerY + 6);
+    }
+
+    /**
+     * Load town hall image for a specific level
+     */
+    async loadTownHallImage(level) {
+        if (this.townHallImages.has(level)) {
+            return this.townHallImages.get(level);
+        }
+
+        try {
+            const imagePath = path.join(__dirname, '..', '..', 'assets', 'clashofclans', 'townhalls', `th${level}.png`);
+            const image = await loadImage(imagePath);
+            this.townHallImages.set(level, image);
+            return image;
+        } catch (error) {
+            console.warn(`Town hall image not found for level ${level}, using fallback`);
+            return null;
+        }
+    }
+
+    /**
+     * Draw town hall level image next to player name
+     */
+    async drawTownHallLevel(ctx, townHallLevel, x, y) {
+        try {
+            const thImage = await this.loadTownHallImage(townHallLevel);
+            if (thImage) {
+                ctx.drawImage(thImage, x, y, this.townHallSize, this.townHallSize);
+                return this.townHallSize + 5; // Return width used including spacing
+            }
+        } catch (error) {
+            console.warn('Failed to draw town hall image:', error);
+        }
+        
+        // Fallback: draw TH level as text
+        ctx.save();
+        ctx.fillStyle = '#f39c12'; // Orange color for TH level
+        ctx.font = 'bold 16px Arial';
+        ctx.textAlign = 'center';
+        
+        const thText = `TH${townHallLevel}`;
+        
+        // Draw background circle
+        ctx.beginPath();
+        ctx.arc(x + this.townHallSize/2, y + this.townHallSize/2, this.townHallSize/2, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(243, 156, 18, 0.2)';
+        ctx.fill();
+        
+        // Draw text
+        ctx.fillStyle = '#f39c12';
+        ctx.fillText(thText, x + this.townHallSize/2, y + this.townHallSize/2 + 5);
+        ctx.restore();
+        
+        return this.townHallSize + 5;
     }
 
     /**
@@ -744,18 +818,33 @@ class LeaderboardCanvas {
         const avatarY = y + (this.playerRowHeight - this.avatarSize) / 2; // Center avatar in the taller row
         await this.drawPlayerAvatar(ctx, player, avatarX, avatarY);
 
-        // Player name
+        // Player name with town hall level
         ctx.fillStyle = this.textColor;
         ctx.font = this.playerFont;
         ctx.textAlign = 'left';
         
-        const nameX = avatarX + this.avatarSize + 15;
+        const nameStartX = avatarX + this.avatarSize + 15;
         const nameY = y + 52; // Adjusted from 45 to 52
         
-        // Truncate name if too long
+        // Draw town hall image first
+        const thY = y + (this.playerRowHeight - this.townHallSize) / 2; // Center TH image vertically
+        const thSpacing = await this.drawTownHallLevel(ctx, player.townHallLevel || 1, nameStartX, thY);
+        
+        // Draw player name after town hall image
+        const nameX = nameStartX + thSpacing;
+        
+        // Truncate name if too long (account for space taken by TH image)
         let displayName = player.name || 'Unknown Player';
-        if (displayName.length > 18) {
-            displayName = displayName.substring(0, 15) + '...';
+        const maxNameWidth = this.nameWidth - thSpacing - 30; // Account for TH space and padding
+        ctx.font = this.playerFont;
+        let nameWidth = ctx.measureText(displayName).width;
+        
+        if (nameWidth > maxNameWidth) {
+            // Truncate until it fits
+            while (nameWidth > maxNameWidth && displayName.length > 3) {
+                displayName = displayName.substring(0, displayName.length - 4) + '...';
+                nameWidth = ctx.measureText(displayName).width;
+            }
         }
         
         ctx.fillText(displayName, nameX, nameY);

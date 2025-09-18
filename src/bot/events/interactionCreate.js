@@ -276,6 +276,20 @@ async function handleHelpSelect(interaction) {
 }
 
 async function handleButtonInteraction(interaction, client, commandMap) {
+  // Handle leaderboard buttons first
+  if (interaction.customId.startsWith('leaderboard_')) {
+    // Get leaderboard handler from client if available
+    if (client.leaderboardEvents && client.leaderboardEvents.interactionHandler) {
+      try {
+        await client.leaderboardEvents.interactionHandler.handleButtonInteraction(interaction);
+        return;
+      } catch (error) {
+        console.error('Leaderboard button error:', error);
+      }
+    }
+  }
+  
+  // Handle poll buttons
   const pollModule = commandMap.get('poll');
   
   if (pollModule && pollModule.handleButton) {
