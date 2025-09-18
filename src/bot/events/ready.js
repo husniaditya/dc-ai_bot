@@ -87,6 +87,8 @@ function setupReadyHandler(client, store, startTimestamp, commandMap) {
     // Initialize leaderboard button interactions
     try {
       const leaderboardEvents = new LeaderboardEvents(client, store.sqlPool);
+      // Attach to client so interactionCreate.js can access it
+      client.leaderboardEvents = leaderboardEvents;
       console.log('✅ Leaderboard button interactions initialized');
     } catch(e) { 
       console.warn('Leaderboard events failed to initialize', e.message); 
