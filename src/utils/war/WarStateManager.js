@@ -1,0 +1,394 @@
+/**
+ * Manages war state transitions and message tracking for war leaderboards
+ * Handles the lifecycle: preparing -> active -> ended
+ */
+class WarStateManager {
+    constructor(database) {
+        this.db = database;
+        
+        // War states
+        this.STATES = {
+            PREPARING: 'preparation',    // Clan API state: 'preparation'
+            ACTIVE: 'inWar',            // Clan API state: 'inWar' 
+            ENDED: 'ended',             // Clan API state: 'notInWar' or war completion
+            NOT_IN_WAR: 'notInWar'      // Clan API state: 'notInWar'
+        };
+        
+        // Message types for different war states
+        this.MESSAGE_TYPES = {
+            PREPARING: 'preparing_war',
+            ACTIVE: 'active_war', 
+            ENDED: 'ended_war'
+        };
+    }
+
+    /**
+     * Determines the normalized war state from API war data
+     * @param {Object} warData - War data from Clash of Clans API
+     * @returns {string} Normalized war state
+     */
+    getWarState(warData) {
+        if (!warData || warData.state === 'notInWar') {
+            return this.STATES.NOT_IN_WAR;
+        }
+        
+        switch (warData.state) {
+            case 'preparation':
+                return this.STATES.PREPARING;
+            case 'inWar':
+                return this.STATES.ACTIVE;
+            case 'warEnded':
+                return this.STATES.ENDED;
+            default:
+                return this.STATES.NOT_IN_WAR;
+        }
+    }
+
+    /**
+     * Gets the current war state for a clan from database tracking
+     * @param {string} guildId - Guild ID
+     * @param {string} clanTag - Clan tag
+     * @returns {Object} Current war state tracking data
+     */
+    async getCurrentWarState(guildId, clanTag) {
+        try {
+            // Validate parameters to prevent undefined values in SQL queries
+            if (!guildId || !clanTag) {
+                console.warn('[WarStateManager] getCurrentWarState called with invalid parameters:', { guildId, clanTag });
+                return null;
+            }
+
+            const [rows] = await this.db.execute(`
+                SELECT war_current_state, war_preparing_message_id, 
+                       war_active_message_id, war_last_state_change, war_state_data
+                FROM guild_clashofclans_watch 
+                WHERE guild_id = ? AND clan_tag = ?
+            `, [guildId, clanTag]);
+
+            if (rows.length === 0) {
+                return null;
+            }
+
+            const row = rows[0];
+            let stateData = null;
+            if (row.war_state_data) {
+                try {
+                    stateData = JSON.parse(row.war_state_data);
+                } catch (e) {
+                    console.warn('[WarStateManager] Invalid JSON in war_state_data:', e.message);
+                }
+            }
+
+            return {
+                currentState: row.war_current_state || this.STATES.NOT_IN_WAR,
+                preparingMessageId: row.war_preparing_message_id,
+                activeMessageId: row.war_active_message_id,
+                lastStateChange: row.war_last_state_change,
+                stateData: stateData || {},
+                // Legacy compatibility
+                messageId: row.war_preparing_message_id || row.war_active_message_id
+            };
+        } catch (error) {
+            console.error('[WarStateManager] Error getting current war state:', error);
+            return null;
+        }
+    }
+
+    /**
+     * Updates the war state in database
+     * @param {string} guildId - Guild ID
+     * @param {string} clanTag - Clan tag
+     * @param {string} newState - New war state
+     * @param {Object} warData - Current war data from API
+     * @param {string} messageId - Message ID for this state
+     */
+    async updateWarState(guildId, clanTag, newState, warData = null, messageId = null) {
+        try {
+            // Validate parameters to prevent undefined values in SQL queries
+            if (!guildId || !clanTag || !newState) {
+                console.warn('[WarStateManager] updateWarState called with invalid parameters:', { guildId, clanTag, newState });
+                return false;
+            }
+
+            const updateData = {
+                war_current_state: newState,
+                war_last_state_change: new Date()
+            };
+
+            // Set the appropriate message ID field based on state
+            if (messageId) {
+                switch (newState) {
+                    case this.STATES.PREPARING:
+                        updateData.war_preparing_message_id = messageId;
+                        break;
+                    case this.STATES.ACTIVE:
+                        updateData.war_active_message_id = messageId;
+                        break;
+                    case this.STATES.ENDED:
+                        // For ended state, keep existing message IDs but update state
+                        break;
+                }
+            }
+
+            // Update war state data with additional information
+            let stateDataObj = {};
+            if (warData) {
+                stateDataObj = {
+                    startTime: warData.startTime,
+                    endTime: warData.endTime,
+                    opponent: warData.opponent?.name || null,
+                    lastUpdated: new Date().toISOString()
+                };
+                updateData.war_state_data = JSON.stringify(stateDataObj);
+            }
+
+            // Clear preparing message when transitioning to active
+            if (newState === this.STATES.ACTIVE) {
+                // Move preparing message to active message if no active message set
+                if (!messageId) {
+                    // Get current preparing message ID and use it as active message
+                    const currentState = await this.getCurrentWarState(guildId, clanTag);
+                    if (currentState && currentState.preparingMessageId) {
+                        updateData.war_active_message_id = currentState.preparingMessageId;
+                    }
+                }
+                updateData.war_preparing_message_id = null;
+            }
+
+            // Clear message IDs when new war starts (preparing state)
+            if (newState === this.STATES.PREPARING) {
+                updateData.war_active_message_id = null;
+            }
+
+            const setClause = Object.keys(updateData).map(key => `${key} = ?`).join(', ');
+            const values = Object.values(updateData).concat([guildId, clanTag]);
+
+            await this.db.execute(`
+                UPDATE guild_clashofclans_watch 
+                SET ${setClause}
+                WHERE guild_id = ? AND clan_tag = ?
+            `, values);
+
+            console.log(`[WarStateManager] Updated war state for clan ${clanTag} to ${newState}`);
+            return true;
+
+        } catch (error) {
+            console.error('[WarStateManager] Error updating war state:', error);
+            return false;
+        }
+    }
+
+    /**
+     * Determines if a state transition should occur and what action to take
+     * @param {Object} currentStateData - Current state from database
+     * @param {Object} warData - Current war data from API
+     * @returns {Object} Transition action to take
+     */
+    getTransitionAction(currentStateData, warData) {
+        const currentState = currentStateData ? currentStateData.currentState : this.STATES.NOT_IN_WAR;
+        const newState = this.getWarState(warData);
+
+        // No war data available
+        if (newState === this.STATES.NOT_IN_WAR) {
+            if (currentState === this.STATES.ACTIVE) {
+                // War just ended
+                return {
+                    action: 'transition',
+                    from: currentState,
+                    to: this.STATES.ENDED,
+                    messageAction: 'update_to_ended',
+                    messageId: currentStateData.activeMessageId
+                };
+            }
+            return { action: 'none' };
+        }
+
+        // State transitions
+        switch (currentState) {
+            case this.STATES.NOT_IN_WAR:
+                if (newState === this.STATES.PREPARING) {
+                    return {
+                        action: 'transition',
+                        from: currentState,
+                        to: newState,
+                        messageAction: 'create_preparing',
+                        messageId: null
+                    };
+                }
+                if (newState === this.STATES.ACTIVE) {
+                    // War started directly to active (missed preparation phase)
+                    return {
+                        action: 'transition',
+                        from: currentState,
+                        to: newState,
+                        messageAction: 'create_active',
+                        messageId: null
+                    };
+                }
+                break;
+
+            case this.STATES.PREPARING:
+                if (newState === this.STATES.ACTIVE) {
+                    return {
+                        action: 'transition',
+                        from: currentState,
+                        to: newState,
+                        messageAction: 'update_to_active',
+                        messageId: currentStateData.preparingMessageId
+                    };
+                }
+                if (newState === this.STATES.NOT_IN_WAR) {
+                    // War cancelled during preparation
+                    return {
+                        action: 'transition',
+                        from: currentState,
+                        to: this.STATES.ENDED,
+                        messageAction: 'update_to_ended',
+                        messageId: currentStateData.preparingMessageId
+                    };
+                }
+                break;
+
+            case this.STATES.ACTIVE:
+                if (newState === this.STATES.NOT_IN_WAR) {
+                    return {
+                        action: 'transition',
+                        from: currentState,
+                        to: this.STATES.ENDED,
+                        messageAction: 'update_to_ended',
+                        messageId: currentStateData.activeMessageId
+                    };
+                }
+                break;
+
+            case this.STATES.ENDED:
+                if (newState === this.STATES.PREPARING) {
+                    // New war starting
+                    return {
+                        action: 'transition',
+                        from: currentState,
+                        to: newState,
+                        messageAction: 'create_preparing',
+                        messageId: null
+                    };
+                }
+                break;
+        }
+
+        // Same state - check if we need to refresh
+        if (currentState === newState && newState !== this.STATES.ENDED) {
+            return {
+                action: 'refresh',
+                state: currentState,
+                messageAction: 'update_current',
+                messageId: this.getMessageIdForState(currentStateData, currentState)
+            };
+        }
+
+        return { action: 'none' };
+    }
+
+    /**
+     * Gets the message ID for a specific state
+     * @param {Object} stateData - Current state data
+     * @param {string} state - War state
+     * @returns {string|null} Message ID for the state
+     */
+    getMessageIdForState(stateData, state) {
+        if (!stateData) return null;
+        
+        switch (state) {
+            case this.STATES.PREPARING:
+                return stateData.preparingMessageId;
+            case this.STATES.ACTIVE:
+                return stateData.activeMessageId;
+            case this.STATES.ENDED:
+                // For ended state, use the last active message ID to update it
+                return stateData.activeMessageId;
+            default:
+                return null;
+        }
+    }    /**
+     * Gets the canvas type for a war state
+     * @param {string} warState - War state
+     * @returns {string} Canvas type identifier
+     */
+    getCanvasType(warState) {
+        switch (warState) {
+            case this.STATES.PREPARING:
+                return 'war_preparing';
+            case this.STATES.ACTIVE:
+                return 'war_active';
+            case this.STATES.ENDED:
+                return 'war_ended';
+            default:
+                return 'war_ended';
+        }
+    }
+
+    /**
+     * Determines if buttons should be enabled for a war state
+     * @param {string} warState - War state
+     * @returns {boolean} Whether interactive buttons should be enabled
+     */
+    shouldEnableButtons(warState) {
+        return warState !== this.STATES.ENDED;
+    }
+
+    /**
+     * Gets appropriate update frequency for a war state
+     * @param {string} warState - War state
+     * @returns {number} Update frequency in milliseconds
+     */
+    getUpdateFrequency(warState) {
+        switch (warState) {
+            case this.STATES.PREPARING:
+                return 5 * 60 * 1000; // 5 minutes
+            case this.STATES.ACTIVE:
+                return 5 * 60 * 1000; // 5 minutes
+            case this.STATES.ENDED:
+                return 60 * 60 * 1000; // 1 hour (minimal updates)
+            default:
+                return 10 * 60 * 1000; // 10 minutes
+        }
+    }
+
+    /**
+     * Add required database columns if they don't exist
+     */
+    async ensureWarStateColumns() {
+        try {
+            // Add war state tracking columns if they don't exist
+            const columns = [
+                'war_current_state VARCHAR(20) DEFAULT "notInWar"',
+                'war_preparing_message_id VARCHAR(20)',
+                'war_active_message_id VARCHAR(20)', 
+                'war_ended_message_id VARCHAR(20)',
+                'war_last_updated DATETIME',
+                'war_start_time DATETIME',
+                'war_end_time DATETIME',
+                'war_opponent_name VARCHAR(255)'
+            ];
+
+            for (const column of columns) {
+                const columnName = column.split(' ')[0];
+                try {
+                    await this.db.execute(`
+                        ALTER TABLE guild_clashofclans_watch 
+                        ADD COLUMN ${column}
+                    `);
+                    console.log(`[WarStateManager] Added column: ${columnName}`);
+                } catch (error) {
+                    // Column likely already exists
+                    if (!error.message.includes('Duplicate column name')) {
+                        console.warn(`[WarStateManager] Error adding column ${columnName}:`, error.message);
+                    }
+                }
+            }
+        } catch (error) {
+            console.error('[WarStateManager] Error ensuring war state columns:', error);
+        }
+    }
+}
+
+module.exports = WarStateManager;

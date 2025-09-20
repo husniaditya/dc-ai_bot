@@ -803,7 +803,7 @@
       "disabled": "{{feature}} désactivé",
       "enableFailed": "Échec de l'activation de la fonctionnalité",
       "disableFailed": "Échec de la désactivation de la fonctionnalité",
-      "loadFailedGeneric": "Échec du chargement des données de modération",
+      "loadFailedGeneric": "Échec du chargement des données de modération, veuillez actualiser la page",
       "loadFailed": "Échec du chargement des paramètres de {{feature}}",
       "saveSuccess": "Paramètres de {{feature}} enregistrés",
       "saveFailed": "Échec de l'enregistrement des paramètres de {{feature}}"

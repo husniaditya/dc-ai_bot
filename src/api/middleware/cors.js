@@ -25,7 +25,7 @@ function createCorsMiddleware() {
       console.warn(`[CORS] Blocked origin ${origin}. Allowed: ${allowedOriginsRaw.length?allowedOriginsRaw.join(', '):'(all)'} . Set DASHBOARD_CORS_ORIGINS or DASHBOARD_CORS_ALLOW_ALL=1 to adjust.`);
       return cb(new Error('Not allowed by CORS'));
     }, 
-    credentials: false 
+    credentials: process.env.DASHBOARD_CORS_CREDENTIALS === 'true'
   });
 }
 

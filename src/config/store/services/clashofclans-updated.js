@@ -28,7 +28,9 @@ async function getGuildClashOfClansConfig(guildId) {
                enabled, interval_sec, track_wars, track_members, track_donations, track_donation_leaderboard,
                donation_threshold, donation_leaderboard_schedule, donation_leaderboard_time, 
                war_start_template, war_end_template, member_join_template, donation_template, 
-               donation_leaderboard_template, embed_enabled, clan_data
+               donation_leaderboard_template, embed_enabled, clan_data,
+               war_current_state, war_preparing_message_id, war_active_message_id, 
+               war_last_state_change, war_state_data
         FROM guild_clashofclans_watch 
         WHERE guild_id = ?
         ORDER BY clan_order ASC, id ASC
@@ -71,12 +73,70 @@ async function getGuildClashOfClansConfig(guildId) {
               donationAnnounceChannelId: row.donation_announce_channel_id,
               // Preserve per-clan message ids so we don't overwrite them on save
               warLeaderboardMessageId: row.war_leaderboard_message_id || null,
-              donationMessageId: row.donation_message_id || null
+              donationMessageId: row.donation_message_id || null,
+              // War state management fields
+              warCurrentState: row.war_current_state || 'notInWar',
+              warPreparingMessageId: row.war_preparing_message_id || null,
+              warActiveMessageId: row.war_active_message_id || null,
+              warLastStateChange: row.war_last_state_change || null,
+              warStateData: (() => {
+                if (!row.war_state_data) return null;
+                
+                // Ensure war_state_data is a string before checking for corruption
+                const warStateDataStr = typeof row.war_state_data === 'string' ? row.war_state_data : String(row.war_state_data);
+                
+                // Check for the specific "[object Object]" corruption
+                if (warStateDataStr === '[object Object]' || warStateDataStr.includes('[object Object]')) {
+                  console.warn(`[Config] Detected corrupted "[object Object]" in war_state_data for clan ${row.clan_tag}, cleaning up...`);
+                  
+                  // Clean up the corrupted data in the database
+                  // Use a safer approach that doesn't rely on matching the exact corrupted data
+                  if (db.mariaAvailable && db.sqlPool) {
+                    db.sqlPool.query(`
+                      UPDATE guild_clashofclans_watch 
+                      SET war_state_data = NULL 
+                      WHERE clan_tag = ?
+                    `, [row.clan_tag]).catch(err => {
+                      console.error(`[Config] Error cleaning up corrupted war_state_data for clan ${row.clan_tag}:`, err.message);
+                    });
+                  }
+                  
+                  return null;
+                }
+                
+                try {
+                  // Handle case where war_state_data might already be an object
+                  if (typeof row.war_state_data === 'object') {
+                    return row.war_state_data;
+                  }
+                  
+                  return JSON.parse(warStateDataStr);
+                } catch (e) {
+                  console.warn(`[Config] Invalid JSON in war_state_data for clan ${row.clan_tag}: "${warStateDataStr}" - ${e.message}`);
+                  
+                  // Clean up any invalid JSON in the database
+                  // Use a safer approach that doesn't rely on matching the exact corrupted data
+                  if (db.mariaAvailable && db.sqlPool) {
+                    db.sqlPool.query(`
+                      UPDATE guild_clashofclans_watch 
+                      SET war_state_data = NULL 
+                      WHERE clan_tag = ?
+                    `, [row.clan_tag]).catch(err => {
+                      console.error(`[Config] Error cleaning up invalid war_state_data for clan ${row.clan_tag}:`, err.message);
+                    });
+                  }
+                  
+                  return null;
+                }
+              })()
             };
           }
         });
         
         const config = {
+          // Guild information
+          guildId: guildId, // Add the guild ID to the config
+          
           // Clan information
           clans: clans.map(clan => clan.tag),
           clashofclans_clans: clans.map(clan => clan.tag).join(','), // For backward compatibility
@@ -123,7 +183,17 @@ async function getGuildClashOfClansConfig(guildId) {
           donationTemplate: firstRow.donation_template || defaultConfigs.guildClashOfClansConfig.donationTemplate,
           donationLeaderboardTemplate: firstRow.donation_leaderboard_template || '',
           embedEnabled: !!firstRow.embed_enabled,
-          clanData: firstRow.clan_data ? JSON.parse(firstRow.clan_data) : {}
+          
+          // Extended data
+          clanData: (() => {
+            if (!firstRow.clan_data) return {};
+            try {
+              return JSON.parse(firstRow.clan_data);
+            } catch (e) {
+              console.warn(`[Config] Invalid JSON in clan_data for guild ${guildId}:`, e.message);
+              return {};
+            }
+          })()
         };
         
         cacheData.guildClashOfClansConfigCache.set(guildId, config);
@@ -285,7 +355,13 @@ async function setGuildClashOfClansConfig(guildId, partial) {
             memberAnnouncementChannelId: clanConfig.memberAnnouncementChannelId || null,
             donationAnnounceChannelId: clanConfig.donationAnnounceChannelId || null,
             warLeaderboardMessageId: clanConfig.warLeaderboardMessageId || clanConfig.war_leaderboard_message_id || null,
-            donationMessageId: clanConfig.donationMessageId || clanConfig.donation_message_id || null
+            donationMessageId: clanConfig.donationMessageId || clanConfig.donation_message_id || null,
+            // War state management fields (preserve existing values if available)
+            warCurrentState: clanConfig.warCurrentState || 'notInWar',
+            warPreparingMessageId: clanConfig.warPreparingMessageId || null,
+            warActiveMessageId: clanConfig.warActiveMessageId || null,
+            warLastStateChange: clanConfig.warLastStateChange || null,
+            warStateData: clanConfig.warStateData || null
           });
         });
       } else {
@@ -309,7 +385,13 @@ async function setGuildClashOfClansConfig(guildId, partial) {
             memberAnnouncementChannelId: clanConfig.memberAnnouncementChannelId || null,
             donationAnnounceChannelId: clanConfig.donationAnnounceChannelId || null,
             warLeaderboardMessageId: clanConfig.warLeaderboardMessageId || clanConfig.war_leaderboard_message_id || null,
-            donationMessageId: clanConfig.donationMessageId || clanConfig.donation_message_id || null
+            donationMessageId: clanConfig.donationMessageId || clanConfig.donation_message_id || null,
+            // War state management fields (preserve existing values if available)
+            warCurrentState: clanConfig.warCurrentState || 'notInWar',
+            warPreparingMessageId: clanConfig.warPreparingMessageId || null,
+            warActiveMessageId: clanConfig.warActiveMessageId || null,
+            warLastStateChange: clanConfig.warLastStateChange || null,
+            warStateData: clanConfig.warStateData || null
           });
         }
       }
@@ -335,7 +417,13 @@ async function setGuildClashOfClansConfig(guildId, partial) {
           donationAnnounceChannelId: null,
           // For legacy arrays, reuse global message ids only for first clan; others remain null to avoid duplication
           warLeaderboardMessageId: index === 0 ? (next.warLeaderboardMessageId || null) : null,
-          donationMessageId: index === 0 ? (next.donationMessageId || null) : null
+          donationMessageId: index === 0 ? (next.donationMessageId || null) : null,
+          // War state management fields - set defaults for legacy clans
+          warCurrentState: 'notInWar',
+          warPreparingMessageId: null,
+          warActiveMessageId: null,
+          warLastStateChange: null,
+          warStateData: null
         });
       });
     }
@@ -352,8 +440,10 @@ async function setGuildClashOfClansConfig(guildId, partial) {
           enabled, interval_sec, track_wars, track_members, track_donations, track_donation_leaderboard,
           donation_threshold, donation_leaderboard_schedule, donation_leaderboard_time,
           war_start_template, war_end_template, member_join_template, donation_template, 
-          donation_leaderboard_template, embed_enabled, clan_data
-        ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+          donation_leaderboard_template, embed_enabled, clan_data,
+          war_current_state, war_preparing_message_id, war_active_message_id, 
+          war_last_state_change, war_state_data
+        ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
       `, [
         guildId, '', '', 0, // Empty clan data
         null, null, null, // No announcement channels
@@ -364,7 +454,8 @@ async function setGuildClashOfClansConfig(guildId, partial) {
         next.trackWars ? 1 : 0, next.trackMembers ? 1 : 0, next.trackDonations ? 1 : 0, next.trackDonationLeaderboard ? 1 : 0,
         next.donationThreshold || 100, next.donationLeaderboardSchedule || 'hourly', next.donationLeaderboardTime || '20:00',
         next.warStartTemplate, next.warEndTemplate, next.memberJoinTemplate, next.donationTemplate,
-        next.donationLeaderboardTemplate, next.embedEnabled ? 1 : 0, JSON.stringify(next.clanData || {})
+        next.donationLeaderboardTemplate, next.embedEnabled ? 1 : 0, JSON.stringify(next.clanData || {}),
+        'notInWar', null, null, new Date(), null
       ]);
     } else {
       // Insert records for each clan
@@ -383,8 +474,10 @@ async function setGuildClashOfClansConfig(guildId, partial) {
             enabled, interval_sec, track_wars, track_members, track_donations, track_donation_leaderboard,
             donation_threshold, donation_leaderboard_schedule, donation_leaderboard_time,
             war_start_template, war_end_template, member_join_template, donation_template, 
-            donation_leaderboard_template, embed_enabled, clan_data
-          ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+            donation_leaderboard_template, embed_enabled, clan_data,
+            war_current_state, war_preparing_message_id, war_active_message_id, 
+            war_last_state_change, war_state_data
+          ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
         `, [
           guildId, clan.tag, clan.name, clan.order,
           clan.warAnnounceChannelId || null, clan.memberAnnouncementChannelId || null, clan.donationAnnounceChannelId || null,
@@ -399,7 +492,40 @@ async function setGuildClashOfClansConfig(guildId, partial) {
           next.trackWars ? 1 : 0, next.trackMembers ? 1 : 0, next.trackDonations ? 1 : 0, next.trackDonationLeaderboard ? 1 : 0,
           next.donationThreshold || 100, next.donationLeaderboardSchedule || 'hourly', next.donationLeaderboardTime || '20:00',
           next.warStartTemplate, next.warEndTemplate, next.memberJoinTemplate, next.donationTemplate,
-          next.donationLeaderboardTemplate, next.embedEnabled ? 1 : 0, JSON.stringify(next.clanData || {})
+          next.donationLeaderboardTemplate, next.embedEnabled ? 1 : 0, JSON.stringify(next.clanData || {}),
+          // War state management fields - preserve existing values or set defaults
+          clan.warCurrentState || 'notInWar', 
+          clan.warPreparingMessageId || null, 
+          clan.warActiveMessageId || null,
+          clan.warLastStateChange || new Date(),
+          // Safe stringification for warStateData
+          (() => {
+            if (!clan.warStateData) return null;
+            if (typeof clan.warStateData === 'string') {
+              // Check for the specific "[object Object]" problem and reset it
+              if (clan.warStateData === '[object Object]' || clan.warStateData.includes('[object Object]')) {
+                console.warn(`[Config] Detected corrupted "[object Object]" string in warStateData for clan ${clan.tag}, resetting to null`);
+                return null;
+              }
+              // If it's already a string, try to parse and re-stringify to ensure it's valid JSON
+              try {
+                JSON.parse(clan.warStateData);
+                return clan.warStateData; // It's valid JSON string, use as-is
+              } catch (e) {
+                console.warn(`[Config] Invalid JSON string in warStateData for clan ${clan.tag}:`, clan.warStateData);
+                return null; // Invalid JSON string, reset to null
+              }
+            } else if (typeof clan.warStateData === 'object') {
+              // It's an object, stringify it
+              try {
+                return JSON.stringify(clan.warStateData);
+              } catch (e) {
+                console.warn(`[Config] Error stringifying warStateData for clan ${clan.tag}:`, e.message);
+                return null;
+              }
+            }
+            return null;
+          })()
         ]);
       }
     }

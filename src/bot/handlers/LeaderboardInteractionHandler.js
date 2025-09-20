@@ -3,6 +3,7 @@ const LeaderboardButtons = require('../../components/leaderboard/LeaderboardButt
 const LeaderboardCanvas = require('../../utils/leaderboard/LeaderboardCanvas');
 const ClashOfClansAPI = require('../services/ClashOfClansAPI');
 const clashOfClansService = require('../../config/store/services/clashofclans-updated');
+const WarStateManager = require('../../utils/war/WarStateManager');
 
 /**
  * Handles all leaderboard button interactions
@@ -12,6 +13,12 @@ class LeaderboardInteractionHandler {
     constructor(database) {
         this.db = database;
         this.lastInteraction = new Map(); // Track last interaction time per user to prevent spam
+        this.warStateManager = new WarStateManager(database);
+        
+        // Initialize war state database columns
+        this.warStateManager.ensureWarStateColumns().catch(error => {
+            console.error('[LeaderboardInteractionHandler] Failed to initialize war state columns:', error);
+        });
     }
 
     /**
@@ -173,7 +180,7 @@ class LeaderboardInteractionHandler {
                 .addFields([
                     {
                         name: '📊 Display Settings',
-                        value: `**Players per page:** ${config.donation_leaderboard_players_per_page || 20}\n**Time range:** ${config.donation_leaderboard_time_range || 'current_season'}`,
+                        value: `**Players per page:** ${config.donation_leaderboard_players_per_page || 25}\n**Time range:** ${config.donation_leaderboard_time_range || 'current_season'}`,
                         inline: true
                     },
                     {
@@ -223,7 +230,7 @@ class LeaderboardInteractionHandler {
                     return await this.sendError(interaction, `No ${view} data available for pagination`, view, clanTag);
                 }
                 
-                const playersPerPage = config.donation_leaderboard_players_per_page || 20;
+                const playersPerPage = config.donation_leaderboard_players_per_page || 25;
                 totalPages = Math.max(1, Math.ceil(clanData.players.length / playersPerPage));
             } else {
                 // Use config total pages for combined leaderboard
@@ -315,7 +322,7 @@ class LeaderboardInteractionHandler {
             }
 
             // Pagination logic
-            const playersPerPage = config.donation_leaderboard_players_per_page || 20;
+            const playersPerPage = config.donation_leaderboard_players_per_page || 25;
             const totalPages = Math.max(1, Math.ceil(clanData.players.length / playersPerPage));
             if (page > totalPages) page = totalPages;
             if (page < 1) page = 1;
@@ -329,11 +336,13 @@ class LeaderboardInteractionHandler {
             // Generate canvas image
             const canvas = new LeaderboardCanvas();
             const canvasBuffer = view === 'war'
-                ? await canvas.generateWarLeaderboard(pageData, {...config, clan_name: clanData.clanName, clan_tag: clanTag}, page, totalPages, clanData)
+                ? await canvas.generateWarLeaderboard(pageData, {...config, clan_name: clanData.clanName, clan_tag: clanTag}, page, totalPages, clanData, clanData.warState)
                 : await canvas.generateLeaderboard(pageData, {...config, clan_name: clanData.clanName, clan_tag: clanTag}, page, totalPages);
 
-            // Create buttons with clan tag
+            // Create buttons with clan tag (disable if war ended)
             const isAdmin = LeaderboardButtons.hasAdminPermission(interaction.member);
+            const buttonsDisabled = view === 'war' && !this.warStateManager.shouldEnableButtons(clanData.warState);
+            
             const buttonRow = LeaderboardButtons.createButtonRow({
                 currentPage: page,
                 totalPages,
@@ -341,7 +350,8 @@ class LeaderboardInteractionHandler {
                 guildId: interaction.guildId,
                 clanTag: clanTag,
                 view: 'page',
-                dataView: view
+                dataView: view,
+                disabled: buttonsDisabled
             });
 
             // Create embed with page info
@@ -447,7 +457,7 @@ class LeaderboardInteractionHandler {
     async generateClanLeaderboardForData(interaction, config, page, clanData, view, isOriginalReply = false) {
         try {
             // Pagination logic
-            const playersPerPage = config.donation_leaderboard_players_per_page || 20;
+            const playersPerPage = config.donation_leaderboard_players_per_page || 25;
             const totalPages = Math.max(1, Math.ceil(clanData.players.length / playersPerPage));
             if (page > totalPages) page = totalPages;
             if (page < 1) page = 1;
@@ -458,11 +468,13 @@ class LeaderboardInteractionHandler {
             // Generate canvas image
             const canvas = new LeaderboardCanvas();
             const canvasBuffer = view === 'war'
-                ? await canvas.generateWarLeaderboard(pageData, {...config, clan_name: clanData.clanName, clan_tag: clanData.clanTag}, page, totalPages, clanData)
+                ? await canvas.generateWarLeaderboard(pageData, {...config, clan_name: clanData.clanName, clan_tag: clanData.clanTag}, page, totalPages, clanData, clanData.warState)
                 : await canvas.generateLeaderboard(pageData, {...config, clan_name: clanData.clanName, clan_tag: clanData.clanTag}, page, totalPages);
 
-            // Create buttons with clan tag
+            // Create buttons with clan tag (disable if war ended)
             const isAdmin = LeaderboardButtons.hasAdminPermission(interaction.member);
+            const buttonsDisabled = view === 'war' && clanData && !this.warStateManager.shouldEnableButtons(clanData.warState);
+            
             const buttonRow = LeaderboardButtons.createButtonRow({
                 currentPage: page,
                 totalPages,
@@ -470,7 +482,8 @@ class LeaderboardInteractionHandler {
                 guildId: interaction.guildId,
                 clanTag: clanData.clanTag,
                 view: 'page',
-                dataView: view
+                dataView: view,
+                disabled: buttonsDisabled
             });
 
             // Create embed with page info
@@ -601,7 +614,7 @@ class LeaderboardInteractionHandler {
             const isAdmin = LeaderboardButtons.hasAdminPermission(interaction.member);
             
             // Calculate correct total pages based on actual player data
-            const playersPerPage = config.donation_leaderboard_players_per_page || 20;
+            const playersPerPage = config.donation_leaderboard_players_per_page || 25;
             const totalPages = Math.max(1, Math.ceil(players.length / playersPerPage));
             
             const buttonRow = LeaderboardButtons.createButtonRow({
@@ -685,7 +698,7 @@ class LeaderboardInteractionHandler {
         // Enhance with activity tracking if we have previous data
         if (clanData.players && clanData.players.length > 0) {
             let previousPlayers = [];
-            const cacheKey = `${config.guild_id}_${clanTag}_donations`;
+            const cacheKey = `${config.guildId}_${clanTag}_donations`;
             
             if (config.donation_leaderboard_cached_data) {
                 try {
@@ -705,42 +718,58 @@ class LeaderboardInteractionHandler {
     }
 
     /**
-     * Get individual clan war data
+     * Get individual clan war data with state management
      * @param {Object} config - Leaderboard configuration
      * @param {string} clanTag - Specific clan tag
      * @param {boolean} forceRefresh - Whether to force data refresh
-     * @returns {Object} Individual clan war data
+     * @returns {Object} Individual clan war data with state information
      */
     async getIndividualWarData(config, clanTag, forceRefresh = false) {
-        // For individual clan, we can use the new API method
-        const clanDataArray = await ClashOfClansAPI.getIndividualClanWarStats([clanTag]);
-        
-        if (!clanDataArray || clanDataArray.length === 0) {
-            throw new Error(`No war data available for clan ${clanTag}`);
-        }
-
-        const clanData = clanDataArray[0];
-        
-        // Enhance with activity tracking if we have previous data
-        if (clanData.players && clanData.players.length > 0) {
-            let previousPlayers = [];
-            const cacheKey = `${config.guild_id}_${clanTag}_war`;
+        try {
+            // Get current war state from database
+            const currentStateData = await this.warStateManager.getCurrentWarState(config.guildId, clanTag);
             
-            if (config.war_leaderboard_cached_data) {
-                try {
-                    const cachedData = JSON.parse(config.war_leaderboard_cached_data);
-                    if (cachedData[cacheKey]) {
-                        previousPlayers = cachedData[cacheKey].players || [];
-                    }
-                } catch (error) {
-                    console.warn('Failed to parse previous clan war data:', error);
-                }
+            // For individual clan, we can use the new API method
+            const clanDataArray = await ClashOfClansAPI.getIndividualClanWarStats([clanTag]);
+            
+            if (!clanDataArray || clanDataArray.length === 0) {
+                throw new Error(`No war data available for clan ${clanTag}`);
             }
-            
-            clanData.players = await ClashOfClansAPI.enhancePlayersWithActivity(clanData.players, previousPlayers);
-        }
 
-        return clanData;
+            const clanData = clanDataArray[0];
+            
+            // Determine war state transition action
+            const transitionAction = this.warStateManager.getTransitionAction(currentStateData, clanData.currentWar);
+            
+            // Add war state information to clan data
+            clanData.warState = this.warStateManager.getWarState(clanData.currentWar);
+            clanData.warStateData = currentStateData;
+            clanData.transitionAction = transitionAction;
+            
+            // Enhance with activity tracking if we have previous data
+            if (clanData.players && clanData.players.length > 0) {
+                let previousPlayers = [];
+                const cacheKey = `${config.guildId}_${clanTag}_war`;
+                
+                if (config.war_leaderboard_cached_data) {
+                    try {
+                        const cachedData = JSON.parse(config.war_leaderboard_cached_data);
+                        if (cachedData[cacheKey]) {
+                            previousPlayers = cachedData[cacheKey].players || [];
+                        }
+                    } catch (error) {
+                        console.warn('Failed to parse previous clan war data:', error);
+                    }
+                }
+                
+                clanData.players = await ClashOfClansAPI.enhancePlayersWithActivity(clanData.players, previousPlayers);
+            }
+
+            return clanData;
+        } catch (error) {
+            console.error(`[LeaderboardInteractionHandler] Error getting individual war data for clan ${clanTag}:`, error);
+            throw error;
+        }
     }
 
     /**
@@ -763,7 +792,7 @@ class LeaderboardInteractionHandler {
             }
 
             // Pagination logic
-            const playersPerPage = config.donation_leaderboard_players_per_page || 20;
+            const playersPerPage = config.donation_leaderboard_players_per_page || 25;
             const totalPages = Math.max(1, Math.ceil(leaderboardData.players.length / playersPerPage));
             if (page > totalPages) page = totalPages;
             if (page < 1) page = 1;
@@ -931,7 +960,7 @@ class LeaderboardInteractionHandler {
             if (freshData) {
                 await this.db.execute(
                     'UPDATE guild_clashofclans_watch SET donation_leaderboard_cached_data = ?, donation_leaderboard_last_update = CURRENT_TIMESTAMP WHERE guild_id = ?',
-                    [JSON.stringify({ ...freshData, last_fetched: new Date().toISOString() }), config.guild_id]
+                    [JSON.stringify({ ...freshData, last_fetched: new Date().toISOString() }), config.guildId]
                 );
             }
 
@@ -1019,7 +1048,7 @@ class LeaderboardInteractionHandler {
             if (freshData) {
                 await this.db.execute(
                     'UPDATE guild_clashofclans_watch SET war_leaderboard_cached_data = ?, war_leaderboard_last_update = CURRENT_TIMESTAMP WHERE guild_id = ?',
-                    [JSON.stringify({ ...freshData, last_fetched: new Date().toISOString() }), config.guild_id]
+                    [JSON.stringify({ ...freshData, last_fetched: new Date().toISOString() }), config.guildId]
                 );
             }
 

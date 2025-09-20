@@ -284,11 +284,11 @@ function createCOCEmbed(data, type, config) {
 // Helper function to get clan-specific mention targets
 async function getClanSpecificMentionTargets(config, data, eventType) {
   // If we have per-clan configuration and a specific clan tag, use it
-  if (data && data.clanTag && config.guild_id) {
+  if (data && data.clanTag && config.guildId) {
     try {
       // Import the new service here to avoid circular imports
       const clashOfClansService = require('../../config/store/services/clashofclans-updated');
-      const clanMentions = await clashOfClansService.getClanMentionTargets(config.guild_id, data.clanTag, eventType);
+      const clanMentions = await clashOfClansService.getClanMentionTargets(config.guildId, data.clanTag, eventType);
       if (clanMentions && clanMentions.length > 0) {
         return clanMentions;
       }

@@ -1,5 +1,6 @@
 const { Events } = require('discord.js');
 const LeaderboardInteractionHandler = require('../handlers/LeaderboardInteractionHandler');
+const WarStateManager = require('../../utils/war/WarStateManager');
 
 /**
  * Bot event handler for leaderboard button interactions
@@ -9,12 +10,13 @@ class LeaderboardEvents {
     constructor(client, database) {
         this.client = client;
         this.interactionHandler = new LeaderboardInteractionHandler(database);
+        this.warStateManager = new WarStateManager(database);
         // Remove the automatic event listener setup
         console.log('🎮 Leaderboard Events initialized (manual handler mode)');
     }
 
     /**
-     * Manual method to post or update a leaderboard message
+     * Manual method to post or update a leaderboard message with war state management
      * Called by scheduled jobs or admin commands
      * @param {string} guildId - Guild ID
      * @param {string} channelId - Channel ID to post in
@@ -24,6 +26,198 @@ class LeaderboardEvents {
      * @returns {Object} Posted message information
      */
     async postLeaderboard(guildId, channelId, messageId = null, type = 'donations', clanTag = null) {
+        try {
+            // For war leaderboards, use the new state-aware method
+            if (type === 'war' && clanTag) {
+                return await this.postWarLeaderboardWithStateManagement(guildId, channelId, clanTag);
+            }
+
+            // Original logic for donation leaderboards and legacy war leaderboards
+            return await this.postOriginalLeaderboard(guildId, channelId, messageId, type, clanTag);
+
+        } catch (error) {
+            console.error(`Failed to post ${type} leaderboard for guild ${guildId}:`, error);
+            return { success: false, error: error.message, guildId, channelId, type };
+        }
+    }
+
+    /**
+     * Post war leaderboard with state management support
+     * @param {string} guildId - Guild ID
+     * @param {string} channelId - Channel ID to post in
+     * @param {string} clanTag - Specific clan tag
+     * @returns {Object} Posted message information
+     */
+    async postWarLeaderboardWithStateManagement(guildId, channelId, clanTag) {
+        try {
+            // Validate parameters
+            if (!guildId || !channelId || !clanTag) {
+                throw new Error(`Invalid parameters for war leaderboard: guildId=${guildId}, channelId=${channelId}, clanTag=${clanTag}`);
+            }
+
+            const channel = await this.client.channels.fetch(channelId);
+            if (!channel) {
+                throw new Error(`Channel ${channelId} not found`);
+            }
+
+            // Get leaderboard configuration
+            const config = await this.interactionHandler.getLeaderboardConfig(guildId);
+            if (!config || !config.trackWarLeaderboard) {
+                throw new Error('War leaderboard not enabled for this guild');
+            }
+
+            // Get current war state
+            const currentStateData = await this.warStateManager.getCurrentWarState(guildId, clanTag);
+            
+            // Get current war data
+            const clanData = await this.interactionHandler.getIndividualWarData(config, clanTag, true);
+            
+            // Determine what action to take based on state transition
+            const transitionAction = this.warStateManager.getTransitionAction(currentStateData, clanData.currentWar);
+
+            console.log(`[LeaderboardEvents] War state transition for ${clanTag}: ${JSON.stringify(transitionAction)}`);
+
+            let targetMessageId = null;
+            let shouldCreateNew = false;
+            let shouldUpdate = false;
+
+            switch (transitionAction.action) {
+                case 'transition':
+                    if (transitionAction.messageAction === 'create_preparing' || transitionAction.messageAction === 'create_active') {
+                        // New war started - create new message
+                        shouldCreateNew = true;
+                    } else if (transitionAction.messageAction === 'update_to_active') {
+                        // War moved from preparation to active - update existing message
+                        targetMessageId = transitionAction.messageId;
+                        shouldUpdate = true;
+                    } else if (transitionAction.messageAction === 'update_to_ended') {
+                        // War ended - update existing message with final results
+                        targetMessageId = transitionAction.messageId;
+                        shouldUpdate = true;
+                    }
+                    break;
+
+                case 'refresh':
+                    // Same state, just refresh the message
+                    targetMessageId = transitionAction.messageId;
+                    shouldUpdate = !!targetMessageId;
+                    shouldCreateNew = !targetMessageId;
+                    break;
+
+                case 'none':
+                default:
+                    // No action needed
+                    return { success: true, guildId, channelId, type: 'war', action: 'none' };
+            }
+
+            // Create mock interaction for leaderboard generation
+            const mockInteraction = {
+                guildId,
+                guild: channel.guild,
+                member: null,
+                deferred: true,
+                replied: false,
+                customId: `war_state_${clanData.warState}_update`,
+                editReply: async (options) => {
+                    let resultMessage = null;
+
+                    if (shouldCreateNew) {
+                        // Create new message
+                        resultMessage = await channel.send(options);
+                        
+                        // Update database with new message ID for current state
+                        await this.warStateManager.updateWarState(
+                            guildId, 
+                            clanTag, 
+                            clanData.warState, 
+                            clanData.currentWar, 
+                            resultMessage.id
+                        );
+                        
+                        console.log(`[LeaderboardEvents] Created new war message for ${clanTag} (state: ${clanData.warState})`);
+                        
+                    } else if (shouldUpdate && targetMessageId) {
+                        try {
+                            // Update existing message
+                            const existingMessage = await channel.messages.fetch(targetMessageId);
+                            resultMessage = await existingMessage.edit(options);
+                            
+                            // Update state if this is a transition
+                            if (transitionAction.action === 'transition') {
+                                await this.warStateManager.updateWarState(
+                                    guildId, 
+                                    clanTag, 
+                                    clanData.warState, 
+                                    clanData.currentWar, 
+                                    resultMessage.id
+                                );
+                            }
+                            
+                            console.log(`[LeaderboardEvents] Updated war message for ${clanTag} (state: ${clanData.warState})`);
+                            
+                        } catch (error) {
+                            if (error.code === 10008 || error.message.includes('Unknown Message')) {
+                                // Message was deleted, create new one
+                                resultMessage = await channel.send(options);
+                                await this.warStateManager.updateWarState(
+                                    guildId, 
+                                    clanTag, 
+                                    clanData.warState, 
+                                    clanData.currentWar, 
+                                    resultMessage.id
+                                );
+                                console.log(`[LeaderboardEvents] Recreated war message for ${clanTag} (original deleted)`);
+                            } else {
+                                throw error;
+                            }
+                        }
+                    }
+
+                    return resultMessage;
+                },
+                followUp: async (options) => {
+                    return await channel.send(options);
+                }
+            };
+
+            // Generate the leaderboard
+            if (shouldCreateNew || shouldUpdate) {
+                await this.interactionHandler.generateLeaderboardPage(mockInteraction, config, 1, true, 'war', clanTag);
+            }
+
+            return { 
+                success: true, 
+                guildId, 
+                channelId, 
+                type: 'war', 
+                clanTag,
+                action: transitionAction.action,
+                warState: clanData.warState
+            };
+
+        } catch (error) {
+            console.error(`Failed to post war leaderboard with state management for clan ${clanTag}:`, error);
+            return { 
+                success: false, 
+                error: error.message, 
+                guildId, 
+                channelId, 
+                type: 'war', 
+                clanTag 
+            };
+        }
+    }
+
+    /**
+     * Original leaderboard posting method (for donations and legacy support)
+     * @param {string} guildId - Guild ID
+     * @param {string} channelId - Channel ID to post in
+     * @param {string|null} messageId - Existing message ID to update (null for new)
+     * @param {string} type - Leaderboard type ('donations' or 'war')
+     * @param {string|null} clanTag - Specific clan tag
+     * @returns {Object} Posted message information
+     */
+    async postOriginalLeaderboard(guildId, channelId, messageId = null, type = 'donations', clanTag = null) {
         try {
             const channel = await this.client.channels.fetch(channelId);
             if (!channel) {

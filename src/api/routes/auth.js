@@ -526,7 +526,22 @@ function createAuthRoutes(client, store) {
         console.log('[OAuth] JWT token created for user:', user.username);
       }
       
+      // Set secure HttpOnly cookie for production deployment
+      const isProduction = process.env.NODE_ENV === 'production';
+      const cookieOptions = {
+        httpOnly: true, // Prevent XSS attacks
+        secure: isProduction, // HTTPS only in production
+        sameSite: isProduction ? 'strict' : 'lax', // CSRF protection
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days in milliseconds
+        path: '/' // Available for all routes
+      };
+      
+      res.cookie('authToken', jwtToken, cookieOptions);
+      
       audit(req, { action: 'oauth-login', user: user.id });
+      
+      // Return token in response body for backward compatibility
+      // Frontend will gradually migrate to use cookies only
       res.json({ token: jwtToken, user, guilds });
       
     } catch(e) {
@@ -672,6 +687,29 @@ function createAuthRoutes(client, store) {
     }
   });
 
+  // Logout endpoint - clear HttpOnly cookies securely
+  router.post('/logout', (req, res) => {
+    try {
+      // Clear the HttpOnly authentication cookie
+      res.clearCookie('authToken', {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
+        path: '/'
+      });
+      
+      // Log the logout action if user is authenticated
+      if (req.user) {
+        audit(req, { action: 'logout', user: req.user.userId || req.user.user });
+      }
+      
+      res.json({ success: true, message: 'Logged out successfully' });
+    } catch (error) {
+      console.error('[Auth] Logout error:', error);
+      res.status(500).json({ error: 'logout_failed', message: 'Failed to logout' });
+    }
+  });
+
   // Legacy login (if not disabled)
   if (!process.env.DISABLE_LEGACY_LOGIN) {
     router.post('/login', (req, res) => {
@@ -684,7 +722,21 @@ function createAuthRoutes(client, store) {
           type: 'legacy' 
         }, PRIMARY_JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
         
+        // Set secure HttpOnly cookie for production deployment
+        const isProduction = process.env.NODE_ENV === 'production';
+        const cookieOptions = {
+          httpOnly: true, // Prevent XSS attacks
+          secure: isProduction, // HTTPS only in production
+          sameSite: isProduction ? 'strict' : 'lax', // CSRF protection
+          maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days in milliseconds
+          path: '/' // Available for all routes
+        };
+        
+        res.cookie('authToken', token, cookieOptions);
+        
         audit(req, { action: 'login-success', user: username });
+        
+        // Return token in response body for backward compatibility
         return res.json({ token });
       }
       

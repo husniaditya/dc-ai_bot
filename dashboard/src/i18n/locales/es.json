@@ -616,7 +616,7 @@
       "disabled": "{{feature}} deshabilitado",
       "enableFailed": "No se pudo habilitar la función",
       "disableFailed": "No se pudo deshabilitar la función",
-      "loadFailedGeneric": "No se pudieron cargar los datos de moderación",
+      "loadFailedGeneric": "Error al cargar los datos de moderación, por favor actualiza la página",
       "loadFailed": "No se pudieron cargar los ajustes de {{feature}}",
       "saveSuccess": "Ajustes de {{feature}} guardados",
       "saveFailed": "No se pudieron guardar los ajustes de {{feature}}"

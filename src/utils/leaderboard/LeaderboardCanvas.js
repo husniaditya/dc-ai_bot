@@ -117,9 +117,144 @@ class LeaderboardCanvas {
      * @param {number} page - Current page number
      * @param {number} totalPages - Total number of pages
      * @param {Object} warData - Additional war data (current war, clan info)
+     * @param {string} warState - War state (preparation, inWar, ended)
      * @returns {Buffer} Canvas image buffer
      */
-    async generateWarLeaderboard(players, config, page = 1, totalPages = 1, warData = {}) {
+    async generateWarLeaderboard(players, config, page = 1, totalPages = 1, warData = {}, warState = 'ended') {
+        try {
+            // Determine which canvas type to generate based on war state
+            switch (warState) {
+                case 'preparation':
+                    return await this.generatePreparingWarCanvas(players, config, page, totalPages, warData);
+                case 'inWar':
+                    return await this.generateActiveWarCanvas(players, config, page, totalPages, warData);
+                case 'ended':
+                case 'notInWar':
+                default:
+                    return await this.generateHistoricalWarCanvas(players, config, page, totalPages, warData);
+            }
+        } catch (error) {
+            console.error('Error generating war leaderboard canvas:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Generate preparing war canvas (war in preparation state)
+     * @param {Array} players - Array of player war statistics data
+     * @param {Object} config - Leaderboard configuration
+     * @param {number} page - Current page number
+     * @param {number} totalPages - Total number of pages
+     * @param {Object} warData - War data including current war info
+     * @returns {Buffer} Canvas image buffer
+     */
+    async generatePreparingWarCanvas(players, config, page = 1, totalPages = 1, warData = {}) {
+        try {
+            // Calculate required height - use all players passed to the method
+            const playersToShow = players; // Show all players passed (pagination is handled upstream)
+            const requiredHeight = this.padding + this.headerHeight + 100 + (playersToShow.length * this.playerRowHeight) + this.footerHeight + this.padding;
+            const canvasHeight = Math.max(this.minHeight, requiredHeight);
+
+            // Create canvas
+            const canvas = createCanvas(this.width, canvasHeight);
+            const ctx = canvas.getContext('2d');
+
+            // Generate random background gradient colors if specified
+            if (config.canvas_generate_random_color) {
+                this.generateRandomColors();
+            }
+
+            // Draw background
+            await this.drawBackground(ctx, canvasHeight);
+
+            // Draw preparing war header
+            await this.drawPreparingWarHeader(ctx, config, page, totalPages, warData);
+
+            // Draw preparation war info section
+            const infoSectionY = this.padding + this.headerHeight + 20;
+            await this.drawPreparationWarInfo(ctx, warData, infoSectionY);
+
+            // Draw table headers
+            const tableStartY = this.padding + this.headerHeight + 100;
+            await this.drawWarTableHeaders(ctx, tableStartY);
+
+            // Draw war player list (preparing state)
+            await this.drawPreparingWarPlayerList(ctx, playersToShow, config, tableStartY);
+
+            // Draw footer
+            await this.drawFooter(ctx, page, totalPages, canvasHeight);
+
+            return canvas.toBuffer('image/png');
+
+        } catch (error) {
+            console.error('Error generating preparing war canvas:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Generate active war canvas (war currently in progress)
+     * @param {Array} players - Array of player war statistics data
+     * @param {Object} config - Leaderboard configuration
+     * @param {number} page - Current page number
+     * @param {number} totalPages - Total number of pages
+     * @param {Object} warData - War data including current war info
+     * @returns {Buffer} Canvas image buffer
+     */
+    async generateActiveWarCanvas(players, config, page = 1, totalPages = 1, warData = {}) {
+        try {
+            // Calculate required height - use all players passed to the method
+            const playersToShow = players; // Show all players passed (pagination is handled upstream)
+            const requiredHeight = this.padding + this.headerHeight + 100 + (playersToShow.length * this.playerRowHeight) + this.footerHeight + this.padding;
+            const canvasHeight = Math.max(this.minHeight, requiredHeight);
+
+            // Create canvas
+            const canvas = createCanvas(this.width, canvasHeight);
+            const ctx = canvas.getContext('2d');
+
+            // Generate random background gradient colors if specified
+            if (config.canvas_generate_random_color) {
+                this.generateRandomColors();
+            }
+
+            // Draw background
+            await this.drawBackground(ctx, canvasHeight);
+
+            // Draw active war header
+            await this.drawActiveWarHeader(ctx, config, page, totalPages, warData);
+
+            // Draw active war info section (scores, remaining time, etc.)
+            const infoSectionY = this.padding + this.headerHeight + 20;
+            await this.drawActiveWarInfo(ctx, warData, infoSectionY);
+
+            // Draw table headers
+            const tableStartY = this.padding + this.headerHeight + 100;
+            await this.drawWarTableHeaders(ctx, tableStartY);
+
+            // Draw war player list (active state with current attacks)
+            await this.drawActiveWarPlayerList(ctx, playersToShow, config, tableStartY);
+
+            // Draw footer
+            await this.drawFooter(ctx, page, totalPages, canvasHeight);
+
+            return canvas.toBuffer('image/png');
+
+        } catch (error) {
+            console.error('Error generating active war canvas:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Generate historical war canvas (completed wars)
+     * @param {Array} players - Array of player war statistics data
+     * @param {Object} config - Leaderboard configuration
+     * @param {number} page - Current page number
+     * @param {number} totalPages - Total number of pages
+     * @param {Object} warData - War data including historical data
+     * @returns {Buffer} Canvas image buffer
+     */
+    async generateHistoricalWarCanvas(players, config, page = 1, totalPages = 1, warData = {}) {
         try {
             // Calculate dynamic height based on player count
             const tableHeaderHeight = 40; // Updated to match drawTableHeaders height
@@ -146,7 +281,7 @@ class LeaderboardCanvas {
             await this.drawBackground(ctx, canvasHeight);
             
             // Draw header (war themed)
-            await this.drawWarHeader(ctx, config, page, totalPages, warData);
+            await this.drawHistoricalWarHeader(ctx, config, page, totalPages, warData);
             
             // Draw war player list
             await this.drawWarPlayerList(ctx, players, config);
@@ -156,7 +291,7 @@ class LeaderboardCanvas {
 
             return canvas.toBuffer('image/png');
         } catch (error) {
-            console.error('Error generating war leaderboard canvas:', error);
+            console.error('Error generating historical war canvas:', error);
             throw error;
         }
     }
@@ -1124,6 +1259,304 @@ class LeaderboardCanvas {
         };
 
         return await this.generateLeaderboard(testPlayers, testConfig, 1, 3);
+    }
+
+    /**
+     * Draw preparing war header
+     */
+    async drawPreparingWarHeader(ctx, config, page, totalPages, warData = {}) {
+        const headerY = this.padding;
+        
+        // Header background with preparation theme (blue/orange)
+        const headerGradient = ctx.createLinearGradient(0, headerY, this.width, headerY + this.headerHeight);
+        headerGradient.addColorStop(0, 'rgba(52, 152, 219, 0.8)'); // Blue preparation theme
+        headerGradient.addColorStop(1, 'rgba(230, 126, 34, 0.6)'); // Orange accent
+        
+        ctx.fillStyle = headerGradient;
+        ctx.fillRect(this.padding, headerY, this.width - (this.padding * 2), this.headerHeight);
+
+        // Add rounded corners effect
+        ctx.beginPath();
+        ctx.roundRect(this.padding, headerY, this.width - (this.padding * 2), this.headerHeight, 15);
+        ctx.fill();
+
+        // Draw title
+        ctx.fillStyle = this.textColor;
+        ctx.font = this.titleFont;
+        ctx.textAlign = 'center';
+        
+        const clanName = config.clan_name || (warData.clanName || 'Clan');
+        const title = `🛡️ ${clanName} - War Preparation`;
+        const titleY = headerY + 70;
+        ctx.fillText(title, this.width / 2, titleY);
+
+        // War status
+        ctx.font = this.headerFont;
+        let warStatus = 'Preparing for War';
+        if (warData.currentWar && warData.currentWar.opponent) {
+            warStatus = `vs ${warData.currentWar.opponent.name}`;
+        }
+        
+        const statusY = titleY + 50;
+        ctx.fillText(warStatus, this.width / 2, statusY);
+    }
+
+    /**
+     * Draw active war header
+     */
+    async drawActiveWarHeader(ctx, config, page, totalPages, warData = {}) {
+        const headerY = this.padding;
+        
+        // Header background with active war theme (red/crimson)
+        const headerGradient = ctx.createLinearGradient(0, headerY, this.width, headerY + this.headerHeight);
+        headerGradient.addColorStop(0, 'rgba(231, 76, 60, 0.8)'); // Red war theme
+        headerGradient.addColorStop(1, 'rgba(192, 57, 43, 0.6)');
+        
+        ctx.fillStyle = headerGradient;
+        ctx.fillRect(this.padding, headerY, this.width - (this.padding * 2), this.headerHeight);
+
+        // Add rounded corners effect
+        ctx.beginPath();
+        ctx.roundRect(this.padding, headerY, this.width - (this.padding * 2), this.headerHeight, 15);
+        ctx.fill();
+
+        // Draw title
+        ctx.fillStyle = this.textColor;
+        ctx.font = this.titleFont;
+        ctx.textAlign = 'center';
+        
+        const clanName = config.clan_name || (warData.clanName || 'Clan');
+        const title = `⚔️ ${clanName} - Active War`;
+        const titleY = headerY + 70;
+        ctx.fillText(title, this.width / 2, titleY);
+
+        // War status and current war info
+        ctx.font = this.headerFont;
+        let warStatus = 'War in Progress';
+        if (warData.currentWar && warData.currentWar.opponent) {
+            warStatus = `vs ${warData.currentWar.opponent.name}`;
+        }
+        
+        const statusY = titleY + 50;
+        ctx.fillText(warStatus, this.width / 2, statusY);
+    }
+
+    /**
+     * Draw historical war header
+     */
+    async drawHistoricalWarHeader(ctx, config, page, totalPages, warData = {}) {
+        const headerY = this.padding;
+        
+        // Header background with historical theme (purple/gray)
+        const headerGradient = ctx.createLinearGradient(0, headerY, this.width, headerY + this.headerHeight);
+        headerGradient.addColorStop(0, 'rgba(155, 89, 182, 0.8)'); // Purple historical theme
+        headerGradient.addColorStop(1, 'rgba(127, 140, 141, 0.6)'); // Gray accent
+        
+        ctx.fillStyle = headerGradient;
+        ctx.fillRect(this.padding, headerY, this.width - (this.padding * 2), this.headerHeight);
+
+        // Add rounded corners effect
+        ctx.beginPath();
+        ctx.roundRect(this.padding, headerY, this.width - (this.padding * 2), this.headerHeight, 15);
+        ctx.fill();
+
+        // Draw title
+        ctx.fillStyle = this.textColor;
+        ctx.font = this.titleFont;
+        ctx.textAlign = 'center';
+        
+        const clanName = config.clan_name || (warData.clanName || 'Clan');
+        const title = `🏆 ${clanName} War Statistics`;
+        const titleY = headerY + 70;
+        ctx.fillText(title, this.width / 2, titleY);
+
+        // War status
+        ctx.font = this.headerFont;
+        const warStatus = 'Historical War Performance';
+        const statusY = titleY + 50;
+        ctx.fillText(warStatus, this.width / 2, statusY);
+    }
+
+    /**
+     * Draw preparation war info section
+     */
+    async drawPreparationWarInfo(ctx, warData, y) {
+        if (!warData.currentWar) return;
+
+        const war = warData.currentWar;
+        const infoHeight = 60;
+        
+        // Background for info section
+        ctx.fillStyle = 'rgba(52, 152, 219, 0.2)';
+        ctx.fillRect(this.padding, y, this.width - (this.padding * 2), infoHeight);
+
+        // War info text
+        ctx.fillStyle = this.textColor;
+        ctx.font = this.headerFont;
+        ctx.textAlign = 'center';
+
+        let timeText = 'War preparation in progress';
+        if (war.startTime) {
+            const startTime = new Date(war.startTime);
+            const now = new Date();
+            const timeRemaining = startTime.getTime() - now.getTime();
+            
+            if (timeRemaining > 0) {
+                const hours = Math.floor(timeRemaining / (1000 * 60 * 60));
+                const minutes = Math.floor((timeRemaining % (1000 * 60 * 60)) / (1000 * 60));
+                timeText = `War starts in ${hours}h ${minutes}m`;
+            }
+        }
+
+        ctx.fillText(timeText, this.width / 2, y + 40);
+    }
+
+    /**
+     * Draw active war info section
+     */
+    async drawActiveWarInfo(ctx, warData, y) {
+        if (!warData.currentWar) return;
+
+        const war = warData.currentWar;
+        const infoHeight = 60;
+        
+        // Background for info section
+        ctx.fillStyle = 'rgba(231, 76, 60, 0.2)';
+        ctx.fillRect(this.padding, y, this.width - (this.padding * 2), infoHeight);
+
+        // War score and time remaining
+        ctx.fillStyle = this.textColor;
+        ctx.font = this.headerFont;
+        ctx.textAlign = 'center';
+
+        let scoreText = `⭐ ${war.clan?.stars || 0} - ${war.opponent?.stars || 0}`;
+        let timeText = 'War in progress';
+        
+        if (war.endTime) {
+            const endTime = new Date(war.endTime);
+            const now = new Date();
+            const timeRemaining = endTime.getTime() - now.getTime();
+            
+            if (timeRemaining > 0) {
+                const hours = Math.floor(timeRemaining / (1000 * 60 * 60));
+                const minutes = Math.floor((timeRemaining % (1000 * 60 * 60)) / (1000 * 60));
+                timeText = `${hours}h ${minutes}m remaining`;
+            }
+        }
+
+        ctx.fillText(`${scoreText} | ${timeText}`, this.width / 2, y + 40);
+    }
+
+    /**
+     * Draw preparing war player list
+     */
+    async drawPreparingWarPlayerList(ctx, players, config, startY) {
+        const tableHeaderHeight = 40;
+        let currentY = startY + tableHeaderHeight + 10;
+
+        for (let i = 0; i < players.length; i++) {
+            const player = players[i];
+            await this.drawPreparingWarPlayerRow(ctx, player, currentY, i);
+            currentY += this.playerRowHeight;
+        }
+    }
+
+    /**
+     * Draw active war player list
+     */
+    async drawActiveWarPlayerList(ctx, players, config, startY) {
+        const tableHeaderHeight = 40;
+        let currentY = startY + tableHeaderHeight + 10;
+
+        for (let i = 0; i < players.length; i++) {
+            const player = players[i];
+            await this.drawActiveWarPlayerRow(ctx, player, currentY, i);
+            currentY += this.playerRowHeight;
+        }
+    }
+
+    /**
+     * Draw historical war player list (uses existing method)
+     */
+    async drawHistoricalWarPlayerList(ctx, players, config, startY) {
+        // Use existing war player list drawing method
+        await this.drawWarPlayerList(ctx, players, config);
+    }
+
+    /**
+     * Draw preparing war player row
+     */
+    async drawPreparingWarPlayerRow(ctx, player, y, index) {
+        // Similar to existing but focused on preparation status
+        const rank = index + 1;
+        let currentX = this.padding + 20;
+
+        // Row background
+        ctx.fillStyle = index % 2 === 0 ? 'rgba(255, 255, 255, 0.05)' : 'rgba(255, 255, 255, 0.02)';
+        ctx.fillRect(this.padding, y, this.width - (this.padding * 2), this.playerRowHeight);
+
+        // Rank
+        await this.drawRankWithMedal(ctx, rank, currentX, y + 20, true);
+        currentX += this.rankWidth;
+
+        // Town Hall and Player Name
+        if (player.townHallLevel) {
+            await this.drawTownHallLevel(ctx, player.townHallLevel, currentX, y + 20);
+        }
+        
+        const nameX = currentX + 70;
+        const nameY = y + 52;
+        
+        ctx.fillStyle = this.textColor;
+        ctx.font = this.playerFont;
+        ctx.textAlign = 'left';
+        
+        let displayName = player.name || 'Unknown Player';
+        const maxNameWidth = this.warNameWidth - 70 - 30;
+        let nameWidth = ctx.measureText(displayName).width;
+        
+        if (nameWidth > maxNameWidth) {
+            while (nameWidth > maxNameWidth && displayName.length > 3) {
+                displayName = displayName.substring(0, displayName.length - 4) + '...';
+                nameWidth = ctx.measureText(displayName).width;
+            }
+        }
+        
+        ctx.fillText(displayName, nameX, nameY);
+        currentX += this.warNameWidth;
+
+        // Player role
+        ctx.fillStyle = this.getRoleColor(player.role);
+        ctx.font = this.playerFont;
+        ctx.textAlign = 'center';
+        
+        const roleText = this.formatRole(player.role);
+        ctx.fillText(roleText, currentX + (this.warRoleWidth / 2), y + 52);
+        currentX += this.warRoleWidth;
+
+        // Preparation status (ready/not ready indicator)
+        ctx.fillStyle = this.accentColor;
+        ctx.fillText('Ready for War', currentX + (this.warAttackWidth / 2), y + 52);
+        currentX += this.warAttackWidth;
+
+        // Historical stats preview - handle both string and number values for averageStars
+        ctx.fillStyle = this.textColor;
+        const avgStars = typeof player.averageStars === 'string' ? parseFloat(player.averageStars) || 0 : (player.averageStars || 0);
+        ctx.fillText(avgStars.toFixed(1), currentX + (this.warAvgStarsWidth / 2), y + 52);
+        currentX += this.warAvgStarsWidth;
+
+        ctx.fillText(`${player.winRate || '0.0'}%`, currentX + (this.warWinRateWidth / 2), y + 52);
+        currentX += this.warWinRateWidth;
+
+        ctx.fillText(player.warsParticipated || 0, currentX + (this.warParticipationWidth / 2), y + 52);
+    }
+
+    /**
+     * Draw active war player row
+     */
+    async drawActiveWarPlayerRow(ctx, player, y, index) {
+        // Use existing war player row method which handles current attacks
+        await this.drawWarPlayerRow(ctx, player, y, index);
     }
 }
 
