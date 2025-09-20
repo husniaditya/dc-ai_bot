@@ -61,6 +61,23 @@ class LeaderboardCanvas {
     }
 
     /**
+     * Convert Clash of Clans API time format to JavaScript Date
+     * @param {string} cocTimeString - Time string in format "20250921T092450.000Z"
+     * @returns {Date} Parsed Date object
+     */
+    parseClashTime(cocTimeString) {
+        if (!cocTimeString) return null;
+        
+        // Convert CoC format "20250921T092450.000Z" to ISO format "2025-09-21T09:24:50.000Z"
+        const formattedTimeString = cocTimeString.replace(
+            /^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})\.(\d{3})Z$/,
+            '$1-$2-$3T$4:$5:$6.$7Z'
+        );
+        
+        return new Date(formattedTimeString);
+    }
+
+    /**
      * Generate leaderboard canvas image
      * @param {Array} players - Array of player data
      * @param {Object} config - Leaderboard configuration
@@ -1026,7 +1043,7 @@ class LeaderboardCanvas {
      */
     async drawWarTableHeaders(ctx, y) {
         // Header background
-        ctx.fillStyle = 'rgba(231, 76, 60, 0.2)'; // War red theme
+        ctx.fillStyle = '#2c2c2c'; // War red theme
         ctx.fillRect(this.padding, y, this.width - (this.padding * 2), 35);
 
         // Header text
@@ -1395,16 +1412,28 @@ class LeaderboardCanvas {
         ctx.font = this.headerFont;
         ctx.textAlign = 'center';
 
+        // Debug: Log war object structure
+        console.log('[LeaderboardCanvas] Preparation war object:', JSON.stringify(war, null, 2));
+
         let timeText = 'War preparation in progress';
-        if (war.startTime) {
-            const startTime = new Date(war.startTime);
-            const now = new Date();
-            const timeRemaining = startTime.getTime() - now.getTime();
+        if (war.preparationStartTime || war.startTime) {
+            // For preparation phase, use startTime (when war actually begins)
+            const warStartTimeString = war.startTime || war.preparationStartTime;
+            const warStartTime = this.parseClashTime(warStartTimeString);
             
-            if (timeRemaining > 0) {
-                const hours = Math.floor(timeRemaining / (1000 * 60 * 60));
-                const minutes = Math.floor((timeRemaining % (1000 * 60 * 60)) / (1000 * 60));
-                timeText = `War starts in ${hours}h ${minutes}m`;
+            if (warStartTime) {
+                const now = new Date();
+                const timeRemaining = warStartTime.getTime() - now.getTime();
+                
+                console.log(`[LeaderboardCanvas] War start time: ${warStartTime}, Time remaining: ${timeRemaining}ms`);
+                
+                if (timeRemaining > 0) {
+                    const hours = Math.floor(timeRemaining / (1000 * 60 * 60));
+                    const minutes = Math.floor((timeRemaining % (1000 * 60 * 60)) / (1000 * 60));
+                    timeText = `War starts in ${hours}h ${minutes}m`;
+                } else {
+                    timeText = 'War should have started';
+                }
             }
         }
 
@@ -1421,7 +1450,7 @@ class LeaderboardCanvas {
         const infoHeight = 60;
         
         // Background for info section
-        ctx.fillStyle = 'rgba(231, 76, 60, 0.2)';
+        ctx.fillStyle = '#2c2c2c';
         ctx.fillRect(this.padding, y, this.width - (this.padding * 2), infoHeight);
 
         // War score and time remaining
@@ -1429,18 +1458,28 @@ class LeaderboardCanvas {
         ctx.font = this.headerFont;
         ctx.textAlign = 'center';
 
-        let scoreText = `⭐ ${war.clan?.stars || 0} - ${war.opponent?.stars || 0}`;
+        // Debug: Log war object structure
+        console.log('[LeaderboardCanvas] Active war object:', JSON.stringify(war, null, 2));
+
+        let scoreText = `★ ${war.clan?.stars || 0} - ${war.opponent?.stars || 0}`;
         let timeText = 'War in progress';
         
         if (war.endTime) {
-            const endTime = new Date(war.endTime);
-            const now = new Date();
-            const timeRemaining = endTime.getTime() - now.getTime();
+            const endTime = this.parseClashTime(war.endTime);
             
-            if (timeRemaining > 0) {
-                const hours = Math.floor(timeRemaining / (1000 * 60 * 60));
-                const minutes = Math.floor((timeRemaining % (1000 * 60 * 60)) / (1000 * 60));
-                timeText = `${hours}h ${minutes}m remaining`;
+            if (endTime) {
+                const now = new Date();
+                const timeRemaining = endTime.getTime() - now.getTime();
+                
+                console.log(`[LeaderboardCanvas] War end time: ${endTime}, Time remaining: ${timeRemaining}ms`);
+                
+                if (timeRemaining > 0) {
+                    const hours = Math.floor(timeRemaining / (1000 * 60 * 60));
+                    const minutes = Math.floor((timeRemaining % (1000 * 60 * 60)) / (1000 * 60));
+                    timeText = `${hours}h ${minutes}m remaining`;
+                } else {
+                    timeText = 'War should have ended';
+                }
             }
         }
 
@@ -1545,10 +1584,12 @@ class LeaderboardCanvas {
         ctx.fillText(avgStars.toFixed(1), currentX + (this.warAvgStarsWidth / 2), y + 52);
         currentX += this.warAvgStarsWidth;
 
-        ctx.fillText(`${player.winRate || '0.0'}%`, currentX + (this.warWinRateWidth / 2), y + 52);
-        currentX += this.warWinRateWidth;
-
         ctx.fillText(player.warsParticipated || 0, currentX + (this.warParticipationWidth / 2), y + 52);
+        currentX += this.warParticipationWidth;
+
+        // Win Rate
+        ctx.fillStyle = this.secondaryColor;
+        ctx.fillText(`${player.winRate || '0.0'}%`, currentX + (this.warWinRateWidth / 2), y + 52);
     }
 
     /**

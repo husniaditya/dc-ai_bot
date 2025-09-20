@@ -3,6 +3,15 @@ const db = require('../database/connection');
 const cache = require('../cache/manager');
 const { defaultConfigs } = require('../models/defaults');
 
+/**
+ * Formats a JavaScript Date object for MySQL datetime storage
+ * @param {Date} date - Date to format
+ * @returns {string} MySQL-compatible datetime string
+ */
+function formatDateForMySQL(date = new Date()) {
+    return date.toISOString().slice(0, 19).replace('T', ' ');
+}
+
 async function getGuildClashOfClansConfig(guildId) {
   if (!guildId) return { ...defaultConfigs.guildClashOfClansConfig };
   
@@ -455,7 +464,7 @@ async function setGuildClashOfClansConfig(guildId, partial) {
         next.donationThreshold || 100, next.donationLeaderboardSchedule || 'hourly', next.donationLeaderboardTime || '20:00',
         next.warStartTemplate, next.warEndTemplate, next.memberJoinTemplate, next.donationTemplate,
         next.donationLeaderboardTemplate, next.embedEnabled ? 1 : 0, JSON.stringify(next.clanData || {}),
-        'notInWar', null, null, new Date(), null
+        'notInWar', null, null, formatDateForMySQL(new Date()), null
       ]);
     } else {
       // Insert records for each clan
@@ -497,7 +506,7 @@ async function setGuildClashOfClansConfig(guildId, partial) {
           clan.warCurrentState || 'notInWar', 
           clan.warPreparingMessageId || null, 
           clan.warActiveMessageId || null,
-          clan.warLastStateChange || new Date(),
+          clan.warLastStateChange ? formatDateForMySQL(new Date(clan.warLastStateChange)) : formatDateForMySQL(new Date()),
           // Safe stringification for warStateData
           (() => {
             if (!clan.warStateData) return null;

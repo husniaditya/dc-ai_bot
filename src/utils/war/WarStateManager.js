@@ -23,6 +23,15 @@ class WarStateManager {
     }
 
     /**
+     * Convert JavaScript Date to MySQL-compatible datetime string
+     * @param {Date} date - Date object to convert
+     * @returns {string} MySQL-compatible datetime string
+     */
+    formatDateForMySQL(date = new Date()) {
+        return date.toISOString().slice(0, 19).replace('T', ' ');
+    }
+
+    /**
      * Determines the normalized war state from API war data
      * @param {Object} warData - War data from Clash of Clans API
      * @returns {string} Normalized war state
@@ -40,6 +49,7 @@ class WarStateManager {
             case 'warEnded':
                 return this.STATES.ENDED;
             default:
+                console.warn(`[WarStateManager] Unknown war state: ${warData.state}`);
                 return this.STATES.NOT_IN_WAR;
         }
     }
@@ -112,7 +122,7 @@ class WarStateManager {
 
             const updateData = {
                 war_current_state: newState,
-                war_last_state_change: new Date()
+                war_last_state_change: this.formatDateForMySQL()
             };
 
             // Set the appropriate message ID field based on state
@@ -169,7 +179,11 @@ class WarStateManager {
                 WHERE guild_id = ? AND clan_tag = ?
             `, values);
 
-            console.log(`[WarStateManager] Updated war state for clan ${clanTag} to ${newState}`);
+            console.log(`[WarStateManager] Updated war state for clan ${clanTag}: ${currentState || 'NOT_IN_WAR'} → ${newState}`, {
+                messageId,
+                messageField: newState === this.STATES.PREPARING ? 'preparing' : 
+                             newState === this.STATES.ACTIVE ? 'active' : 'none'
+            });
             return true;
 
         } catch (error) {
@@ -188,10 +202,21 @@ class WarStateManager {
         const currentState = currentStateData ? currentStateData.currentState : this.STATES.NOT_IN_WAR;
         const newState = this.getWarState(warData);
 
+        // Debug logging for state transitions
+        console.log(`[WarStateManager] State check: ${currentState} → ${newState}`, {
+            hasWarData: !!warData,
+            apiState: warData?.state,
+            currentStateData: currentStateData ? {
+                currentState: currentStateData.currentState,
+                preparingMessageId: currentStateData.preparingMessageId,
+                activeMessageId: currentStateData.activeMessageId
+            } : null
+        });
+
         // No war data available
         if (newState === this.STATES.NOT_IN_WAR) {
             if (currentState === this.STATES.ACTIVE) {
-                // War just ended
+                // War just ended - transition to ENDED state first
                 return {
                     action: 'transition',
                     from: currentState,
@@ -200,6 +225,17 @@ class WarStateManager {
                     messageId: currentStateData.activeMessageId
                 };
             }
+            if (currentState === this.STATES.PREPARING) {
+                // War cancelled during preparation
+                return {
+                    action: 'transition',
+                    from: currentState,
+                    to: this.STATES.ENDED,
+                    messageAction: 'update_to_ended',
+                    messageId: currentStateData.preparingMessageId
+                };
+            }
+            // Already in NOT_IN_WAR or ENDED state
             return { action: 'none' };
         }
 
@@ -269,6 +305,39 @@ class WarStateManager {
                         from: currentState,
                         to: newState,
                         messageAction: 'create_preparing',
+                        messageId: null
+                    };
+                }
+                if (newState === this.STATES.ACTIVE) {
+                    // War started directly to active (missed preparation phase)
+                    return {
+                        action: 'transition',
+                        from: currentState,
+                        to: newState,
+                        messageAction: 'create_active',
+                        messageId: null
+                    };
+                }
+                break;
+
+            case this.STATES.NOT_IN_WAR:
+                if (newState === this.STATES.PREPARING) {
+                    // New war starting after being not in war
+                    return {
+                        action: 'transition',
+                        from: currentState,
+                        to: newState,
+                        messageAction: 'create_preparing',
+                        messageId: null
+                    };
+                }
+                if (newState === this.STATES.ACTIVE) {
+                    // War started directly to active (missed preparation phase)
+                    return {
+                        action: 'transition',
+                        from: currentState,
+                        to: newState,
+                        messageAction: 'create_active',
                         messageId: null
                     };
                 }
@@ -364,6 +433,8 @@ class WarStateManager {
                 'war_preparing_message_id VARCHAR(20)',
                 'war_active_message_id VARCHAR(20)', 
                 'war_ended_message_id VARCHAR(20)',
+                'war_last_state_change TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP',
+                'war_state_data JSON',
                 'war_last_updated DATETIME',
                 'war_start_time DATETIME',
                 'war_end_time DATETIME',
