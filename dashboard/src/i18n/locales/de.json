@@ -818,7 +818,7 @@
       "disabled": "{{feature}} deaktiviert",
       "enableFailed": "Funktion konnte nicht aktiviert werden",
       "disableFailed": "Funktion konnte nicht deaktiviert werden",
-      "loadFailedGeneric": "Moderationsdaten konnten nicht geladen werden",
+      "loadFailedGeneric": "Fehler beim Laden der Moderationsdaten, bitte aktualisieren Sie die Seite",
       "loadFailed": "Einstellungen für {{feature}} konnten nicht geladen werden",
       "saveSuccess": "Einstellungen für {{feature}} gespeichert",
       "saveFailed": "Einstellungen für {{feature}} konnten nicht gespeichert werden"

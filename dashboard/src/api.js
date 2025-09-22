@@ -1,34 +1,73 @@
 // Point to backend API (proxy handles /api during dev; fallback direct port)
 const API_BASE = import.meta.env.VITE_API_BASE || '';
 
-function getToken(){ return localStorage.getItem('token'); }
-function setToken(t){ localStorage.setItem('token', t); }
+// Secure token management for production
+function getToken(){ 
+  // For development/backward compatibility, check localStorage
+  // In production, tokens should be in HttpOnly cookies
+  return localStorage.getItem('token'); 
+}
+
+function setToken(t){ 
+  if (t) {
+    localStorage.setItem('token', t); 
+  } else {
+    localStorage.removeItem('token');
+  }
+}
+
+// Check if we're using cookie-based auth (more secure)
+function isUsingCookieAuth() {
+  return document.cookie.includes('authToken=');
+}
 
 async function login(username, password){
-  const r = await fetch(API_BASE + '/api/login', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ username, password }) });
+  const r = await fetch(API_BASE + '/api/login', { 
+    method:'POST', 
+    headers:{'Content-Type':'application/json'}, 
+    body: JSON.stringify({ username, password }),
+    credentials: 'include' // Important: Include cookies in requests
+  });
   if(!r.ok) throw new Error('Login failed');
   const data = await r.json();
-  setToken(data.token);
+  
+  // Set token in localStorage for backward compatibility
+  // In production, prefer HttpOnly cookies set by server
+  if (data.token) {
+    setToken(data.token);
+  }
   return data;
 }
 
 // Enhanced auth fetch with JWT expiration handling
 async function authFetch(path, opts={}){
-  const token = getToken();
+  // Check if using cookie-based auth (more secure)
+  const usingCookies = isUsingCookieAuth();
+  const token = usingCookies ? null : getToken();
   
-  if (!token) {
+  if (!usingCookies && !token) {
     // No token available - don't call handleAuthError to avoid loops
     console.warn('authFetch called without token for:', path);
     throw new Error('No authentication token available');
   }
   
   const headers = Object.assign({}, opts.headers||{}, { 
-    'Content-Type':'application/json', 
-    Authorization: 'Bearer ' + token 
+    'Content-Type':'application/json'
   });
   
+  // Only add Authorization header if not using cookies
+  if (!usingCookies && token) {
+    headers.Authorization = 'Bearer ' + token;
+  }
+  
+  const fetchOptions = { 
+    ...opts, 
+    headers,
+    credentials: 'include' // Always include cookies
+  };
+  
   try {
-    const res = await fetch(API_BASE + path, { ...opts, headers });
+    const res = await fetch(API_BASE + path, fetchOptions);
     
     // Handle authentication errors with specific JWT error handling
     if(res.status === 401) {
@@ -318,8 +357,10 @@ export async function logout() {
     // Even if logout API call fails, clear local storage
     console.warn('Logout API call failed:', error);
   } finally {
-    // Always clear local storage
+    // Always clear local storage and cookies
     localStorage.removeItem('token');
+    // Clear cookie by setting it to expire
+    document.cookie = 'authToken=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; secure; samesite=strict';
   }
 }
 

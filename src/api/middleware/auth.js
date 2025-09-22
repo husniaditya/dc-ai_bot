@@ -8,8 +8,16 @@ function authMiddleware(req, res, next) {
   const JWT_SECRETS = JWT_SECRET_RAW.split(',').map(s => s.trim()).filter(s => s.length > 0);
   const PRIMARY_SECRET = JWT_SECRETS[0]; // Used for signing new tokens
   
+  // Try to get token from Authorization header first (backward compatibility)
+  let token = null;
   const auth = req.headers.authorization || '';
-  const token = auth.startsWith('Bearer ') ? auth.slice(7) : null;
+  if (auth.startsWith('Bearer ')) {
+    token = auth.slice(7);
+  } 
+  // Fallback to HttpOnly cookie (more secure for public websites)
+  else if (req.cookies && req.cookies.authToken) {
+    token = req.cookies.authToken;
+  }
   
   if (!token) {
     return res.status(401).json({ 

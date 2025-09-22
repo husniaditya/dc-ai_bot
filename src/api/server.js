@@ -8,6 +8,7 @@ const authMiddleware = require('./middleware/auth');
 const rateLimitMiddleware = require('./middleware/rateLimit');
 const auditMiddleware = require('./middleware/audit');
 const trackingMiddleware = require('./middleware/tracking');
+const { securityMiddleware } = require('./middleware/security');
 
 // Import routes
 const authRoutes = require('./routes/auth');
@@ -33,6 +34,9 @@ function createApiServer(client, store, commandMap, startTimestamp) {
   // Basic middleware
   app.use(express.json());
   app.use((req,res,next)=>{ res.setHeader('Vary','Origin'); next(); });
+  
+  // Apply security middleware for production
+  app.use(securityMiddleware());
   
   // Apply custom middleware
   app.use('/api', rateLimitMiddleware());

@@ -818,7 +818,7 @@
       "disabled": "{{feature}} を無効化しました",
       "enableFailed": "機能の有効化に失敗しました",
       "disableFailed": "機能の無効化に失敗しました",
-      "loadFailedGeneric": "モデレーションデータの読み込みに失敗しました",
+      "loadFailedGeneric": "モデレーションデータの読み込みに失敗しました。ページを更新してください",
       "loadFailed": "{{feature}} の設定を読み込めませんでした",
       "saveSuccess": "{{feature}} の設定を保存しました",
       "saveFailed": "{{feature}} の設定の保存に失敗しました"

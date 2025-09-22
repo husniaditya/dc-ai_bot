@@ -837,7 +837,7 @@
       "disabled": "{{feature}} 已停用",
       "enableFailed": "啟用功能失敗",
       "disableFailed": "停用功能失敗",
-      "loadFailedGeneric": "管理資料載入失敗",
+      "loadFailedGeneric": "管理資料載入失敗，請重新整理頁面",
       "loadFailed": "{{feature}} 設定載入失敗",
       "saveSuccess": "{{feature}} 設定已儲存",
       "saveFailed": "{{feature}} 設定儲存失敗"

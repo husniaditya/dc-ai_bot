@@ -636,7 +636,7 @@
       "disabled": "{{feature}} dinonaktifkan",
       "enableFailed": "Gagal mengaktifkan fitur",
       "disableFailed": "Gagal menonaktifkan fitur",
-      "loadFailedGeneric": "Gagal memuat data moderasi",
+      "loadFailedGeneric": "Gagal memuat data moderasi, silakan segarkan halaman",
       "loadFailed": "Gagal memuat pengaturan {{feature}}",
       "saveSuccess": "Pengaturan {{feature}} tersimpan",
       "saveFailed": "Gagal menyimpan pengaturan {{feature}}"

@@ -838,7 +838,7 @@
       "disabled": "{{feature}} disabled",
       "enableFailed": "Failed to enable feature",
       "disableFailed": "Failed to disable feature",
-      "loadFailedGeneric": "Failed to load moderation data",
+      "loadFailedGeneric": "Failed to load moderation data, please refresh the page",
       "loadFailed": "Failed to load {{feature}} settings",
       "saveSuccess": "{{feature}} settings saved",
       "saveFailed": "Failed to save {{feature}} settings"
