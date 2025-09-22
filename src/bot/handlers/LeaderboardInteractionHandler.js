@@ -4,6 +4,7 @@ const LeaderboardCanvas = require('../../utils/leaderboard/LeaderboardCanvas');
 const ClashOfClansAPI = require('../services/ClashOfClansAPI');
 const clashOfClansService = require('../../config/store/services/clashofclans-updated');
 const WarStateManager = require('../../utils/war/WarStateManager');
+const WarPerformanceIntegration = require('../../utils/war/WarPerformanceIntegration');
 
 /**
  * Handles all leaderboard button interactions
@@ -14,6 +15,7 @@ class LeaderboardInteractionHandler {
         this.db = database;
         this.lastInteraction = new Map(); // Track last interaction time per user to prevent spam
         this.warStateManager = new WarStateManager(database);
+        this.warPerformanceIntegration = new WarPerformanceIntegration(this.warStateManager);
         
         // Initialize war state database columns
         this.warStateManager.ensureWarStateColumns().catch(error => {
@@ -729,7 +731,7 @@ class LeaderboardInteractionHandler {
             // Get current war state from database
             const currentStateData = await this.warStateManager.getCurrentWarState(config.guildId, clanTag);
             
-            // For individual clan, we can use the new API method
+            // Get current war data from API (for war state and current war info)
             const clanDataArray = await ClashOfClansAPI.getIndividualClanWarStats([clanTag]);
             
             if (!clanDataArray || clanDataArray.length === 0) {
@@ -746,8 +748,32 @@ class LeaderboardInteractionHandler {
             clanData.warStateData = currentStateData;
             clanData.transitionAction = transitionAction;
             
-            // Enhance with activity tracking if we have previous data
-            if (clanData.players && clanData.players.length > 0) {
+            // FEATURE 3: Replace mock data with real war performance statistics
+            try {
+                console.log('[LeaderboardInteractionHandler] Getting real war performance data for clan', clanTag);
+                const realWarData = await this.warPerformanceIntegration.getEnhancedLeaderboardData(
+                    config.guildId, 
+                    clanData.currentWar
+                );
+                
+                if (realWarData && realWarData.length > 0) {
+                    console.log(`[LeaderboardInteractionHandler] ✅ Using real war performance data: ${realWarData.length} players`);
+                    // Replace with real performance data
+                    clanData.players = realWarData;
+                    clanData.dataSource = 'real_performance_data';
+                } else {
+                    console.log('[LeaderboardInteractionHandler] ⚠️ No real war performance data available, using API data');
+                    // Keep original API data as fallback
+                    clanData.dataSource = 'api_fallback';
+                }
+            } catch (performanceError) {
+                console.warn('[LeaderboardInteractionHandler] Failed to get real war performance data:', performanceError.message);
+                // Keep original API data as fallback
+                clanData.dataSource = 'api_fallback_error';
+            }
+            
+            // Enhance with activity tracking if we have players and no real performance data
+            if (clanData.players && clanData.players.length > 0 && clanData.dataSource !== 'real_performance_data') {
                 let previousPlayers = [];
                 const cacheKey = `${config.guildId}_${clanTag}_war`;
                 

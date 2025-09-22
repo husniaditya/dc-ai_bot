@@ -103,6 +103,10 @@ const {
   cocStats 
 } = require('../services/clashofclans');
 
+// Import war performance tracking
+const WarPerformanceIntegration = require('../../utils/war/WarPerformanceIntegration');
+const WarStateManager = require('../../utils/war/WarStateManager');
+
 // Lazy singleton for LeaderboardEvents to avoid registering multiple listeners
 let _leaderboardEventsInstance = null;
 function getLeaderboardEventsInstance(client) {
@@ -115,6 +119,21 @@ function getLeaderboardEventsInstance(client) {
     }
   }
   return _leaderboardEventsInstance;
+}
+
+// War performance integration instance
+let _warPerformanceIntegration = null;
+function getWarPerformanceIntegration() {
+  if (!_warPerformanceIntegration) {
+    try {
+      const warStateManager = new WarStateManager(store.sqlPool);
+      _warPerformanceIntegration = new WarPerformanceIntegration(warStateManager);
+      console.log('[COC] War performance integration initialized');
+    } catch (err) {
+      console.warn('[COC] Failed to initialize War Performance Integration:', err.message);
+    }
+  }
+  return _warPerformanceIntegration;
 }
 
 function saveStateDebounced(){
@@ -332,6 +351,17 @@ async function pollGuild(guild) {
       // Check for war events if tracking is enabled
       if (cfg.trackWars || cfg.trackWarEvents) {
         const warInfo = await fetchClanWar(cleanTag);
+        
+        // Add war performance tracking
+        try {
+          const warPerformanceIntegration = getWarPerformanceIntegration();
+          if (warPerformanceIntegration && warInfo) {
+            // Process war with performance tracking (stores attack data automatically)
+            await warPerformanceIntegration.processWarPerformance(guild.id, warInfo);
+          }
+        } catch (performanceError) {
+          console.warn('[COC] War performance tracking failed (non-critical):', performanceError.message);
+        }
         
         if (warInfo) {
           const warState = warInfo.state;

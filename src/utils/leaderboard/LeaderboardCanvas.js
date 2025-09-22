@@ -1413,7 +1413,7 @@ class LeaderboardCanvas {
         ctx.textAlign = 'center';
 
         // Debug: Log war object structure
-        console.log('[LeaderboardCanvas] Preparation war object:', JSON.stringify(war, null, 2));
+        // console.log('[LeaderboardCanvas] Preparation war object:', JSON.stringify(war, null, 2));
 
         let timeText = 'War preparation in progress';
         if (war.preparationStartTime || war.startTime) {
@@ -1459,7 +1459,7 @@ class LeaderboardCanvas {
         ctx.textAlign = 'center';
 
         // Debug: Log war object structure
-        console.log('[LeaderboardCanvas] Active war object:', JSON.stringify(war, null, 2));
+        // console.log('[LeaderboardCanvas] Active war object:', JSON.stringify(war, null, 2));
 
         let scoreText = `★ ${war.clan?.stars || 0} - ${war.opponent?.stars || 0}`;
         let timeText = 'War in progress';
