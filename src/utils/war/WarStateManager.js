@@ -351,6 +351,7 @@ class WarStateManager {
                 break;
 
             case this.STATES.ENDED:
+            case 'warEnd': // Handle legacy 'warEnd' state as alias for 'warEnded'
                 if (newState === this.STATES.PREPARING) {
                     // New war starting
                     return {

@@ -627,7 +627,7 @@ class LeaderboardInteractionHandler {
             const totalPages = Math.max(1, Math.ceil(players.length / playersPerPage));
             
             // For war leaderboards, check if buttons should be shown (no buttons for historical wars)
-            const shouldShowButtons = !(view === 'war' && clanData && !this.warStateManager.shouldEnableButtons(clanData.warState));
+            const shouldShowButtons = !(view === 'war' && leaderboardData.currentWar && !this.warStateManager.shouldEnableButtons(leaderboardData.warState));
             
             const buttonRow = shouldShowButtons ? LeaderboardButtons.createButtonRow({
                 currentPage: returnPage,

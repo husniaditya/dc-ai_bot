@@ -195,6 +195,8 @@ class LeaderboardEvents {
             // Get current war data (state should already be updated by main watcher)
             const clanData = await this.interactionHandler.getIndividualWarData(config, clanTag, true);
 
+            let createdMessageId = null;
+
             // Create mock interaction for leaderboard generation
             const mockInteraction = {
                 guildId,
@@ -206,7 +208,8 @@ class LeaderboardEvents {
                 editReply: async (options) => {
                     // Always create new message since this is called after state transitions
                     const resultMessage = await channel.send(options);
-                    console.log(`[LeaderboardEvents] Created war leaderboard for ${clanTag} (state: ${clanData.warState}) after main watcher state update`);
+                    createdMessageId = resultMessage.id; // Capture the message ID
+                    console.log(`[LeaderboardEvents] Created war leaderboard for ${clanTag} (state: ${clanData.warState}) after main watcher state update - Message ID: ${createdMessageId}`);
                     return resultMessage;
                 },
                 followUp: async (options) => {
@@ -217,13 +220,41 @@ class LeaderboardEvents {
             // Generate leaderboard using the interaction handler
             await this.interactionHandler.generateLeaderboardPage(mockInteraction, config, 1, true, 'war', clanTag);
             
+            // Update the database with the correct message ID field based on war state
+            if (createdMessageId) {
+                let messageField = 'war_leaderboard_message_id'; // Default fallback
+                
+                // Determine the correct message field based on war state
+                switch (clanData.warState) {
+                    case 'preparation':
+                        messageField = 'war_preparing_message_id';
+                        break;
+                    case 'inWar':
+                        messageField = 'war_active_message_id';
+                        break;
+                    case 'warEnded':
+                    default:
+                        messageField = 'war_leaderboard_message_id';
+                        break;
+                }
+                
+                // Update the database
+                await this.warStateManager.db.execute(
+                    `UPDATE guild_clashofclans_watch SET ${messageField} = ? WHERE guild_id = ? AND clan_tag = ?`,
+                    [createdMessageId, guildId, clanTag]
+                );
+                
+                console.log(`[LeaderboardEvents] Updated ${messageField} to ${createdMessageId} for clan ${clanTag}`);
+            }
+            
             return {
                 success: true,
                 guildId,
                 channelId,
                 type: 'war',
                 clanTag,
-                warState: clanData.warState
+                warState: clanData.warState,
+                messageId: createdMessageId
             };
 
         } catch (error) {
