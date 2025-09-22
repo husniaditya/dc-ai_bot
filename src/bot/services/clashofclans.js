@@ -209,6 +209,34 @@ function createCOCEmbed(data, type, config) {
   };
   
   switch (type) {
+    case 'war_declared':
+      embed.title = '⚔️ War Declared!';
+      embed.description = `War has been declared against **${data.warOpponent}**`;
+      embed.color = 0xFFA500; // Orange color for declaration
+      embed.fields = [
+        { name: 'Our Clan', value: `${data.clanName} (${data.clanTag})`, inline: true },
+        { name: 'Enemy Clan', value: `${data.warOpponent} (${data.warOpponentTag})`, inline: true },
+        { name: 'Enemy Level', value: `Level ${data.warOpponentLevel}`, inline: true },
+        { name: 'Enemy Members', value: `${data.warOpponentMembers}/50`, inline: true },
+        { name: 'Preparation Time', value: data.preparationTimeRemaining || 'Calculating...', inline: true },
+        { name: 'War Size', value: `${data.warSize}vs${data.warSize}`, inline: true }
+      ];
+      
+      // Add enemy war statistics if available
+      if (data.warOpponentWinStreak !== undefined || data.warOpponentWinRate !== undefined) {
+        if (data.warOpponentWinStreak !== undefined) {
+          embed.fields.push({ name: 'Enemy Win Streak', value: `${data.warOpponentWinStreak} wins`, inline: true });
+        }
+        if (data.warOpponentWinRate !== undefined) {
+          embed.fields.push({ name: 'Enemy Win Rate', value: `${data.warOpponentWinRate}%`, inline: true });
+        }
+      }
+      
+      if (data.warOpponentDescription) {
+        embed.fields.push({ name: 'Enemy Description', value: data.warOpponentDescription.slice(0, 1024), inline: false });
+      }
+      break;
+      
     case 'war_start':
       embed.title = '⚔️ War Started!';
       embed.description = `War has begun against **${data.warOpponent}**`;
@@ -317,6 +345,11 @@ async function announce(guild, config, data, type) {
     
     // Determine channel and template based on announcement type
     switch (type) {
+      case 'war_declared':
+        channelId = config.warAnnounceChannelId;
+        template = config.warDeclaredTemplate || 'War declared against {warOpponent}!';
+        mentionTargets = await getClanSpecificMentionTargets(config, data, 'war');
+        break;
       case 'war_start':
       case 'war_end':
         channelId = config.warAnnounceChannelId;

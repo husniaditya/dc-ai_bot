@@ -94,7 +94,7 @@ class EnhancedWarStateManager {
         
         if (clanStars > opponentStars) return 'win';
         if (clanStars < opponentStars) return 'loss';
-        return 'tie';
+        return 'win'; // Treat ties as wins
     }
 
     /**

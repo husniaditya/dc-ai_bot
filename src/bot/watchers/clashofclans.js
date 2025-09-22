@@ -367,6 +367,73 @@ async function pollGuild(guild) {
           const warState = warInfo.state;
           const warEndTime = warInfo.endTime;
           
+          // War declared (transition from notInWar to preparation)
+          if (warState === 'preparation' && (!clanState.lastWarState || clanState.lastWarState === 'notInWar')) {
+            // Calculate preparation time remaining
+            let preparationTimeRemaining = 'Unknown';
+            if (warInfo.startTime) {
+              try {
+                const warStartTime = new Date(warInfo.startTime);
+                const now = new Date();
+                const timeDiff = warStartTime - now;
+                
+                if (timeDiff > 0) {
+                  const hours = Math.floor(timeDiff / (1000 * 60 * 60));
+                  const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
+                  preparationTimeRemaining = hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
+                }
+              } catch (timeError) {
+                console.warn('[COC] Error calculating preparation time:', timeError.message);
+              }
+            }
+
+            // Fetch enemy clan information for win streak and win rate
+            let enemyWinStreak, enemyWinRate;
+            try {
+              const enemyClanTag = cleanClanTag(warInfo.opponent.tag);
+              if (enemyClanTag) {
+                const enemyClanInfo = await fetchClanInfo(enemyClanTag);
+                if (enemyClanInfo) {
+                  enemyWinStreak = enemyClanInfo.warWinStreak;
+                  // Calculate win rate from war statistics
+                  const warWins = enemyClanInfo.warWins || 0;
+                  const warLosses = enemyClanInfo.warLosses || 0;
+                  const warTies = enemyClanInfo.warTies || 0;
+                  const totalWars = warWins + warLosses + warTies;
+                  if (totalWars > 0) {
+                    enemyWinRate = ((warWins / totalWars) * 100).toFixed(1);
+                  }
+                }
+              }
+            } catch (enemyError) {
+              console.warn('[COC] Error fetching enemy clan info:', enemyError.message);
+            }
+
+            await announce(guild, cfg, {
+              clanName: clanInfo.name,
+              clanTag: formatClanTag(cleanTag),
+              warOpponent: warInfo.opponent.name,
+              warOpponentTag: formatClanTag(warInfo.opponent.tag),
+              warOpponentLevel: warInfo.opponent.clanLevel || 'Unknown',
+              warOpponentMembers: warInfo.opponent.members?.length || warInfo.teamSize || 'Unknown',
+              warOpponentDescription: warInfo.opponent.description || '',
+              warOpponentWinStreak: enemyWinStreak,
+              warOpponentWinRate: enemyWinRate,
+              warSize: warInfo.teamSize || 'Unknown',
+              preparationTimeRemaining: preparationTimeRemaining,
+              memberCount: `${currentMembers.length}/50`
+            }, 'war_declared');
+
+            // Update war state to preparation in database using WarStateManager
+            try {
+              const warStateManager = new WarStateManager(store.sqlPool);
+              await warStateManager.updateWarState(guild.id, cleanTag, 'preparation', warInfo);
+              console.log(`[COC] Updated war state to 'preparation' for clan ${cleanTag} in guild ${guild.id}`);
+            } catch (stateError) {
+              console.error('[COC] Error updating war state to preparation:', stateError.message);
+            }
+          }
+          
           // War started
           if (warState === 'inWar' && clanState.lastWarState !== 'inWar') {
             await announce(guild, cfg, {
@@ -376,6 +443,15 @@ async function pollGuild(guild) {
               warEndTime: getWarTimeRemaining(warEndTime),
               memberCount: `${currentMembers.length}/50`
             }, 'war_start');
+
+            // Update war state to active in database using WarStateManager
+            try {
+              const warStateManager = new WarStateManager(store.sqlPool);
+              await warStateManager.updateWarState(guild.id, cleanTag, 'inWar', warInfo);
+              console.log(`[COC] Updated war state to 'inWar' for clan ${cleanTag} in guild ${guild.id}`);
+            } catch (stateError) {
+              console.error('[COC] Error updating war state to inWar:', stateError.message);
+            }
 
             // Create NEW war leaderboard message for each new war
             if (cfg.trackWarLeaderboard && (cfg.warLeaderboardChannelId || cfg.warAnnounceChannelId)) {
@@ -407,8 +483,8 @@ async function pollGuild(guild) {
             }
           }
           
-          // War ended (was in war, now not in war, or preparation ended)
-          if (clanState.lastWarState === 'inWar' && warState !== 'inWar') {
+          // War ended (was in war, now not in war, or war ended state)
+          if ((clanState.lastWarState === 'inWar' && warState !== 'inWar') || warState === 'warEnded') {
             let warResult = 'tie';
             let warStars = `${warInfo.clan.stars}/${warInfo.teamSize}`;
             let warDestruction = `${warInfo.clan.destructionPercentage?.toFixed(1) || 0}%`;
@@ -437,6 +513,15 @@ async function pollGuild(guild) {
               warDestructionPercentage: warDestruction,
               memberCount: `${currentMembers.length}/50`
             }, 'war_end');
+
+            // Update war state to warEnded in database using WarStateManager
+            try {
+              const warStateManager = new WarStateManager(store.sqlPool);
+              await warStateManager.updateWarState(guild.id, cleanTag, 'warEnded', warInfo);
+              console.log(`[COC] Updated war state to 'warEnded' for clan ${cleanTag} in guild ${guild.id}`);
+            } catch (stateError) {
+              console.error('[COC] Error updating war state to warEnded:', stateError.message);
+            }
           }
           
           clanState.lastWarState = warState;
@@ -448,7 +533,15 @@ async function pollGuild(guild) {
           }
         } else {
           // No war info available, reset war state
-          if (clanState.lastWarState === 'inWar') {
+          if (clanState.lastWarState === 'inWar' || clanState.lastWarState === 'preparation') {
+            // Update war state to notInWar in database
+            try {
+              const warStateManager = new WarStateManager(store.sqlPool);
+              await warStateManager.updateWarState(guild.id, cleanTag, 'notInWar', null);
+              console.log(`[COC] Updated war state to 'notInWar' for clan ${cleanTag} in guild ${guild.id}`);
+            } catch (stateError) {
+              console.error('[COC] Error updating war state to notInWar:', stateError.message);
+            }
             clanState.lastWarState = null;
           }
         }

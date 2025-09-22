@@ -128,13 +128,13 @@ class WarPerformanceService {
                 playerData?.opponentAttacks || 0,                      // 11: opponent_attacks_received
                 // Attack 1
                 attack1?.defenderTag || null,                          // 12: attack_1_defender_tag
-                attack1?.stars || null,                                // 13: attack_1_stars
+                attack1 ? (attack1.stars ?? null) : null,              // 13: attack_1_stars (handle 0 stars properly)
                 attack1?.destructionPercentage || null,                // 14: attack_1_destruction_percentage
                 attack1?.order || null,                                // 15: attack_1_order
                 attack1?.duration || null,                             // 16: attack_1_duration
                 // Attack 2
                 attack2?.defenderTag || null,                          // 17: attack_2_defender_tag
-                attack2?.stars || null,                                // 18: attack_2_stars
+                attack2 ? (attack2.stars ?? null) : null,              // 18: attack_2_stars (handle 0 stars properly)
                 attack2?.destructionPercentage || null,                // 19: attack_2_destruction_percentage
                 attack2?.order || null,                                // 20: attack_2_order
                 attack2?.duration || null,                             // 21: attack_2_duration
@@ -147,7 +147,7 @@ class WarPerformanceService {
             // console.log(`[WarPerformanceService] Storing performance for ${playerData?.name} with ${values.length} parameters`);
             
             await connection.execute(query, values);
-            console.log(`✅ Stored war performance for ${playerData?.name} (${playerData?.tag}) in war ${warId}`);
+            // console.log(`✅ Stored war performance for ${playerData?.name} (${playerData?.tag}) in war ${warId}`);
             
         } catch (error) {
             console.error('❌ Error storing war performance:', error);
@@ -170,10 +170,10 @@ class WarPerformanceService {
         
         try {
             await connection.execute(
-                'UPDATE guild_coc_war_performance SET war_result = ? WHERE war_id = ?',
-                [result, warId]
+                'UPDATE guild_coc_war_performance SET war_result = ?, war_state = ? WHERE war_id = ?',
+                [result, 'warEnded', warId]
             );
-            console.log(`✅ Updated war result to ${result} for war ${warId}`);
+            console.log(`✅ Updated war result to ${result} and state to warEnded for war ${warId}`);
         } catch (error) {
             console.error('❌ Error updating war result:', error);
             throw error;
@@ -209,7 +209,20 @@ class WarPerformanceService {
             `, [guildId, playerTag]);
 
             if (stats.length === 0) {
-                console.log(`[WarPerformanceService] No completed wars found for player ${playerTag}`);
+                // Debug: Check if player has any records at all
+                const [debugStats] = await connection.execute(`
+                    SELECT war_state, war_result, COUNT(*) as count
+                    FROM guild_coc_war_performance 
+                    WHERE guild_id = ? AND player_tag = ?
+                    GROUP BY war_state, war_result
+                `, [guildId, playerTag]);
+                
+                if (debugStats.length > 0) {
+                    console.log(`[WarPerformanceService] Player ${playerTag} has records but no completed wars:`, 
+                        debugStats.map(d => `${d.war_state}/${d.war_result}: ${d.count}`).join(', '));
+                } else {
+                    console.log(`[WarPerformanceService] No war records found at all for player ${playerTag}`);
+                }
                 return;
             }
 

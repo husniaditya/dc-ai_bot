@@ -10,7 +10,7 @@ class WarStateManager {
         this.STATES = {
             PREPARING: 'preparation',    // Clan API state: 'preparation'
             ACTIVE: 'inWar',            // Clan API state: 'inWar' 
-            ENDED: 'ended',             // Clan API state: 'notInWar' or war completion
+            ENDED: 'warEnded',          // Clan API state: 'warEnded'
             NOT_IN_WAR: 'notInWar'      // Clan API state: 'notInWar'
         };
         
@@ -179,7 +179,7 @@ class WarStateManager {
                 WHERE guild_id = ? AND clan_tag = ?
             `, values);
 
-            console.log(`[WarStateManager] Updated war state for clan ${clanTag}: ${currentState || 'NOT_IN_WAR'} → ${newState}`, {
+            console.log(`[WarStateManager] Updated war state for clan ${clanTag} to: ${newState}`, {
                 messageId,
                 messageField: newState === this.STATES.PREPARING ? 'preparing' : 
                              newState === this.STATES.ACTIVE ? 'active' : 'none'
