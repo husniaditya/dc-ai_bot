@@ -745,7 +745,7 @@ class LeaderboardCanvas {
             this.townHallImages.set(level, image);
             return image;
         } catch (error) {
-            console.warn(`Town hall image not found for level ${level}, using fallback`);
+            // console.warn(`Town hall image not found for level ${level}, using fallback`);
             return null;
         }
     }

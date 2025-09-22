@@ -83,9 +83,49 @@ class WarStateManager {
             let stateData = null;
             if (row.war_state_data) {
                 try {
-                    stateData = JSON.parse(row.war_state_data);
+                    // Check for the specific "[object Object]" corruption before parsing
+                    const dataStr = typeof row.war_state_data === 'string' ? row.war_state_data : String(row.war_state_data);
+                    
+                    if (dataStr === '[object Object]' || dataStr.includes('[object Object]')) {
+                        console.warn('[WarStateManager] Detected corrupted "[object Object]" in war_state_data, cleaning up...');
+                        
+                        // Clean up the corrupted data in the database
+                        try {
+                            await this.db.execute(`
+                                UPDATE guild_clashofclans_watch 
+                                SET war_state_data = NULL 
+                                WHERE guild_id = ? AND clan_tag = ?
+                            `, [guildId, clanTag]);
+                            console.log('[WarStateManager] Cleaned up corrupted war_state_data');
+                        } catch (cleanupError) {
+                            console.error('[WarStateManager] Error cleaning up corrupted war_state_data:', cleanupError.message);
+                        }
+                        
+                        stateData = {};
+                    } else {
+                        // Handle case where war_state_data might already be an object
+                        if (typeof row.war_state_data === 'object') {
+                            stateData = row.war_state_data;
+                        } else {
+                            stateData = JSON.parse(dataStr);
+                        }
+                    }
                 } catch (e) {
                     console.warn('[WarStateManager] Invalid JSON in war_state_data:', e.message);
+                    
+                    // Clean up any invalid JSON in the database
+                    try {
+                        await this.db.execute(`
+                            UPDATE guild_clashofclans_watch 
+                            SET war_state_data = NULL 
+                            WHERE guild_id = ? AND clan_tag = ?
+                        `, [guildId, clanTag]);
+                        console.log('[WarStateManager] Cleaned up invalid war_state_data');
+                    } catch (cleanupError) {
+                        console.error('[WarStateManager] Error cleaning up invalid war_state_data:', cleanupError.message);
+                    }
+                    
+                    stateData = {};
                 }
             }
 
@@ -141,15 +181,28 @@ class WarStateManager {
             }
 
             // Update war state data with additional information
-            let stateDataObj = {};
             if (warData) {
-                stateDataObj = {
+                const stateDataObj = {
                     startTime: warData.startTime,
                     endTime: warData.endTime,
                     opponent: warData.opponent?.name || null,
                     lastUpdated: new Date().toISOString()
                 };
-                updateData.war_state_data = JSON.stringify(stateDataObj);
+                
+                // Ensure we properly stringify the object and validate it
+                try {
+                    const jsonString = JSON.stringify(stateDataObj);
+                    // Validate that it's not the problematic "[object Object]" string
+                    if (jsonString && jsonString !== '[object Object]') {
+                        updateData.war_state_data = jsonString;
+                    } else {
+                        console.warn('[WarStateManager] Detected potential object corruption, setting war_state_data to null');
+                        updateData.war_state_data = null;
+                    }
+                } catch (stringifyError) {
+                    console.error('[WarStateManager] Error stringifying war state data:', stringifyError.message);
+                    updateData.war_state_data = null;
+                }
             }
 
             // Clear preparing message when transitioning to active
@@ -300,29 +353,6 @@ class WarStateManager {
             case this.STATES.ENDED:
                 if (newState === this.STATES.PREPARING) {
                     // New war starting
-                    return {
-                        action: 'transition',
-                        from: currentState,
-                        to: newState,
-                        messageAction: 'create_preparing',
-                        messageId: null
-                    };
-                }
-                if (newState === this.STATES.ACTIVE) {
-                    // War started directly to active (missed preparation phase)
-                    return {
-                        action: 'transition',
-                        from: currentState,
-                        to: newState,
-                        messageAction: 'create_active',
-                        messageId: null
-                    };
-                }
-                break;
-
-            case this.STATES.NOT_IN_WAR:
-                if (newState === this.STATES.PREPARING) {
-                    // New war starting after being not in war
                     return {
                         action: 'transition',
                         from: currentState,

@@ -341,6 +341,8 @@ async function getClanSpecificMentionTargets(config, data, eventType) {
 // Send announcement to Discord channel
 async function announce(guild, config, data, type) {
   try {
+    console.log(`[COC] announce() called with type: ${type}, guild: ${guild.id}, clanTag: ${data.clanTag}`);
+    
     let channelId, template, mentionTargets;
     
     // Determine channel and template based on announcement type
@@ -349,6 +351,7 @@ async function announce(guild, config, data, type) {
         channelId = config.warAnnounceChannelId;
         template = config.warDeclaredTemplate || 'War declared against {warOpponent}!';
         mentionTargets = await getClanSpecificMentionTargets(config, data, 'war');
+        console.log(`[COC] war_declared: channelId=${channelId}, template="${template}"`);
         break;
       case 'war_start':
       case 'war_end':
@@ -378,18 +381,24 @@ async function announce(guild, config, data, type) {
     }
     
     if (!channelId) {
+      console.warn(`[COC] NO_CHANNEL: No channel configured for ${type} (config.warAnnounceChannelId: ${config.warAnnounceChannelId})`);
       pushDebug(`NO_CHANNEL: No channel configured for ${type}`);
       return;
     }
     
+    console.log(`[COC] Looking for channel: ${channelId}`);
     const channel = guild.channels.cache.get(channelId);
     if (!channel) {
+      console.warn(`[COC] CHANNEL_NOT_FOUND: Channel ${channelId} not found for ${type}`);
       pushDebug(`CHANNEL_NOT_FOUND: Channel ${channelId} not found for ${type}`);
       return;
     }
     
+    console.log(`[COC] Found channel: #${channel.name} (${channel.id})`);
+    
     // Build role mention string
     const roleMention = buildRoleMention(mentionTargets, guild);
+    console.log(`[COC] Role mention: "${roleMention}"`);
     
     // Prepare data for placeholder replacement
     const templateData = {
@@ -414,6 +423,8 @@ async function announce(guild, config, data, type) {
       content = roleMention + (content ? '\n' + content : '');
     }
     
+    console.log(`[COC] Message content: "${content}"`);
+    
     // Prepare message options
     const messageOptions = { 
       content: content || undefined,
@@ -423,6 +434,7 @@ async function announce(guild, config, data, type) {
     // Add embed if enabled
     if (config.embedEnabled || type === 'donation_leaderboard') {
       messageOptions.embeds = [createCOCEmbed(templateData, type, config)];
+      console.log(`[COC] Adding embed (embedEnabled: ${config.embedEnabled})`);
     }
     
     // Add leaderboard image if present
@@ -463,10 +475,14 @@ async function announce(guild, config, data, type) {
       return { messageId: message.id, updated: false };
     } else {
       // For non-leaderboard messages, just send normally
-      await channel.send(messageOptions);
+      console.log(`[COC] Sending ${type} message with options:`, JSON.stringify(messageOptions, null, 2));
+      const sentMessage = await channel.send(messageOptions);
+      console.log(`[COC] Successfully sent ${type} message ${sentMessage.id} in #${channel.name}`);
       cocStats.totalAnnouncements++;
       pushDebug(`ANNOUNCED: ${type} in #${channel.name} for clan ${data.clanTag}`);
-    }  } catch (error) {
+    }
+  } catch (error) {
+    console.error(`[COC] ANNOUNCE_ERROR: ${error.message} for ${type}`, error.stack);
     cocStats.totalErrors++;
     pushDebug(`ANNOUNCE_ERROR: ${error.message} for ${type}`);
   }

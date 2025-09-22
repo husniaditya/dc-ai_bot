@@ -40,7 +40,7 @@ class WarPerformanceService {
             
             // Check if date is valid
             if (isNaN(date.getTime())) {
-                console.warn('[WarPerformanceService] Invalid date value:', dateValue);
+                // console.warn('[WarPerformanceService] Invalid date value:', dateValue);
                 return null;
             }
             
@@ -48,7 +48,7 @@ class WarPerformanceService {
             return date.toISOString().slice(0, 19).replace('T', ' ');
             
         } catch (error) {
-            console.warn('[WarPerformanceService] Error formatting date:', dateValue, error.message);
+            // console.warn('[WarPerformanceService] Error formatting date:', dateValue, error.message);
             return null;
         }
     }
@@ -218,10 +218,10 @@ class WarPerformanceService {
                 `, [guildId, playerTag]);
                 
                 if (debugStats.length > 0) {
-                    console.log(`[WarPerformanceService] Player ${playerTag} has records but no completed wars:`, 
-                        debugStats.map(d => `${d.war_state}/${d.war_result}: ${d.count}`).join(', '));
+                    // console.log(`[WarPerformanceService] Player ${playerTag} has records but no completed wars:`, 
+                        // debugStats.map(d => `${d.war_state}/${d.war_result}: ${d.count}`).join(', '));
                 } else {
-                    console.log(`[WarPerformanceService] No war records found at all for player ${playerTag}`);
+                    // console.log(`[WarPerformanceService] No war records found at all for player ${playerTag}`);
                 }
                 return;
             }
@@ -300,11 +300,11 @@ class WarPerformanceService {
             const validLimit = Math.max(1, Math.min(parseInt(limit) || 50, 200));
             
             if (!validGuildId) {
-                console.error('[WarPerformanceService] No valid guild ID provided');
+                // console.error('[WarPerformanceService] No valid guild ID provided');
                 return [];
             }
 
-            console.log(`[WarPerformanceService] Getting leaderboard data for guild ${validGuildId}, limit ${validLimit}`);
+            // console.log(`[WarPerformanceService] Getting leaderboard data for guild ${validGuildId}, limit ${validLimit}`);
 
             // Use string interpolation for LIMIT to avoid MySQL parameter type issues
             // Only guild_id uses parameter binding for security
@@ -324,11 +324,11 @@ class WarPerformanceService {
                 LIMIT ${validLimit}
             `;
 
-            console.log('[WarPerformanceService] Executing query with guild_id parameter:', validGuildId);
+            // console.log('[WarPerformanceService] Executing query with guild_id parameter:', validGuildId);
 
             const [players] = await connection.execute(query, [validGuildId]);
 
-            console.log(`[WarPerformanceService] Found ${players.length} players in leaderboard`);
+            // console.log(`[WarPerformanceService] Found ${players.length} players in leaderboard`);
 
             // Add rank numbers
             const rankedPlayers = players.map((player, index) => ({
@@ -371,7 +371,7 @@ class WarPerformanceService {
             const validPlayerTag = playerTag || null;
 
             if (!validWarId || !validPlayerTag) {
-                console.log(`[WarPerformanceService] Missing required parameters: warId=${validWarId}, playerTag=${validPlayerTag}`);
+                // console.log(`[WarPerformanceService] Missing required parameters: warId=${validWarId}, playerTag=${validPlayerTag}`);
                 return [];
             }
 
@@ -385,7 +385,7 @@ class WarPerformanceService {
             `, [validWarId, validPlayerTag]);
 
             if (rows.length === 0) {
-                console.log(`[WarPerformanceService] No attack data found for player ${validPlayerTag} in war ${validWarId}`);
+                // console.log(`[WarPerformanceService] No attack data found for player ${validPlayerTag} in war ${validWarId}`);
                 return [];
             }
 

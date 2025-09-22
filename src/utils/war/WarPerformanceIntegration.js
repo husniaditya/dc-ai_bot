@@ -152,8 +152,8 @@ class WarPerformanceIntegration {
                 
                 // War statistics for canvas display
                 warsParticipated: player.warsParticipated || 0,
-                winRate: (player.winRate || 0).toFixed(1),
-                averageStars: (player.averageStars || 0).toFixed(2),
+                winRate: parseFloat(player.winRate || 0).toFixed(1),
+                averageStars: parseFloat(player.averageStars || 0).toFixed(2),
                 
                 // Current war attack details (if available)
                 currentWarAttackDetails: player.currentWarAttackDetails || [],

@@ -343,18 +343,18 @@ class LeaderboardInteractionHandler {
 
             // Create buttons with clan tag (disable if war ended)
             const isAdmin = LeaderboardButtons.hasAdminPermission(interaction.member);
-            const buttonsDisabled = view === 'war' && !this.warStateManager.shouldEnableButtons(clanData.warState);
+            const shouldShowButtons = !(view === 'war' && !this.warStateManager.shouldEnableButtons(clanData.warState));
             
-            const buttonRow = LeaderboardButtons.createButtonRow({
+            // Only create button row if buttons should be shown (for historical wars, no buttons at all)
+            const buttonRow = shouldShowButtons ? LeaderboardButtons.createButtonRow({
                 currentPage: page,
                 totalPages,
                 isAdmin,
                 guildId: interaction.guildId,
                 clanTag: clanTag,
                 view: 'page',
-                dataView: view,
-                disabled: buttonsDisabled
-            });
+                dataView: view
+            }) : null;
 
             // Create embed with page info
             const viewTitle = view === 'war' ? 'War Statistics' : 'Donation Leaderboard';
@@ -373,9 +373,13 @@ class LeaderboardInteractionHandler {
             // Update the message
             const updateData = {
                 embeds: [embed],
-                files: [{ attachment: canvasBuffer, name: 'leaderboard.png' }],
-                components: [buttonRow]
+                files: [{ attachment: canvasBuffer, name: 'leaderboard.png' }]
             };
+
+            // Only add buttons if they should be shown (no buttons for historical wars)
+            if (buttonRow) {
+                updateData.components = [buttonRow];
+            }
 
             // Only add content if template exists and is not empty
             if (config.donation_leaderboard_template && config.donation_leaderboard_template.trim()) {
@@ -473,20 +477,19 @@ class LeaderboardInteractionHandler {
                 ? await canvas.generateWarLeaderboard(pageData, {...config, clan_name: clanData.clanName, clan_tag: clanData.clanTag}, page, totalPages, clanData, clanData.warState)
                 : await canvas.generateLeaderboard(pageData, {...config, clan_name: clanData.clanName, clan_tag: clanData.clanTag}, page, totalPages);
 
-            // Create buttons with clan tag (disable if war ended)
+            // Create buttons with clan tag (only show if war is not ended)
             const isAdmin = LeaderboardButtons.hasAdminPermission(interaction.member);
-            const buttonsDisabled = view === 'war' && clanData && !this.warStateManager.shouldEnableButtons(clanData.warState);
+            const shouldShowButtons = !(view === 'war' && clanData && !this.warStateManager.shouldEnableButtons(clanData.warState));
             
-            const buttonRow = LeaderboardButtons.createButtonRow({
+            const buttonRow = shouldShowButtons ? LeaderboardButtons.createButtonRow({
                 currentPage: page,
                 totalPages,
                 isAdmin,
                 guildId: interaction.guildId,
                 clanTag: clanData.clanTag,
                 view: 'page',
-                dataView: view,
-                disabled: buttonsDisabled
-            });
+                dataView: view
+            }) : null;
 
             // Create embed with page info
             const viewTitle = view === 'war' ? 'War Statistics' : 'Donation Leaderboard';
@@ -505,9 +508,13 @@ class LeaderboardInteractionHandler {
             // Prepare message data
             const messageData = {
                 embeds: [embed],
-                files: [{ attachment: canvasBuffer, name: 'leaderboard.png' }],
-                components: [buttonRow]
+                files: [{ attachment: canvasBuffer, name: 'leaderboard.png' }]
             };
+
+            // Only add buttons if they should be shown (no buttons for historical wars)
+            if (buttonRow) {
+                messageData.components = [buttonRow];
+            }
 
             // Only add content if template exists and is not empty (only for original reply)
             if (isOriginalReply && config.donation_leaderboard_template && config.donation_leaderboard_template.trim()) {
@@ -619,7 +626,10 @@ class LeaderboardInteractionHandler {
             const playersPerPage = config.donation_leaderboard_players_per_page || 25;
             const totalPages = Math.max(1, Math.ceil(players.length / playersPerPage));
             
-            const buttonRow = LeaderboardButtons.createButtonRow({
+            // For war leaderboards, check if buttons should be shown (no buttons for historical wars)
+            const shouldShowButtons = !(view === 'war' && clanData && !this.warStateManager.shouldEnableButtons(clanData.warState));
+            
+            const buttonRow = shouldShowButtons ? LeaderboardButtons.createButtonRow({
                 currentPage: returnPage,
                 totalPages,
                 isAdmin,
@@ -627,17 +637,23 @@ class LeaderboardInteractionHandler {
                 clanTag: clanTag,
                 view: 'summary',
                 dataView: view
-            });
+            }) : null;
 
             // Check if interaction is still valid before editing
             if (interaction.deferred || interaction.replied) {
                 try {
-                    await interaction.editReply({
+                    const replyData = {
                         content: null,
                         embeds: [embed],
-                        files: [],
-                        components: [buttonRow]
-                    });
+                        files: []
+                    };
+
+                    // Only add buttons if they should be shown (no buttons for historical wars)
+                    if (buttonRow) {
+                        replyData.components = [buttonRow];
+                    }
+
+                    await interaction.editReply(replyData);
                 } catch (editError) {
                     console.error('Failed to edit reply in summary (interaction may be expired):', {
                         error: editError.message,
