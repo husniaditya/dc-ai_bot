@@ -283,6 +283,11 @@ export async function getClashOfClansConfig(guildId){ return authFetch('/api/cla
 export async function updateClashOfClansConfig(partial, guildId){ return authFetch('/api/clashofclans/config' + (guildId?`?guildId=${guildId}`:''), { method:'PUT', body: JSON.stringify(partial) }); }
 export async function resolveTwitchStreamer(input){ return authFetch('/api/twitch/resolve-streamer', { method:'POST', body: JSON.stringify({ input }) }); }
 
+// Genshin Impact API
+export async function getGenshinConfig(guildId){ return authFetch('/api/genshin/config' + (guildId?`?guildId=${guildId}`:'')); }
+export async function updateGenshinConfig(partial, guildId){ return authFetch('/api/genshin/config' + (guildId?`?guildId=${guildId}`:''), { method:'PUT', body: JSON.stringify(partial) }); }
+export async function resolveGenshinPlayer(uid){ return authFetch('/api/genshin/resolve-player', { method:'POST', body: JSON.stringify({ uid }) }); }
+
 // XP System config helpers
 export async function getXpConfig(guildId){ 
   const headers = guildId ? { 'X-Guild-Id': guildId } : {};

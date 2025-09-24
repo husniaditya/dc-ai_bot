@@ -1852,7 +1852,7 @@
       },
       "genshin": {
         "label": "Genshin Impact",
-        "desc": "Event updates and news (planned)"
+        "desc": "Track player profiles and character builds via Enka.Network"
       }
     },
     "preview": {
@@ -1873,6 +1873,12 @@
           "warState": "in war",
           "warOpponent": "Enemy Clan",
           "warResult": "Victory"
+        },
+        "genshin": {
+          "playerName": "Traveler",
+          "adventureRank": "60",
+          "worldLevel": "8",
+          "characterName": "Hu Tao"
         }
       }
     },
@@ -1897,6 +1903,15 @@
       "remove": "Remove",
       "loadingConfig": "Loading {{service}} configuration…",
       "mentionInputPlaceholder": "Add @everyone, @here, or a role…",
+      "announcementChannels": "Announcement Channels",
+      "messageTemplates": "Message Templates",
+      "selectChannel": "Select Channel",
+      "basicSettings": "Basic Settings",
+      "checkInterval": "Check Interval",
+      "seconds": "seconds",
+      "features": "Features",
+      "embedEnabled": "Enable Embeds",
+      "advancedSettings": "Advanced Settings",
       "meta": {
         "role": "role",
         "meta": "meta"
@@ -2052,6 +2067,99 @@
         "addFailed": "Failed to add clan"
       },
       "intervalHint": "How often to check for clan updates (minimum 5 minutes, recommended 1 hour)"
+    },
+    "genshin": {
+      "playersToTrack": "Players to Track",
+      "noPlayers": "No players configured. Add a player to start tracking.",
+      "options": {
+        "trackProfileUpdates": "Track Profile Updates",
+        "trackAchievements": "Track New Achievements",
+        "trackSpiralAbyss": "Track Spiral Abyss Progress"
+      },
+      "placeholders": {
+        "playerUID": "Enter player UID (e.g. 123456789)",
+        "customMessage": "Custom announcement message for this player...",
+        "profileUpdateTemplate": "🎮 {playerName} updated their profile! Adventure Rank: {adventureRank} | World Level: {worldLevel}",
+        "achievementTemplate": "🏆 {playerName} earned a new achievement: {achievementName}!",
+        "spiralAbyssTemplate": "🌀 {playerName} made progress in Spiral Abyss! Floor {floor}, Chamber {chamber}"
+      },
+      "channels": {
+        "profileUpdates": "Profile Updates Channel",
+        "achievements": "Achievements Channel", 
+        "spiralAbyss": "Spiral Abyss Channel"
+      },
+      "templates": {
+        "profileUpdate": "Profile Update Template",
+        "achievement": "Achievement Template",
+        "spiralAbyss": "Spiral Abyss Template"
+      },
+      "settings": {
+        "minAchievementThreshold": "Min Achievement Points"
+      },
+      "help": {
+        "interval": "How often to check for updates (minimum 300 seconds)",
+        "addPlayer": "Enter a valid 9-digit Genshin Impact UID",
+        "customMessage": "Optional custom message for announcements from this player",
+        "mentionTargets": "Roles and users to mention in Genshin Impact announcements",
+        "minAchievementThreshold": "Only announce achievements worth this many points or more"
+      },
+      "customMessage": "Custom Message for {player}",
+      "errors": {
+        "invalidUID": "Invalid UID. Please enter a valid 9-digit UID.",
+        "playerExists": "Player is already being tracked.",
+        "playerNotFound": "Player not found. Check that the UID is correct and profile is public."
+      },
+      "messages": {
+        "playerAdded": "Player {player} added successfully",
+        "playerRemoved": "Player removed successfully"
+      },
+      "fields": {
+        "playerUid": "Player UID",
+        "playerUidHint": "Enter Genshin Impact UID (e.g., 123456789)",
+        "playerName": "Player Name",
+        "playerNameHint": "Enter player name for display",
+        "profileAnnouncements": "Profile Announcements",
+        "buildAnnouncements": "Build Announcements"
+      },
+      "announce": {
+        "profile": "Profile",
+        "build": "Build",
+        "globalMentions": "Global Mention Targets",
+        "globalMentionsHelp": "These roles/users will be mentioned for all Genshin Impact notifications"
+      },
+      "sections": {
+        "playerManagement": "Player Management",
+        "trackingFeatures": "Tracking Features",
+        "profileTemplate": "Profile Update Template",
+        "buildTemplate": "Build Update Template",
+        "preview": "Template Preview"
+      },
+      "players": {
+        "addPlayer": "Add Player",
+        "playerUidPlaceholder": "Enter player UID (e.g., 123456789)",
+        "noPlayers": "No players added yet.",
+        "mentionTargets": "Per-Player Mention Targets",
+        "profileAnnouncementChannel": "Profile Announcement Channel",
+        "profileAnnouncementChannelHelp": "Channel for profile update announcements for this specific player",
+        "buildAnnouncementChannel": "Build Announcement Channel", 
+        "buildAnnouncementChannelHelp": "Channel for build update announcements for this specific player",
+        "profileMentions": "Profile Mentions",
+        "profileMentionsHelp": "Roles/users to mention for profile updates from this player",
+        "buildMentions": "Build Mentions",
+        "buildMentionsHelp": "Roles/users to mention for build updates from this player"
+      },
+      "tracking": {
+        "trackProfiles": "Track Profile Changes",
+        "trackBuilds": "Track Build Changes"
+      },
+      "toasts": {
+        "invalidUid": "Invalid player UID format",
+        "alreadyTracking": "Already tracking player {{uid}}",
+        "added": "Added player {{uid}} to tracking list",
+        "addFailed": "Failed to add player",
+        "resolveFailed": "Couldn't connect to Enka.Network or player data not found"
+      },
+      "intervalHint": "How often to check for player updates (minimum 5 minutes, recommended 1 hour)"
     },
     "leveling": "XP & Leveling",
     "economy": "Economy System",

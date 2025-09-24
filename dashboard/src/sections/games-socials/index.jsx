@@ -6,6 +6,8 @@ import {
   updateTwitchConfig,
   getClashOfClansConfig,
   updateClashOfClansConfig,
+  getGenshinConfig,
+  updateGenshinConfig,
   getChannels, 
   getRoles 
 } from '../../api';
@@ -21,6 +23,7 @@ import PlaceholderService from './components/PlaceholderService';
 import YouTubeConfig from './features/YouTubeConfig';
 import TwitchConfig from './features/TwitchConfig';
 import ClashOfClansConfig from './features/ClashOfClansConfig';
+import GenshinConfig from './features/GenshinConfig';
 
 // Utils
 import { cleanChannelIds, cleanStreamerUsernames, hasUnsavedChanges } from './utils';
@@ -51,6 +54,12 @@ export default function GamesSocialsSection({ guildId, pushToast }) {
   const [cocLoading, setCocLoading] = useState(false);
   const [cocSaving, setCocSaving] = useState(false);
   
+  // Genshin Impact state
+  const [genshinConfig, setGenshinConfig] = useState(null);
+  const [genshinOriginal, setGenshinOriginal] = useState(null);
+  const [genshinLoading, setGenshinLoading] = useState(false);
+  const [genshinSaving, setGenshinSaving] = useState(false);
+  
   // Shared data
   const [discordChannels, setDiscordChannels] = useState([]);
   const [guildRoles, setGuildRoles] = useState([]);
@@ -64,11 +73,13 @@ export default function GamesSocialsSection({ guildId, pushToast }) {
         setYtLoading(true);
         setTwitchLoading(true);
         setCocLoading(true);
+        setGenshinLoading(true);
         
-        const [ytCfg, twitchCfg, cocCfg, ch, roles] = await Promise.all([
+        const [ytCfg, twitchCfg, cocCfg, genshinCfg, ch, roles] = await Promise.all([
           getYouTubeConfig(guildId).catch(() => null),
           getTwitchConfig(guildId).catch(() => null),
           getClashOfClansConfig(guildId).catch(() => null),
+          getGenshinConfig(guildId).catch(() => null),
           getChannels(guildId).catch(() => null),
           getRoles(guildId).catch(() => null)
         ]);
@@ -106,6 +117,17 @@ export default function GamesSocialsSection({ guildId, pushToast }) {
           setCocOriginal(cleanedCocCfg);
         }
         
+        // Set Genshin Impact config
+        if (genshinCfg) {
+          const cleanedGenshinCfg = {
+            ...DEFAULT_CONFIGS.genshin,
+            ...genshinCfg,
+            players: Array.isArray(genshinCfg.players) ? genshinCfg.players : []
+          };
+          setGenshinConfig(cleanedGenshinCfg);
+          setGenshinOriginal(cleanedGenshinCfg);
+        }
+        
         // Set shared data
         if (ch && Array.isArray(ch.channels)) setDiscordChannels(ch.channels);
         if (roles && Array.isArray(roles.roles)) setGuildRoles(roles.roles);
@@ -114,6 +136,7 @@ export default function GamesSocialsSection({ guildId, pushToast }) {
         setYtLoading(false); 
         setTwitchLoading(false);
         setCocLoading(false);
+        setGenshinLoading(false);
       }
     })();
   }, [guildId]);
@@ -192,6 +215,32 @@ export default function GamesSocialsSection({ guildId, pushToast }) {
       } catch (err) {
   pushToast && pushToast('error', t('gamesSocials.toasts.toggleFailed'));
         setCocConfig(prevConfig); // revert
+      }
+    } else if (serviceKey === 'genshin') {
+      if (!genshinConfig) return;
+      
+      const newEnabled = !genshinConfig.enabled;
+      const prevConfig = genshinConfig;
+      
+      // Optimistic update
+      setGenshinConfig(prev => ({ ...prev, enabled: newEnabled }));
+      
+      try {
+        const updated = await updateGenshinConfig({ ...prevConfig, enabled: newEnabled }, guildId);
+        const safeConfig = {
+          ...DEFAULT_CONFIGS.genshin,
+          ...updated,
+          players: Array.isArray(updated?.players) ? updated.players : [],
+          mentionTargets: Array.isArray(updated?.mentionTargets) ? updated.mentionTargets : [],
+          playerMessages: updated?.playerMessages || {},
+          playerNames: updated?.playerNames || {}
+        };
+        setGenshinConfig(safeConfig);
+        setGenshinOriginal(safeConfig);
+        pushToast && pushToast('success', t(newEnabled ? 'gamesSocials.toasts.serviceEnabled' : 'gamesSocials.toasts.serviceDisabled', { service: t('gamesSocials.services.genshin.label') }));
+      } catch (err) {
+        pushToast && pushToast('error', t('gamesSocials.toasts.toggleFailed'));
+        setGenshinConfig(prevConfig); // revert
       }
     }
   };
@@ -287,15 +336,47 @@ export default function GamesSocialsSection({ guildId, pushToast }) {
     if (cocOriginal) setCocConfig(cocOriginal);
   };
 
+  // Genshin Impact handlers
+  const handleGenshinSave = async () => {
+    if (!genshinConfig) return;
+    
+    try { 
+      setGenshinSaving(true); 
+      const updated = await updateGenshinConfig(genshinConfig, guildId); 
+      const safe = {
+        ...DEFAULT_CONFIGS.genshin,
+        ...updated,
+        players: Array.isArray(updated?.players) ? updated.players : [],
+        mentionTargets: Array.isArray(updated?.mentionTargets) ? updated.mentionTargets : [],
+        playerMessages: updated?.playerMessages || {},
+        playerNames: updated?.playerNames || {}
+      }; 
+      setGenshinConfig(safe); 
+      setGenshinOriginal(safe); 
+      pushToast && pushToast('success', t('gamesSocials.toasts.saved', { service: t('gamesSocials.services.genshin.label') })); 
+    } catch (e) { 
+      console.error('Genshin save error:', e);
+      pushToast && pushToast('error', t('gamesSocials.toasts.saveFailed')); 
+    } finally { 
+      setGenshinSaving(false); 
+    }
+  };
+
+  const handleGenshinReset = () => {
+    if (genshinOriginal) setGenshinConfig(genshinOriginal);
+  };
+
   // Get current service and check states
   const currentService = SERVICES.find(s => s.key === activeService);
   const showOverlay = (activeService === 'youtube' && (ytLoading || (!ytConfig && guildId))) || 
                      (activeService === 'twitch' && (twitchLoading || (!twitchConfig && guildId))) ||
-                     (activeService === 'clashofclans' && (cocLoading || (!cocConfig && guildId)));
+                     (activeService === 'clashofclans' && (cocLoading || (!cocConfig && guildId))) ||
+                     (activeService === 'genshin' && (genshinLoading || (!genshinConfig && guildId)));
 
   const ytHasChanges = hasUnsavedChanges(ytConfig, ytOriginal);
   const twitchHasChanges = hasUnsavedChanges(twitchConfig, twitchOriginal);
   const cocHasChanges = hasUnsavedChanges(cocConfig, cocOriginal);
+  const genshinHasChanges = hasUnsavedChanges(genshinConfig, genshinOriginal);
 
   return (
     <LoadingSection
@@ -311,6 +392,7 @@ export default function GamesSocialsSection({ guildId, pushToast }) {
         {activeService === 'youtube' && ytHasChanges && <span className="dirty-badge">{t('common.unsaved')}</span>}
         {activeService === 'twitch' && twitchHasChanges && <span className="dirty-badge">{t('common.unsaved')}</span>}
         {activeService === 'clashofclans' && cocHasChanges && <span className="dirty-badge">{t('common.unsaved')}</span>}
+        {activeService === 'genshin' && genshinHasChanges && <span className="dirty-badge">{t('common.unsaved')}</span>}
       </div>
 
       {/* Service Cards Grid */}
@@ -318,10 +400,12 @@ export default function GamesSocialsSection({ guildId, pushToast }) {
         {SERVICES.map(service => {
           const isEnabled = service.key === 'youtube' ? (ytConfig?.enabled ?? false) : 
                            service.key === 'twitch' ? (twitchConfig?.enabled ?? false) : 
-                           service.key === 'clashofclans' ? (cocConfig?.enabled ?? false) : false;
+                           service.key === 'clashofclans' ? (cocConfig?.enabled ?? false) :
+                           service.key === 'genshin' ? (genshinConfig?.enabled ?? false) : false;
           const isLoading = service.key === 'youtube' ? ytLoading : 
                            service.key === 'twitch' ? twitchLoading : 
-                           service.key === 'clashofclans' ? cocLoading : false;
+                           service.key === 'clashofclans' ? cocLoading :
+                           service.key === 'genshin' ? genshinLoading : false;
           
           return (
             <ServiceCard
@@ -334,7 +418,8 @@ export default function GamesSocialsSection({ guildId, pushToast }) {
               canToggle={service.implemented && (
                 (service.key === 'youtube' && ytConfig) || 
                 (service.key === 'twitch' && twitchConfig) ||
-                (service.key === 'clashofclans' && cocConfig)
+                (service.key === 'clashofclans' && cocConfig) ||
+                (service.key === 'genshin' && genshinConfig)
               )}
               isLoading={isLoading}
             />
@@ -351,10 +436,12 @@ export default function GamesSocialsSection({ guildId, pushToast }) {
             serviceKey={activeService}
             isEnabled={activeService === 'youtube' ? (ytConfig?.enabled ?? false) : 
                       activeService === 'twitch' ? (twitchConfig?.enabled ?? false) : 
-                      activeService === 'clashofclans' ? (cocConfig?.enabled ?? false) : false}
+                      activeService === 'clashofclans' ? (cocConfig?.enabled ?? false) :
+                      activeService === 'genshin' ? (genshinConfig?.enabled ?? false) : false}
             hasUnsavedChanges={activeService === 'youtube' ? ytHasChanges : 
                              activeService === 'twitch' ? twitchHasChanges : 
-                             activeService === 'clashofclans' ? cocHasChanges : false}
+                             activeService === 'clashofclans' ? cocHasChanges :
+                             activeService === 'genshin' ? genshinHasChanges : false}
           />
 
           {/* Render appropriate configuration component */}
@@ -448,6 +535,37 @@ export default function GamesSocialsSection({ guildId, pushToast }) {
                 >
                   <i className="fa-solid fa-floppy-disk me-2"/>
                   {cocSaving ? t('common.saving') : t('common.save')}
+                </button>
+              </div>
+            </>
+          ) : activeService === 'genshin' ? (
+            <>
+              <GenshinConfig
+                config={genshinConfig}
+                onChange={setGenshinConfig}
+                onSave={handleGenshinSave}
+                discordChannels={discordChannels}
+                guildRoles={guildRoles}
+                guildId={guildId}
+                pushToast={pushToast}
+                isSaving={genshinSaving}
+              />
+              
+              <div className="d-flex gap-2 mt-3">
+                <button 
+                  className="btn btn-outline-secondary" 
+                  disabled={!genshinHasChanges || genshinSaving} 
+                  onClick={handleGenshinReset}
+                >
+                  <i className="fa-solid fa-rotate-left me-2"/>{t('common.reset')}
+                </button>
+                <button 
+                  className="btn btn-primary" 
+                  disabled={!genshinHasChanges || genshinSaving} 
+                  onClick={handleGenshinSave}
+                >
+                  <i className="fa-solid fa-floppy-disk me-2"/>
+                  {genshinSaving ? t('common.saving') : t('common.save')}
                 </button>
               </div>
             </>

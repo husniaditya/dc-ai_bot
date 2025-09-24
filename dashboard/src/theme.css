@@ -2326,19 +2326,30 @@ html:not(.dark) .btn-outline-secondary:active {
 /* YouTube config redesigned UI */
 .yt-config-grid { display:grid; gap:1.25rem; grid-template-columns: repeat(auto-fit,minmax(300px,1fr)); }
 .yt-config-block { 
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(168, 85, 247, 0.08) 50%, rgba(236, 72, 153, 0.06) 100%);
-  border: 1px solid rgba(99, 102, 241, 0.2); 
+  background: linear-gradient(135deg, rgba(185, 28, 28, 0.18) 0%, rgba(239, 68, 68, 0.14) 50%, rgba(248, 113, 113, 0.10) 100%);
+  border: 1px solid rgba(185, 28, 28, 0.28); 
   padding: 1rem 1rem 0.9rem; 
   border-radius: 16px; 
   position: relative;
   backdrop-filter: blur(10px);
-  box-shadow: 0 8px 32px rgba(99, 102, 241, 0.1), 0 4px 16px rgba(168, 85, 247, 0.05);
+  box-shadow: 0 8px 32px rgba(185, 28, 28, 0.15), 0 4px 16px rgba(239, 68, 68, 0.08);
   transition: all 0.3s ease;
+}
+.yt-config-block::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, rgba(185, 28, 28, 0.9) 0%, rgba(239, 68, 68, 0.7) 50%, rgba(248, 113, 113, 0.5) 100%);
+  border-radius: 16px 16px 0 0;
 }
 .yt-config-block:hover {
   transform: translateY(-2px);
-  box-shadow: 0 12px 40px rgba(99, 102, 241, 0.15), 0 6px 20px rgba(168, 85, 247, 0.08);
-  border-color: rgba(99, 102, 241, 0.3);
+  box-shadow: 0 12px 40px rgba(185, 28, 28, 0.22), 0 6px 20px rgba(239, 68, 68, 0.12);
+  border-color: rgba(185, 28, 28, 0.4);
+  background: linear-gradient(135deg, rgba(185, 28, 28, 0.25) 0%, rgba(239, 68, 68, 0.18) 50%, rgba(248, 113, 113, 0.14) 100%);
 }
 .yt-config-block textarea { resize:vertical; }
 .tiny { font-size:.55rem !important; }
@@ -2361,19 +2372,25 @@ html:not(.dark) .btn-outline-secondary:active {
 .template-preview.size-lg { font-size:.6rem; min-height:180px; max-height:360px; overflow:auto; resize:vertical; }
 /* Light theme refinements for YouTube config & mention picker */
 html:not(.dark) .yt-config-block { 
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.08) 0%, rgba(168, 85, 247, 0.06) 50%, rgba(236, 72, 153, 0.04) 100%);
-  border-color: rgba(99, 102, 241, 0.15); 
-  box-shadow: 0 8px 32px rgba(99, 102, 241, 0.08), 0 4px 16px rgba(168, 85, 247, 0.04), 0 0 0 1px rgba(255,255,255,0.6) inset;
+  background: linear-gradient(135deg, rgba(185, 28, 28, 0.14) 0%, rgba(239, 68, 68, 0.10) 50%, rgba(248, 113, 113, 0.08) 100%);
+  border-color: rgba(185, 28, 28, 0.22); 
+  box-shadow: 0 8px 32px rgba(185, 28, 28, 0.10), 0 4px 16px rgba(239, 68, 68, 0.06), 0 0 0 1px rgba(255,255,255,0.6) inset;
 }
+
+html:not(.dark) .yt-config-block::before {
+  background: linear-gradient(90deg, rgba(185, 28, 28, 0.6) 0%, rgba(239, 68, 68, 0.5) 50%, rgba(248, 113, 113, 0.3) 100%);
+}
+
 html:not(.dark) .yt-config-block:hover {
-  box-shadow: 0 12px 40px rgba(99, 102, 241, 0.12), 0 6px 20px rgba(168, 85, 247, 0.06), 0 0 0 1px rgba(255,255,255,0.7) inset;
-  border-color: rgba(99, 102, 241, 0.25);
+  background: linear-gradient(135deg, rgba(185, 28, 28, 0.18) 0%, rgba(239, 68, 68, 0.14) 50%, rgba(248, 113, 113, 0.10) 100%);
+  box-shadow: 0 12px 40px rgba(185, 28, 28, 0.14), 0 6px 20px rgba(239, 68, 68, 0.08), 0 0 0 1px rgba(255,255,255,0.7) inset;
+  border-color: rgba(185, 28, 28, 0.32);
 }
 html:not(.dark) .yt-config-block + .yt-config-block { 
-  box-shadow: 0 8px 32px rgba(99, 102, 241, 0.06), 0 4px 16px rgba(168, 85, 247, 0.03);
+  box-shadow: 0 8px 32px rgba(255, 0, 0, 0.06), 0 4px 16px rgba(220, 38, 127, 0.03);
 }
 html:not(.dark) .yt-channel-item { background:#f5f7fb; border-color:rgba(0,0,0,0.08); }
-html:not(.dark) .yt-channel-item.editing { box-shadow:0 0 0 2px var(--accent) inset,0 0 0 4px rgba(99,102,241,0.25); }
+html:not(.dark) .yt-channel-item.editing { box-shadow:0 0 0 2px var(--accent) inset,0 0 0 4px rgba(255, 0, 0, 0.25); }
 html:not(.dark) .yt-channel-edit { border-top-color:rgba(0,0,0,0.08); }
 html:not(.dark) .template-preview { background:#f5f7fb; border-color:rgba(0,0,0,0.08); }
 html:not(.dark) .template-preview.empty { opacity:.6; }
@@ -4573,12 +4590,21 @@ html:not(.dark) {
   }
 }
 
+/* YouTube brand theming - Refined red colors */
 .yt-config-block {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(220, 38, 38, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.12);
   border-radius: var(--radius);
   padding: 1rem;
   backdrop-filter: blur(10px);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.yt-config-block:hover {
+  background: rgba(220, 38, 38, 0.12);
+  border-color: rgba(239, 68, 68, 0.18);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(220, 38, 38, 0.15);
 }
 
 /* Template Preview */
@@ -4813,7 +4839,20 @@ html:not(.dark) .service-card.active {
   box-shadow: 0 8px 32px rgba(99, 102, 241, 0.15), 0 4px 16px rgba(168, 85, 247, 0.08), 0 0 0 2px var(--accent), 0 0 0 1px rgba(255,255,255,0.8) inset;
 }
 
-html:not(.dark) .yt-config-block,
+/* YouTube light theme - Clean red accent */
+html:not(.dark) .yt-config-block {
+  background: rgba(239, 68, 68, 0.06) !important;
+  border: 1px solid rgba(220, 38, 38, 0.12) !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+html:not(.dark) .yt-config-block:hover {
+  background: rgba(239, 68, 68, 0.09) !important;
+  border-color: rgba(220, 38, 38, 0.18) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(220, 38, 38, 0.08);
+}
+
 html:not(.dark) .app-config-header {
   background: rgba(255, 255, 255, 0.7);
   border-color: rgba(0, 0, 0, 0.08);
@@ -6138,4 +6177,469 @@ html:not(.dark) .clash-config-wrapper select.form-select option {
 
 .clash-config-wrapper select:focus {
   z-index: 9999 !important;
+}
+
+/* Genshin config redesigned UI */
+.genshin-config-grid { display:grid; gap:1.25rem; grid-template-columns: repeat(auto-fit,minmax(300px,1fr)); }
+.genshin-config-block { 
+  background: linear-gradient(135deg, rgba(74, 144, 226, 0.1) 0%, rgba(255, 215, 0, 0.08) 50%, rgba(135, 206, 235, 0.06) 100%);
+  border: 1px solid rgba(74, 144, 226, 0.2); 
+  padding: 1rem 1rem 0.9rem; 
+  border-radius: 16px; 
+  position: relative;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 8px 32px rgba(74, 144, 226, 0.1), 0 4px 16px rgba(255, 215, 0, 0.05);
+  transition: all 0.3s ease;
+}
+.genshin-config-block::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, rgba(74, 144, 226, 0.8) 0%, rgba(255, 215, 0, 0.6) 50%, rgba(135, 206, 235, 0.5) 100%);
+  border-radius: 16px 16px 0 0;
+}
+.genshin-config-block:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 40px rgba(74, 144, 226, 0.15), 0 6px 20px rgba(255, 215, 0, 0.08);
+  border-color: rgba(74, 144, 226, 0.3);
+}
+.genshin-config-block textarea { resize:vertical; }
+.genshin-player-list { display:flex; flex-direction:column; gap:.65rem; }
+.genshin-player-item { padding:.65rem .75rem .55rem; border:1px solid rgba(255,255,255,0.08); background: rgba(0,0,0,0.25); border-radius:10px; }
+.genshin-player-item.editing { box-shadow:0 0 0 1px var(--accent) inset; }
+.genshin-player-row { display:flex; align-items:center; justify-content:space-between; gap:.75rem; flex-wrap:wrap; }
+.genshin-player-edit { border-top:1px dashed rgba(255,255,255,0.1); padding-top:.6rem; }
+.genshin-player-edit textarea { font-size:.6rem; }
+
+/* Light theme refinements for Genshin config */
+html:not(.dark) .genshin-config-block { 
+  background: linear-gradient(135deg, rgba(74, 144, 226, 0.08) 0%, rgba(255, 215, 0, 0.06) 50%, rgba(135, 206, 235, 0.04) 100%);
+  border-color: rgba(74, 144, 226, 0.15); 
+  box-shadow: 0 8px 32px rgba(74, 144, 226, 0.08), 0 4px 16px rgba(255, 215, 0, 0.04), 0 0 0 1px rgba(255,255,255,0.6) inset;
+}
+html:not(.dark) .genshin-config-block::before {
+  background: linear-gradient(90deg, rgba(74, 144, 226, 0.5) 0%, rgba(255, 215, 0, 0.4) 50%, rgba(135, 206, 235, 0.3) 100%);
+}
+html:not(.dark) .genshin-config-block:hover {
+  box-shadow: 0 12px 40px rgba(74, 144, 226, 0.12), 0 6px 20px rgba(255, 215, 0, 0.06), 0 0 0 1px rgba(255,255,255,0.7) inset;
+  border-color: rgba(74, 144, 226, 0.25);
+}
+html:not(.dark) .genshin-config-block + .genshin-config-block { 
+  box-shadow: 0 8px 32px rgba(74, 144, 226, 0.06), 0 4px 16px rgba(255, 215, 0, 0.03);
+}
+html:not(.dark) .genshin-player-item { background:#f0f8ff; border-color:rgba(74, 144, 226, 0.15); }
+html:not(.dark) .genshin-player-item.editing { box-shadow:0 0 0 2px var(--accent) inset,0 0 0 4px rgba(74, 144, 226, 0.25); }
+
+/* Clash of Clans brand theming - Orange colors */
+.clash-config-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+  margin-top: 1rem;
+}
+
+.clash-config-block {
+  background: rgba(255, 140, 0, 0.08);
+  border: 1px solid rgba(255, 165, 0, 0.12);
+  border-radius: var(--radius);
+  padding: 1rem;
+  backdrop-filter: blur(10px);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.clash-config-block:hover {
+  background: rgba(255, 140, 0, 0.12);
+  border-color: rgba(255, 165, 0, 0.18);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(255, 140, 0, 0.15);
+}
+
+@media (max-width: 1024px) {
+  .clash-config-grid {
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .clash-config-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Clash of Clans brand theming - Enhanced orange styling */
+.clash-config-wrapper {
+  background: linear-gradient(135deg, rgba(255, 140, 0, 0.03) 0%, rgba(255, 165, 0, 0.02) 50%, rgba(255, 127, 80, 0.01) 100%);
+  border-radius: 16px;
+  padding: 1.5rem;
+  margin: -1.5rem;
+  margin-bottom: 0;
+}
+
+.clash-config-wrapper .card-glass {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(10px);
+  background: linear-gradient(135deg, rgba(255, 140, 0, 0.08) 0%, rgba(255, 165, 0, 0.06) 50%, rgba(255, 127, 80, 0.04) 100%);
+  border: 1px solid rgba(255, 140, 0, 0.18);
+  box-shadow: 0 4px 16px rgba(255, 140, 0, 0.05);
+}
+
+.clash-config-wrapper .card-glass:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 40px rgba(255, 165, 0, 0.15), 0 6px 20px rgba(255, 140, 0, 0.08);
+  border-color: rgba(255, 165, 0, 0.25) !important;
+  background: linear-gradient(135deg, rgba(255, 140, 0, 0.12) 0%, rgba(255, 165, 0, 0.09) 50%, rgba(255, 127, 80, 0.06) 100%);
+}
+
+.clash-config-wrapper .clan-card {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background: rgba(255, 140, 0, 0.04);
+  border: 1px solid rgba(255, 140, 0, 0.12);
+}
+
+.clash-config-wrapper .clan-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 32px rgba(255, 165, 0, 0.12), 0 4px 16px rgba(255, 140, 0, 0.06);
+  border-color: rgba(255, 165, 0, 0.2) !important;
+  background: rgba(255, 140, 0, 0.06);
+}
+
+/* Clash of Clans light theme - Clean orange accent */
+html:not(.dark) .clash-config-block {
+  background: rgba(255, 165, 0, 0.06) !important;
+  border: 1px solid rgba(255, 140, 0, 0.12) !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+html:not(.dark) .clash-config-block:hover {
+  background: rgba(255, 165, 0, 0.09) !important;
+  border-color: rgba(255, 140, 0, 0.18) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(255, 140, 0, 0.08);
+}
+
+/* Clash of Clans light theme - Enhanced orange styling */
+html:not(.dark) .clash-config-wrapper {
+  background: linear-gradient(135deg, rgba(255, 140, 0, 0.02) 0%, rgba(255, 165, 0, 0.015) 50%, rgba(255, 127, 80, 0.01) 100%);
+}
+
+html:not(.dark) .clash-config-wrapper .card-glass {
+  background: linear-gradient(135deg, rgba(255, 140, 0, 0.04) 0%, rgba(255, 165, 0, 0.03) 50%, rgba(255, 127, 80, 0.02) 100%);
+  border-color: rgba(255, 140, 0, 0.12);
+  box-shadow: 0 4px 16px rgba(255, 140, 0, 0.03);
+}
+
+html:not(.dark) .clash-config-wrapper .card-glass:hover {
+  box-shadow: 0 12px 40px rgba(255, 165, 0, 0.08), 0 6px 20px rgba(255, 140, 0, 0.04), 0 0 0 1px rgba(255,255,255,0.7) inset;
+  border-color: rgba(255, 165, 0, 0.18) !important;
+  background: linear-gradient(135deg, rgba(255, 140, 0, 0.06) 0%, rgba(255, 165, 0, 0.045) 50%, rgba(255, 127, 80, 0.03) 100%);
+}
+
+html:not(.dark) .clash-config-wrapper .clan-card {
+  background: rgba(255, 140, 0, 0.025);
+  border-color: rgba(255, 140, 0, 0.08);
+}
+
+html:not(.dark) .clash-config-wrapper .clan-card:hover {
+  box-shadow: 0 8px 32px rgba(255, 165, 0, 0.06), 0 4px 16px rgba(255, 140, 0, 0.03), 0 0 0 1px rgba(255,255,255,0.6) inset;
+  border-color: rgba(255, 165, 0, 0.15) !important;
+  background: rgba(255, 140, 0, 0.04);
+}
+
+/* Enhanced Clash of Clans form controls */
+.clash-config-wrapper .btn {
+  border: 1px solid rgba(255, 140, 0, 0.2);
+  background: linear-gradient(135deg, rgba(255, 140, 0, 0.08) 0%, rgba(255, 165, 0, 0.06) 100%);
+  color: rgb(255, 140, 0);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.clash-config-wrapper .btn:hover {
+  transform: translateY(-1px);
+  background: linear-gradient(135deg, rgba(255, 140, 0, 0.15) 0%, rgba(255, 165, 0, 0.12) 100%);
+  border-color: rgba(255, 140, 0, 0.3);
+  box-shadow: 0 4px 16px rgba(255, 140, 0, 0.2);
+}
+
+.clash-config-wrapper .form-control {
+  background: rgba(255, 140, 0, 0.03);
+  border: 1px solid rgba(255, 140, 0, 0.15);
+  color: inherit;
+}
+
+.clash-config-wrapper .form-control:focus {
+  background: rgba(255, 140, 0, 0.05);
+  border-color: rgba(255, 140, 0, 0.3);
+  box-shadow: 0 0 0 0.2rem rgba(255, 140, 0, 0.15);
+}
+
+/* Light theme form controls */
+html:not(.dark) .clash-config-wrapper .btn {
+  background: linear-gradient(135deg, rgba(255, 140, 0, 0.04) 0%, rgba(255, 165, 0, 0.03) 100%);
+  border-color: rgba(255, 140, 0, 0.12);
+}
+
+html:not(.dark) .clash-config-wrapper .btn:hover {
+  background: linear-gradient(135deg, rgba(255, 140, 0, 0.08) 0%, rgba(255, 165, 0, 0.06) 100%);
+  border-color: rgba(255, 140, 0, 0.2);
+}
+
+html:not(.dark) .clash-config-wrapper .form-control {
+  background: rgba(255, 140, 0, 0.015);
+  border-color: rgba(255, 140, 0, 0.08);
+}
+
+html:not(.dark) .clash-config-wrapper .form-control:focus {
+  background: rgba(255, 140, 0, 0.025);
+  border-color: rgba(255, 140, 0, 0.18);
+  box-shadow: 0 0 0 0.2rem rgba(255, 140, 0, 0.08);
+}
+
+/* Clash of Clans config grid layout */
+.clash-config-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+.clash-config-block {
+  background: linear-gradient(135deg, rgba(255, 140, 0, 0.15) 0%, rgba(255, 165, 0, 0.12) 50%, rgba(255, 127, 80, 0.08) 100%);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 140, 0, 0.28);
+  border-radius: 16px;
+  padding: 1rem 1rem 0.9rem;
+  transition: all 0.3s ease;
+  position: relative;
+  box-shadow: 0 8px 32px rgba(255, 140, 0, 0.12), 0 4px 16px rgba(255, 165, 0, 0.08);
+}
+
+.clash-config-block::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, rgba(255, 140, 0, 0.8) 0%, rgba(255, 165, 0, 0.6) 50%, rgba(255, 127, 80, 0.5) 100%);
+  border-radius: 16px 16px 0 0;
+}
+
+.clash-config-block:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 40px rgba(255, 140, 0, 0.18), 0 6px 20px rgba(255, 165, 0, 0.12);
+  border-color: rgba(255, 140, 0, 0.35);
+  background: linear-gradient(135deg, rgba(255, 140, 0, 0.22) 0%, rgba(255, 165, 0, 0.16) 50%, rgba(255, 127, 80, 0.12) 100%);
+}
+
+/* Light theme Clash of Clans config grid */
+html:not(.dark) .clash-config-block {
+  background: linear-gradient(135deg, rgba(255, 140, 0, 0.12) 0%, rgba(255, 165, 0, 0.08) 50%, rgba(255, 127, 80, 0.06) 100%);
+  border-color: rgba(255, 140, 0, 0.22);
+  box-shadow: 0 8px 32px rgba(255, 140, 0, 0.08), 0 4px 16px rgba(255, 165, 0, 0.05), 0 0 0 1px rgba(255,255,255,0.6) inset;
+}
+
+html:not(.dark) .clash-config-block::before {
+  background: linear-gradient(90deg, rgba(255, 140, 0, 0.5) 0%, rgba(255, 165, 0, 0.4) 50%, rgba(255, 127, 80, 0.3) 100%);
+}
+
+html:not(.dark) .clash-config-block:hover {
+  background: linear-gradient(135deg, rgba(255, 140, 0, 0.16) 0%, rgba(255, 165, 0, 0.12) 50%, rgba(255, 127, 80, 0.08) 100%);
+  box-shadow: 0 12px 40px rgba(255, 140, 0, 0.12), 0 6px 20px rgba(255, 165, 0, 0.08), 0 0 0 1px rgba(255,255,255,0.7) inset;
+  border-color: rgba(255, 140, 0, 0.32);
+  border-color: rgba(255, 165, 0, 0.25);
+}
+
+/* Clash of Clans config form controls */
+.clash-config-block .form-control,
+.clash-config-block .form-select {
+  background: rgba(255, 140, 0, 0.05);
+  border-color: rgba(255, 140, 0, 0.15);
+  transition: all 0.3s ease;
+}
+
+.clash-config-block .form-control:focus,
+.clash-config-block .form-select:focus {
+  background: rgba(255, 140, 0, 0.08);
+  border-color: rgba(255, 140, 0, 0.4);
+  box-shadow: 0 0 0 0.2rem rgba(255, 140, 0, 0.15);
+}
+
+html:not(.dark) .clash-config-block .form-control,
+html:not(.dark) .clash-config-block .form-select {
+  background: rgba(255, 255, 255, 0.8);
+  border-color: rgba(255, 140, 0, 0.2);
+}
+
+html:not(.dark) .clash-config-block .form-control:focus,
+html:not(.dark) .clash-config-block .form-select:focus {
+  background: rgba(255, 255, 255, 0.95);
+  border-color: rgba(255, 140, 0, 0.4);
+  box-shadow: 0 0 0 0.2rem rgba(255, 140, 0, 0.1);
+}
+
+/* Clash of Clans clan list styles */
+.clash-clan-list {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.clash-clan-item {
+  background: rgba(255, 140, 0, 0.06);
+  border: 1px solid rgba(255, 140, 0, 0.15);
+  border-radius: 8px;
+  margin-bottom: 0.75rem;
+  padding: 1rem;
+  transition: all 0.3s ease;
+}
+
+.clash-clan-item:hover {
+  background: rgba(255, 140, 0, 0.1);
+  border-color: rgba(255, 140, 0, 0.25);
+  transform: translateY(-1px);
+}
+
+.clash-clan-item.editing {
+  border-color: rgba(255, 140, 0, 0.4);
+  background: rgba(255, 140, 0, 0.12);
+}
+
+html:not(.dark) .clash-clan-item {
+  background: rgba(255, 255, 255, 0.7);
+  border-color: rgba(255, 140, 0, 0.15);
+}
+
+html:not(.dark) .clash-clan-item:hover {
+  background: rgba(255, 255, 255, 0.85);
+  border-color: rgba(255, 140, 0, 0.25);
+}
+
+html:not(.dark) .clash-clan-item.editing {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: rgba(255, 140, 0, 0.3);
+}
+
+/* ===== TWITCH CONFIG STYLES ===== */
+/* Twitch config grid and blocks */
+.twitch-config-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+.twitch-config-block {
+  background: linear-gradient(135deg, rgba(147, 51, 234, 0.15) 0%, rgba(99, 102, 241, 0.12) 50%, rgba(168, 85, 247, 0.08) 100%);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(147, 51, 234, 0.25);
+  border-radius: 16px;
+  padding: 1rem 1rem 0.9rem;
+  transition: all 0.3s ease;
+  position: relative;
+  box-shadow: 0 8px 32px rgba(147, 51, 234, 0.12), 0 4px 16px rgba(99, 102, 241, 0.08);
+}
+
+.twitch-config-block::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, rgba(147, 51, 234, 0.8) 0%, rgba(99, 102, 241, 0.6) 50%, rgba(168, 85, 247, 0.5) 100%);
+  border-radius: 16px 16px 0 0;
+}
+
+.twitch-config-block:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 40px rgba(147, 51, 234, 0.18), 0 6px 20px rgba(99, 102, 241, 0.12);
+  border-color: rgba(147, 51, 234, 0.35);
+  background: linear-gradient(135deg, rgba(147, 51, 234, 0.22) 0%, rgba(99, 102, 241, 0.16) 50%, rgba(168, 85, 247, 0.12) 100%);
+}
+
+/* Light theme Twitch config styles */
+html:not(.dark) .twitch-config-block {
+  background: linear-gradient(135deg, rgba(147, 51, 234, 0.12) 0%, rgba(99, 102, 241, 0.08) 50%, rgba(168, 85, 247, 0.06) 100%);
+  border-color: rgba(147, 51, 234, 0.18);
+  box-shadow: 0 8px 32px rgba(147, 51, 234, 0.08), 0 4px 16px rgba(99, 102, 241, 0.05), 0 0 0 1px rgba(255,255,255,0.6) inset;
+}
+
+html:not(.dark) .twitch-config-block::before {
+  background: linear-gradient(90deg, rgba(147, 51, 234, 0.5) 0%, rgba(99, 102, 241, 0.4) 50%, rgba(168, 85, 247, 0.3) 100%);
+}
+
+html:not(.dark) .twitch-config-block:hover {
+  background: linear-gradient(135deg, rgba(147, 51, 234, 0.16) 0%, rgba(99, 102, 241, 0.12) 50%, rgba(168, 85, 247, 0.08) 100%);
+  box-shadow: 0 12px 40px rgba(147, 51, 234, 0.12), 0 6px 20px rgba(99, 102, 241, 0.08), 0 0 0 1px rgba(255,255,255,0.7) inset;
+  border-color: rgba(147, 51, 234, 0.28);
+}
+
+/* Twitch config form controls */
+.twitch-config-block .form-control,
+.twitch-config-block .form-select {
+  background: rgba(145, 70, 255, 0.05);
+  border-color: rgba(145, 70, 255, 0.15);
+  transition: all 0.3s ease;
+}
+
+.twitch-config-block .form-control:focus,
+.twitch-config-block .form-select:focus {
+  background: rgba(145, 70, 255, 0.08);
+  border-color: rgba(145, 70, 255, 0.4);
+  box-shadow: 0 0 0 0.2rem rgba(145, 70, 255, 0.15);
+}
+
+html:not(.dark) .twitch-config-block .form-control,
+html:not(.dark) .twitch-config-block .form-select {
+  background: rgba(255, 255, 255, 0.8);
+  border-color: rgba(145, 70, 255, 0.2);
+}
+
+html:not(.dark) .twitch-config-block .form-control:focus,
+html:not(.dark) .twitch-config-block .form-select:focus {
+  background: rgba(255, 255, 255, 0.95);
+  border-color: rgba(145, 70, 255, 0.4);
+  box-shadow: 0 0 0 0.2rem rgba(145, 70, 255, 0.1);
+}
+
+/* Twitch streamer list styles */
+.twitch-channel-list {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.twitch-channel-item {
+  background: rgba(145, 70, 255, 0.06);
+  border: 1px solid rgba(145, 70, 255, 0.15);
+  border-radius: 8px;
+  margin-bottom: 0.75rem;
+  padding: 1rem;
+  transition: all 0.3s ease;
+}
+
+.twitch-channel-item:hover {
+  background: rgba(145, 70, 255, 0.1);
+  border-color: rgba(145, 70, 255, 0.25);
+  transform: translateY(-1px);
+}
+
+.twitch-channel-item.editing {
+  border-color: rgba(145, 70, 255, 0.4);
+  background: rgba(145, 70, 255, 0.12);
+}
+
+html:not(.dark) .twitch-channel-item {
+  background: rgba(255, 255, 255, 0.7);
+  border-color: rgba(145, 70, 255, 0.15);
+}
+
+html:not(.dark) .twitch-channel-item:hover {
+  background: rgba(255, 255, 255, 0.85);
+  border-color: rgba(145, 70, 255, 0.25);
+}
+
+html:not(.dark) .twitch-channel-item.editing {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: rgba(145, 70, 255, 0.3);
 }

@@ -862,6 +862,46 @@ const commands = [
     description: 'Show COC watcher debug events and statistics (Manage Server)'
   },
   {
+    name: 'genshin',
+    description: 'Genshin Impact player information via Enka.Network',
+    options: [
+      {
+        name: 'profile',
+        description: 'Get player profile and basic information',
+        type: 1, // SUB_COMMAND
+        options: [
+          {
+            name: 'uid',
+            description: 'Player UID (9-digit number)',
+            type: 3, // STRING
+            required: true
+          }
+        ]
+      },
+      {
+        name: 'build',
+        description: 'Get detailed character builds for a player',
+        type: 1, // SUB_COMMAND
+        options: [
+          {
+            name: 'uid',
+            description: 'Player UID (9-digit number)',
+            type: 3, // STRING
+            required: true
+          },
+          {
+            name: 'character',
+            description: 'Character slot number to show (1-8)',
+            type: 4, // INTEGER
+            required: false,
+            min_value: 1,
+            max_value: 8
+          }
+        ]
+      }
+    ]
+  },
+  {
     name: 'Explain Image',
     type: 3 // MESSAGE context menu
   },

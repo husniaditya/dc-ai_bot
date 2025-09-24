@@ -76,10 +76,10 @@ export const SERVICES = [
     key: 'genshin', 
     labelKey: 'gamesSocials.services.genshin.label', 
     image: 'genshinimpact.png', 
-    icon: 'fa-solid fa-flag', 
-    color: '#6366f1', 
+    icon: 'fa-solid fa-star', 
+    color: '#FFD700', 
     descKey: 'gamesSocials.services.genshin.desc',
-    implemented: false
+    implemented: true
   },
 ];
 
@@ -123,6 +123,20 @@ export const TEMPLATE_PLACEHOLDERS = {
     '{warDestructionPercentage}',
     '{warEndTime}',
     '{warPreparationStartTime}'
+  ],
+  genshin: [
+    '{playerName}',
+    '{uid}',
+    '{adventureRank}',
+    '{worldLevel}',
+    '{achievements}',
+    '{signature}',
+    '{profileCharacter}',
+    '{spiralAbyss}',
+    '{roleNames}',
+    '{roleMention}',
+    '{characterCount}',
+    '{lastUpdate}'
   ]
 };
 
@@ -174,5 +188,24 @@ export const DEFAULT_CONFIGS = {
     trackDonations: false,
     trackMemberChanges: true,
     minDonationThreshold: 100
+  },
+  genshin: {
+    enabled: false,
+    intervalSec: 1800, // Check every 30 minutes for profile updates
+    embedEnabled: true,
+    players: [], // Array of UIDs to track
+    mentionTargets: [],
+    playerMessages: {},
+    playerNames: {},
+    profileUpdateTemplate: '',
+    achievementTemplate: '',
+    spiralAbyssTemplate: '',
+    profileAnnounceChannelId: null,
+    achievementAnnounceChannelId: null,
+    spiralAbyssAnnounceChannelId: null,
+    trackProfileUpdates: true,
+    trackAchievements: true,
+    trackSpiralAbyss: true,
+    minAchievementThreshold: 10
   }
 };

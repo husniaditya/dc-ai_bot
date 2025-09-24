@@ -1502,7 +1502,7 @@
       },
       "genshin": {
         "label": "Genshin Impact",
-        "desc": "Update acara dan berita (direncanakan)"
+        "desc": "Lacak profil pemain dan build karakter melalui Enka.Network"
       }
     },
     "preview": {
@@ -1517,6 +1517,18 @@
           "videoTitle": "Unggahan Baru yang Menakjubkan",
           "publishedAtRelative": "baru saja",
           "memberOnly": " (Hanya Member)"
+        },
+        "clashofclans": {
+          "clanName": "Contoh Clan",
+          "warState": "sedang berperang",
+          "warOpponent": "Clan Musuh",
+          "warResult": "Menang"
+        },
+        "genshin": {
+          "playerName": "Pengembara",
+          "adventureRank": "60",
+          "worldLevel": "8",
+          "characterName": "Hu Tao"
         }
       }
     },
@@ -1541,6 +1553,15 @@
       "remove": "Hapus",
       "loadingConfig": "Memuat konfigurasi {{service}}…",
       "mentionInputPlaceholder": "Tambahkan @everyone, @here atau peran…",
+      "announcementChannels": "Saluran Pengumuman",
+      "messageTemplates": "Template Pesan",
+      "selectChannel": "Pilih Saluran",
+      "basicSettings": "Pengaturan Dasar",
+      "checkInterval": "Interval Pemeriksaan",
+      "seconds": "detik",
+      "features": "Fitur",
+      "embedEnabled": "Aktifkan Embed",
+      "advancedSettings": "Pengaturan Lanjutan",
       "meta": {
         "role": "peran",
         "meta": "meta"
@@ -1694,6 +1715,110 @@
         "addFailed": "Gagal menambahkan clan"
       },
       "intervalHint": "Seberapa sering memeriksa pembaruan clan (minimum 5 menit, disarankan 1 jam)"
+    },
+    "genshin": {
+      "playersToTrack": "Pemain yang Dilacak",
+      "noPlayers": "Tidak ada pemain yang dikonfigurasi. Tambahkan pemain untuk memulai pelacakan.",
+      "options": {
+        "trackProfileUpdates": "Lacak Pembaruan Profil",
+        "trackAchievements": "Lacak Prestasi Baru",
+        "trackSpiralAbyss": "Lacak Kemajuan Spiral Abyss"
+      },
+      "placeholders": {
+        "playerUID": "Masukkan UID pemain (contoh: 123456789)",
+        "customMessage": "Pesan pengumuman khusus untuk pemain ini...",
+        "profileUpdateTemplate": "🎮 {playerName} memperbarui profil mereka! Adventure Rank: {adventureRank} | World Level: {worldLevel}",
+        "achievementTemplate": "🏆 {playerName} meraih prestasi baru: {achievementName}!",
+        "spiralAbyssTemplate": "🌀 {playerName} membuat kemajuan di Spiral Abyss! Lantai {floor}, Kamar {chamber}"
+      },
+      "channels": {
+        "profileUpdates": "Saluran Pembaruan Profil",
+        "achievements": "Saluran Prestasi",
+        "spiralAbyss": "Saluran Spiral Abyss"
+      },
+      "templates": {
+        "profileUpdate": "Template Pembaruan Profil",
+        "achievement": "Template Prestasi",
+        "spiralAbyss": "Template Spiral Abyss"
+      },
+      "settings": {
+        "minAchievementThreshold": "Poin Prestasi Minimum"
+      },
+      "help": {
+        "interval": "Seberapa sering memeriksa pembaruan (minimum 300 detik)",
+        "addPlayer": "Masukkan UID Genshin Impact yang valid 9 digit",
+        "customMessage": "Pesan khusus opsional untuk pengumuman dari pemain ini",
+        "mentionTargets": "Role dan pengguna yang akan disebutkan dalam pengumuman Genshin Impact",
+        "minAchievementThreshold": "Hanya umumkan prestasi yang bernilai poin sebanyak ini atau lebih"
+      },
+      "customMessage": "Pesan Khusus untuk {player}",
+      "errors": {
+        "invalidUID": "UID tidak valid. Harap masukkan UID 9 digit yang valid.",
+        "playerExists": "Pemain sudah dilacak.",
+        "playerNotFound": "Pemain tidak ditemukan. Periksa apakah UID benar dan profil bersifat publik."
+      },
+      "messages": {
+        "playerAdded": "Pemain {player} berhasil ditambahkan",
+        "playerRemoved": "Pemain berhasil dihapus"
+      },
+      "sections": {
+        "general": "Konfigurasi Umum",
+        "players": "Pemain yang Dilacak",
+        "tracking": "Konfigurasi Pelacakan", 
+        "templates": "Template Pesan",
+        "preview": "Pratinjau template"
+      },
+      "fields": {
+        "enabled": "Aktifkan pelacakan Genshin Impact",
+        "channel": "Saluran pembaruan",
+        "playerUID": "UID pemain",
+        "playerName": "Nama pemain",
+        "interval": "Interval pemeriksaan (menit)",
+        "trackProfiles": "Lacak pembaruan profil",
+        "trackBuilds": "Lacak perubahan build karakter",
+        "trackAchievements": "Lacak prestasi baru",
+        "profileTemplate": "Template profil",
+        "buildTemplate": "Template build",
+        "achievementTemplate": "Template prestasi"
+      },
+      "players": {
+        "title": "Pemain yang Dilacak",
+        "description": "Kelola pemain Genshin Impact yang dilacak untuk pembaruan otomatis",
+        "addPlayer": "Tambah Pemain",
+        "removePlayer": "Hapus Pemain",
+        "editPlayer": "Edit Pemain",
+        "playerUID": "UID Pemain",
+        "playerName": "Nama Pemain",
+        "trackingEnabled": "Pelacakan Aktif",
+        "lastUpdate": "Pembaruan Terakhir",
+        "noPlayers": "Tidak ada pemain yang dikonfigurasi. Tambahkan pemain untuk memulai pelacakan.",
+        "uidPlaceholder": "Masukkan UID pemain (contoh: 123456789)",
+        "namePlaceholder": "Nama akan terisi otomatis",
+        "resolving": "Menyelesaikan pemain...",
+        "resolved": "Pemain berhasil diselesaikan"
+      },
+      "tracking": {
+        "title": "Konfigurasi Pelacakan",
+        "description": "Konfigurasikan pembaruan mana yang akan dilacak untuk pemain Genshin Impact",
+        "profiles": "Pembaruan Profil",
+        "builds": "Perubahan Build",
+        "achievements": "Prestasi Baru",
+        "interval": "Interval Pemeriksaan",
+        "intervalHint": "Seberapa sering memeriksa pembaruan (dalam menit, minimum 15)"
+      },
+      "toast": {
+        "configSaved": "Konfigurasi Genshin berhasil disimpan",
+        "configError": "Error menyimpan konfigurasi Genshin",
+        "playerAdded": "Pemain berhasil ditambahkan",
+        "playerRemoved": "Pemain berhasil dihapus",
+        "playerError": "Error mengelola pemain",
+        "invalidUID": "UID tidak valid. Harap masukkan UID 9 digit yang valid.",
+        "playerNotFound": "Pemain tidak ditemukan. Periksa apakah UID benar dan profil bersifat publik.",
+        "rateLimited": "Batas rate tercapai. Silakan coba lagi nanti.",
+        "networkError": "Error jaringan. Periksa koneksi Anda.",
+        "templateSaved": "Template berhasil disimpan",
+        "templateError": "Error menyimpan template"
+      }
     },
     "leveling": "XP & Level",
     "economy": "Sistem Ekonomi",

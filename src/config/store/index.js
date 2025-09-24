@@ -15,6 +15,7 @@ const personalizationService = require('./services/personalization');
 const youtubeService = require('./services/youtube');
 const twitchService = require('./services/twitch');
 const clashofclansService = require('./services/clashofclans-updated');
+const genshinService = require('./services/genshin');
 const moderationService = require('./services/moderation');
 
 async function initPersistence() {
@@ -211,6 +212,10 @@ module.exports = {
   // Clash of Clans API
   getGuildClashOfClansConfig: clashofclansService.getGuildClashOfClansConfig,
   setGuildClashOfClansConfig: clashofclansService.setGuildClashOfClansConfig,
+  
+  // Genshin Impact API
+  getGuildGenshinConfig: genshinService.getGuildGenshinConfig,
+  updateGuildGenshinConfig: genshinService.updateGuildGenshinConfig,
   
   // Moderation API
   getModerationFeatures: moderationService.getModerationFeatures,

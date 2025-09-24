@@ -1826,7 +1826,7 @@
       },
       "genshin": {
         "label": "Genshin Impact",
-        "desc": "Event-Updates und Neuigkeiten (geplant)"
+        "desc": "Spielerprofile und Charakter-Builds über Enka.Network verfolgen"
       }
     },
     "preview": {
@@ -1841,6 +1841,18 @@
           "videoTitle": "Fantastischer neuer Upload",
           "publishedAtRelative": "gerade eben",
           "memberOnly": " (Nur für Mitglieder)"
+        },
+        "clashofclans": {
+          "clanName": "Beispiel-Clan",
+          "warState": "im Krieg",
+          "warOpponent": "Feindlicher Clan",
+          "warResult": "Sieg"
+        },
+        "genshin": {
+          "playerName": "Reisender",
+          "adventureRank": "60",
+          "worldLevel": "8",
+          "characterName": "Hu Tao"
         }
       }
     },
@@ -1865,6 +1877,15 @@
       "remove": "Entfernen",
       "loadingConfig": "{{service}}-Konfiguration wird geladen…",
       "mentionInputPlaceholder": "@everyone, @here oder Rolle hinzufügen…",
+      "announcementChannels": "Ankündigungskanäle",
+      "messageTemplates": "Nachrichtenvorlagen",
+      "selectChannel": "Kanal auswählen",
+      "basicSettings": "Grundeinstellungen",
+      "checkInterval": "Prüfintervall",
+      "seconds": "Sekunden",
+      "features": "Funktionen",
+      "embedEnabled": "Embeds aktivieren",
+      "advancedSettings": "Erweiterte Einstellungen",
       "meta": {
         "role": "Rolle",
         "meta": "Meta"
@@ -2018,6 +2039,99 @@
         "addFailed": "Fehler beim Hinzufügen des Clans"
       },
       "intervalHint": "Wie oft Clan-Updates überprüft werden (minimum 5 Minuten, empfohlen 1 Stunde)"
+    },
+    "genshin": {
+      "playersToTrack": "Zu verfolgende Spieler",
+      "noPlayers": "Keine Spieler konfiguriert. Fügen Sie einen Spieler hinzu, um die Verfolgung zu starten.",
+      "options": {
+        "trackProfileUpdates": "Profil-Updates verfolgen",
+        "trackAchievements": "Neue Errungenschaften verfolgen",
+        "trackSpiralAbyss": "Spiral-Abyss-Fortschritt verfolgen"
+      },
+      "placeholders": {
+        "playerUID": "Spieler-UID eingeben (z.B. 123456789)",
+        "customMessage": "Benutzerdefinierte Ankündigungsnachricht für diesen Spieler...",
+        "profileUpdateTemplate": "🎮 {playerName} hat ihr Profil aktualisiert! Abenteuer-Rang: {adventureRank} | Weltstufe: {worldLevel}",
+        "achievementTemplate": "🏆 {playerName} hat eine neue Errungenschaft erhalten: {achievementName}!",
+        "spiralAbyssTemplate": "🌀 {playerName} hat Fortschritte im Spiral-Abyss gemacht! Etage {floor}, Kammer {chamber}"
+      },
+      "channels": {
+        "profileUpdates": "Profil-Updates-Kanal",
+        "achievements": "Errungenschaften-Kanal",
+        "spiralAbyss": "Spiral-Abyss-Kanal"
+      },
+      "templates": {
+        "profileUpdate": "Profil-Update-Vorlage",
+        "achievement": "Errungenschaften-Vorlage",
+        "spiralAbyss": "Spiral-Abyss-Vorlage"
+      },
+      "settings": {
+        "minAchievementThreshold": "Mindest-Errungenschaften-Punkte"
+      },
+      "help": {
+        "interval": "Wie oft auf Updates prüfen (minimum 300 Sekunden)",
+        "addPlayer": "Gültige 9-stellige Genshin Impact UID eingeben",
+        "customMessage": "Optionale benutzerdefinierte Nachricht für Ankündigungen dieses Spielers",
+        "mentionTargets": "Rollen und Benutzer, die in Genshin Impact-Ankündigungen erwähnt werden",
+        "minAchievementThreshold": "Nur Errungenschaften mit diesem oder mehr Punkten ankündigen"
+      },
+      "customMessage": "Benutzerdefinierte Nachricht für {player}",
+      "errors": {
+        "invalidUID": "Ungültige UID. Bitte geben Sie eine gültige 9-stellige UID ein.",
+        "playerExists": "Spieler wird bereits verfolgt.",
+        "playerNotFound": "Spieler nicht gefunden. Überprüfen Sie, dass die UID korrekt ist und das Profil öffentlich ist."
+      },
+      "messages": {
+        "playerAdded": "Spieler {player} erfolgreich hinzugefügt",
+        "playerRemoved": "Spieler erfolgreich entfernt"
+      },
+      "fields": {
+        "playerUid": "Spieler-UID",
+        "playerUidHint": "Genshin Impact UID eingeben (z.B. 123456789)",
+        "playerName": "Spielername",
+        "playerNameHint": "Spielername für Anzeige eingeben",
+        "profileAnnouncements": "Profil-Ankündigungen",
+        "buildAnnouncements": "Build-Ankündigungen"
+      },
+      "announce": {
+        "profile": "Profil",
+        "build": "Build",
+        "globalMentions": "Globale Erwähnungsziele",
+        "globalMentionsHelp": "Diese Rollen/Benutzer werden bei allen Genshin Impact-Benachrichtigungen erwähnt"
+      },
+      "sections": {
+        "playerManagement": "Spielerverwaltung",
+        "trackingFeatures": "Verfolgungsfunktionen",
+        "profileTemplate": "Profil-Update-Vorlage",
+        "buildTemplate": "Build-Update-Vorlage",
+        "preview": "Vorlagenvorschau"
+      },
+      "players": {
+        "addPlayer": "Spieler hinzufügen",
+        "playerUidPlaceholder": "Spieler-UID eingeben (z.B. 123456789)",
+        "noPlayers": "Noch keine Spieler hinzugefügt.",
+        "mentionTargets": "Pro-Spieler-Erwähnungsziele",
+        "profileAnnouncementChannel": "Profil-Ankündigungskanal",
+        "profileAnnouncementChannelHelp": "Kanal für Profil-Update-Ankündigungen dieses spezifischen Spielers",
+        "buildAnnouncementChannel": "Build-Ankündigungskanal", 
+        "buildAnnouncementChannelHelp": "Kanal für Build-Update-Ankündigungen dieses spezifischen Spielers",
+        "profileMentions": "Profil-Erwähnungen",
+        "profileMentionsHelp": "Rollen/Benutzer, die bei Profil-Updates dieses Spielers erwähnt werden",
+        "buildMentions": "Build-Erwähnungen",
+        "buildMentionsHelp": "Rollen/Benutzer, die bei Build-Updates dieses Spielers erwähnt werden"
+      },
+      "tracking": {
+        "trackProfiles": "Profil-Änderungen verfolgen",
+        "trackBuilds": "Build-Änderungen verfolgen"
+      },
+      "toasts": {
+        "invalidUid": "Ungültiges Spieler-UID-Format",
+        "alreadyTracking": "Spieler {{uid}} wird bereits verfolgt",
+        "added": "Spieler {{uid}} zur Verfolgungsliste hinzugefügt",
+        "addFailed": "Fehler beim Hinzufügen des Spielers",
+        "resolveFailed": "Keine Verbindung zu Enka.Network oder Spielerdaten nicht gefunden"
+      },
+      "intervalHint": "Wie oft Spieler-Updates überprüft werden (minimum 5 Minuten, empfohlen 1 Stunde)"
     },
     "leveling": "XP & Levelsystem",
     "economy": "Wirtschaftssystem",
