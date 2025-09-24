@@ -270,6 +270,55 @@ Automatic formatting for dates and timestamps based on selected language:
 | `/ytwatch` | YouTube monitoring tools | `/ytwatch [action]` |
 | `/ytdebug` | Debug YouTube integration | `/ytdebug` |
 
+## 📺 Platform Integrations
+
+This project includes first-class integrations for YouTube, Twitch, and Clash of Clans. Below is a quick overview of what each integration does, how to enable it, and the most useful commands and environment options.
+
+### YouTube Integration
+
+What it does:
+- Watches one or more YouTube channels per guild and announces new uploads and live streams
+- Supports member-only content detection and templated announcements
+- Multiple strategies to detect lives (API, optional scraping, optional RSS/WebSub fallback)
+- Quota-aware with automatic cool-down and multi-key support
+
+Helpful commands:
+- `/ytstats` – Show watcher cache/quota stats and env intervals
+- `/ytwatch` – Manage/watch controls (per-guild)
+- `/ytdebug` – Show recent debug events (opt-in via env)
+
+Announcement templates (placeholders available):
+- `{roleMention}` `{channelTitle}` `{title}` `{url}` `{thumbnail}` `{memberBadge}` `{memberText}` `{publishedAt}` `{publishedAtRelative}`
+- Member-only variants are supported via dedicated templates.
+
+### Twitch Integration
+
+What it does:
+- Watches configured Twitch streamers per guild and announces when they go live
+- Templated live announcements with optional embeds and role mentions
+
+Helpful commands:
+- `/twitchstats` – Watcher statistics and current intervals
+- `/twitchdebug` – Recent debug events (if enabled)
+
+Announcement template placeholders:
+- `{streamerName}` `{title}` `{url}` `{roleMention}`
+
+### Clash of Clans Integration
+
+What it does:
+- Tracks multiple clans per guild: donations, wars, and member changes
+- Auto-generates and maintains donation and war leaderboards with interactive buttons
+
+Helpful commands:
+- `/coc` – Quick info and actions
+- `/cocdebug` – Debug events and configuration overview
+
+Leaderboard features:
+- Multi-clan support with per-clan pagination and caching
+- War state transitions handled automatically (preparation → in war → ended)
+- Donation leaderboard can be scheduled and refreshed; supports message discovery/persistence
+
 ### 🖱️ Context Menu Actions
 Right-click on messages to access:
 - **Explain Image** - Analyze images in the message with AI

@@ -64,7 +64,7 @@ class WarStateManager {
         try {
             // Validate parameters to prevent undefined values in SQL queries
             if (!guildId || !clanTag) {
-                console.warn('[WarStateManager] getCurrentWarState called with invalid parameters:', { guildId, clanTag });
+                // console.warn('[WarStateManager] getCurrentWarState called with invalid parameters:', { guildId, clanTag });
                 return null;
             }
 
@@ -87,7 +87,7 @@ class WarStateManager {
                     const dataStr = typeof row.war_state_data === 'string' ? row.war_state_data : String(row.war_state_data);
                     
                     if (dataStr === '[object Object]' || dataStr.includes('[object Object]')) {
-                        console.warn('[WarStateManager] Detected corrupted "[object Object]" in war_state_data, cleaning up...');
+                        // console.warn('[WarStateManager] Detected corrupted "[object Object]" in war_state_data, cleaning up...');
                         
                         // Clean up the corrupted data in the database
                         try {
@@ -96,7 +96,7 @@ class WarStateManager {
                                 SET war_state_data = NULL 
                                 WHERE guild_id = ? AND clan_tag = ?
                             `, [guildId, clanTag]);
-                            console.log('[WarStateManager] Cleaned up corrupted war_state_data');
+                            // console.log('[WarStateManager] Cleaned up corrupted war_state_data');
                         } catch (cleanupError) {
                             console.error('[WarStateManager] Error cleaning up corrupted war_state_data:', cleanupError.message);
                         }
@@ -120,7 +120,7 @@ class WarStateManager {
                             SET war_state_data = NULL 
                             WHERE guild_id = ? AND clan_tag = ?
                         `, [guildId, clanTag]);
-                        console.log('[WarStateManager] Cleaned up invalid war_state_data');
+                        // console.log('[WarStateManager] Cleaned up invalid war_state_data');
                     } catch (cleanupError) {
                         console.error('[WarStateManager] Error cleaning up invalid war_state_data:', cleanupError.message);
                     }
@@ -156,7 +156,7 @@ class WarStateManager {
         try {
             // Validate parameters to prevent undefined values in SQL queries
             if (!guildId || !clanTag || !newState) {
-                console.warn('[WarStateManager] updateWarState called with invalid parameters:', { guildId, clanTag, newState });
+                // console.warn('[WarStateManager] updateWarState called with invalid parameters:', { guildId, clanTag, newState });
                 return false;
             }
 
@@ -223,6 +223,11 @@ class WarStateManager {
                 updateData.war_active_message_id = null;
             }
 
+            // Clear active message ID when war ends to ensure new wars create fresh messages
+            if (newState === this.STATES.ENDED) {
+                updateData.war_active_message_id = null;
+            }
+
             const setClause = Object.keys(updateData).map(key => `${key} = ?`).join(', ');
             const values = Object.values(updateData).concat([guildId, clanTag]);
 
@@ -231,12 +236,7 @@ class WarStateManager {
                 SET ${setClause}
                 WHERE guild_id = ? AND clan_tag = ?
             `, values);
-
-            console.log(`[WarStateManager] Updated war state for clan ${clanTag} to: ${newState}`, {
-                messageId,
-                messageField: newState === this.STATES.PREPARING ? 'preparing' : 
-                             newState === this.STATES.ACTIVE ? 'active' : 'none'
-            });
+            
             return true;
 
         } catch (error) {
@@ -254,17 +254,6 @@ class WarStateManager {
     getTransitionAction(currentStateData, warData) {
         const currentState = currentStateData ? currentStateData.currentState : this.STATES.NOT_IN_WAR;
         const newState = this.getWarState(warData);
-
-        // Debug logging for state transitions
-        console.log(`[WarStateManager] State check: ${currentState} → ${newState}`, {
-            hasWarData: !!warData,
-            apiState: warData?.state,
-            currentStateData: currentStateData ? {
-                currentState: currentStateData.currentState,
-                preparingMessageId: currentStateData.preparingMessageId,
-                activeMessageId: currentStateData.activeMessageId
-            } : null
-        });
 
         // No war data available
         if (newState === this.STATES.NOT_IN_WAR) {
@@ -346,6 +335,26 @@ class WarStateManager {
                         to: this.STATES.ENDED,
                         messageAction: 'update_to_ended',
                         messageId: currentStateData.activeMessageId
+                    };
+                }
+                if (newState === this.STATES.ENDED) {
+                    // War ended naturally (inWar → warEnded)
+                    return {
+                        action: 'transition',
+                        from: currentState,
+                        to: newState,
+                        messageAction: 'update_to_ended',
+                        messageId: currentStateData.activeMessageId
+                    };
+                }
+                if (newState === this.STATES.PREPARING) {
+                    // War ended and new war started immediately (direct transition)
+                    return {
+                        action: 'transition',
+                        from: currentState,
+                        to: newState,
+                        messageAction: 'create_preparing',
+                        messageId: null
                     };
                 }
                 break;
@@ -479,11 +488,11 @@ class WarStateManager {
                         ALTER TABLE guild_clashofclans_watch 
                         ADD COLUMN ${column}
                     `);
-                    console.log(`[WarStateManager] Added column: ${columnName}`);
+                    // console.log(`[WarStateManager] Added column: ${columnName}`);
                 } catch (error) {
                     // Column likely already exists
                     if (!error.message.includes('Duplicate column name')) {
-                        console.warn(`[WarStateManager] Error adding column ${columnName}:`, error.message);
+                        // console.warn(`[WarStateManager] Error adding column ${columnName}:`, error.message);
                     }
                 }
             }

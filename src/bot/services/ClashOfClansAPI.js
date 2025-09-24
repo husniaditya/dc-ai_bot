@@ -479,15 +479,11 @@ class ClashOfClansAPI {
                 player.attackRate = player.warsParticipated > 0 ? ((player.totalAttacks / (player.warsParticipated * 2)) * 100).toFixed(1) : '0.0';
                 return player;
             }).sort((a, b) => {
-                // Sort by war position first (lowest position number = highest priority)
+                // Sort by war position only (lowest position number = highest priority)
                 // Players with position 0 (not in current war) go to the end
-                const aPos = a.currentWarPosition || 999;
-                const bPos = b.currentWarPosition || 999;
-                if (aPos !== bPos) return aPos - bPos;
-                // Then by average stars, then by total stars, then by participation
-                if (a.averageStars !== b.averageStars) return b.averageStars - a.averageStars;
-                if (a.totalStars !== b.totalStars) return b.totalStars - a.totalStars;
-                return b.warsParticipated - a.warsParticipated;
+                const aPos = a.currentWarPosition || Number.MAX_SAFE_INTEGER;
+                const bPos = b.currentWarPosition || Number.MAX_SAFE_INTEGER;
+                return aPos - bPos;
             });
 
             console.log(`Successfully processed war stats for ${sortedPlayers.length} players from ${clanTags.length} clan(s)`);
@@ -666,15 +662,11 @@ class ClashOfClansAPI {
                         player.attackRate = player.warsParticipated > 0 ? ((player.totalAttacks / (player.warsParticipated * 2)) * 100).toFixed(1) : '0.0';
                         return player;
                     }).sort((a, b) => {
-                        // Sort by war position first (lowest position number = highest priority)
+                        // Sort by war position only (lowest position number = highest priority)
                         // Players with position 0 (not in current war) go to the end
-                        const aPos = a.currentWarPosition || 999;
-                        const bPos = b.currentWarPosition || 999;
-                        if (aPos !== bPos) return aPos - bPos;
-                        // Then by average stars, then by total stars, then by participation
-                        if (a.averageStars !== b.averageStars) return b.averageStars - a.averageStars;
-                        if (a.totalStars !== b.totalStars) return b.totalStars - a.totalStars;
-                        return b.warsParticipated - a.warsParticipated;
+                        const aPos = a.currentWarPosition || Number.MAX_SAFE_INTEGER;
+                        const bPos = b.currentWarPosition || Number.MAX_SAFE_INTEGER;
+                        return aPos - bPos;
                     });
 
                     // Add ranking within this clan

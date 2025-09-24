@@ -286,6 +286,102 @@ class WarPerformanceService {
     }
 
     /**
+     * Get war statistics for leaderboard display with current war data
+     * @param {string} guildId - Discord guild ID
+     * @param {number} limit - Number of players to return
+     * @param {string} currentWarId - Current war ID to join with (optional)
+     * @returns {Array} Array of player statistics with current war data
+     */
+    async getWarLeaderboardDataWithCurrentWar(guildId, limit = 50, currentWarId = null) {
+        const connection = await this.getConnection();
+        
+        try {
+            // Validate and sanitize parameters
+            const validGuildId = String(guildId || '').trim();
+            const validLimit = Math.max(1, Math.min(parseInt(limit) || 50, 200));
+            
+            if (!validGuildId) {
+                return [];
+            }
+
+            let query;
+            let queryParams;
+
+            if (currentWarId) {
+                // JOIN with current war performance data to get town hall and position
+                // Only show players who are actually in the current war
+                query = `
+                    SELECT DISTINCT
+                        s.player_tag,
+                        s.player_name,
+                        s.total_wars_participated as warsParticipated,
+                        s.win_rate as winRate,
+                        s.average_stars_per_attack as averageStars,
+                        s.total_stars_earned,
+                        s.total_attacks_made,
+                        s.last_war_date,
+                        p.townhall_level,
+                        p.map_position as currentWarPosition
+                    FROM guild_coc_war_statistics_summary s
+                    INNER JOIN guild_coc_war_performance p ON s.player_tag = p.player_tag 
+                        AND p.guild_id = s.guild_id 
+                        AND p.war_id = ?
+                    WHERE s.guild_id = ?
+                    ORDER BY 
+                        p.map_position ASC,
+                        s.total_wars_participated DESC, 
+                        s.win_rate DESC, 
+                        s.average_stars_per_attack DESC
+                    LIMIT ${validLimit}
+                `;
+                queryParams = [currentWarId, validGuildId];
+            } else {
+                // Fallback to original query when no current war
+                query = `
+                    SELECT 
+                        player_tag,
+                        player_name,
+                        total_wars_participated as warsParticipated,
+                        win_rate as winRate,
+                        average_stars_per_attack as averageStars,
+                        total_stars_earned,
+                        total_attacks_made,
+                        last_war_date,
+                        NULL as townhall_level,
+                        NULL as currentWarPosition
+                    FROM guild_coc_war_statistics_summary 
+                    WHERE guild_id = ? 
+                    ORDER BY total_wars_participated DESC, win_rate DESC, average_stars_per_attack DESC
+                    LIMIT ${validLimit}
+                `;
+                queryParams = [validGuildId];
+            }
+
+            const [players] = await connection.execute(query, queryParams);
+
+            // Add rank numbers
+            const rankedPlayers = players.map((player, index) => ({
+                ...player,
+                rank: index + 1
+            }));
+
+            return rankedPlayers;
+            
+        } catch (error) {
+            console.error('❌ Error getting war leaderboard data with current war:', error);
+            console.error('❌ Error details:', {
+                message: error.message,
+                code: error.code,
+                errno: error.errno,
+                sqlState: error.sqlState
+            });
+            return [];
+        } finally {
+            await connection.end();
+        }
+    }
+
+    /**
      * Get war statistics for leaderboard display
      * @param {string} guildId - Discord guild ID
      * @param {number} limit - Number of players to return

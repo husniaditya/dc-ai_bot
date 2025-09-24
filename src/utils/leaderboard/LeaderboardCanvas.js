@@ -167,8 +167,21 @@ class LeaderboardCanvas {
      */
     async generatePreparingWarCanvas(players, config, page = 1, totalPages = 1, warData = {}) {
         try {
-            // Calculate required height - use all players passed to the method
-            const playersToShow = players; // Show all players passed (pagination is handled upstream)
+            // Sort players by current war position only (lowest to highest - war map order)
+            const sortedPlayers = [...players].sort((a, b) => {
+                const warPosA = parseInt(a.currentWarPosition) || Number.MAX_SAFE_INTEGER;
+                const warPosB = parseInt(b.currentWarPosition) || Number.MAX_SAFE_INTEGER;
+                
+                return warPosA - warPosB;
+            });
+
+            // Update ranks based on new sorting order
+            sortedPlayers.forEach((player, index) => {
+                player.rank = index + 1;
+            });
+
+            // Calculate required height - use sorted players
+            const playersToShow = sortedPlayers; // Show sorted players
             const requiredHeight = this.padding + this.headerHeight + 100 + (playersToShow.length * this.playerRowHeight) + this.footerHeight + this.padding;
             const canvasHeight = Math.max(this.minHeight, requiredHeight);
 
@@ -220,8 +233,21 @@ class LeaderboardCanvas {
      */
     async generateActiveWarCanvas(players, config, page = 1, totalPages = 1, warData = {}) {
         try {
-            // Calculate required height - use all players passed to the method
-            const playersToShow = players; // Show all players passed (pagination is handled upstream)
+            // Sort players by current war position only (lowest to highest - war map order)
+            const sortedPlayers = [...players].sort((a, b) => {
+                const warPosA = parseInt(a.currentWarPosition) || Number.MAX_SAFE_INTEGER;
+                const warPosB = parseInt(b.currentWarPosition) || Number.MAX_SAFE_INTEGER;
+                
+                return warPosA - warPosB;
+            });
+
+            // Update ranks based on new sorting order
+            sortedPlayers.forEach((player, index) => {
+                player.rank = index + 1;
+            });
+
+            // Calculate required height - use sorted players
+            const playersToShow = sortedPlayers; // Show sorted players
             const requiredHeight = this.padding + this.headerHeight + 100 + (playersToShow.length * this.playerRowHeight) + this.footerHeight + this.padding;
             const canvasHeight = Math.max(this.minHeight, requiredHeight);
 
@@ -273,6 +299,19 @@ class LeaderboardCanvas {
      */
     async generateHistoricalWarCanvas(players, config, page = 1, totalPages = 1, warData = {}) {
         try {
+            // Sort players by current war position only (lowest to highest - war map order)
+            const sortedPlayers = [...players].sort((a, b) => {
+                const warPosA = parseInt(a.currentWarPosition) || Number.MAX_SAFE_INTEGER;
+                const warPosB = parseInt(b.currentWarPosition) || Number.MAX_SAFE_INTEGER;
+                
+                return warPosA - warPosB;
+            });
+
+            // Update ranks based on new sorting order
+            sortedPlayers.forEach((player, index) => {
+                player.rank = index + 1;
+            });
+
             // Calculate dynamic height based on player count
             const tableHeaderHeight = 40; // Updated to match drawTableHeaders height
             const spacingHeight = 30;
@@ -280,7 +319,7 @@ class LeaderboardCanvas {
                                  this.headerHeight + // Header section
                                  spacingHeight + // Space after header
                                  tableHeaderHeight + // Table header
-                                 (players.length * this.playerRowHeight) + // Player rows
+                                 (sortedPlayers.length * this.playerRowHeight) + // Player rows
                                  this.footerHeight; // Footer
 
             const canvasHeight = Math.max(this.minHeight, dynamicHeight);
@@ -300,8 +339,8 @@ class LeaderboardCanvas {
             // Draw header (war themed)
             await this.drawHistoricalWarHeader(ctx, config, page, totalPages, warData);
             
-            // Draw war player list
-            await this.drawWarPlayerList(ctx, players, config);
+            // Draw war player list with sorted players
+            await this.drawWarPlayerList(ctx, sortedPlayers, config);
             
             // Draw footer with pagination info
             await this.drawFooter(ctx, page, totalPages, canvasHeight);

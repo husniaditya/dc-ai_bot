@@ -15,7 +15,7 @@ class LeaderboardInteractionHandler {
         this.db = database;
         this.lastInteraction = new Map(); // Track last interaction time per user to prevent spam
         this.warStateManager = new WarStateManager(database);
-        this.warPerformanceIntegration = new WarPerformanceIntegration(this.warStateManager);
+        this.warPerformanceIntegration = new WarPerformanceIntegration(this.warStateManager, ClashOfClansAPI);
         
         // Initialize war state database columns
         this.warStateManager.ensureWarStateColumns().catch(error => {
@@ -332,6 +332,11 @@ class LeaderboardInteractionHandler {
             const endIndex = startIndex + playersPerPage;
             const pageData = clanData.players.slice(startIndex, endIndex);
 
+            // For historical war leaderboards (war ended), generate all pages at once without buttons
+            if (view === 'war' && clanData.warState === 'warEnded') {
+                return await this.generateHistoricalWarLeaderboard(interaction, config, clanData, false);
+            }
+
             // Update database with current page state
             await this.updatePageState(interaction.guildId, page, totalPages, clanTag);
 
@@ -470,6 +475,11 @@ class LeaderboardInteractionHandler {
             const startIndex = (page - 1) * playersPerPage;
             const endIndex = startIndex + playersPerPage;
             const pageData = clanData.players.slice(startIndex, endIndex);
+
+            // For historical war leaderboards (war ended), generate all pages at once without buttons
+            if (view === 'war' && clanData.warState === 'warEnded') {
+                return await this.generateHistoricalWarLeaderboard(interaction, config, clanData, isOriginalReply);
+            }
 
             // Generate canvas image
             const canvas = new LeaderboardCanvas();
@@ -773,12 +783,12 @@ class LeaderboardInteractionHandler {
                 );
                 
                 if (realWarData && realWarData.length > 0) {
-                    console.log(`[LeaderboardInteractionHandler] ✅ Using real war performance data: ${realWarData.length} players`);
+                    // console.log(`[LeaderboardInteractionHandler] ✅ Using real war performance data: ${realWarData.length} players`);
                     // Replace with real performance data
                     clanData.players = realWarData;
                     clanData.dataSource = 'real_performance_data';
                 } else {
-                    console.log('[LeaderboardInteractionHandler] ⚠️ No real war performance data available, using API data');
+                    // console.log('[LeaderboardInteractionHandler] ⚠️ No real war performance data available, using API data');
                     // Keep original API data as fallback
                     clanData.dataSource = 'api_fallback';
                 }
@@ -1144,6 +1154,85 @@ class LeaderboardInteractionHandler {
                 code: editError.code,
                 customId: interaction.customId
             });
+        }
+    }
+
+    /**
+     * Generate historical war leaderboard - creates all pages at once without buttons
+     * This makes the leaderboard unupdatable and shows complete war history
+     * @param {Interaction} interaction 
+     * @param {Object} config - Leaderboard configuration
+     * @param {Object} clanData - Clan war data
+     * @param {boolean} isOriginalReply - Whether this is the original reply
+     */
+    async generateHistoricalWarLeaderboard(interaction, config, clanData, isOriginalReply = false) {
+        try {
+            const playersPerPage = config.donation_leaderboard_players_per_page || 25;
+            const totalPages = Math.max(1, Math.ceil(clanData.players.length / playersPerPage));
+            
+            console.log(`[Historical War] Generating ${totalPages} pages for historical war leaderboard (${clanData.players.length} players)`);
+            
+            const canvas = new LeaderboardCanvas();
+            const messages = [];
+            
+            // Generate all pages at once
+            for (let page = 1; page <= totalPages; page++) {
+                const startIndex = (page - 1) * playersPerPage;
+                const endIndex = startIndex + playersPerPage;
+                const pageData = clanData.players.slice(startIndex, endIndex);
+                
+                // Generate canvas for this page
+                const canvasBuffer = await canvas.generateHistoricalWarCanvas(
+                    pageData, 
+                    {...config, clan_name: clanData.clanName, clan_tag: clanData.clanTag}, 
+                    page, 
+                    totalPages, 
+                    clanData
+                );
+                
+                // Create embed for this page (no buttons - historical data is static)
+                const embed = new EmbedBuilder()
+                    .setTitle(`📊 ${clanData.clanName} War History ${totalPages > 1 ? `(Page ${page}/${totalPages})` : ''}`)
+                    .setDescription(`Historical war statistics for **${clanData.clanName}**\n${totalPages > 1 ? `Page ${page} of ${totalPages} • ` : ''}Showing ${pageData.length} of ${clanData.players.length} players`)
+                    .setImage('attachment://war_history.png')
+                    .setColor('#95a5a6') // Gray color to indicate historical/static data
+                    .setTimestamp()
+                    .setFooter({ 
+                        text: `${clanData.clanTag} • War History • No longer updating` 
+                    });
+                
+                messages.push({
+                    embeds: [embed],
+                    files: [{ attachment: canvasBuffer, name: 'war_history.png' }]
+                    // No components - historical data should not be interactive
+                });
+            }
+            
+            // Send the first message as reply, then follow up with additional pages
+            if (messages.length > 0) {
+                // Send/edit the first page
+                const firstMessage = messages[0];
+                if (isOriginalReply) {
+                    await interaction.reply(firstMessage);
+                } else {
+                    await interaction.editReply(firstMessage);
+                }
+                
+                // Send additional pages as follow-up messages if there are multiple pages
+                for (let i = 1; i < messages.length; i++) {
+                    await interaction.followUp(messages[i]);
+                    // Small delay to prevent rate limiting
+                    if (i < messages.length - 1) {
+                        await new Promise(resolve => setTimeout(resolve, 500));
+                    }
+                }
+                
+                console.log(`[Historical War] ✅ Successfully generated ${messages.length} historical war leaderboard pages for ${clanData.clanTag}`);
+            }
+            
+        } catch (error) {
+            console.error('[Historical War] Error generating historical war leaderboard:', error);
+            throw error;
         }
     }
 
