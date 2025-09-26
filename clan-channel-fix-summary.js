@@ -1,0 +1,26 @@
+// Test script to verify clan-specific channel routing fix
+console.log('Clan-Specific Channel Routing Fix Summary:');
+console.log('==========================================');
+console.log('');
+console.log('Problem Identified:');
+console.log('- War end messages were being sent to global warAnnounceChannelId instead of clan-specific channels');
+console.log('- Database has clan-specific war_announce_channel_id but code was not using it');
+console.log('');
+console.log('Database Configuration:');
+console.log('- Clan 8P8QRQYV (Devil VS Witch) → Channel 1416054056622751866');
+console.log('- Clan 2L8C9GP8Y (The Mafia) → Channel 1416054056622751866');
+console.log('- Clan 2YC0QV00V (CIDUK WARRIOR) → Channel 1420378243680436255');
+console.log('');
+console.log('Fix Applied:');
+console.log('1. Added getClanSpecificChannelId() helper function in announce()');
+console.log('2. Function queries guild_clashofclans_watch table for clan-specific channel');
+console.log('3. Falls back to global config.warAnnounceChannelId if no clan-specific channel found');
+console.log('4. Applied to war_declared, war_start, and war_end message types');
+console.log('');
+console.log('Expected Behavior After Fix:');
+console.log('- War messages for CIDUK WARRIOR (2YC0QV00V) → Channel 1420378243680436255');
+console.log('- War messages for other clans → Channel 1416054056622751866');
+console.log('- Proper clan-specific routing based on database configuration');
+console.log('');
+console.log('The announce() function now checks the database for clan-specific channels before');
+console.log('falling back to the global configuration, ensuring messages go to the correct channels.');

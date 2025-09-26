@@ -249,8 +249,10 @@ export default function ClashOfClansConfig({
                       trackWarLeaderboard: e.target.checked,
                       track_war_leaderboard: e.target.checked,
                       ...(e.target.checked && { 
-                        warLeaderboardMessageId: config.warLeaderboardMessageId || config.war_leaderboard_message_id || null,
-                        war_leaderboard_message_id: config.war_leaderboard_message_id || config.warLeaderboardMessageId || null
+                        warPreparingMessageId: config.warPreparingMessageId || config.war_preparing_message_id || null,
+                        warActiveMessageId: config.warActiveMessageId || config.war_active_message_id || null,
+                        war_preparing_message_id: config.war_preparing_message_id || config.warPreparingMessageId || null,
+                        war_active_message_id: config.war_active_message_id || config.warActiveMessageId || null
                       })
                     }))}
                   />

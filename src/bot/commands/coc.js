@@ -289,6 +289,66 @@ async function handleClanCommand(interaction) {
   const clanTag = cleanTag(interaction.options.getString('tag'));
   const clanData = await cocApiRequest(`/clans/%23${clanTag}`);
 
+  // Calculate war win rate (ties count as wins)
+  let winRate = 'N/A';
+  if (clanData.warWins && clanData.warLosses !== undefined) {
+    const totalWars = clanData.warWins + clanData.warLosses + (clanData.warTies || 0);
+    const effectiveWins = clanData.warWins + (clanData.warTies || 0); // Ties count as wins
+    if (totalWars > 0) {
+      winRate = `${((effectiveWins / totalWars) * 100).toFixed(1)}%`;
+    }
+  }
+
+  // Find clan leadership
+  const leader = clanData.memberList.find(member => member.role === 'leader');
+  const coLeaders = clanData.memberList.filter(member => member.role === 'coLeader');
+  
+  // Calculate average stats from war log (recent wars)
+  let avgDestruction = 'N/A';
+  let avgStars = 'N/A';
+  
+  try {
+    // Get war log data for historical averages
+    const warLogData = await cocApiRequest(`/clans/%23${clanTag}/warlog`);
+    if (warLogData && warLogData.items && warLogData.items.length > 0) {
+      // Use last 10 wars for average calculation
+      const recentWars = warLogData.items.slice(0, 10);
+      const warsWithData = recentWars.filter(war => 
+        war.clan && 
+        war.clan.destructionPercentage !== undefined && 
+        war.clan.stars !== undefined &&
+        war.clan.destructionPercentage <= 100 && // Filter out impossible destruction values
+        war.clan.destructionPercentage >= 0 &&
+        war.teamSize > 0 && // Ensure valid team size
+        (war.clan.stars / war.teamSize) <= 3 // Filter out impossible stars per base
+      );
+      
+      if (warsWithData.length > 0) {
+        // Calculate averages correctly
+        let totalDestructionPercent = 0;
+        let totalStarsPerBase = 0;
+        
+        warsWithData.forEach((war, index) => {
+          // Destruction percentage per war (already 0-100% in API)
+          totalDestructionPercent += war.clan.destructionPercentage;
+          
+          // Stars per base for this war
+          const starsPerBase = war.teamSize > 0 ? war.clan.stars / war.teamSize : 0;
+          totalStarsPerBase += starsPerBase;
+        });
+        
+        // Average destruction per war (should be 0-100%)
+        avgDestruction = `${(totalDestructionPercent / warsWithData.length).toFixed(1)}%`;
+        
+        // Average stars per base (should be 0-3)
+        avgStars = `${(totalStarsPerBase / warsWithData.length).toFixed(2)}`;
+      }
+    }
+  } catch (warLogError) {
+    // War log not available - keep N/A values
+    console.log('Could not fetch war log for averages:', warLogError.message);
+  }
+
   const embed = new EmbedBuilder()
     .setTitle(`${clanData.name} (#${clanTag})`)
     .setColor('#87CEEB')
@@ -299,7 +359,14 @@ async function handleClanCommand(interaction) {
       { name: '🏆 Trophies', value: formatNumber(clanData.clanPoints), inline: true },
       { name: '🛡️ Required Trophies', value: formatNumber(clanData.requiredTrophies), inline: true },
       { name: '⚔️ War Wins', value: clanData.warWins?.toString() || 'N/A', inline: true },
-      { name: '🎯 War Win Streak', value: clanData.warWinStreak?.toString() || 'N/A', inline: true }
+      { name: '🎯 War Win Streak', value: clanData.warWinStreak?.toString() || 'N/A', inline: true },
+      { name: '📈 War Win Rate', value: winRate, inline: true },
+      { name: '💥 Avg Destruction', value: avgDestruction, inline: true },
+      { name: '⭐ Avg Stars', value: avgStars, inline: true },
+      { name: '🏅 CWL League', value: clanData.warLeague?.name || 'Unranked', inline: true },
+      { name: '🏛️ Capital Hall', value: clanData.clanCapital?.capitalHallLevel?.toString() || 'N/A', inline: true },
+      { name: '🏆 Capital Trophies', value: clanData.clanCapitalPoints ? formatNumber(clanData.clanCapitalPoints) : 'N/A', inline: true },
+      { name: '👑 Leader', value: leader?.name || 'N/A', inline: true }
     );
 
   if (clanData.description) {

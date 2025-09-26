@@ -146,6 +146,7 @@ class LeaderboardCanvas {
                 case 'inWar':
                     return await this.generateActiveWarCanvas(players, config, page, totalPages, warData);
                 case 'ended':
+                case 'warEnded':
                 case 'notInWar':
                 default:
                     return await this.generateHistoricalWarCanvas(players, config, page, totalPages, warData);
@@ -175,9 +176,10 @@ class LeaderboardCanvas {
                 return warPosA - warPosB;
             });
 
-            // Update ranks based on new sorting order
+            // Update ranks based on new sorting order and pagination
+            const playersPerPage = config.donation_leaderboard_players_per_page || 25;
             sortedPlayers.forEach((player, index) => {
-                player.rank = index + 1;
+                player.rank = (page - 1) * playersPerPage + index + 1;
             });
 
             // Calculate required height - use sorted players
@@ -241,9 +243,10 @@ class LeaderboardCanvas {
                 return warPosA - warPosB;
             });
 
-            // Update ranks based on new sorting order
+            // Update ranks based on new sorting order and pagination
+            const playersPerPage = config.donation_leaderboard_players_per_page || 25;
             sortedPlayers.forEach((player, index) => {
-                player.rank = index + 1;
+                player.rank = (page - 1) * playersPerPage + index + 1;
             });
 
             // Calculate required height - use sorted players
@@ -307,9 +310,10 @@ class LeaderboardCanvas {
                 return warPosA - warPosB;
             });
 
-            // Update ranks based on new sorting order
+            // Update ranks based on new sorting order and pagination
+            const playersPerPage = config.donation_leaderboard_players_per_page || 25;
             sortedPlayers.forEach((player, index) => {
-                player.rank = index + 1;
+                player.rank = (page - 1) * playersPerPage + index + 1;
             });
 
             // Calculate dynamic height based on player count
@@ -1251,7 +1255,11 @@ class LeaderboardCanvas {
             const attackY = baseY + (i * attackSpacing);
             
             // Calculate total width of the attack display (text + stars + percentage)
-            const attackText = `${attack.defenderPosition || '?'}/${attack.attackNumber} `;
+            // Fix: Use proper null check instead of falsy || operator to handle position 0 correctly
+            const defenderPos = (attack.defenderPosition !== null && attack.defenderPosition !== undefined && attack.defenderPosition > 0) 
+                ? attack.defenderPosition 
+                : '?';
+            const attackText = `${defenderPos}/${attack.attackNumber} `;
             const percentText = ` ${attack.destructionPercentage}%`;
             
             ctx.font = '27px Arial';
@@ -1566,7 +1574,7 @@ class LeaderboardCanvas {
      */
     async drawPreparingWarPlayerRow(ctx, player, y, index) {
         // Similar to existing but focused on preparation status
-        const rank = index + 1;
+        const rank = player.rank || (index + 1); // Use player's rank if available, fallback to index + 1
         let currentX = this.padding + 20;
 
         // Row background

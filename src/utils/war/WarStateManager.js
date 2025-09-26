@@ -205,28 +205,21 @@ class WarStateManager {
                 }
             }
 
-            // Clear preparing message when transitioning to active
+            // Handle message ID transitions when transitioning to active
             if (newState === this.STATES.ACTIVE) {
-                // Move preparing message to active message if no active message set
-                if (!messageId) {
-                    // Get current preparing message ID and use it as active message
-                    const currentState = await this.getCurrentWarState(guildId, clanTag);
-                    if (currentState && currentState.preparingMessageId) {
-                        updateData.war_active_message_id = currentState.preparingMessageId;
-                    }
-                }
+                // For delete_preparation_and_create_active, we don't reuse the preparing message
+                // The active message ID will be set separately when the new message is created
+                // Just clear the preparing message ID
                 updateData.war_preparing_message_id = null;
             }
 
-            // Clear message IDs when new war starts (preparing state)
+            // Clear previous message IDs when new war starts (preparing state)
             if (newState === this.STATES.PREPARING) {
                 updateData.war_active_message_id = null;
             }
 
-            // Clear active message ID when war ends to ensure new wars create fresh messages
-            if (newState === this.STATES.ENDED) {
-                updateData.war_active_message_id = null;
-            }
+            // Note: For ended state, we'll clear war_active_message_id after the message is updated
+            // This is handled separately in LeaderboardEvents after the message update is complete
 
             const setClause = Object.keys(updateData).map(key => `${key} = ?`).join(', ');
             const values = Object.values(updateData).concat([guildId, clanTag]);
@@ -311,7 +304,7 @@ class WarStateManager {
                         action: 'transition',
                         from: currentState,
                         to: newState,
-                        messageAction: 'update_to_active',
+                        messageAction: 'delete_preparation_and_create_active',
                         messageId: currentStateData.preparingMessageId
                     };
                 }
@@ -333,7 +326,7 @@ class WarStateManager {
                         action: 'transition',
                         from: currentState,
                         to: this.STATES.ENDED,
-                        messageAction: 'update_to_ended',
+                        messageAction: 'delete_and_create_historical',
                         messageId: currentStateData.activeMessageId
                     };
                 }
@@ -343,7 +336,7 @@ class WarStateManager {
                         action: 'transition',
                         from: currentState,
                         to: newState,
-                        messageAction: 'update_to_ended',
+                        messageAction: 'delete_and_create_historical',
                         messageId: currentStateData.activeMessageId
                     };
                 }
@@ -361,6 +354,16 @@ class WarStateManager {
 
             case this.STATES.ENDED:
             case 'warEnd': // Handle legacy 'warEnd' state as alias for 'warEnded'
+                if (newState === this.STATES.NOT_IN_WAR) {
+                    // War ended and no longer in war - transition to notInWar to stop spam
+                    return {
+                        action: 'transition',
+                        from: currentState,
+                        to: newState,
+                        messageAction: 'finalize_ended_war',
+                        messageId: null
+                    };
+                }
                 if (newState === this.STATES.PREPARING) {
                     // New war starting
                     return {
@@ -385,13 +388,18 @@ class WarStateManager {
         }
 
         // Same state - check if we need to refresh
-        if (currentState === newState && newState !== this.STATES.ENDED) {
+        if (currentState === newState && newState !== this.STATES.ENDED && newState !== this.STATES.NOT_IN_WAR) {
             return {
                 action: 'refresh',
                 state: currentState,
                 messageAction: 'update_current',
                 messageId: this.getMessageIdForState(currentStateData, currentState)
             };
+        }
+
+        // Skip processing when not in war to prevent spam
+        if (newState === this.STATES.NOT_IN_WAR) {
+            return { action: 'none' };
         }
 
         return { action: 'none' };
@@ -413,6 +421,7 @@ class WarStateManager {
                 return stateData.activeMessageId;
             case this.STATES.ENDED:
                 // For ended state, use the last active message ID to update it
+                // Note: after update, war_active_message_id will be cleared but we still need it for the transition
                 return stateData.activeMessageId;
             default:
                 return null;
@@ -463,6 +472,83 @@ class WarStateManager {
     }
 
     /**
+     * Clear the active message ID when war ends (for delete_and_create_historical action)
+     * @param {string} guildId - Guild ID
+     * @param {string} clanTag - Clan tag
+     */
+    async clearActiveMessageId(guildId, clanTag) {
+        try {
+            if (!guildId || !clanTag) {
+                return false;
+            }
+
+            await this.db.execute(`
+                UPDATE guild_clashofclans_watch 
+                SET war_active_message_id = NULL
+                WHERE guild_id = ? AND clan_tag = ?
+            `, [guildId, clanTag]);
+            
+            return true;
+
+        } catch (error) {
+            console.error('[WarStateManager] Error clearing active message ID:', error);
+            return false;
+        }
+    }
+
+    /**
+     * Clear the preparing message ID when transitioning to active (for delete_preparation_and_create_active action)
+     * @param {string} guildId - Guild ID
+     * @param {string} clanTag - Clan tag
+     */
+    async clearPreparingMessageId(guildId, clanTag) {
+        try {
+            if (!guildId || !clanTag) {
+                return false;
+            }
+
+            await this.db.execute(`
+                UPDATE guild_clashofclans_watch 
+                SET war_preparing_message_id = NULL
+                WHERE guild_id = ? AND clan_tag = ?
+            `, [guildId, clanTag]);
+            
+            return true;
+
+        } catch (error) {
+            console.error('[WarStateManager] Error clearing preparing message ID:', error);
+            return false;
+        }
+    }
+
+    /**
+     * Transition war state from ENDED to NOT_IN_WAR after historical message is created
+     * This prevents spam of historical messages
+     * @param {string} guildId - Guild ID
+     * @param {string} clanTag - Clan tag
+     */
+    async finalizeEndedWar(guildId, clanTag) {
+        try {
+            if (!guildId || !clanTag) {
+                return false;
+            }
+
+            await this.db.execute(`
+                UPDATE guild_clashofclans_watch 
+                SET war_current_state = ?, war_last_state_change = ?
+                WHERE guild_id = ? AND clan_tag = ?
+            `, [this.STATES.NOT_IN_WAR, this.formatDateForMySQL(), guildId, clanTag]);
+            
+            console.log(`[WarStateManager] Finalized ended war for ${clanTag}: ${this.STATES.ENDED} → ${this.STATES.NOT_IN_WAR}`);
+            return true;
+
+        } catch (error) {
+            console.error('[WarStateManager] Error finalizing ended war:', error);
+            return false;
+        }
+    }
+
+    /**
      * Add required database columns if they don't exist
      */
     async ensureWarStateColumns() {
@@ -472,7 +558,6 @@ class WarStateManager {
                 'war_current_state VARCHAR(20) DEFAULT "notInWar"',
                 'war_preparing_message_id VARCHAR(20)',
                 'war_active_message_id VARCHAR(20)', 
-                'war_ended_message_id VARCHAR(20)',
                 'war_last_state_change TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP',
                 'war_state_data JSON',
                 'war_last_updated DATETIME',

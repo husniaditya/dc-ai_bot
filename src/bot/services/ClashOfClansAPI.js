@@ -353,11 +353,10 @@ class ClashOfClansAPI {
                 try {
                     const [clanInfo, currentWar, warLog] = await Promise.all([
                         this.getClan(clanTag),
-                        this.getCurrentWar(clanTag).catch(() => null), // War might not be active
-                        this.getWarLog(clanTag).catch(() => null) // War log might be private
+                        this.getCurrentWar(clanTag).catch(() => null),
+                        this.getWarLog(clanTag).catch(() => null)
                     ]);
 
-                    // Use first clan name as primary
                     if (!primaryClanName) {
                         primaryClanName = clanInfo.name;
                     }
@@ -373,7 +372,7 @@ class ClashOfClansAPI {
 
                     // Process war log
                     if (warLog && warLog.items) {
-                        for (const war of warLog.items.slice(0, 10)) { // Last 10 wars
+                        for (const war of warLog.items.slice(0, 10)) {
                             allWarData.push({
                                 type: 'history',
                                 clan: clanInfo,
@@ -394,6 +393,18 @@ class ClashOfClansAPI {
             for (const warData of allWarData) {
                 const war = warData.war;
                 const isCurrentWar = warData.type === 'current';
+                
+                // Create mapping from defender tag to opponent information
+                const opponentMapping = new Map();
+                if (war.opponent && war.opponent.members) {
+                    for (const opponentMember of war.opponent.members) {
+                        opponentMapping.set(opponentMember.tag, {
+                            position: opponentMember.mapPosition,
+                            name: opponentMember.name,
+                            townhallLevel: opponentMember.townhallLevel
+                        });
+                    }
+                }
                 
                 // Process clan members in this war
                 const clanMembers = war.clan?.members || [];
@@ -422,8 +433,15 @@ class ClashOfClansAPI {
                             currentWarStars: 0,
                             currentWarDestruction: 0,
                             currentWarPosition: member.mapPosition || 0,
-                            // Detailed attack information for current war
-                            currentWarAttackDetails: []
+                            // Enhanced attack information
+                            currentWarAttackDetails: [],
+                            // New: Track which opponents were attacked
+                            opponentsAttacked: [],
+                            // New: Track attack efficiency
+                            threeStars: 0,
+                            twoStars: 0,
+                            oneStars: 0,
+                            zeroStars: 0
                         });
                     }
 
@@ -437,7 +455,7 @@ class ClashOfClansAPI {
 
                     // Process attacks
                     const attacks = member.attacks || [];
-                    const maxAttacks = 2; // Standard war attacks per player
+                    const maxAttacks = war.attacksPerMember || 2;
                     
                     stats.totalAttacks += attacks.length;
                     stats.missedAttacks += Math.max(0, maxAttacks - attacks.length);
@@ -445,6 +463,12 @@ class ClashOfClansAPI {
                     for (const attack of attacks) {
                         stats.totalStars += attack.stars || 0;
                         stats.totalDestruction += attack.destructionPercentage || 0;
+                        
+                        // Track star distribution
+                        if (attack.stars === 3) stats.threeStars++;
+                        else if (attack.stars === 2) stats.twoStars++;
+                        else if (attack.stars === 1) stats.oneStars++;
+                        else if (attack.stars === 0) stats.zeroStars++;
                     }
 
                     // Current war specific stats
@@ -455,16 +479,28 @@ class ClashOfClansAPI {
                             ? attacks.reduce((sum, attack) => sum + (attack.destructionPercentage || 0), 0) / attacks.length 
                             : 0;
                         
-                        // Store detailed attack information for current war
-                        stats.currentWarAttackDetails = attacks.map((attack, index) => ({
-                            attackNumber: index + 1,
-                            stars: attack.stars || 0,
-                            destructionPercentage: attack.destructionPercentage || 0,
-                            attackerTag: attack.attackerTag,
-                            defenderTag: attack.defenderTag,
-                            defenderPosition: attack.defenderPosition || 0,
-                            attackOrder: attack.order || 0
-                        }));
+                        // Enhanced attack details with opponent information
+                        stats.currentWarAttackDetails = attacks.map((attack, index) => {
+                            const opponentInfo = opponentMapping.get(attack.defenderTag);
+                            return {
+                                attackNumber: index + 1,
+                                stars: attack.stars || 0,
+                                destructionPercentage: attack.destructionPercentage || 0,
+                                attackerTag: attack.attackerTag,
+                                defenderTag: attack.defenderTag,
+                                defenderPosition: opponentInfo?.position || 0,  // Use opponentMapping instead of defenderTagToPosition
+                                defenderName: opponentInfo?.name || 'Unknown',
+                                defenderTH: opponentInfo?.townhallLevel || 0,
+                                attackOrder: attack.order || 0,
+                                duration: attack.duration || 0
+                            };
+                        });
+                        
+                        // Track which opponent numbers were attacked
+                        stats.opponentsAttacked = attacks.map(attack => {
+                            const opponentInfo = opponentMapping.get(attack.defenderTag);
+                            return opponentInfo?.position || 0;
+                        }).filter(pos => pos > 0);
                         
                         stats.currentWarPosition = member.mapPosition || 0;
                     }
@@ -473,14 +509,22 @@ class ClashOfClansAPI {
 
             // Calculate averages and sort players
             const sortedPlayers = Array.from(playerStats.values()).map(player => {
-                player.averageStars = player.totalAttacks > 0 ? (player.totalStars / player.totalAttacks).toFixed(2) : '0.00';
-                player.averageDestruction = player.totalAttacks > 0 ? (player.totalDestruction / player.totalAttacks).toFixed(1) : '0.0';
-                player.winRate = player.warsParticipated > 0 ? ((player.warsWon / player.warsParticipated) * 100).toFixed(1) : '0.0';
-                player.attackRate = player.warsParticipated > 0 ? ((player.totalAttacks / (player.warsParticipated * 2)) * 100).toFixed(1) : '0.0';
+                player.averageStars = player.totalAttacks > 0 ? 
+                    parseFloat((player.totalStars / player.totalAttacks).toFixed(2)) : 0;
+                player.averageDestruction = player.totalAttacks > 0 ? 
+                    parseFloat((player.totalDestruction / player.totalAttacks).toFixed(1)) : 0;
+                player.winRate = player.warsParticipated > 0 ? 
+                    parseFloat(((player.warsWon / player.warsParticipated) * 100).toFixed(1)) : 0;
+                player.attackRate = player.warsParticipated > 0 ? 
+                    parseFloat(((player.totalAttacks / (player.warsParticipated * 2)) * 100).toFixed(1)) : 0;
+                
+                // Calculate star efficiency
+                player.starEfficiency = player.totalAttacks > 0 ? 
+                    parseFloat(((player.threeStars * 3 + player.twoStars * 2 + player.oneStars) / (player.totalAttacks * 3) * 100).toFixed(1)) : 0;
+                
                 return player;
             }).sort((a, b) => {
-                // Sort by war position only (lowest position number = highest priority)
-                // Players with position 0 (not in current war) go to the end
+                // Sort by war position (current war participants first)
                 const aPos = a.currentWarPosition || Number.MAX_SAFE_INTEGER;
                 const bPos = b.currentWarPosition || Number.MAX_SAFE_INTEGER;
                 return aPos - bPos;
@@ -570,6 +614,14 @@ class ClashOfClansAPI {
                         const war = warData.war;
                         const isCurrentWar = warData.type === 'current';
                         
+                        // Create mapping from defender tag to map position using opponent data
+                        const defenderTagToPosition = new Map();
+                        if (war.opponent && war.opponent.members) {
+                            for (const opponentMember of war.opponent.members) {
+                                defenderTagToPosition.set(opponentMember.tag, opponentMember.mapPosition);
+                            }
+                        }
+                        
                         // Process clan members in this war
                         const clanMembers = war.clan?.members || [];
                         
@@ -645,7 +697,7 @@ class ClashOfClansAPI {
                                     destructionPercentage: attack.destructionPercentage || 0,
                                     attackerTag: attack.attackerTag,
                                     defenderTag: attack.defenderTag,
-                                    defenderPosition: attack.defenderPosition || 0,
+                                    defenderPosition: defenderTagToPosition.get(attack.defenderTag) || 0,
                                     attackOrder: attack.order || 0
                                 }));
                                 

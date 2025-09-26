@@ -345,17 +345,40 @@ async function announce(guild, config, data, type) {
     
     let channelId, template, mentionTargets;
     
+    // Helper function to get clan-specific channel ID from database
+    async function getClanSpecificChannelId(clanTag, fallbackChannelId) {
+      if (!clanTag) return fallbackChannelId;
+      
+      try {
+        const store = require('../../config/store');
+        const [rows] = await store.sqlPool.execute(
+          'SELECT war_announce_channel_id FROM guild_clashofclans_watch WHERE guild_id = ? AND clan_tag = ? LIMIT 1',
+          [guild.id, clanTag.replace(/^#/, '').toUpperCase()]
+        );
+        
+        if (rows.length > 0 && rows[0].war_announce_channel_id) {
+          console.log(`[COC] Using clan-specific channel ${rows[0].war_announce_channel_id} for clan ${clanTag}`);
+          return rows[0].war_announce_channel_id;
+        }
+      } catch (error) {
+        console.warn(`[COC] Error getting clan-specific channel for ${clanTag}:`, error.message);
+      }
+      
+      console.log(`[COC] Using fallback channel ${fallbackChannelId} for clan ${clanTag}`);
+      return fallbackChannelId;
+    }
+    
     // Determine channel and template based on announcement type
     switch (type) {
       case 'war_declared':
-        channelId = config.warAnnounceChannelId;
+        channelId = await getClanSpecificChannelId(data.clanTag, config.warAnnounceChannelId);
         template = config.warDeclaredTemplate || 'War declared against {warOpponent}!';
         mentionTargets = await getClanSpecificMentionTargets(config, data, 'war');
         console.log(`[COC] war_declared: channelId=${channelId}, template="${template}"`);
         break;
       case 'war_start':
       case 'war_end':
-        channelId = config.warAnnounceChannelId;
+        channelId = await getClanSpecificChannelId(data.clanTag, config.warAnnounceChannelId);
         template = type === 'war_start' ? config.warStartTemplate : config.warEndTemplate;
         mentionTargets = await getClanSpecificMentionTargets(config, data, 'war');
         break;
