@@ -147,6 +147,38 @@ export function buildPreview(template, channelId, type = 'youtube', config = {},
       .replace(/\{startedAtRelative\}/g, resolve('gamesSocials.preview.samples.twitch.startedAtRelative', 'just now'));
   }
   
+  if (type === 'genshin') {
+    const playerNames = config?.playerNames || {};
+    const playerId = channelId || config?.players?.[0] || '123456789';
+    const playerName = playerId ? (playerNames[playerId] || resolve('gamesSocials.preview.samples.genshin.playerName', 'Traveler')) : resolve('gamesSocials.preview.samples.genshin.playerName', 'Traveler');
+    const list = config?.mentionTargets && config.mentionTargets.length ? config.mentionTargets : [];
+    const roleMention = list.map(id => id === 'everyone' ? '@everyone' : id === 'here' ? '@here' : (/^[0-9]{5,32}$/.test(id) ? `<@&${id}>` : id)).join(' ');
+    const rolesById = Object.fromEntries((guildRoles || []).map(r => [r.id, r.name]));
+    const roleNames = list.map(id => {
+      if (id === 'everyone') return '@everyone';
+      if (id === 'here') return '@here';
+      if (rolesById[id]) {
+        const n = rolesById[id];
+        return n.startsWith('@') ? n : '@' + n;
+      }
+      return id.startsWith('@') ? id : '@' + id;
+    }).join(', ');
+    
+    return template
+      .replace(/\{playerName\}/g, playerName)
+      .replace(/\{uid\}/g, playerId)
+      .replace(/\{adventureRank\}/g, '60')
+      .replace(/\{worldLevel\}/g, '8')
+      .replace(/\{achievements\}/g, '756')
+      .replace(/\{signature\}/g, resolve('gamesSocials.preview.samples.genshin.signature', 'Exploring Teyvat...'))
+      .replace(/\{profileCharacter\}/g, resolve('gamesSocials.preview.samples.genshin.profileCharacter', 'Raiden Shogun'))
+      .replace(/\{spiralAbyss\}/g, '12-3')
+      .replace(/\{roleMention\}/g, roleMention)
+      .replace(/\{roleNames\}/g, roleNames)
+      .replace(/\{characterCount\}/g, '8')
+      .replace(/\{lastUpdate\}/g, resolve('gamesSocials.preview.samples.genshin.lastUpdate', 'just now'));
+  }
+  
   // YouTube preview
   const sampleVideoId = 'VIDEO12345';
   const channelNames = config?.channelNames || {};

@@ -1463,7 +1463,7 @@
       },
       "genshin": {
         "label": "Genshin Impact",
-        "desc": "Actualizaciones de eventos y noticias (planeado)"
+        "desc": "Seguir perfiles de jugadores y builds de personajes vía Enka.Network"
       }
     },
     "preview": {
@@ -1478,6 +1478,18 @@
           "videoTitle": "Nueva subida asombrosa",
           "publishedAtRelative": "justo ahora",
           "memberOnly": " (Solo miembros)"
+        },
+        "clashofclans": {
+          "clanName": "Clan de ejemplo",
+          "warState": "en guerra",
+          "warOpponent": "Clan enemigo",
+          "warResult": "Victoria"
+        },
+        "genshin": {
+          "playerName": "Viajero",
+          "adventureRank": "60",
+          "worldLevel": "8",
+          "characterName": "Hu Tao"
         }
       }
     },
@@ -1502,6 +1514,15 @@
       "remove": "Eliminar",
       "loadingConfig": "Cargando la configuración de {{service}}…",
       "mentionInputPlaceholder": "Agrega @everyone, @here o rol…",
+      "announcementChannels": "Canales de Anuncio",
+      "messageTemplates": "Plantillas de Mensajes",
+      "selectChannel": "Seleccionar Canal",
+      "basicSettings": "Configuración Básica",
+      "checkInterval": "Intervalo de Verificación",
+      "seconds": "segundos",
+      "features": "Características",
+      "embedEnabled": "Habilitar Incrustados",
+      "advancedSettings": "Configuración Avanzada",
       "meta": {
         "role": "rol",
         "meta": "meta"
@@ -1655,6 +1676,110 @@
         "addFailed": "Error al agregar clan"
       },
       "intervalHint": "Qué tan frecuente verificar actualizaciones del clan (mínimo 5 minutos, recomendado 1 hora)"
+    },
+    "genshin": {
+      "playersToTrack": "Jugadores a Rastrear",
+      "noPlayers": "No hay jugadores configurados. Agrega un jugador para comenzar el seguimiento.",
+      "options": {
+        "trackProfileUpdates": "Rastrear Actualizaciones de Perfil",
+        "trackAchievements": "Rastrear Nuevos Logros",
+        "trackSpiralAbyss": "Rastrear Progreso del Abismo Espiral"
+      },
+      "placeholders": {
+        "playerUID": "Ingresa el UID del jugador (ej: 123456789)",
+        "customMessage": "Mensaje de anuncio personalizado para este jugador...",
+        "profileUpdateTemplate": "🎮 ¡{playerName} actualizó su perfil! Rango de Aventura: {adventureRank} | Nivel Mundial: {worldLevel}",
+        "achievementTemplate": "🏆 ¡{playerName} obtuvo un nuevo logro: {achievementName}!",
+        "spiralAbyssTemplate": "🌀 ¡{playerName} progresó en el Abismo Espiral! Piso {floor}, Cámara {chamber}"
+      },
+      "channels": {
+        "profileUpdates": "Canal de Actualizaciones de Perfil",
+        "achievements": "Canal de Logros",
+        "spiralAbyss": "Canal del Abismo Espiral"
+      },
+      "templates": {
+        "profileUpdate": "Plantilla de Actualización de Perfil",
+        "achievement": "Plantilla de Logros",
+        "spiralAbyss": "Plantilla del Abismo Espiral"
+      },
+      "settings": {
+        "minAchievementThreshold": "Puntos Mínimos de Logro"
+      },
+      "help": {
+        "interval": "Qué tan frecuente verificar actualizaciones (mínimo 300 segundos)",
+        "addPlayer": "Ingresa un UID válido de Genshin Impact de 9 dígitos",
+        "customMessage": "Mensaje personalizado opcional para anuncios de este jugador",
+        "mentionTargets": "Roles y usuarios a mencionar en anuncios de Genshin Impact",
+        "minAchievementThreshold": "Solo anunciar logros que valgan estos puntos o más"
+      },
+      "customMessage": "Mensaje Personalizado para {player}",
+      "errors": {
+        "invalidUID": "UID inválido. Por favor ingresa un UID válido de 9 dígitos.",
+        "playerExists": "El jugador ya está siendo rastreado.",
+        "playerNotFound": "Jugador no encontrado. Verifica que el UID sea correcto y que el perfil sea público."
+      },
+      "messages": {
+        "playerAdded": "Jugador {player} agregado exitosamente",
+        "playerRemoved": "Jugador eliminado exitosamente"
+      },
+      "sections": {
+        "general": "Configuración General",
+        "players": "Jugadores Rastreados",
+        "tracking": "Configuración de Seguimiento", 
+        "templates": "Plantillas de Mensajes",
+        "preview": "Vista previa de plantillas"
+      },
+      "fields": {
+        "enabled": "Habilitar seguimiento de Genshin Impact",
+        "channel": "Canal de actualizaciones",
+        "playerUID": "UID del jugador",
+        "playerName": "Nombre del jugador",
+        "interval": "Intervalo de verificación (minutos)",
+        "trackProfiles": "Rastrear actualizaciones de perfil",
+        "trackBuilds": "Rastrear cambios de builds de personajes",
+        "trackAchievements": "Rastrear nuevos logros",
+        "profileTemplate": "Plantilla de perfil",
+        "buildTemplate": "Plantilla de build",
+        "achievementTemplate": "Plantilla de logro"
+      },
+      "players": {
+        "title": "Jugadores Rastreados",
+        "description": "Administra los jugadores de Genshin Impact rastreados para actualizaciones automáticas",
+        "addPlayer": "Agregar Jugador",
+        "removePlayer": "Eliminar Jugador",
+        "editPlayer": "Editar Jugador",
+        "playerUID": "UID del Jugador",
+        "playerName": "Nombre del Jugador",
+        "trackingEnabled": "Seguimiento Habilitado",
+        "lastUpdate": "Última Actualización",
+        "noPlayers": "No hay jugadores configurados. Agrega un jugador para comenzar el seguimiento.",
+        "uidPlaceholder": "Ingresa el UID del jugador (ej: 123456789)",
+        "namePlaceholder": "El nombre se completará automáticamente",
+        "resolving": "Resolviendo jugador...",
+        "resolved": "Jugador resuelto exitosamente"
+      },
+      "tracking": {
+        "title": "Configuración de Seguimiento",
+        "description": "Configura qué actualizaciones rastrear para los jugadores de Genshin Impact",
+        "profiles": "Actualizaciones de Perfil",
+        "builds": "Cambios de Builds",
+        "achievements": "Nuevos Logros",
+        "interval": "Intervalo de Verificación",
+        "intervalHint": "Frecuencia con la que verificar actualizaciones (en minutos, mínimo 15)"
+      },
+      "toast": {
+        "configSaved": "Configuración de Genshin guardada exitosamente",
+        "configError": "Error al guardar la configuración de Genshin",
+        "playerAdded": "Jugador agregado exitosamente",
+        "playerRemoved": "Jugador eliminado exitosamente",
+        "playerError": "Error al administrar el jugador",
+        "invalidUID": "UID inválido. Por favor ingresa un UID válido de 9 dígitos.",
+        "playerNotFound": "Jugador no encontrado. Verifica que el UID sea correcto y que el perfil sea público.",
+        "rateLimited": "Límite de velocidad alcanzado. Por favor inténtalo de nuevo más tarde.",
+        "networkError": "Error de red. Por favor verifica tu conexión.",
+        "templateSaved": "Plantilla guardada exitosamente",
+        "templateError": "Error al guardar la plantilla"
+      }
     },
     "leveling": "XP y nivelación",
     "economy": "Sistema de economía",

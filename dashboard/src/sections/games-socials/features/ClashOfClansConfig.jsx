@@ -143,7 +143,7 @@ export default function ClashOfClansConfig({
       {/* First Row: Configuration and Mention Targets */}
       <div className="row mb-4">
         <div className="col-lg-6">
-          <div className="card card-glass">
+          <div className="clash-config-block">
             <div className="card-body">
               <h6 className="card-title">{t('gamesSocials.common.configuration')}</h6>
               
@@ -249,8 +249,10 @@ export default function ClashOfClansConfig({
                       trackWarLeaderboard: e.target.checked,
                       track_war_leaderboard: e.target.checked,
                       ...(e.target.checked && { 
-                        warLeaderboardMessageId: config.warLeaderboardMessageId || config.war_leaderboard_message_id || null,
-                        war_leaderboard_message_id: config.war_leaderboard_message_id || config.warLeaderboardMessageId || null
+                        warPreparingMessageId: config.warPreparingMessageId || config.war_preparing_message_id || null,
+                        warActiveMessageId: config.warActiveMessageId || config.war_active_message_id || null,
+                        war_preparing_message_id: config.war_preparing_message_id || config.warPreparingMessageId || null,
+                        war_active_message_id: config.war_active_message_id || config.warActiveMessageId || null
                       })
                     }))}
                   />
@@ -319,7 +321,7 @@ export default function ClashOfClansConfig({
 
         <div className="col-lg-6">
           {/* Mention Targets */}
-          <div className="card card-glass">
+          <div className="clash-config-block">
             <div className="card-body">
               <h6 className="card-title">{t('gamesSocials.common.mentionTargets')}</h6>
               
@@ -350,7 +352,7 @@ export default function ClashOfClansConfig({
       </div>
 
       {/* Clan Management */}
-      <div className="card card-glass mb-4">
+      <div className="clash-config-block mb-4">
         <div className="card-body">
           <h6 className="card-title">{t('gamesSocials.clashofclans.sections.clanManagement')}</h6>
           
@@ -614,9 +616,9 @@ export default function ClashOfClansConfig({
       </div>
 
       {/* Message Templates */}
-      <div className="row">
-        <div className="col-lg-6">
-          <div className="card card-glass mb-3">
+      <div className="clash-config-grid">
+        <div>
+          <div className="clash-config-block mb-3">
             <div className="card-body">
               <h6 className="card-title">{t('gamesSocials.clashofclans.sections.warStartTemplate')}</h6>
               <textarea
@@ -641,7 +643,7 @@ export default function ClashOfClansConfig({
             </div>
           </div>
 
-          <div className="card card-glass mb-3">
+          <div className="clash-config-block mb-3">
             <div className="card-body">
               <h6 className="card-title">{t('gamesSocials.clashofclans.sections.warEndTemplate')}</h6>
               <textarea
@@ -668,8 +670,8 @@ export default function ClashOfClansConfig({
           </div>
         </div>
 
-        <div className="col-lg-6">
-          <div className="card card-glass mb-3">
+        <div>
+          <div className="clash-config-block mb-3">
             <div className="card-body">
               <h6 className="card-title">{t('gamesSocials.clashofclans.sections.memberJoinTemplate')}</h6>
               <textarea
@@ -693,7 +695,7 @@ export default function ClashOfClansConfig({
           </div>
 
           {(config.trackDonationEvents || config.trackDonations) && (
-            <div className="card card-glass mb-3">
+            <div className="clash-config-block mb-3">
               <div className="card-body">
                 <h6 className="card-title">{t('gamesSocials.clashofclans.sections.donationTemplate')}</h6>
                 <textarea
@@ -720,7 +722,7 @@ export default function ClashOfClansConfig({
       </div>
 
       {/* Placeholders Reference */}
-      <div className="card card-glass border-info">
+      <div className="clash-config-block border-info">
         <div className="card-body">
           <h6 className="card-title text-info">
             <i className="fa-solid fa-info-circle me-2"/>

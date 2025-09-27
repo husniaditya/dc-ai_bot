@@ -22,6 +22,7 @@ const youtubeRoutes = require('./routes/youtube');
 const youtubeWebSubRoutes = require('./routes/youtube-websub');
 const twitchRoutes = require('./routes/twitch');
 const clashofclansRoutes = require('./routes/clashofclans');
+const genshinRoutes = require('./routes/genshin');
 const channelsRoutes = require('./routes/channels');
 const rolesRoutes = require('./routes/roles');
 const guildsRoutes = require('./routes/guilds');
@@ -55,6 +56,7 @@ function createApiServer(client, store, commandMap, startTimestamp) {
   app.use('/api/youtube', youtubeWebSubRoutes(client, store)); // WebSub endpoints (no auth for webhooks)
   app.use('/api/twitch', authMiddleware, twitchRoutes(client, store));
   app.use('/api/clashofclans', authMiddleware, clashofclansRoutes(client, store));
+  app.use('/api/genshin', authMiddleware, genshinRoutes(client, store));
   app.use('/api/channels', authMiddleware, channelsRoutes(client, store));
   app.use('/api/roles', authMiddleware, rolesRoutes(client, store));
   app.use('/api/guilds', authMiddleware, guildsRoutes(client, store));

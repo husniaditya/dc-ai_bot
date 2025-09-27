@@ -53,8 +53,8 @@ class LeaderboardButtons {
             );
         }
 
-        // Edit button - admin only
-        if (isAdmin) {
+        // Edit button - admin only (disabled for war leaderboards)
+        if (isAdmin && dataView !== 'war') {
             buttons.push(
                 new ButtonBuilder()
                     .setCustomId(`leaderboard_edit_${dataView}_${guildId}${clanSuffix}`)

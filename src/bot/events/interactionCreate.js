@@ -469,6 +469,7 @@ function getCategoryForCommand(commandName) {
     // Gaming
     'coc': 'gaming',
     'cocdebug': 'gaming',
+    'genshin': 'gaming',
     
     // Configuration
     'config': 'configuration',

@@ -308,33 +308,32 @@ class WarPerformanceService {
             let queryParams;
 
             if (currentWarId) {
-                // JOIN with current war performance data to get town hall and position
-                // Only show players who are actually in the current war
+                // Start from current war players and LEFT JOIN with historical statistics
+                // This ensures ALL current war players are included, even without historical data
                 query = `
                     SELECT DISTINCT
-                        s.player_tag,
-                        s.player_name,
-                        s.total_wars_participated as warsParticipated,
-                        s.win_rate as winRate,
-                        s.average_stars_per_attack as averageStars,
-                        s.total_stars_earned,
-                        s.total_attacks_made,
+                        COALESCE(s.player_tag, p.player_tag) as player_tag,
+                        COALESCE(s.player_name, p.player_name) as player_name,
+                        COALESCE(s.total_wars_participated, 0) as warsParticipated,
+                        COALESCE(s.win_rate, 0) as winRate,
+                        COALESCE(s.average_stars_per_attack, 0) as averageStars,
+                        COALESCE(s.total_stars_earned, 0) as total_stars_earned,
+                        COALESCE(s.total_attacks_made, 0) as total_attacks_made,
                         s.last_war_date,
                         p.townhall_level,
                         p.map_position as currentWarPosition
-                    FROM guild_coc_war_statistics_summary s
-                    INNER JOIN guild_coc_war_performance p ON s.player_tag = p.player_tag 
-                        AND p.guild_id = s.guild_id 
-                        AND p.war_id = ?
-                    WHERE s.guild_id = ?
+                    FROM guild_coc_war_performance p
+                    LEFT JOIN guild_coc_war_statistics_summary s ON p.player_tag = s.player_tag 
+                        AND p.guild_id = s.guild_id
+                    WHERE p.guild_id = ? AND p.war_id = ?
                     ORDER BY 
                         p.map_position ASC,
-                        s.total_wars_participated DESC, 
-                        s.win_rate DESC, 
-                        s.average_stars_per_attack DESC
+                        COALESCE(s.total_wars_participated, 0) DESC, 
+                        COALESCE(s.win_rate, 0) DESC, 
+                        COALESCE(s.average_stars_per_attack, 0) DESC
                     LIMIT ${validLimit}
                 `;
-                queryParams = [currentWarId, validGuildId];
+                queryParams = [validGuildId, currentWarId];
             } else {
                 // Fallback to original query when no current war
                 query = `

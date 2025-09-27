@@ -1844,7 +1844,7 @@
       },
       "genshin": {
         "label": "原神",
-        "desc": "活動更新與最新消息（規劃中）"
+        "desc": "透過 Enka.Network 追蹤玩家資料和角色配裝"
       }
     },
     "preview": {
@@ -1859,6 +1859,18 @@
           "videoTitle": "精彩新上傳",
           "publishedAtRelative": "剛剛",
           "memberOnly": "（僅限會員）"
+        },
+        "clashofclans": {
+          "clanName": "範例部落",
+          "warState": "戰爭中",
+          "warOpponent": "敵方部落",
+          "warResult": "勝利"
+        },
+        "genshin": {
+          "playerName": "旅行者",
+          "adventureRank": "60",
+          "worldLevel": "8",
+          "characterName": "胡桃"
         }
       }
     },
@@ -1883,6 +1895,15 @@
       "remove": "移除",
       "loadingConfig": "正在載入 {{service}} 設定…",
       "mentionInputPlaceholder": "新增@everyone、@here或角色…",
+      "announcementChannels": "公告頻道",
+      "messageTemplates": "訊息範本",
+      "selectChannel": "選擇頻道",
+      "basicSettings": "基本設定",
+      "checkInterval": "檢查間隔",
+      "seconds": "秒",
+      "features": "功能",
+      "embedEnabled": "啟用嵌入式訊息",
+      "advancedSettings": "進階設定",
       "meta": {
         "role": "角色",
         "meta": "後設"
@@ -2038,6 +2059,99 @@
         "addFailed": "新增部落失敗"
       },
       "intervalHint": "檢查部落更新的頻率（最少 5 分鐘，建議 1 小時）"
+    },
+    "genshin": {
+      "playersToTrack": "追蹤的玩家",
+      "noPlayers": "沒有配置玩家。新增一個玩家以開始追蹤。",
+      "options": {
+        "trackProfileUpdates": "追蹤資料更新",
+        "trackAchievements": "追蹤新成就",
+        "trackSpiralAbyss": "追蹤深境螺旋進度"
+      },
+      "placeholders": {
+        "playerUID": "輸入玩家 UID（例如：123456789）",
+        "customMessage": "此玩家的自訂公告訊息...",
+        "profileUpdateTemplate": "🎮 {playerName} 更新了資料！冒險等階：{adventureRank} | 世界等級：{worldLevel}",
+        "achievementTemplate": "🏆 {playerName} 獲得了新成就：{achievementName}！",
+        "spiralAbyssTemplate": "🌀 {playerName} 在深境螺旋取得進展！第 {floor} 層，第 {chamber} 間"
+      },
+      "channels": {
+        "profileUpdates": "資料更新頻道",
+        "achievements": "成就頻道",
+        "spiralAbyss": "深境螺旋頻道"
+      },
+      "templates": {
+        "profileUpdate": "資料更新範本",
+        "achievement": "成就範本",
+        "spiralAbyss": "深境螺旋範本"
+      },
+      "settings": {
+        "minAchievementThreshold": "最低成就點數"
+      },
+      "help": {
+        "interval": "檢查更新的頻率（最少 300 秒）",
+        "addPlayer": "輸入有效的 9 位數原神 UID",
+        "customMessage": "此玩家公告的可選自訂訊息",
+        "mentionTargets": "在原神公告中要標註的角色和用戶",
+        "minAchievementThreshold": "僅公告達到此點數或更高的成就"
+      },
+      "customMessage": "{player} 的自訂訊息",
+      "errors": {
+        "invalidUID": "無效的 UID。請輸入有效的 9 位數 UID。",
+        "playerExists": "玩家已在追蹤中。",
+        "playerNotFound": "找不到玩家。檢查 UID 是否正確且個人資料為公開。"
+      },
+      "messages": {
+        "playerAdded": "成功新增玩家 {player}",
+        "playerRemoved": "成功移除玩家"
+      },
+      "fields": {
+        "playerUid": "玩家 UID",
+        "playerUidHint": "輸入原神 UID（例如：123456789）",
+        "playerName": "玩家名稱",
+        "playerNameHint": "輸入顯示用的玩家名稱",
+        "profileAnnouncements": "資料公告",
+        "buildAnnouncements": "配裝公告"
+      },
+      "announce": {
+        "profile": "資料",
+        "build": "配裝",
+        "globalMentions": "全域標註目標",
+        "globalMentionsHelp": "這些角色/用戶將被標註於所有原神通知"
+      },
+      "sections": {
+        "playerManagement": "玩家管理",
+        "trackingFeatures": "追蹤功能",
+        "profileTemplate": "資料更新範本",
+        "buildTemplate": "配裝更新範本",
+        "preview": "範本預覽"
+      },
+      "players": {
+        "addPlayer": "新增玩家",
+        "playerUidPlaceholder": "輸入玩家 UID（例如：123456789）",
+        "noPlayers": "尚未新增玩家。",
+        "mentionTargets": "個別玩家標註目標",
+        "profileAnnouncementChannel": "資料公告頻道",
+        "profileAnnouncementChannelHelp": "此特定玩家的資料更新公告頻道",
+        "buildAnnouncementChannel": "配裝公告頻道", 
+        "buildAnnouncementChannelHelp": "此特定玩家的配裝更新公告頻道",
+        "profileMentions": "資料標註",
+        "profileMentionsHelp": "此玩家資料更新時要標註的角色/用戶",
+        "buildMentions": "配裝標註",
+        "buildMentionsHelp": "此玩家配裝更新時要標註的角色/用戶"
+      },
+      "tracking": {
+        "trackProfiles": "追蹤資料變更",
+        "trackBuilds": "追蹤配裝變更"
+      },
+      "toasts": {
+        "invalidUid": "無效的玩家 UID 格式",
+        "alreadyTracking": "已在追蹤玩家 {{uid}}",
+        "added": "已將玩家 {{uid}} 新增至追蹤清單",
+        "addFailed": "新增玩家失敗",
+        "resolveFailed": "無法連接到 Enka.Network 或找不到玩家資料"
+      },
+      "intervalHint": "檢查玩家更新的頻率（最少 5 分鐘，建議 1 小時）"
     },
     "leveling": "經驗值與等級系統",
     "economy": "經濟系統",

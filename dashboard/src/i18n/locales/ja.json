@@ -1826,7 +1826,7 @@
       },
       "genshin": {
         "label": "Genshin Impact",
-        "desc": "イベント情報＆ニュース（予定）"
+        "desc": "Enka.Networkを通じてプレイヤープロフィールとキャラクタービルドを追跡"
       }
     },
     "preview": {
@@ -1841,6 +1841,18 @@
           "videoTitle": "素晴らしい新作アップロード",
           "publishedAtRelative": "たった今",
           "memberOnly": "（メンバー限定）"
+        },
+        "clashofclans": {
+          "clanName": "クラン例",
+          "warState": "戦争中",
+          "warOpponent": "敵クラン",
+          "warResult": "勝利"
+        },
+        "genshin": {
+          "playerName": "旅行者",
+          "adventureRank": "60",
+          "worldLevel": "8",
+          "characterName": "胡桃"
         }
       }
     },
@@ -1865,6 +1877,15 @@
       "remove": "削除",
       "loadingConfig": "{{service}}の設定を読み込み中…",
       "mentionInputPlaceholder": "@everyone, @here またはロールを追加…",
+      "announcementChannels": "告知チャンネル",
+      "messageTemplates": "メッセージテンプレート",
+      "selectChannel": "チャンネル選択",
+      "basicSettings": "基本設定",
+      "checkInterval": "チェック間隔",
+      "seconds": "秒",
+      "features": "機能",
+      "embedEnabled": "埋め込み有効化",
+      "advancedSettings": "詳細設定",
       "meta": {
         "role": "ロール",
         "meta": "メタ"
@@ -2017,6 +2038,110 @@
         "addFailed": "クランの追加に失敗しました"
       },
       "intervalHint": "クラン更新をチェックする頻度（最小5分、推奨1時間）"
+    },
+    "genshin": {
+      "playersToTrack": "追跡中のプレイヤー",
+      "noPlayers": "プレイヤーが設定されていません。追跡を開始するためにプレイヤーを追加してください。",
+      "options": {
+        "trackProfileUpdates": "プロフィール更新を追跡",
+        "trackAchievements": "新しい実績を追跡",
+        "trackSpiralAbyss": "螺旋の進行状況を追跡"
+      },
+      "placeholders": {
+        "playerUID": "プレイヤーUIDを入力（例：123456789）",
+        "customMessage": "このプレイヤーのカスタム告知メッセージ...",
+        "profileUpdateTemplate": "🎮 {playerName}がプロフィールを更新しました！冒険ランク: {adventureRank} | 世界ランク: {worldLevel}",
+        "achievementTemplate": "🏆 {playerName}が新しい実績を獲得しました: {achievementName}！",
+        "spiralAbyssTemplate": "🌀 {playerName}が螺旋で進歩しました！第{floor}層、第{chamber}間"
+      },
+      "channels": {
+        "profileUpdates": "プロフィール更新チャンネル",
+        "achievements": "実績チャンネル",
+        "spiralAbyss": "螺旋チャンネル"
+      },
+      "templates": {
+        "profileUpdate": "プロフィール更新テンプレート",
+        "achievement": "実績テンプレート",
+        "spiralAbyss": "螺旋テンプレート"
+      },
+      "settings": {
+        "minAchievementThreshold": "最小実績ポイント"
+      },
+      "help": {
+        "interval": "更新をチェックする頻度（最小300秒）",
+        "addPlayer": "有効な9桁の原神UIDを入力",
+        "customMessage": "このプレイヤーの告知用オプションカスタムメッセージ",
+        "mentionTargets": "原神告知でメンションするロールとユーザー",
+        "minAchievementThreshold": "この数以上のポイント価値がある実績のみ告知"
+      },
+      "customMessage": "{player}のカスタムメッセージ",
+      "errors": {
+        "invalidUID": "無効なUID。有効な9桁のUIDを入力してください。",
+        "playerExists": "プレイヤーは既に追跡されています。",
+        "playerNotFound": "プレイヤーが見つかりません。UIDが正しく、プロフィールが公開されていることを確認してください。"
+      },
+      "messages": {
+        "playerAdded": "プレイヤー{player}が正常に追加されました",
+        "playerRemoved": "プレイヤーが正常に削除されました"
+      },
+      "sections": {
+        "general": "一般設定",
+        "players": "追跡中のプレイヤー",
+        "tracking": "追跡設定", 
+        "templates": "メッセージテンプレート",
+        "preview": "テンプレートプレビュー"
+      },
+      "fields": {
+        "enabled": "原神の追跡を有効にする",
+        "channel": "更新チャンネル",
+        "playerUID": "プレイヤーUID",
+        "playerName": "プレイヤー名",
+        "interval": "チェック間隔（分）",
+        "trackProfiles": "プロフィール更新を追跡",
+        "trackBuilds": "キャラクタービルド変更を追跡",
+        "trackAchievements": "新しい実績を追跡",
+        "profileTemplate": "プロフィールテンプレート",
+        "buildTemplate": "ビルドテンプレート",
+        "achievementTemplate": "実績テンプレート"
+      },
+      "players": {
+        "title": "追跡中のプレイヤー",
+        "description": "自動更新のために追跡する原神プレイヤーを管理",
+        "addPlayer": "プレイヤー追加",
+        "removePlayer": "プレイヤー削除",
+        "editPlayer": "プレイヤー編集",
+        "playerUID": "プレイヤーUID",
+        "playerName": "プレイヤー名",
+        "trackingEnabled": "追跡有効",
+        "lastUpdate": "最終更新",
+        "noPlayers": "プレイヤーが設定されていません。追跡を開始するためにプレイヤーを追加してください。",
+        "uidPlaceholder": "プレイヤーUIDを入力（例：123456789）",
+        "namePlaceholder": "名前は自動的に入力されます",
+        "resolving": "プレイヤーを解決中...",
+        "resolved": "プレイヤーが正常に解決されました"
+      },
+      "tracking": {
+        "title": "追跡設定",
+        "description": "原神プレイヤーのどの更新を追跡するかを設定",
+        "profiles": "プロフィール更新",
+        "builds": "ビルド変更",
+        "achievements": "新しい実績",
+        "interval": "チェック間隔",
+        "intervalHint": "更新をチェックする頻度（分単位、最小15分）"
+      },
+      "toast": {
+        "configSaved": "原神設定が正常に保存されました",
+        "configError": "原神設定の保存エラー",
+        "playerAdded": "プレイヤーが正常に追加されました",
+        "playerRemoved": "プレイヤーが正常に削除されました",
+        "playerError": "プレイヤー管理エラー",
+        "invalidUID": "無効なUID。有効な9桁のUIDを入力してください。",
+        "playerNotFound": "プレイヤーが見つかりません。UIDが正しく、プロフィールが公開されていることを確認してください。",
+        "rateLimited": "レート制限に達しました。後でもう一度お試しください。",
+        "networkError": "ネットワークエラー。接続を確認してください。",
+        "templateSaved": "テンプレートが正常に保存されました",
+        "templateError": "テンプレートの保存エラー"
+      }
     },
     "leveling": "XPとレベルアップ",
     "economy": "経済システム",
