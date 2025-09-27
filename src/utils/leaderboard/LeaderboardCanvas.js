@@ -1646,6 +1646,340 @@ class LeaderboardCanvas {
         // Use existing war player row method which handles current attacks
         await this.drawWarPlayerRow(ctx, player, y, index);
     }
+
+    /**
+     * Calculate canvas height for (historical) war leaderboard dual-column layout.
+     * Test script calls this directly.
+     * @param {number} playerCount
+     * @param {number} perColumn Maximum players per column (default 25)
+     * @returns {number} Calculated canvas height (>= minHeight)
+     */
+    calculateWarCanvasHeight(playerCount, perColumn = 25) {
+        const rows = Math.min(playerCount, perColumn); // vertical rows shown
+        const headerExtra = 30; // gap below header
+        const tableHeaderHeight = 50; // column header bar
+        const dynamicHeight = this.padding + // top padding
+            this.headerHeight +
+            headerExtra +
+            tableHeaderHeight +
+            (rows * this.playerRowHeight) +
+            this.footerHeight +
+            this.padding; // bottom padding
+        return Math.max(dynamicHeight, this.minHeight);
+    }
+
+    /**
+     * Public API for historical war leaderboard (dual-column: up to 50 players shown).
+     * Matches usage in test/test-historical-war-leaderboard.js
+     * @param {Array} players Full player list (expects rank, name, townHallLevel, averageStars, warsParticipated, winRate, totalStars)
+     * @param {Object} config Config object { clan_name, clan_tag, canvas_generate_random_color }
+     * @param {Object} warData Optional meta (clanName, clanTag, etc.)
+     * @returns {Buffer} PNG buffer
+     */
+    async generateHistoricalWarLeaderboard(players = [], config = {}, warData = {}) {
+        try {
+            // Theme: enforce purple historical theme (as per test summary) unless overridden
+            this.primaryColor = '#6b46c1'; // deep purple
+            this.accentColor = '#9f7aea'; // lighter purple
+
+            const perColumn = 25;
+            const totalPlayers = players.length;
+            const dual = totalPlayers > perColumn; // two side-by-side pages
+
+            // Original war column total width
+            const warTableInnerWidth = this.rankWidth + this.warNameWidth + this.warRoleWidth + this.warAttackWidth + this.warAvgStarsWidth + this.warParticipationWidth + this.warWinRateWidth;
+            const gapBetweenTables = dual ? 60 : 0;
+            const totalNeededWidth = this.padding * 2 + warTableInnerWidth * (dual ? 2 : 1) + gapBetweenTables;
+
+            // Preserve original width for other usages
+            const originalWidth = this.width;
+            if (totalNeededWidth > this.width) {
+                this.width = totalNeededWidth; // temporarily expand canvas width
+            }
+
+            // Height calculation: based only on max rows in a single table (since side-by-side)
+            const rowsShown = Math.min(perColumn, totalPlayers - 0); // first table rows
+            const secondRows = dual ? Math.min(perColumn, totalPlayers - perColumn) : 0;
+            const tableHeaderHeight = 35;
+            const gapBelowHeader = 30;
+            const blockHeight = this.headerHeight + gapBelowHeader + tableHeaderHeight + (Math.max(rowsShown, secondRows) * this.playerRowHeight);
+            const dynamicHeight = this.padding + blockHeight + this.footerHeight + this.padding;
+            const canvasHeight = Math.max(dynamicHeight, this.minHeight);
+
+            const canvas = createCanvas(this.width, canvasHeight);
+            const ctx = canvas.getContext('2d');
+            await this.drawBackground(ctx, canvasHeight);
+
+            // Slice players
+            const firstPlayers = players.slice(0, perColumn);
+            const secondPlayers = dual ? players.slice(perColumn, perColumn * 2) : [];
+
+            // Draw first header
+            const firstX = this.padding;
+            await this._drawHistoricalPageHeader(ctx, firstX, warTableInnerWidth, config, warData, 1, dual ? 2 : 1);
+            const tableStartY = this.padding + this.headerHeight + gapBelowHeader; // y for table header bar
+            await this._drawWarTableHeadersAt(ctx, firstX, tableStartY, warTableInnerWidth);
+            let rowsYStart = tableStartY + tableHeaderHeight + 5; // some spacing
+
+            for (let i = 0; i < firstPlayers.length; i++) {
+                firstPlayers[i].rank = i + 1;
+                await this._drawWarPlayerRowAt(ctx, firstPlayers[i], rowsYStart + i * this.playerRowHeight, i, firstX, warTableInnerWidth);
+            }
+
+            if (dual) {
+                const secondX = firstX + warTableInnerWidth + gapBetweenTables;
+                await this._drawHistoricalPageHeader(ctx, secondX, warTableInnerWidth, config, warData, 2, 2);
+                await this._drawWarTableHeadersAt(ctx, secondX, tableStartY, warTableInnerWidth);
+                for (let j = 0; j < secondPlayers.length; j++) {
+                    secondPlayers[j].rank = perColumn + j + 1;
+                    await this._drawWarPlayerRowAt(ctx, secondPlayers[j], rowsYStart + j * this.playerRowHeight, j, secondX, warTableInnerWidth);
+                }
+            }
+
+            // Footer once centered across new width
+            await this._drawHistoricalDualFooter(ctx, canvasHeight);
+
+            const buffer = canvas.toBuffer('image/png');
+            // Restore width
+            this.width = originalWidth;
+            return buffer;
+        } catch (err) {
+            console.error('[generateHistoricalWarLeaderboard] Failed:', err);
+            throw err;
+        }
+    }
+
+    /**
+     * Internal: header for dual historical layout
+     */
+    async _drawHistoricalDualHeader(ctx, config, warData, dual) { /* deprecated single-wide header retained for backwards compatibility */ }
+
+    /**
+     * Draw a per-page (per-column) header box for dual historical layout.
+     */
+    async _drawHistoricalPageHeader(ctx, x, width, config, warData, pageNumber, totalPages) {
+        const headerY = this.padding;
+        const gradient = ctx.createLinearGradient(x, headerY, x + width, headerY + this.headerHeight);
+        gradient.addColorStop(0, this.primaryColor);
+        gradient.addColorStop(1, this.accentColor);
+        ctx.fillStyle = gradient;
+        ctx.beginPath();
+        ctx.roundRect(x, headerY, width, this.headerHeight, 15);
+        ctx.fill();
+        // Extract clan & opponent names
+        const clanName = config.clan_name || warData.clanName || warData.clan?.name || 'Clan';
+        const opponentName = warData.opponentName ||
+            warData.opponent?.name ||
+            warData.historicalWar?.opponent?.name ||
+            warData.lastWar?.opponent?.name ||
+            warData.currentWar?.opponent?.name || 'Opponent';
+
+        // Extract star results (prefer historical/ended war data)
+        const clanStars = (warData.historicalWar?.clan?.stars ?? warData.lastWar?.clan?.stars ?? warData.clanStars ?? warData.currentWar?.clan?.stars);
+        const opponentStars = (warData.historicalWar?.opponent?.stars ?? warData.lastWar?.opponent?.stars ?? warData.opponentStars ?? warData.currentWar?.opponent?.stars);
+        const hasStarResult = typeof clanStars === 'number' && typeof opponentStars === 'number';
+
+        ctx.fillStyle = this.textColor;
+        ctx.font = this.titleFont;
+        ctx.textAlign = 'center';
+        ctx.fillText(`📜 ${clanName} vs ${opponentName}`.trim(), x + width / 2, headerY + 65);
+
+        ctx.font = this.headerFont;
+        let secondLine;
+        if (hasStarResult) {
+            secondLine = `⭐ ${clanStars} - ${opponentStars} ⭐  (Page ${pageNumber}/${totalPages})`;
+        } else {
+            secondLine = `Historical War (Page ${pageNumber}/${totalPages})`;
+        }
+        ctx.fillText(secondLine, x + width / 2, headerY + 120);
+
+        if (config.clan_tag) {
+            ctx.font = '20px Arial';
+            ctx.textAlign = 'left';
+            ctx.fillStyle = 'rgba(255,255,255,0.8)';
+            ctx.fillText(config.clan_tag, x + 15, headerY + 120);
+        }
+    }
+
+    /**
+     * Internal: footer for dual historical layout (no navigation hint)
+     */
+    async _drawHistoricalDualFooter(ctx, canvasHeight) {
+        const footerY = canvasHeight - 60;
+        ctx.fillStyle = this.secondaryColor;
+        ctx.font = '26px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText(`Last updated: ${new Date().toLocaleString()}`, this.width / 2, footerY);
+    }
+
+    /**
+     * War table headers drawn at specific x/width (duplicate of drawWarTableHeaders but column-scoped)
+     */
+    async _drawWarTableHeadersAt(ctx, x, y, width) {
+        ctx.fillStyle = '#2c2c2c';
+        ctx.fillRect(x, y, width, 35);
+        ctx.fillStyle = this.secondaryColor;
+        ctx.font = this.headerFont;
+        ctx.textAlign = 'center';
+        let currentX = x;
+        // Using same widths as original war layout
+        // Rank
+        ctx.fillText('#', currentX + (this.rankWidth / 2), y + 22); currentX += this.rankWidth;
+        // Player (left align for name header like original)
+        ctx.textAlign = 'left'; ctx.fillText('Player', currentX + 20, y + 22); currentX += this.warNameWidth;
+        // Role
+        ctx.textAlign = 'center'; ctx.fillText('Role', currentX + (this.warRoleWidth / 2), y + 22); currentX += this.warRoleWidth;
+        // War Attacks
+        ctx.fillText('War Atk', currentX + (this.warAttackWidth / 2), y + 22); currentX += this.warAttackWidth;
+        // Avg Stars
+        ctx.fillText('Avg', currentX + (this.warAvgStarsWidth / 2), y + 22); currentX += this.warAvgStarsWidth;
+        // Wars
+        ctx.fillText('Wars', currentX + (this.warParticipationWidth / 2), y + 22); currentX += this.warParticipationWidth;
+        // Win Rate
+        ctx.fillText('WR', currentX + (this.warWinRateWidth / 2), y + 22);
+    }
+
+    /**
+     * Draw war player row at column offset (adapted from drawWarPlayerRow)
+     */
+    async _drawWarPlayerRowAt(ctx, player, y, index, startX, width) {
+        const isEven = index % 2 === 0;
+        ctx.fillStyle = isEven ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.1)';
+        ctx.fillRect(startX, y, width, this.playerRowHeight);
+
+        let currentX = startX;
+        await this.drawRankWithMedal(ctx, player.rank || index + 1, currentX, y, true);
+        currentX += this.rankWidth;
+
+        // Player name + TH
+        ctx.fillStyle = this.textColor;
+        ctx.font = this.playerFont;
+        ctx.textAlign = 'left';
+        const nameStartX = currentX + 15;
+        const thY = y + (this.playerRowHeight - this.townHallSize)/2;
+        const thSpacing = await this.drawTownHallLevel(ctx, player.townHallLevel || 1, nameStartX, thY);
+        let displayName = player.name || 'Unknown Player';
+        const maxNameWidth = this.warNameWidth - thSpacing - 30;
+        while (ctx.measureText(displayName).width > maxNameWidth && displayName.length > 3) {
+            displayName = displayName.substring(0, displayName.length - 4) + '...';
+        }
+        ctx.fillText(displayName, nameStartX + thSpacing, y + 52);
+        currentX += this.warNameWidth;
+
+        // Role
+        ctx.fillStyle = this.getRoleColor(player.role);
+        ctx.font = this.playerFont; ctx.textAlign = 'center';
+        ctx.fillText(this.formatRole(player.role), currentX + (this.warRoleWidth / 2), y + 52);
+        currentX += this.warRoleWidth;
+
+        // War Attacks area
+        await this.drawCurrentWarAttacks(ctx, player, currentX, y);
+        currentX += this.warAttackWidth;
+
+        // Avg Stars
+        ctx.fillStyle = '#f1c40f'; ctx.font = this.donationFont; ctx.textAlign = 'left';
+        const avgStars = player.averageStars || '0.00';
+        const textWidth = ctx.measureText(avgStars).width;
+        const textStartX = currentX + (this.warAvgStarsWidth / 2) - (textWidth / 2) - 12;
+        ctx.fillText(avgStars, textStartX, y + 52);
+        const starX = textStartX + textWidth + 5;
+        const starY = y + 52 - 20;
+        await this.drawStars(ctx, 1, 1, starX, starY, 32);
+        currentX += this.warAvgStarsWidth;
+
+        // Wars participated
+        ctx.fillStyle = '#9b59b6'; ctx.font = this.playerFont; ctx.textAlign = 'center';
+        ctx.fillText(String(player.warsParticipated || 0), currentX + (this.warParticipationWidth / 2), y + 52);
+        currentX += this.warParticipationWidth;
+
+        // Win Rate
+        ctx.fillStyle = this.secondaryColor; ctx.fillText(`${player.winRate || '0.0'}%`, currentX + (this.warWinRateWidth / 2), y + 52);
+    }
+
+    /**
+     * Internal: column headers (rank, player, avg, win%, wars, stars)
+     */
+    async _drawHistoricalColumnHeaders(ctx, x, y, columnWidth) {
+        ctx.save();
+        ctx.fillStyle = '#2d2d2d';
+        ctx.fillRect(x, y, columnWidth, 50);
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 30px Arial';
+        ctx.textAlign = 'center';
+        const cols = [70, 260, 100, 120, 120, 120]; // base widths
+        const total = cols.reduce((a,b)=>a+b,0);
+        let scale = 1;
+        if (total > columnWidth) scale = columnWidth / total;
+        const scaled = cols.map(c=>c*scale);
+        let cx = x;
+        const headers = ['#','Player','Avg','Win%','Wars','Stars'];
+        for (let i=0;i<headers.length;i++) {
+            const w = scaled[i];
+            ctx.fillText(headers[i], cx + w/2, y + 34);
+            cx += w;
+        }
+        ctx.restore();
+    }
+
+    /**
+     * Internal: draw players for one historical column
+     */
+    async _drawHistoricalColumn(ctx, players, x, startY, columnWidth) {
+        const cols = [70, 260, 100, 120, 120, 120];
+        const total = cols.reduce((a,b)=>a+b,0);
+        let scale = 1;
+        if (total > columnWidth) scale = columnWidth / total;
+        const scaled = cols.map(c=>c*scale);
+
+        for (let i=0;i<players.length;i++) {
+            const p = players[i];
+            const rowY = startY + i * this.playerRowHeight;
+            const isEven = i % 2 === 0;
+            ctx.fillStyle = isEven ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.15)';
+            ctx.fillRect(x, rowY, columnWidth, this.playerRowHeight);
+
+            ctx.font = this.playerFont;
+            ctx.textAlign = 'center';
+            let cx = x;
+            const centerY = rowY + (this.playerRowHeight / 2) + 12;
+
+            // Rank
+            const rank = p.rank || (i + 1);
+            ctx.fillStyle = this.getRankColor(rank);
+            ctx.fillText(this.getRankDisplay(rank, true), cx + scaled[0]/2, centerY);
+            cx += scaled[0];
+
+            // Player name + TH
+            ctx.textAlign = 'left';
+            ctx.fillStyle = this.textColor;
+            const nameX = cx + 15;
+            const thY = rowY + (this.playerRowHeight - this.townHallSize)/2;
+            const thSpacing = await this.drawTownHallLevel(ctx, p.townHallLevel || 1, nameX, thY);
+            const maxNameWidth = scaled[1] - thSpacing - 30;
+            let displayName = p.name || 'Unknown';
+            while (ctx.measureText(displayName).width > maxNameWidth && displayName.length > 3) {
+                displayName = displayName.slice(0, -1);
+            }
+            ctx.fillText(displayName, nameX + thSpacing, centerY);
+            cx += scaled[1];
+
+            ctx.textAlign = 'center';
+            // Avg
+            ctx.fillStyle = this.accentColor;
+            const avg = (typeof p.averageStars === 'string' ? parseFloat(p.averageStars) : (p.averageStars || 0)).toFixed(2);
+            ctx.fillText(avg, cx + scaled[2]/2, centerY); cx += scaled[2];
+            // Win%
+            ctx.fillStyle = '#ffd54f';
+            const win = (typeof p.winRate === 'string' ? parseFloat(p.winRate) : (p.winRate || 0)).toFixed(1) + '%';
+            ctx.fillText(win, cx + scaled[3]/2, centerY); cx += scaled[3];
+            // Wars
+            ctx.fillStyle = '#4dd0e1';
+            ctx.fillText(String(p.warsParticipated || 0), cx + scaled[4]/2, centerY); cx += scaled[4];
+            // Stars (total historical)
+            ctx.fillStyle = '#ffffff';
+            ctx.fillText(String(p.totalStars || 0), cx + scaled[5]/2, centerY);
+        }
+    }
 }
 
 module.exports = LeaderboardCanvas;
