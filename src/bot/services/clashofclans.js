@@ -374,7 +374,7 @@ async function announce(guild, config, data, type) {
         channelId = await getClanSpecificChannelId(data.clanTag, config.warAnnounceChannelId);
         template = config.warDeclaredTemplate || 'War declared against {warOpponent}!';
         mentionTargets = await getClanSpecificMentionTargets(config, data, 'war');
-        // console.log(`[COC] war_declared: channelId=${channelId}, template="${template}"`);
+        console.log(`[COC] war_declared: channelId=${channelId}, template="${template}", warAnnounceChannelId=${config.warAnnounceChannelId}`);
         break;
       case 'war_start':
       case 'war_end':
@@ -404,7 +404,7 @@ async function announce(guild, config, data, type) {
     }
     
     if (!channelId) {
-      // console.warn(`[COC] NO_CHANNEL: No channel configured for ${type} (config.warAnnounceChannelId: ${config.warAnnounceChannelId})`);
+      console.warn(`[COC] NO_CHANNEL: No channel configured for ${type} (config.warAnnounceChannelId: ${config.warAnnounceChannelId})`);
       pushDebug(`NO_CHANNEL: No channel configured for ${type}`);
       return;
     }

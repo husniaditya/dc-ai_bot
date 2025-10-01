@@ -1406,39 +1406,82 @@ class LeaderboardCanvas {
     }
 
     /**
-     * Draw historical war header
+     * Draw historical war header - unified method for both single and dual page layouts
      */
-    async drawHistoricalWarHeader(ctx, config, page, totalPages, warData = {}) {
+    async drawHistoricalWarHeader(ctx, config, page, totalPages, warData = {}, customX = null, customWidth = null) {
         const headerY = this.padding;
+        const x = customX !== null ? customX : this.padding;
+        const width = customWidth !== null ? customWidth : (this.width - (this.padding * 2));
         
         // Header background with historical theme (purple/gray)
-        const headerGradient = ctx.createLinearGradient(0, headerY, this.width, headerY + this.headerHeight);
+        const headerGradient = ctx.createLinearGradient(x, headerY, x + width, headerY + this.headerHeight);
         headerGradient.addColorStop(0, 'rgba(155, 89, 182, 0.8)'); // Purple historical theme
         headerGradient.addColorStop(1, 'rgba(127, 140, 141, 0.6)'); // Gray accent
         
         ctx.fillStyle = headerGradient;
-        ctx.fillRect(this.padding, headerY, this.width - (this.padding * 2), this.headerHeight);
-
-        // Add rounded corners effect
         ctx.beginPath();
-        ctx.roundRect(this.padding, headerY, this.width - (this.padding * 2), this.headerHeight, 15);
+        ctx.roundRect(x, headerY, width, this.headerHeight, 15);
         ctx.fill();
+
+        // Extract clan & opponent names and star results
+        const clanName = config.clan_name || warData.clanName || warData.clan?.name || 'Clan';
+        const opponentName = warData.opponentName ||
+            warData.opponent?.name ||
+            warData.historicalWar?.opponent?.name ||
+            warData.lastWar?.opponent?.name ||
+            warData.currentWar?.opponent?.name;
+
+        const clanStars = (warData.historicalWar?.clan?.stars ?? warData.lastWar?.clan?.stars ?? warData.clanStars ?? warData.currentWar?.clan?.stars);
+        const opponentStars = (warData.historicalWar?.opponent?.stars ?? warData.lastWar?.opponent?.stars ?? warData.opponentStars ?? warData.currentWar?.opponent?.stars);
+        const hasStarResult = typeof clanStars === 'number' && typeof opponentStars === 'number';
 
         // Draw title
         ctx.fillStyle = this.textColor;
         ctx.font = this.titleFont;
         ctx.textAlign = 'center';
         
-        const clanName = config.clan_name || (warData.clanName || 'Clan');
-        const title = `🏆 ${clanName} War Statistics`;
+        let title;
+        if (opponentName && customWidth !== null) {
+            // Dual page layout - show opponent name
+            title = `📜 ${clanName} vs ${opponentName}`;
+        } else if (opponentName) {
+            // Single page with opponent
+            title = `🏆 ${clanName} vs ${opponentName} - War Statistics`;
+        } else {
+            // Fallback
+            title = `🏆 ${clanName} War Statistics`;
+        }
+        
         const titleY = headerY + 70;
-        ctx.fillText(title, this.width / 2, titleY);
+        ctx.fillText(title, x + width / 2, titleY);
 
-        // War status
+        // Second line - war status or page info
         ctx.font = this.headerFont;
-        const warStatus = 'Historical War Performance';
+        let secondLine;
+        if (hasStarResult && customWidth !== null) {
+            // Dual page with star result
+            secondLine = `⭐ ${clanStars} - ${opponentStars} ⭐  (Page ${page}/${totalPages})`;
+        } else if (hasStarResult) {
+            // Single page with star result
+            secondLine = `⭐ Result: ${clanStars} - ${opponentStars} ⭐`;
+        } else if (customWidth !== null) {
+            // Dual page without star result
+            secondLine = `Historical War (Page ${page}/${totalPages})`;
+        } else {
+            // Single page fallback
+            secondLine = 'Historical War Performance';
+        }
+        
         const statusY = titleY + 50;
-        ctx.fillText(warStatus, this.width / 2, statusY);
+        ctx.fillText(secondLine, x + width / 2, statusY);
+
+        // Clan tag (if provided)
+        if (config.clan_tag) {
+            ctx.font = '20px Arial';
+            ctx.textAlign = 'left';
+            ctx.fillStyle = 'rgba(255,255,255,0.8)';
+            ctx.fillText(config.clan_tag, x + 15, statusY);
+        }
     }
 
     /**
@@ -1752,7 +1795,10 @@ class LeaderboardCanvas {
     /**
      * Internal: header for dual historical layout
      */
-    async _drawHistoricalDualHeader(ctx, config, warData, dual) { /* deprecated single-wide header retained for backwards compatibility */ }
+    async _drawHistoricalDualHeader(ctx, config, warData, dual) { 
+        // Use the unified historical header method with custom positioning
+        await this.drawHistoricalWarHeader(ctx, config, pageNumber, totalPages, warData, x, width);
+    }
 
     /**
      * Draw a per-page (per-column) header box for dual historical layout.

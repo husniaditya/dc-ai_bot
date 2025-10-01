@@ -251,7 +251,7 @@ class WarStateManager {
         // No war data available
         if (newState === this.STATES.NOT_IN_WAR) {
             if (currentState === this.STATES.ACTIVE) {
-                // War just ended - transition to ENDED state first
+                // War just ended - transition to ENDED state first to generate historical leaderboard
                 return {
                     action: 'transition',
                     from: currentState,
@@ -270,7 +270,7 @@ class WarStateManager {
                     messageId: currentStateData.preparingMessageId
                 };
             }
-            // Already in NOT_IN_WAR or ENDED state
+            // Already in NOT_IN_WAR or ENDED state - no action needed to prevent spam
             return { action: 'none' };
         }
 

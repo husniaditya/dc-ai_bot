@@ -386,10 +386,10 @@ async function pollGuild(guild) {
           const currentStateData = await warStateManager.getCurrentWarState(guild.id, cleanTag);
           const transitionAction = warStateManager.getTransitionAction(currentStateData, warInfo);
           
-          // console.log(`[COC] Watcher transition check for clan ${cleanTag}:`, JSON.stringify(transitionAction, null, 2));
+          console.log(`[COC] Watcher transition check for clan ${cleanTag}:`, JSON.stringify(transitionAction, null, 2));
           
           if (transitionAction.action === 'transition') {
-            // console.log(`[COC] WATCHER: War state transition detected: ${transitionAction.from} → ${transitionAction.to} for clan ${cleanTag}`);
+            console.log(`[COC] WATCHER: War state transition detected: ${transitionAction.from} → ${transitionAction.to} for clan ${cleanTag}`);
             
             // Handle war declared (transition to preparation)
             if (transitionAction.to === warStateManager.STATES.PREPARING) {
@@ -435,7 +435,7 @@ async function pollGuild(guild) {
               }
 
               // FIRST: Send war declared message (before updating database state)
-              // console.log(`[COC] About to send war declared message for clan ${cleanTag}`);
+              console.log(`[COC] About to send war declared message for clan ${cleanTag}`);
               await announce(guild, cfg, {
                 clanName: clanInfo.name,
                 clanTag: formatClanTag(cleanTag),
@@ -450,11 +450,14 @@ async function pollGuild(guild) {
                 preparationTimeRemaining: preparationTimeRemaining,
                 memberCount: `${currentMembers.length}/50`
               }, 'war_declared');
-              // console.log(`[COC] War declared message sent for clan ${cleanTag}`);
+              console.log(`[COC] War declared message sent for clan ${cleanTag}`);
+
+              // Add a small delay to ensure war declared message is sent before preparation leaderboard
+              await new Promise(resolve => setTimeout(resolve, 2000)); // 2 second delay
 
               // SECOND: Update the database state (after sending declared message)
               await warStateManager.updateWarState(guild.id, cleanTag, transitionAction.to, warInfo);
-              // console.log(`[COC] Updated war state to '${transitionAction.to}' for clan ${cleanTag} in guild ${guild.id}`);
+              console.log(`[COC] Updated war state to '${transitionAction.to}' for clan ${cleanTag} in guild ${guild.id}`);
 
               // Update in-memory state immediately after database update
               clanState.lastWarState = warInfo.state;
@@ -477,7 +480,7 @@ async function pollGuild(guild) {
               }
               
               if (cfg.trackWarLeaderboard && clanSpecificChannelId) {
-                // console.log(`[COC] About to create war preparation leaderboard for clan ${cleanTag} in channel ${clanSpecificChannelId}`);
+                console.log(`[COC] About to create war preparation leaderboard for clan ${cleanTag} in channel ${clanSpecificChannelId}`);
                 try {
                   const leaderboardEvents = getLeaderboardEventsInstance(guild.client);
                   if (leaderboardEvents) {
