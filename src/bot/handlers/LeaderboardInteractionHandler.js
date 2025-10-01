@@ -15,7 +15,7 @@ class LeaderboardInteractionHandler {
         this.db = database;
         this.lastInteraction = new Map(); // Track last interaction time per user to prevent spam
         this.warStateManager = new WarStateManager(database);
-        this.warPerformanceIntegration = new WarPerformanceIntegration(this.warStateManager);
+        this.warPerformanceIntegration = new WarPerformanceIntegration(this.warStateManager, ClashOfClansAPI);
         
         // Initialize war state database columns
         this.warStateManager.ensureWarStateColumns().catch(error => {
@@ -332,6 +332,12 @@ class LeaderboardInteractionHandler {
             const endIndex = startIndex + playersPerPage;
             const pageData = clanData.players.slice(startIndex, endIndex);
 
+            // For historical war leaderboards (war ended), generate dual-page layout without buttons
+            // Only generate historical when war state is 'warEnded', not 'notInWar'
+            if (view === 'war' && clanData.warState === 'warEnded') {
+                return await this.generateHistoricalWarLeaderboard(interaction, config, clanData, false);
+            }
+
             // Update database with current page state
             await this.updatePageState(interaction.guildId, page, totalPages, clanTag);
 
@@ -343,18 +349,18 @@ class LeaderboardInteractionHandler {
 
             // Create buttons with clan tag (disable if war ended)
             const isAdmin = LeaderboardButtons.hasAdminPermission(interaction.member);
-            const buttonsDisabled = view === 'war' && !this.warStateManager.shouldEnableButtons(clanData.warState);
+            const shouldShowButtons = !(view === 'war' && !this.warStateManager.shouldEnableButtons(clanData.warState));
             
-            const buttonRow = LeaderboardButtons.createButtonRow({
+            // Only create button row if buttons should be shown (for historical wars, no buttons at all)
+            const buttonRow = shouldShowButtons ? LeaderboardButtons.createButtonRow({
                 currentPage: page,
                 totalPages,
                 isAdmin,
                 guildId: interaction.guildId,
                 clanTag: clanTag,
                 view: 'page',
-                dataView: view,
-                disabled: buttonsDisabled
-            });
+                dataView: view
+            }) : null;
 
             // Create embed with page info
             const viewTitle = view === 'war' ? 'War Statistics' : 'Donation Leaderboard';
@@ -373,9 +379,13 @@ class LeaderboardInteractionHandler {
             // Update the message
             const updateData = {
                 embeds: [embed],
-                files: [{ attachment: canvasBuffer, name: 'leaderboard.png' }],
-                components: [buttonRow]
+                files: [{ attachment: canvasBuffer, name: 'leaderboard.png' }]
             };
+
+            // Only add buttons if they should be shown (no buttons for historical wars)
+            if (buttonRow) {
+                updateData.components = [buttonRow];
+            }
 
             // Only add content if template exists and is not empty
             if (config.donation_leaderboard_template && config.donation_leaderboard_template.trim()) {
@@ -425,6 +435,8 @@ class LeaderboardInteractionHandler {
                 return await this.sendError(interaction, `No ${view} data available for any clan`, view);
             }
 
+
+
             // For the first clan, update the original interaction reply
             const firstClanData = clanDataArray[0];
             await this.generateClanLeaderboardForData(interaction, config, page, firstClanData, view, true);
@@ -467,26 +479,31 @@ class LeaderboardInteractionHandler {
             const endIndex = startIndex + playersPerPage;
             const pageData = clanData.players.slice(startIndex, endIndex);
 
+            // For historical war leaderboards (war ended), generate dual-page layout without buttons
+            // Only generate historical when war state is 'warEnded', not 'notInWar'
+            if (view === 'war' && clanData.warState === 'warEnded') {
+                return await this.generateHistoricalWarLeaderboard(interaction, config, clanData, isOriginalReply);
+            }
+
             // Generate canvas image
             const canvas = new LeaderboardCanvas();
             const canvasBuffer = view === 'war'
                 ? await canvas.generateWarLeaderboard(pageData, {...config, clan_name: clanData.clanName, clan_tag: clanData.clanTag}, page, totalPages, clanData, clanData.warState)
                 : await canvas.generateLeaderboard(pageData, {...config, clan_name: clanData.clanName, clan_tag: clanData.clanTag}, page, totalPages);
 
-            // Create buttons with clan tag (disable if war ended)
+            // Create buttons with clan tag (only show if war is not ended)
             const isAdmin = LeaderboardButtons.hasAdminPermission(interaction.member);
-            const buttonsDisabled = view === 'war' && clanData && !this.warStateManager.shouldEnableButtons(clanData.warState);
+            const shouldShowButtons = !(view === 'war' && clanData && !this.warStateManager.shouldEnableButtons(clanData.warState));
             
-            const buttonRow = LeaderboardButtons.createButtonRow({
+            const buttonRow = shouldShowButtons ? LeaderboardButtons.createButtonRow({
                 currentPage: page,
                 totalPages,
                 isAdmin,
                 guildId: interaction.guildId,
                 clanTag: clanData.clanTag,
                 view: 'page',
-                dataView: view,
-                disabled: buttonsDisabled
-            });
+                dataView: view
+            }) : null;
 
             // Create embed with page info
             const viewTitle = view === 'war' ? 'War Statistics' : 'Donation Leaderboard';
@@ -505,9 +522,13 @@ class LeaderboardInteractionHandler {
             // Prepare message data
             const messageData = {
                 embeds: [embed],
-                files: [{ attachment: canvasBuffer, name: 'leaderboard.png' }],
-                components: [buttonRow]
+                files: [{ attachment: canvasBuffer, name: 'leaderboard.png' }]
             };
+
+            // Only add buttons if they should be shown (no buttons for historical wars)
+            if (buttonRow) {
+                messageData.components = [buttonRow];
+            }
 
             // Only add content if template exists and is not empty (only for original reply)
             if (isOriginalReply && config.donation_leaderboard_template && config.donation_leaderboard_template.trim()) {
@@ -619,7 +640,10 @@ class LeaderboardInteractionHandler {
             const playersPerPage = config.donation_leaderboard_players_per_page || 25;
             const totalPages = Math.max(1, Math.ceil(players.length / playersPerPage));
             
-            const buttonRow = LeaderboardButtons.createButtonRow({
+            // For war leaderboards, check if buttons should be shown (no buttons for historical wars)
+            const shouldShowButtons = !(view === 'war' && leaderboardData.currentWar && !this.warStateManager.shouldEnableButtons(leaderboardData.warState));
+            
+            const buttonRow = shouldShowButtons ? LeaderboardButtons.createButtonRow({
                 currentPage: returnPage,
                 totalPages,
                 isAdmin,
@@ -627,17 +651,23 @@ class LeaderboardInteractionHandler {
                 clanTag: clanTag,
                 view: 'summary',
                 dataView: view
-            });
+            }) : null;
 
             // Check if interaction is still valid before editing
             if (interaction.deferred || interaction.replied) {
                 try {
-                    await interaction.editReply({
+                    const replyData = {
                         content: null,
                         embeds: [embed],
-                        files: [],
-                        components: [buttonRow]
-                    });
+                        files: []
+                    };
+
+                    // Only add buttons if they should be shown (no buttons for historical wars)
+                    if (buttonRow) {
+                        replyData.components = [buttonRow];
+                    }
+
+                    await interaction.editReply(replyData);
                 } catch (editError) {
                     console.error('Failed to edit reply in summary (interaction may be expired):', {
                         error: editError.message,
@@ -757,12 +787,12 @@ class LeaderboardInteractionHandler {
                 );
                 
                 if (realWarData && realWarData.length > 0) {
-                    console.log(`[LeaderboardInteractionHandler] ✅ Using real war performance data: ${realWarData.length} players`);
+                    // console.log(`[LeaderboardInteractionHandler] ✅ Using real war performance data: ${realWarData.length} players`);
                     // Replace with real performance data
                     clanData.players = realWarData;
                     clanData.dataSource = 'real_performance_data';
                 } else {
-                    console.log('[LeaderboardInteractionHandler] ⚠️ No real war performance data available, using API data');
+                    // console.log('[LeaderboardInteractionHandler] ⚠️ No real war performance data available, using API data');
                     // Keep original API data as fallback
                     clanData.dataSource = 'api_fallback';
                 }
@@ -1130,6 +1160,77 @@ class LeaderboardInteractionHandler {
             });
         }
     }
+
+    /**
+     * Generate historical war leaderboard - creates all pages at once without buttons
+     * This makes the leaderboard unupdatable and shows complete war history
+     * @param {Interaction} interaction 
+     * @param {Object} config - Leaderboard configuration
+     * @param {Object} clanData - Clan war data
+     * @param {boolean} isOriginalReply - Whether this is the original reply
+     */
+    async generateHistoricalWarLeaderboard(interaction, config, clanData, isOriginalReply = false) {
+        try {
+            const playerCount = clanData.players.length;
+            const useDualPage = playerCount > 25;
+            
+            console.log(`[Historical War] Generating ${useDualPage ? 'dual-page' : 'single-page'} historical war leaderboard (${playerCount} players)`);
+            
+            const canvas = new LeaderboardCanvas();
+            let canvasBuffer;
+            let layoutDescription;
+            
+            if (useDualPage) {
+                // Use dual-page layout for >25 players (up to 50) - single canvas with two side-by-side tables
+                canvasBuffer = await canvas.generateHistoricalWarLeaderboard(
+                    clanData.players, 
+                    {...config, clan_name: clanData.clanName, clan_tag: clanData.clanTag}, 
+                    clanData
+                );
+                layoutDescription = `Showing top ${Math.min(playerCount, 50)} players in dual-page layout`;
+            } else {
+                // Use regular single-page layout for ≤25 players
+                canvasBuffer = await canvas.generateHistoricalWarCanvas(
+                    clanData.players, 
+                    {...config, clan_name: clanData.clanName, clan_tag: clanData.clanTag}, 
+                    1, 1, clanData
+                );
+                layoutDescription = `Showing ${playerCount} players`;
+            }
+            
+            // Create embed (no buttons - historical data is static)
+            const embed = new EmbedBuilder()
+                .setTitle(`📜 ${clanData.clanName} Historical War Leaderboard`)
+                .setDescription(`Historical war statistics for **${clanData.clanName}**\n${layoutDescription}`)
+                .setImage('attachment://war_history.png')
+                .setColor('#6b46c1') // Purple color for historical theme
+                .setTimestamp()
+                .setFooter({ 
+                    text: `${clanData.clanTag} • War History • No longer updating` 
+                });
+            
+            const messageData = {
+                embeds: [embed],
+                files: [{ attachment: canvasBuffer, name: 'war_history.png' }]
+                // No components (buttons) - historical data is static
+            };
+            
+            // Send the message - single message only, no duplicates
+            if (isOriginalReply) {
+                await interaction.editReply(messageData);
+            } else {
+                await interaction.followUp(messageData);
+            }
+            
+            console.log(`[Historical War] ✅ Successfully generated ${useDualPage ? 'dual-page' : 'single-page'} historical war leaderboard for ${clanData.clanTag}`);
+            
+        } catch (error) {
+            console.error('[Historical War] Error generating historical war leaderboard:', error);
+            throw error;
+        }
+    }
+
+
 
     async sendError(interaction, message, view = 'donations', clanTag = null) {
         // Check if interaction is still valid before trying to send error

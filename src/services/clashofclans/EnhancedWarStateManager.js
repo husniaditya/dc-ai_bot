@@ -116,8 +116,8 @@ class EnhancedWarStateManager {
                 name: player.player_name,
                 tag: player.player_tag,
                 warsParticipated: player.warsParticipated,
-                winRate: player.winRate.toFixed(1),
-                averageStars: player.averageStars.toFixed(2),
+                winRate: parseFloat(player.winRate || 0).toFixed(1),
+                averageStars: parseFloat(player.averageStars || 0).toFixed(2),
                 // Add placeholder for current war attack details
                 currentWarAttackDetails: [] // This would be populated if there's an active war
             }));

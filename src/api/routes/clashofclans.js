@@ -58,7 +58,8 @@ function createClashOfClansRoutes(client, store) {
         donationLeaderboardChannelId: req.body.donationLeaderboardChannelId,
         // War leaderboard fields (CRITICAL: these were missing!)
         warLeaderboardChannelId: req.body.warLeaderboardChannelId || req.body.war_leaderboard_channel_id,
-        warLeaderboardMessageId: req.body.warLeaderboardMessageId || req.body.war_leaderboard_message_id,
+        warPreparingMessageId: req.body.warPreparingMessageId || req.body.war_preparing_message_id,
+        warActiveMessageId: req.body.warActiveMessageId || req.body.war_active_message_id,
         // Global mention targets (primary)
         mentionTargets: Array.isArray(req.body.mentionTargets) ? req.body.mentionTargets : undefined,
         // Individual mention targets (for compatibility)
@@ -132,7 +133,8 @@ function createClashOfClansRoutes(client, store) {
                   const warResult = await leaderboardEvents.postLeaderboard(
                     guild.id, 
                     clanConfig.warAnnounceChannelId, 
-                    clanConfig.warLeaderboardMessageId || null,
+                    clanConfig.warPreparingMessageId || null,
+                    clanConfig.warActiveMessageId || null,
                     'war',
                     clanTag  // Pass clan tag to update specific clan row
                   );
@@ -175,7 +177,8 @@ function createClashOfClansRoutes(client, store) {
               const warResult = await leaderboardEvents.postLeaderboard(
                 guild.id, 
                 cfg.warLeaderboardChannelId, 
-                cfg.warLeaderboardMessageId || null,
+                cfg.warPreparingMessageId || null,
+                cfg.warActiveMessageId || null,
                 'war',
                 firstClanTag
               );

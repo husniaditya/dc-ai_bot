@@ -32,7 +32,7 @@ async function getGuildClashOfClansConfig(guildId) {
         SELECT clan_tag, clan_name, clan_order,
                war_announce_channel_id, member_announce_channel_id, donation_announce_channel_id,
                donation_leaderboard_channel_id, war_leaderboard_channel_id, 
-               donation_message_id, war_leaderboard_message_id, 
+               donation_message_id, war_preparing_message_id, war_active_message_id, 
                war_mention_target, member_mention_target, donation_mention_target, 
                enabled, interval_sec, track_wars, track_members, track_donations, track_donation_leaderboard,
                donation_threshold, donation_leaderboard_schedule, donation_leaderboard_time, 
@@ -81,7 +81,8 @@ async function getGuildClashOfClansConfig(guildId) {
               memberAnnouncementChannelId: row.member_announce_channel_id,
               donationAnnounceChannelId: row.donation_announce_channel_id,
               // Preserve per-clan message ids so we don't overwrite them on save
-              warLeaderboardMessageId: row.war_leaderboard_message_id || null,
+              warPreparingMessageId: row.war_preparing_message_id || null,
+              warActiveMessageId: row.war_active_message_id || null,
               donationMessageId: row.donation_message_id || null,
               // War state management fields
               warCurrentState: row.war_current_state || 'notInWar',
@@ -161,7 +162,8 @@ async function getGuildClashOfClansConfig(guildId) {
           donationLeaderboardChannelId: firstRow.donation_leaderboard_channel_id,
           warLeaderboardChannelId: firstRow.war_leaderboard_channel_id,
           donationMessageId: firstRow.donation_message_id,
-          warLeaderboardMessageId: firstRow.war_leaderboard_message_id,
+          warPreparingMessageId: firstRow.war_preparing_message_id,
+          warActiveMessageId: firstRow.war_active_message_id,
           
           // Global mention targets (from first row, for backward compatibility)
           warMentionTarget: firstRow.war_mention_target || null,
@@ -250,10 +252,11 @@ async function setGuildClashOfClansConfig(guildId, partial) {
   if (partial.donationAnnounceChannelId !== undefined) next.donationAnnounceChannelId = partial.donationAnnounceChannelId;
   if (partial.donationLeaderboardChannelId !== undefined) next.donationLeaderboardChannelId = partial.donationLeaderboardChannelId;
   if (partial.warLeaderboardChannelId !== undefined) next.warLeaderboardChannelId = partial.warLeaderboardChannelId;
-  if (partial.warLeaderboardMessageId !== undefined) next.warLeaderboardMessageId = partial.warLeaderboardMessageId;
+  // Legacy warLeaderboardMessageId removed - use state-specific fields
   if (partial.donationMessageId !== undefined) next.donationMessageId = partial.donationMessageId;
   if (partial.donation_message_id !== undefined) next.donationMessageId = partial.donation_message_id;
-  if (partial.war_leaderboard_message_id !== undefined) next.warLeaderboardMessageId = partial.war_leaderboard_message_id;
+  if (partial.war_preparing_message_id !== undefined) next.warPreparingMessageId = partial.war_preparing_message_id;
+  if (partial.war_active_message_id !== undefined) next.warActiveMessageId = partial.war_active_message_id;
   
   // Handle mention targets
   if (partial.mentionTargets !== undefined) {
@@ -363,7 +366,8 @@ async function setGuildClashOfClansConfig(guildId, partial) {
             warAnnounceChannelId: clanConfig.warAnnounceChannelId || null,
             memberAnnouncementChannelId: clanConfig.memberAnnouncementChannelId || null,
             donationAnnounceChannelId: clanConfig.donationAnnounceChannelId || null,
-            warLeaderboardMessageId: clanConfig.warLeaderboardMessageId || clanConfig.war_leaderboard_message_id || null,
+            warPreparingMessageId: clanConfig.warPreparingMessageId || clanConfig.war_preparing_message_id || null,
+            warActiveMessageId: clanConfig.warActiveMessageId || clanConfig.war_active_message_id || null,
             donationMessageId: clanConfig.donationMessageId || clanConfig.donation_message_id || null,
             // War state management fields (preserve existing values if available)
             warCurrentState: clanConfig.warCurrentState || 'notInWar',
@@ -393,7 +397,8 @@ async function setGuildClashOfClansConfig(guildId, partial) {
             warAnnounceChannelId: clanConfig.warAnnounceChannelId || null,
             memberAnnouncementChannelId: clanConfig.memberAnnouncementChannelId || null,
             donationAnnounceChannelId: clanConfig.donationAnnounceChannelId || null,
-            warLeaderboardMessageId: clanConfig.warLeaderboardMessageId || clanConfig.war_leaderboard_message_id || null,
+            warPreparingMessageId: clanConfig.warPreparingMessageId || clanConfig.war_preparing_message_id || null,
+            warActiveMessageId: clanConfig.warActiveMessageId || clanConfig.war_active_message_id || null,
             donationMessageId: clanConfig.donationMessageId || clanConfig.donation_message_id || null,
             // War state management fields (preserve existing values if available)
             warCurrentState: clanConfig.warCurrentState || 'notInWar',
@@ -425,7 +430,8 @@ async function setGuildClashOfClansConfig(guildId, partial) {
           memberAnnouncementChannelId: null,
           donationAnnounceChannelId: null,
           // For legacy arrays, reuse global message ids only for first clan; others remain null to avoid duplication
-          warLeaderboardMessageId: index === 0 ? (next.warLeaderboardMessageId || null) : null,
+          warPreparingMessageId: index === 0 ? (next.warPreparingMessageId || null) : null,
+          warActiveMessageId: index === 0 ? (next.warActiveMessageId || null) : null,
           donationMessageId: index === 0 ? (next.donationMessageId || null) : null,
           // War state management fields - set defaults for legacy clans
           warCurrentState: 'notInWar',
@@ -444,7 +450,7 @@ async function setGuildClashOfClansConfig(guildId, partial) {
           guild_id, clan_tag, clan_name, clan_order,
           war_announce_channel_id, member_announce_channel_id, donation_announce_channel_id, 
           donation_leaderboard_channel_id, war_leaderboard_channel_id,
-          donation_message_id, war_leaderboard_message_id, 
+          donation_message_id, war_preparing_message_id, war_active_message_id, 
           war_mention_target, member_mention_target, donation_mention_target,
           enabled, interval_sec, track_wars, track_members, track_donations, track_donation_leaderboard,
           donation_threshold, donation_leaderboard_schedule, donation_leaderboard_time,
@@ -457,7 +463,7 @@ async function setGuildClashOfClansConfig(guildId, partial) {
         guildId, '', '', 0, // Empty clan data
         null, null, null, // No announcement channels
         null, null, // No leaderboard channels
-        next.donationMessageId, next.warLeaderboardMessageId,
+        next.donationMessageId, next.warPreparingMessageId, next.warActiveMessageId,
         next.warMentionTarget || '', next.memberMentionTarget || '', next.donationMentionTarget || '',
         next.enabled ? 1 : 0, next.intervalSec || 3600, 
         next.trackWars ? 1 : 0, next.trackMembers ? 1 : 0, next.trackDonations ? 1 : 0, next.trackDonationLeaderboard ? 1 : 0,
@@ -478,7 +484,7 @@ async function setGuildClashOfClansConfig(guildId, partial) {
             guild_id, clan_tag, clan_name, clan_order,
             war_announce_channel_id, member_announce_channel_id, donation_announce_channel_id, 
             donation_leaderboard_channel_id, war_leaderboard_channel_id,
-            donation_message_id, war_leaderboard_message_id, 
+            donation_message_id, war_preparing_message_id, war_active_message_id, 
             war_mention_target, member_mention_target, donation_mention_target,
             enabled, interval_sec, track_wars, track_members, track_donations, track_donation_leaderboard,
             donation_threshold, donation_leaderboard_schedule, donation_leaderboard_time,
@@ -493,7 +499,8 @@ async function setGuildClashOfClansConfig(guildId, partial) {
           donationLeaderboardChannelId || null, warLeaderboardChannelId || null,
           // Preserve per-clan message ids. Fall back to global ids only if clan-specific not provided
           (clan.donationMessageId !== undefined ? clan.donationMessageId : (clan.order === 0 ? next.donationMessageId : null)) || null,
-          (clan.warLeaderboardMessageId !== undefined ? clan.warLeaderboardMessageId : (clan.order === 0 ? next.warLeaderboardMessageId : null)) || null,
+          (clan.warPreparingMessageId !== undefined ? clan.warPreparingMessageId : (clan.order === 0 ? next.warPreparingMessageId : null)) || null,
+          (clan.warActiveMessageId !== undefined ? clan.warActiveMessageId : (clan.order === 0 ? next.warActiveMessageId : null)) || null,
           Array.isArray(clan.warMentionTargets) ? clan.warMentionTargets.join(',') : '',
           Array.isArray(clan.memberMentionTargets) ? clan.memberMentionTargets.join(',') : '',
           Array.isArray(clan.donationMentionTargets) ? clan.donationMentionTargets.join(',') : '',

@@ -40,7 +40,7 @@ class WarPerformanceService {
             
             // Check if date is valid
             if (isNaN(date.getTime())) {
-                console.warn('[WarPerformanceService] Invalid date value:', dateValue);
+                // console.warn('[WarPerformanceService] Invalid date value:', dateValue);
                 return null;
             }
             
@@ -48,7 +48,7 @@ class WarPerformanceService {
             return date.toISOString().slice(0, 19).replace('T', ' ');
             
         } catch (error) {
-            console.warn('[WarPerformanceService] Error formatting date:', dateValue, error.message);
+            // console.warn('[WarPerformanceService] Error formatting date:', dateValue, error.message);
             return null;
         }
     }
@@ -218,10 +218,10 @@ class WarPerformanceService {
                 `, [guildId, playerTag]);
                 
                 if (debugStats.length > 0) {
-                    console.log(`[WarPerformanceService] Player ${playerTag} has records but no completed wars:`, 
-                        debugStats.map(d => `${d.war_state}/${d.war_result}: ${d.count}`).join(', '));
+                    // console.log(`[WarPerformanceService] Player ${playerTag} has records but no completed wars:`, 
+                        // debugStats.map(d => `${d.war_state}/${d.war_result}: ${d.count}`).join(', '));
                 } else {
-                    console.log(`[WarPerformanceService] No war records found at all for player ${playerTag}`);
+                    // console.log(`[WarPerformanceService] No war records found at all for player ${playerTag}`);
                 }
                 return;
             }
@@ -286,6 +286,101 @@ class WarPerformanceService {
     }
 
     /**
+     * Get war statistics for leaderboard display with current war data
+     * @param {string} guildId - Discord guild ID
+     * @param {number} limit - Number of players to return
+     * @param {string} currentWarId - Current war ID to join with (optional)
+     * @returns {Array} Array of player statistics with current war data
+     */
+    async getWarLeaderboardDataWithCurrentWar(guildId, limit = 50, currentWarId = null) {
+        const connection = await this.getConnection();
+        
+        try {
+            // Validate and sanitize parameters
+            const validGuildId = String(guildId || '').trim();
+            const validLimit = Math.max(1, Math.min(parseInt(limit) || 50, 200));
+            
+            if (!validGuildId) {
+                return [];
+            }
+
+            let query;
+            let queryParams;
+
+            if (currentWarId) {
+                // Start from current war players and LEFT JOIN with historical statistics
+                // This ensures ALL current war players are included, even without historical data
+                query = `
+                    SELECT DISTINCT
+                        COALESCE(s.player_tag, p.player_tag) as player_tag,
+                        COALESCE(s.player_name, p.player_name) as player_name,
+                        COALESCE(s.total_wars_participated, 0) as warsParticipated,
+                        COALESCE(s.win_rate, 0) as winRate,
+                        COALESCE(s.average_stars_per_attack, 0) as averageStars,
+                        COALESCE(s.total_stars_earned, 0) as total_stars_earned,
+                        COALESCE(s.total_attacks_made, 0) as total_attacks_made,
+                        s.last_war_date,
+                        p.townhall_level,
+                        p.map_position as currentWarPosition
+                    FROM guild_coc_war_performance p
+                    LEFT JOIN guild_coc_war_statistics_summary s ON p.player_tag = s.player_tag 
+                        AND p.guild_id = s.guild_id
+                    WHERE p.guild_id = ? AND p.war_id = ?
+                    ORDER BY 
+                        p.map_position ASC,
+                        COALESCE(s.total_wars_participated, 0) DESC, 
+                        COALESCE(s.win_rate, 0) DESC, 
+                        COALESCE(s.average_stars_per_attack, 0) DESC
+                    LIMIT ${validLimit}
+                `;
+                queryParams = [validGuildId, currentWarId];
+            } else {
+                // Fallback to original query when no current war
+                query = `
+                    SELECT 
+                        player_tag,
+                        player_name,
+                        total_wars_participated as warsParticipated,
+                        win_rate as winRate,
+                        average_stars_per_attack as averageStars,
+                        total_stars_earned,
+                        total_attacks_made,
+                        last_war_date,
+                        NULL as townhall_level,
+                        NULL as currentWarPosition
+                    FROM guild_coc_war_statistics_summary 
+                    WHERE guild_id = ? 
+                    ORDER BY total_wars_participated DESC, win_rate DESC, average_stars_per_attack DESC
+                    LIMIT ${validLimit}
+                `;
+                queryParams = [validGuildId];
+            }
+
+            const [players] = await connection.execute(query, queryParams);
+
+            // Add rank numbers
+            const rankedPlayers = players.map((player, index) => ({
+                ...player,
+                rank: index + 1
+            }));
+
+            return rankedPlayers;
+            
+        } catch (error) {
+            console.error('❌ Error getting war leaderboard data with current war:', error);
+            console.error('❌ Error details:', {
+                message: error.message,
+                code: error.code,
+                errno: error.errno,
+                sqlState: error.sqlState
+            });
+            return [];
+        } finally {
+            await connection.end();
+        }
+    }
+
+    /**
      * Get war statistics for leaderboard display
      * @param {string} guildId - Discord guild ID
      * @param {number} limit - Number of players to return
@@ -300,11 +395,11 @@ class WarPerformanceService {
             const validLimit = Math.max(1, Math.min(parseInt(limit) || 50, 200));
             
             if (!validGuildId) {
-                console.error('[WarPerformanceService] No valid guild ID provided');
+                // console.error('[WarPerformanceService] No valid guild ID provided');
                 return [];
             }
 
-            console.log(`[WarPerformanceService] Getting leaderboard data for guild ${validGuildId}, limit ${validLimit}`);
+            // console.log(`[WarPerformanceService] Getting leaderboard data for guild ${validGuildId}, limit ${validLimit}`);
 
             // Use string interpolation for LIMIT to avoid MySQL parameter type issues
             // Only guild_id uses parameter binding for security
@@ -324,11 +419,11 @@ class WarPerformanceService {
                 LIMIT ${validLimit}
             `;
 
-            console.log('[WarPerformanceService] Executing query with guild_id parameter:', validGuildId);
+            // console.log('[WarPerformanceService] Executing query with guild_id parameter:', validGuildId);
 
             const [players] = await connection.execute(query, [validGuildId]);
 
-            console.log(`[WarPerformanceService] Found ${players.length} players in leaderboard`);
+            // console.log(`[WarPerformanceService] Found ${players.length} players in leaderboard`);
 
             // Add rank numbers
             const rankedPlayers = players.map((player, index) => ({
@@ -371,7 +466,7 @@ class WarPerformanceService {
             const validPlayerTag = playerTag || null;
 
             if (!validWarId || !validPlayerTag) {
-                console.log(`[WarPerformanceService] Missing required parameters: warId=${validWarId}, playerTag=${validPlayerTag}`);
+                // console.log(`[WarPerformanceService] Missing required parameters: warId=${validWarId}, playerTag=${validPlayerTag}`);
                 return [];
             }
 
@@ -385,7 +480,7 @@ class WarPerformanceService {
             `, [validWarId, validPlayerTag]);
 
             if (rows.length === 0) {
-                console.log(`[WarPerformanceService] No attack data found for player ${validPlayerTag} in war ${validWarId}`);
+                // console.log(`[WarPerformanceService] No attack data found for player ${validPlayerTag} in war ${validWarId}`);
                 return [];
             }
 

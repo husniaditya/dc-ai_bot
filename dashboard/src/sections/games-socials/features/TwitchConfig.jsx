@@ -69,9 +69,9 @@ export default function TwitchConfig({
 
   return (
     <>
-      <div className="yt-config-grid mt-2">
+      <div className="twitch-config-grid mt-2">
         {/* MAIN CONFIG */}
-        <div className="yt-config-block">
+        <div className="twitch-config-block">
           <div className="d-flex justify-content-between align-items-start mb-2">
             <div>
               <div className="small text-uppercase text-muted fw-semibold mb-1">{t('gamesSocials.common.announcement')}</div>
@@ -158,7 +158,7 @@ export default function TwitchConfig({
         </div>
 
         {/* GLOBAL TEMPLATES */}
-        <div className="yt-config-block">
+        <div className="twitch-config-block">
           <div className="small text-uppercase text-muted fw-semibold mb-2">{t('gamesSocials.twitch.sections.globalTemplate')}</div>
           
           <div className="mb-2">
@@ -177,7 +177,7 @@ export default function TwitchConfig({
         </div>
 
         {/* TEMPLATE PREVIEW */}
-        <div className="yt-config-block">
+        <div className="twitch-config-block">
           <div className="small text-uppercase text-muted fw-semibold mb-2">{t('gamesSocials.twitch.sections.templatePreview')}</div>
           
           <div className="mb-2">
@@ -197,7 +197,7 @@ export default function TwitchConfig({
       </div>
 
       {/* STREAMERS MANAGEMENT */}
-      <div className="yt-config-block mt-3">
+      <div className="twitch-config-block mt-3">
         <div className="d-flex flex-wrap align-items-end gap-2 mb-3">
           <div style={{flex: '1 1 260px'}}>
             <label className="form-label small fw-semibold mb-1">{t('gamesSocials.twitch.streamers.addLabel')}</label>
@@ -224,7 +224,7 @@ export default function TwitchConfig({
           </button>
         </div>
 
-        <ul className="yt-channel-list list-unstyled m-0 p-0">
+        <ul className="twitch-channel-list list-unstyled m-0 p-0">
           {(!Array.isArray(config.streamers) || config.streamers.length === 0) && (
             <li className="text-muted small py-2">{t('gamesSocials.twitch.streamers.empty')}</li>
           )}
@@ -235,8 +235,8 @@ export default function TwitchConfig({
             const isEditing = editingStreamer === username;
             
             return (
-              <li key={username} className={"yt-channel-item " + (isEditing ? 'editing' : '')}>
-                <div className="yt-channel-row">
+              <li key={username} className={"twitch-channel-item " + (isEditing ? 'editing' : '')}>
+                <div className="twitch-channel-row">
                   <div className="flex-grow-1">
                     <div className="d-flex align-items-center gap-2 flex-wrap">
                       <code className="small text-muted">{username}</code>
@@ -305,7 +305,7 @@ export default function TwitchConfig({
                 </div>
 
                 {isEditing && (
-                  <div className="yt-channel-edit mt-2">
+                  <div className="twitch-channel-edit mt-2">
                     <div className="row g-2">
                       <div className="col-md-12">
                         <label className="form-label tiny fw-semibold mb-1">{t('gamesSocials.twitch.streamers.liveTemplate')}</label>

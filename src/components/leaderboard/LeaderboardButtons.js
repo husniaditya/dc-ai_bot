@@ -18,7 +18,8 @@ class LeaderboardButtons {
             clanTag = '', // NEW: Support clan-specific buttons
             view = 'page', // 'page' | 'summary'
             dataView = 'donations', // 'donations' | 'war'
-            showToggle = false // NEW: Control whether to show the view toggle button
+            showToggle = false, // NEW: Control whether to show the view toggle button
+            disabled = false // NEW: Disable all buttons (for historical wars)
         } = options;
 
         const buttons = [];
@@ -33,6 +34,7 @@ class LeaderboardButtons {
                 .setLabel('Refresh')
                 .setStyle(ButtonStyle.Secondary)
                 .setEmoji('🔄')
+                .setDisabled(disabled)
         );
 
         // View toggle button - switch between donations and war (only if enabled)
@@ -47,17 +49,19 @@ class LeaderboardButtons {
                     .setLabel(toggleLabel)
                     .setStyle(ButtonStyle.Primary)
                     .setEmoji(toggleEmoji)
+                    .setDisabled(disabled)
             );
         }
 
-        // Edit button - admin only
-        if (isAdmin) {
+        // Edit button - admin only (disabled for war leaderboards)
+        if (isAdmin && dataView !== 'war') {
             buttons.push(
                 new ButtonBuilder()
                     .setCustomId(`leaderboard_edit_${dataView}_${guildId}${clanSuffix}`)
                     .setLabel('Edit')
                     .setStyle(ButtonStyle.Secondary)
                     .setEmoji('✏️')
+                    .setDisabled(disabled)
             );
         }
 
@@ -69,7 +73,7 @@ class LeaderboardButtons {
                     .setLabel('Prev')
                     .setStyle(ButtonStyle.Secondary)
                     .setEmoji('◀️');
-                if (currentPage <= 1) prevButton.setDisabled(true);
+                if (currentPage <= 1 || disabled) prevButton.setDisabled(true);
                 buttons.push(prevButton);
 
                 const nextButton = new ButtonBuilder()
@@ -77,7 +81,7 @@ class LeaderboardButtons {
                     .setLabel('Next')
                     .setStyle(ButtonStyle.Secondary)
                     .setEmoji('▶️');
-                if (currentPage >= totalPages) nextButton.setDisabled(true);
+                if (currentPage >= totalPages || disabled) nextButton.setDisabled(true);
                 buttons.push(nextButton);
             }
 
@@ -88,6 +92,7 @@ class LeaderboardButtons {
                     .setLabel('Summary')
                     .setStyle(ButtonStyle.Secondary)
                     .setEmoji('📈')
+                    .setDisabled(disabled)
             );
         } else if (view === 'summary') {
             // Back button to return to page view
@@ -97,6 +102,7 @@ class LeaderboardButtons {
                     .setLabel('Back')
                     .setStyle(ButtonStyle.Secondary)
                     .setEmoji('🔙')
+                    .setDisabled(disabled)
             );
         }
 

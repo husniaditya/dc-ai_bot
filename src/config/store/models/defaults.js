@@ -102,7 +102,8 @@ const defaultConfigs = {
     donationLeaderboardChannelId: null,
     warLeaderboardChannelId: null,
     donationMessageId: null,
-    warLeaderboardMessageId: null,
+    warPreparingMessageId: null,
+    warActiveMessageId: null,
     warMentionTarget: null,
     memberMentionTarget: null,
     donationMentionTarget: null,
@@ -127,6 +128,26 @@ const defaultConfigs = {
     donationTemplate: '💎 Weekly donations summary for {clanName}: Top contributors this week! {roleMention}!',
     embedEnabled: true,
     clanData: {} // Clan data from API
+  },
+
+  guildGenshinConfig: {
+    players: [],
+    playerNames: {},
+    playerMessages: {},
+    profileAnnounceChannelId: null,
+    achievementAnnounceChannelId: null,
+    spiralAbyssAnnounceChannelId: null,
+    mentionTargets: [],
+    enabled: false,
+    intervalSec: 1800, // 30 minutes default
+    trackProfileUpdates: true,
+    trackAchievements: true,
+    trackSpiralAbyss: true,
+    minAchievementThreshold: 10,
+    profileUpdateTemplate: '🌟 {playerName} has updated their profile! Adventure Rank: {adventureRank}, World Level: {worldLevel}. {roleMention}',
+    achievementTemplate: '🏆 {playerName} has earned new achievements! Total: {achievements}. {roleMention}',
+    spiralAbyssTemplate: '🗼 {playerName} has progressed in Spiral Abyss! Floor: {spiralAbyss}. {roleMention}',
+    embedEnabled: true
   },
 
   guildXpSettings: {

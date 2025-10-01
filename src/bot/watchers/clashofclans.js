@@ -17,7 +17,7 @@ async function persistMessageId(guildId, clanTag, field, messageId){
     );
     // mysql2 returns an object with affectedRows
     if(result && typeof result.affectedRows !== 'undefined' && result.affectedRows === 0){
-      console.warn(`[COC] persistMessageId: no row updated field=${field} guild=${guildId} clan=${clanTag}`);
+      // console.warn(`[COC] persistMessageId: no row updated field=${field} guild=${guildId} clan=${clanTag}`);
     } else if(process.env.COC_DEBUG==='1') {
       console.log(`[COC] Stored ${field} guild=${guildId} clan=${clanTag} id=${messageId}`);
     }
@@ -35,7 +35,7 @@ async function ensureLeaderboardMessage(guild, cfg, type, cleanTag, clanInfo){
       : cfg.donationLeaderboardChannelId;
     if(!channelId) return null;
 
-    const messageIdField = isWar ? 'war_leaderboard_message_id' : 'donation_message_id';
+    const messageIdField = isWar ? 'war_preparing_message_id' : 'donation_message_id';
     // Check DB first
     let existingId = null;
     try {
@@ -128,7 +128,7 @@ function getWarPerformanceIntegration() {
     try {
       const warStateManager = new WarStateManager(store.sqlPool);
       _warPerformanceIntegration = new WarPerformanceIntegration(warStateManager);
-      console.log('[COC] War performance integration initialized');
+      // console.log('[COC] War performance integration initialized');
     } catch (err) {
       console.warn('[COC] Failed to initialize War Performance Integration:', err.message);
     }
@@ -240,16 +240,30 @@ async function pollGuild(guild) {
       // block creates an initial (placeholder) war leaderboard message so
       // the channel has a persistent message whose ID can be updated later.
       // ------------------------------------------------------------------
-      // Determine effective war leaderboard channel (explicit warLeaderboardChannelId or fallback to warAnnounceChannelId)
-      const effectiveWarLeaderboardChannelId = cfg.warLeaderboardChannelId || cfg.warAnnounceChannelId || null;
+      // Get per-clan channel configuration from database instead of using global config
+      let effectiveWarLeaderboardChannelId = null;
+      try {
+        const [clanRows] = await store.sqlPool.execute(
+          'SELECT war_leaderboard_channel_id, war_announce_channel_id FROM guild_clashofclans_watch WHERE guild_id = ? AND clan_tag = ? LIMIT 1',
+          [guild.id, cleanTag]
+        );
+        if (clanRows.length > 0) {
+          // Use per-clan war_leaderboard_channel_id if set, otherwise fallback to per-clan war_announce_channel_id
+          effectiveWarLeaderboardChannelId = clanRows[0].war_leaderboard_channel_id || clanRows[0].war_announce_channel_id || null;
+        }
+      } catch (channelLookupErr) {
+        console.warn(`[COC] Error looking up per-clan channel config for ${cleanTag}:`, channelLookupErr.message);
+        // Fallback to global config if database lookup fails
+        effectiveWarLeaderboardChannelId = cfg.warLeaderboardChannelId || cfg.warAnnounceChannelId || null;
+      }
 
       if (cfg.trackWarLeaderboard && effectiveWarLeaderboardChannelId) {
         try {
           const [rows] = await store.sqlPool.execute(
-            'SELECT war_leaderboard_message_id FROM guild_clashofclans_watch WHERE guild_id = ? AND clan_tag = ? LIMIT 1',
+            'SELECT war_preparing_message_id, war_active_message_id FROM guild_clashofclans_watch WHERE guild_id = ? AND clan_tag = ? LIMIT 1',
             [guild.id, cleanTag]
           );
-          const existingMsgId = rows.length ? rows[0].war_leaderboard_message_id : null;
+          const existingMsgId = rows.length ? (rows[0].war_preparing_message_id || rows[0].war_active_message_id) : null;
           if (!existingMsgId) {
             // Attempt to post real war leaderboard via unified system
             const leaderboardEvents = getLeaderboardEventsInstance(guild.client);
@@ -274,7 +288,8 @@ async function pollGuild(guild) {
                 const channel = guild.channels.cache.get(effectiveWarLeaderboardChannelId);
                 if (channel) {
                   const placeholder = await channel.send(`⚔️ War statistics for ${clanInfo.name} will appear here once war data is available.`);
-                  await persistMessageId(guild.id, cleanTag, 'war_leaderboard_message_id', placeholder.id);
+                  // Store in war_preparing_message_id as default for initial war leaderboard placeholders
+                  await persistMessageId(guild.id, cleanTag, 'war_preparing_message_id', placeholder.id);
                 }
               } catch (phErr) {
                 console.warn(`[COC] Failed to create placeholder war leaderboard message for ${cleanTag}:`, phErr.message);
@@ -350,7 +365,9 @@ async function pollGuild(guild) {
       
       // Check for war events if tracking is enabled
       if (cfg.trackWars || cfg.trackWarEvents) {
+        // console.log(`[COC] WATCHER: Checking war events for clan ${cleanTag}, trackWars: ${cfg.trackWars}, trackWarEvents: ${cfg.trackWarEvents}`);
         const warInfo = await fetchClanWar(cleanTag);
+        console.log(`[COC] WATCHER: War info retrieved for clan ${cleanTag}, state: ${warInfo?.state || 'no war'}`);
         
         // Add war performance tracking
         try {
@@ -363,186 +380,340 @@ async function pollGuild(guild) {
           console.warn('[COC] War performance tracking failed (non-critical):', performanceError.message);
         }
         
-        if (warInfo) {
-          const warState = warInfo.state;
-          const warEndTime = warInfo.endTime;
+        // Use WarStateManager for proper state transitions
+        try {
+          const warStateManager = new WarStateManager(store.sqlPool);
+          const currentStateData = await warStateManager.getCurrentWarState(guild.id, cleanTag);
+          const transitionAction = warStateManager.getTransitionAction(currentStateData, warInfo);
           
-          // War declared (transition from notInWar to preparation)
-          if (warState === 'preparation' && (!clanState.lastWarState || clanState.lastWarState === 'notInWar')) {
-            // Calculate preparation time remaining
-            let preparationTimeRemaining = 'Unknown';
-            if (warInfo.startTime) {
-              try {
-                const warStartTime = new Date(warInfo.startTime);
-                const now = new Date();
-                const timeDiff = warStartTime - now;
-                
-                if (timeDiff > 0) {
-                  const hours = Math.floor(timeDiff / (1000 * 60 * 60));
-                  const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
-                  preparationTimeRemaining = hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
+          console.log(`[COC] Watcher transition check for clan ${cleanTag}:`, JSON.stringify(transitionAction, null, 2));
+          
+          if (transitionAction.action === 'transition') {
+            console.log(`[COC] WATCHER: War state transition detected: ${transitionAction.from} → ${transitionAction.to} for clan ${cleanTag}`);
+            
+            // Handle war declared (transition to preparation)
+            if (transitionAction.to === warStateManager.STATES.PREPARING) {
+              console.log(`[COC] WATCHER: Processing war declared transition for clan ${cleanTag}`);
+              // Calculate preparation time remaining
+              let preparationTimeRemaining = 'Unknown';
+              if (warInfo.startTime) {
+                try {
+                  const warStartTime = new Date(warInfo.startTime);
+                  const now = new Date();
+                  const timeDiff = warStartTime - now;
+                  
+                  if (timeDiff > 0) {
+                    const hours = Math.floor(timeDiff / (1000 * 60 * 60));
+                    const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
+                    preparationTimeRemaining = hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
+                  }
+                } catch (timeError) {
+                  console.warn('[COC] Error calculating preparation time:', timeError.message);
                 }
-              } catch (timeError) {
-                console.warn('[COC] Error calculating preparation time:', timeError.message);
               }
-            }
 
-            // Fetch enemy clan information for win streak and win rate
-            let enemyWinStreak, enemyWinRate;
-            try {
-              const enemyClanTag = cleanClanTag(warInfo.opponent.tag);
-              if (enemyClanTag) {
-                const enemyClanInfo = await fetchClanInfo(enemyClanTag);
-                if (enemyClanInfo) {
-                  enemyWinStreak = enemyClanInfo.warWinStreak;
-                  // Calculate win rate from war statistics
-                  const warWins = enemyClanInfo.warWins || 0;
-                  const warLosses = enemyClanInfo.warLosses || 0;
-                  const warTies = enemyClanInfo.warTies || 0;
-                  const totalWars = warWins + warLosses + warTies;
-                  if (totalWars > 0) {
-                    enemyWinRate = ((warWins / totalWars) * 100).toFixed(1);
+              // Fetch enemy clan information for win streak and win rate
+              let enemyWinStreak, enemyWinRate;
+              try {
+                const enemyClanTag = cleanClanTag(warInfo.opponent.tag);
+                if (enemyClanTag) {
+                  const enemyClanInfo = await fetchClanInfo(enemyClanTag);
+                  if (enemyClanInfo) {
+                    enemyWinStreak = enemyClanInfo.warWinStreak;
+                    // Calculate win rate from war statistics
+                    const warWins = enemyClanInfo.warWins || 0;
+                    const warLosses = enemyClanInfo.warLosses || 0;
+                    const warTies = enemyClanInfo.warTies || 0;
+                    const totalWars = warWins + warLosses + warTies;
+                    if (totalWars > 0) {
+                      enemyWinRate = ((warWins / totalWars) * 100).toFixed(1);
+                    }
                   }
                 }
+              } catch (enemyError) {
+                console.warn('[COC] Error fetching enemy clan info:', enemyError.message);
               }
-            } catch (enemyError) {
-              console.warn('[COC] Error fetching enemy clan info:', enemyError.message);
-            }
 
-            await announce(guild, cfg, {
-              clanName: clanInfo.name,
-              clanTag: formatClanTag(cleanTag),
-              warOpponent: warInfo.opponent.name,
-              warOpponentTag: formatClanTag(warInfo.opponent.tag),
-              warOpponentLevel: warInfo.opponent.clanLevel || 'Unknown',
-              warOpponentMembers: warInfo.opponent.members?.length || warInfo.teamSize || 'Unknown',
-              warOpponentDescription: warInfo.opponent.description || '',
-              warOpponentWinStreak: enemyWinStreak,
-              warOpponentWinRate: enemyWinRate,
-              warSize: warInfo.teamSize || 'Unknown',
-              preparationTimeRemaining: preparationTimeRemaining,
-              memberCount: `${currentMembers.length}/50`
-            }, 'war_declared');
+              // FIRST: Send war declared message (before updating database state)
+              console.log(`[COC] About to send war declared message for clan ${cleanTag}`);
+              await announce(guild, cfg, {
+                clanName: clanInfo.name,
+                clanTag: formatClanTag(cleanTag),
+                warOpponent: warInfo.opponent.name,
+                warOpponentTag: formatClanTag(warInfo.opponent.tag),
+                warOpponentLevel: warInfo.opponent.clanLevel || 'Unknown',
+                warOpponentMembers: warInfo.opponent.members?.length || warInfo.teamSize || 'Unknown',
+                warOpponentDescription: warInfo.opponent.description || '',
+                warOpponentWinStreak: enemyWinStreak,
+                warOpponentWinRate: enemyWinRate,
+                warSize: warInfo.teamSize || 'Unknown',
+                preparationTimeRemaining: preparationTimeRemaining,
+                memberCount: `${currentMembers.length}/50`
+              }, 'war_declared');
+              console.log(`[COC] War declared message sent for clan ${cleanTag}`);
 
-            // Update war state to preparation in database using WarStateManager
-            try {
-              const warStateManager = new WarStateManager(store.sqlPool);
-              await warStateManager.updateWarState(guild.id, cleanTag, 'preparation', warInfo);
-              console.log(`[COC] Updated war state to 'preparation' for clan ${cleanTag} in guild ${guild.id}`);
-            } catch (stateError) {
-              console.error('[COC] Error updating war state to preparation:', stateError.message);
-            }
-          }
-          
-          // War started
-          if (warState === 'inWar' && clanState.lastWarState !== 'inWar') {
-            await announce(guild, cfg, {
-              clanName: clanInfo.name,
-              clanTag: formatClanTag(cleanTag),
-              warOpponent: warInfo.opponent.name,
-              warEndTime: getWarTimeRemaining(warEndTime),
-              memberCount: `${currentMembers.length}/50`
-            }, 'war_start');
+              // Add a small delay to ensure war declared message is sent before preparation leaderboard
+              await new Promise(resolve => setTimeout(resolve, 2000)); // 2 second delay
 
-            // Update war state to active in database using WarStateManager
-            try {
-              const warStateManager = new WarStateManager(store.sqlPool);
-              await warStateManager.updateWarState(guild.id, cleanTag, 'inWar', warInfo);
-              console.log(`[COC] Updated war state to 'inWar' for clan ${cleanTag} in guild ${guild.id}`);
-            } catch (stateError) {
-              console.error('[COC] Error updating war state to inWar:', stateError.message);
-            }
+              // SECOND: Update the database state (after sending declared message)
+              await warStateManager.updateWarState(guild.id, cleanTag, transitionAction.to, warInfo);
+              console.log(`[COC] Updated war state to '${transitionAction.to}' for clan ${cleanTag} in guild ${guild.id}`);
 
-            // Create NEW war leaderboard message for each new war
-            if (cfg.trackWarLeaderboard && (cfg.warLeaderboardChannelId || cfg.warAnnounceChannelId)) {
+              // Update in-memory state immediately after database update
+              clanState.lastWarState = warInfo.state;
+              clanState.lastWarEndTime = warInfo.endTime;
+
+              // THIRD: Create war preparation leaderboard message (after state update)
+              // Get per-clan channel ID for this specific clan
+              let clanSpecificChannelId = null;
               try {
-                const leaderboardEvents = getLeaderboardEventsInstance(guild.client);
-                if (leaderboardEvents) {
-                  const effectiveChannelId = cfg.warLeaderboardChannelId || cfg.warAnnounceChannelId;
-                  
-                  // Force creation of a NEW message by passing null messageId
-                  const result = await leaderboardEvents.postLeaderboard(
-                    guild.id,
-                    effectiveChannelId,
-                    null, // null forces creation of new message
-                    'war',
-                    cleanTag
-                  );
-                  
-                  if (result && result.success) {
-                    console.log(`[COC] Created NEW war leaderboard message for new war (clan ${cleanTag}, guild ${guild.id})`);
-                    // Reset the war refresh timer so it doesn't immediately update again
-                    clanState.lastWarLeaderboardRefresh = Date.now();
+                const [clanChannelRows] = await store.sqlPool.execute(
+                  'SELECT war_leaderboard_channel_id, war_announce_channel_id FROM guild_clashofclans_watch WHERE guild_id = ? AND clan_tag = ? LIMIT 1',
+                  [guild.id, cleanTag]
+                );
+                if (clanChannelRows.length > 0) {
+                  clanSpecificChannelId = clanChannelRows[0].war_leaderboard_channel_id || clanChannelRows[0].war_announce_channel_id || null;
+                }
+              } catch (channelErr) {
+                console.warn(`[COC] Error getting clan-specific channel for ${cleanTag}:`, channelErr.message);
+                clanSpecificChannelId = cfg.warLeaderboardChannelId || cfg.warAnnounceChannelId;
+              }
+              
+              if (cfg.trackWarLeaderboard && clanSpecificChannelId) {
+                console.log(`[COC] About to create war preparation leaderboard for clan ${cleanTag} in channel ${clanSpecificChannelId}`);
+                try {
+                  const leaderboardEvents = getLeaderboardEventsInstance(guild.client);
+                  if (leaderboardEvents) {
+                    const effectiveChannelId = clanSpecificChannelId;
+                    
+                    // Create a NEW war preparation leaderboard message using the new method
+                    const result = await leaderboardEvents.createWarLeaderboardAfterStateUpdate(
+                      guild.id,
+                      effectiveChannelId,
+                      cleanTag
+                    );
+                    
+                    if (result && result.success) {
+                      // console.log(`[COC] Created war preparation leaderboard message for clan ${cleanTag} in guild ${guild.id}, messageId: ${result.messageId}`);
+                    } else {
+                      console.error(`[COC] Failed to create war preparation leaderboard message for clan ${cleanTag}:`, result?.error);
+                    }
                   } else {
-                    console.error(`[COC] Failed to create new war leaderboard message for clan ${cleanTag}:`, result?.error);
+                    console.warn(`[COC] LeaderboardEvents instance not available for clan ${cleanTag}`);
                   }
+                } catch (preparationLeaderboardError) {
+                  console.error(`[COC] Error creating war preparation leaderboard message:`, preparationLeaderboardError.message);
                 }
-              } catch (newWarError) {
-                console.error(`[COC] Error creating new war leaderboard message for new war:`, newWarError.message);
+              } else {
+                console.log(`[COC] War leaderboard not enabled or no channel configured for clan ${cleanTag}`);
               }
             }
-          }
-          
-          // War ended (was in war, now not in war, or war ended state)
-          if ((clanState.lastWarState === 'inWar' && warState !== 'inWar') || warState === 'warEnded') {
-            let warResult = 'tie';
-            let warStars = `${warInfo.clan.stars}/${warInfo.teamSize}`;
-            let warDestruction = `${warInfo.clan.destructionPercentage?.toFixed(1) || 0}%`;
             
-            if (warInfo.clan.stars > warInfo.opponent.stars) {
-              warResult = 'win';
-            } else if (warInfo.clan.stars < warInfo.opponent.stars) {
-              warResult = 'lose';
-            } else {
-              // Same stars, check destruction percentage
-              const ourDestruction = warInfo.clan.destructionPercentage || 0;
-              const theirDestruction = warInfo.opponent.destructionPercentage || 0;
-              if (ourDestruction > theirDestruction) {
+            // Handle war started (transition to active)
+            if (transitionAction.to === warStateManager.STATES.ACTIVE) {
+              // Send war start message first
+              await announce(guild, cfg, {
+                clanName: clanInfo.name,
+                clanTag: formatClanTag(cleanTag),
+                warOpponent: warInfo.opponent.name,
+                warEndTime: getWarTimeRemaining(warInfo.endTime),
+                memberCount: `${currentMembers.length}/50`
+              }, 'war_start');
+
+              // Handle leaderboard message transitions BEFORE updating database state
+              // This ensures the transition detection works correctly
+              if (cfg.trackWarLeaderboard && effectiveWarLeaderboardChannelId) {
+                try {
+                  const leaderboardEvents = getLeaderboardEventsInstance(guild.client);
+                  if (leaderboardEvents) {
+                    // Use the proper transition-aware method that handles delete_preparation_and_create_active
+                    const result = await leaderboardEvents.postWarLeaderboardWithStateManagement(
+                      guild.id,
+                      effectiveWarLeaderboardChannelId,
+                      cleanTag,
+                      false // skipTransitions = false to handle the transition properly
+                    );
+                    
+                    if (result && result.success) {
+                      // console.log(`[COC] Handled war leaderboard transition for new war (clan ${cleanTag}, guild ${guild.id}), action: ${result.action}`);
+                      // Reset the war refresh timer so it doesn't immediately update again
+                      clanState.lastWarLeaderboardRefresh = Date.now();
+                    } else {
+                      console.error(`[COC] Failed to handle war leaderboard transition for clan ${cleanTag}:`, result?.error);
+                    }
+                  }
+                } catch (newWarError) {
+                  console.error(`[COC] Error handling war leaderboard transition for new war:`, newWarError.message);
+                }
+              } else {
+                // If no leaderboard tracking, still need to update the war state
+                await warStateManager.updateWarState(guild.id, cleanTag, transitionAction.to, warInfo);
+                // console.log(`[COC] Updated war state to '${transitionAction.to}' for clan ${cleanTag} in guild ${guild.id} (no leaderboard)`);
+              }
+
+              // Update in-memory state after database update
+              clanState.lastWarState = warInfo.state;
+              clanState.lastWarEndTime = warInfo.endTime;
+            }
+            
+            // Handle war ended (transition to ended)
+            if (transitionAction.to === warStateManager.STATES.ENDED) {
+              let warResult = 'tie';
+              let warStars = `${warInfo.clan.stars}/${warInfo.teamSize}`;
+              let warDestruction = `${warInfo.clan.destructionPercentage?.toFixed(1) || 0}%`;
+              
+              if (warInfo.clan.stars > warInfo.opponent.stars) {
                 warResult = 'win';
-              } else if (ourDestruction < theirDestruction) {
+              } else if (warInfo.clan.stars < warInfo.opponent.stars) {
                 warResult = 'lose';
+              } else {
+                // Same stars, check destruction percentage
+                const ourDestruction = warInfo.clan.destructionPercentage || 0;
+                const theirDestruction = warInfo.opponent.destructionPercentage || 0;
+                if (ourDestruction > theirDestruction) {
+                  warResult = 'win';
+                } else if (ourDestruction < theirDestruction) {
+                  warResult = 'lose';
+                }
               }
+              
+              // Send war end message first
+              await announce(guild, cfg, {
+                clanName: clanInfo.name,
+                clanTag: formatClanTag(cleanTag),
+                warOpponent: warInfo.opponent.name,
+                warResult,
+                warStars,
+                warDestructionPercentage: warDestruction,
+                memberCount: `${currentMembers.length}/50`
+              }, 'war_end');
+
+              // Handle leaderboard message transitions BEFORE updating database state
+              // This ensures the transition detection works correctly
+              if (cfg.trackWarLeaderboard && effectiveWarLeaderboardChannelId) {
+                try {
+                  const leaderboardEvents = getLeaderboardEventsInstance(guild.client);
+                  if (leaderboardEvents) {
+                    // Use the proper transition-aware method that handles delete_and_create_historical
+                    const result = await leaderboardEvents.postWarLeaderboardWithStateManagement(
+                      guild.id,
+                      effectiveWarLeaderboardChannelId,
+                      cleanTag,
+                      false // skipTransitions = false to handle the transition properly
+                    );
+                    
+                    if (result && result.success) {
+                      // console.log(`[COC] Handled war leaderboard transition for ended war (clan ${cleanTag}, guild ${guild.id}), action: ${result.action}`);
+                    } else {
+                      console.error(`[COC] Failed to handle war leaderboard transition for ended war ${cleanTag}:`, result?.error);
+                    }
+                  }
+                } catch (endedWarError) {
+                  console.error(`[COC] Error handling war leaderboard transition for ended war:`, endedWarError.message);
+                }
+              } else {
+                // If no leaderboard tracking, still need to update the war state
+                await warStateManager.updateWarState(guild.id, cleanTag, transitionAction.to, warInfo);
+                // console.log(`[COC] Updated war state to '${transitionAction.to}' for clan ${cleanTag} in guild ${guild.id} (no leaderboard)`);
+              }
+
+              // Update in-memory state after database update
+              clanState.lastWarState = warInfo.state;
+              clanState.lastWarEndTime = warInfo.endTime;
+            }
+          } else if (transitionAction.action === 'none') {
+            // No state transition, but check for historical war canvas posting
+            console.log(`[COC] WATCHER: No state transition for clan ${cleanTag}, checking for leaderboard events`);
+            
+            const leaderboardEvents = getLeaderboardEventsInstance(guild.client);
+            
+            // Get per-clan channel ID for this specific clan
+            let noneClanChannelId = null;
+            try {
+              const [noneClanChannelRows] = await store.sqlPool.execute(
+                'SELECT war_leaderboard_channel_id, war_announce_channel_id FROM guild_clashofclans_watch WHERE guild_id = ? AND clan_tag = ? LIMIT 1',
+                [guild.id, cleanTag]
+              );
+              if (noneClanChannelRows.length > 0) {
+                noneClanChannelId = noneClanChannelRows[0].war_leaderboard_channel_id || noneClanChannelRows[0].war_announce_channel_id || null;
+              }
+            } catch (noneChannelErr) {
+              console.warn(`[COC] Error getting clan-specific channel for none action ${cleanTag}:`, noneChannelErr.message);
+              noneClanChannelId = cfg.warLeaderboardChannelId || cfg.warAnnounceChannelId;
             }
             
-            await announce(guild, cfg, {
-              clanName: clanInfo.name,
-              clanTag: formatClanTag(cleanTag),
-              warOpponent: warInfo.opponent.name,
-              warResult,
-              warStars,
-              warDestructionPercentage: warDestruction,
-              memberCount: `${currentMembers.length}/50`
-            }, 'war_end');
-
-            // Update war state to warEnded in database using WarStateManager
-            try {
-              const warStateManager = new WarStateManager(store.sqlPool);
-              await warStateManager.updateWarState(guild.id, cleanTag, 'warEnded', warInfo);
-              console.log(`[COC] Updated war state to 'warEnded' for clan ${cleanTag} in guild ${guild.id}`);
-            } catch (stateError) {
-              console.error('[COC] Error updating war state to warEnded:', stateError.message);
+            if (leaderboardEvents && noneClanChannelId) {
+              try {
+                // console.log(`[COC] WATCHER: Calling LeaderboardEvents for 'none' action, current state: ${warInfo.state}`);
+                
+                // Use per-clan channel ID
+                const channelId = noneClanChannelId;
+                
+                const result = await leaderboardEvents.postWarLeaderboardWithStateManagement(
+                  guild.id, 
+                  channelId,   // Correct channel ID from config
+                  cleanTag,    // Clan tag as the third parameter
+                  true         // skipTransitions = true for 'none' action from watcher
+                );
+                
+                if (result && result.success) {
+                  // console.log(`[COC] WATCHER: LeaderboardEvents handled successfully for clan ${cleanTag}`);
+                } else {
+                  // console.log(`[COC] WATCHER: LeaderboardEvents returned no action needed for clan ${cleanTag}`);
+                }
+              } catch (leaderboardError) {
+                console.error(`[COC] WATCHER: Error calling LeaderboardEvents for clan ${cleanTag}:`, leaderboardError.message);
+              }
+            } else {
+              console.log(`[COC] WATCHER: LeaderboardEvents not available or war channels not configured for clan ${cleanTag}`);
             }
           }
           
-          clanState.lastWarState = warState;
-          clanState.lastWarEndTime = warEndTime;
+          // Update the in-memory state to match the database
+          if (warInfo) {
+            clanState.lastWarState = warInfo.state;
+            clanState.lastWarEndTime = warInfo.endTime;
 
-          // Auto-refresh war statistics during active wars
-          if (warState === 'inWar' && (cfg.warLeaderboardChannelId || cfg.warAnnounceChannelId)) {
-            await autoRefreshWarLeaderboard(guild, cfg, cleanTag, warInfo, clanState);
-          }
-        } else {
-          // No war info available, reset war state
-          if (clanState.lastWarState === 'inWar' || clanState.lastWarState === 'preparation') {
-            // Update war state to notInWar in database
+            // Auto-refresh war statistics during active wars
+            // Get per-clan channel ID for this specific clan
+            let refreshClanChannelId = null;
             try {
-              const warStateManager = new WarStateManager(store.sqlPool);
+              const [refreshClanChannelRows] = await store.sqlPool.execute(
+                'SELECT war_leaderboard_channel_id, war_announce_channel_id FROM guild_clashofclans_watch WHERE guild_id = ? AND clan_tag = ? LIMIT 1',
+                [guild.id, cleanTag]
+              );
+              if (refreshClanChannelRows.length > 0) {
+                refreshClanChannelId = refreshClanChannelRows[0].war_leaderboard_channel_id || refreshClanChannelRows[0].war_announce_channel_id || null;
+              }
+            } catch (refreshChannelErr) {
+              console.warn(`[COC] Error getting clan-specific channel for refresh ${cleanTag}:`, refreshChannelErr.message);
+              refreshClanChannelId = cfg.warLeaderboardChannelId || cfg.warAnnounceChannelId;
+            }
+            
+            // Only refresh war leaderboard if war is active (not notInWar)
+            if (warInfo.state === 'inWar' && refreshClanChannelId) {
+              await autoRefreshWarLeaderboard(guild, cfg, cleanTag, warInfo, clanState);
+            } else if (warInfo.state === 'notInWar' && process.env.COC_DEBUG === '1') {
+              console.log(`[COC] Skipping war leaderboard refresh - war not active (notInWar) for clan ${cleanTag}`);
+            }
+          } else {
+            // No war info available, reset war state if currently in war
+            if (clanState.lastWarState === 'inWar' || clanState.lastWarState === 'preparation') {
               await warStateManager.updateWarState(guild.id, cleanTag, 'notInWar', null);
               console.log(`[COC] Updated war state to 'notInWar' for clan ${cleanTag} in guild ${guild.id}`);
-            } catch (stateError) {
-              console.error('[COC] Error updating war state to notInWar:', stateError.message);
+              clanState.lastWarState = null;
             }
-            clanState.lastWarState = null;
+          }
+        } catch (stateError) {
+          console.error('[COC] Error managing war state:', stateError.message);
+          // Fallback to old logic if WarStateManager fails
+          if (warInfo) {
+            const warState = warInfo.state;
+            const warEndTime = warInfo.endTime;
+            
+            // Update the in-memory state
+            clanState.lastWarState = warState;
+            clanState.lastWarEndTime = warEndTime;
           }
         }
       }
@@ -715,8 +886,29 @@ function startCOCWatcher(client) {
  */
 async function autoRefreshWarLeaderboard(guild, cfg, clanTag, warInfo, clanState) {
   try {
-    // Determine effective channel (explicit war leaderboard channel, else fallback to war announce channel)
-    const effectiveChannelId = cfg.warLeaderboardChannelId || cfg.warAnnounceChannelId || null;
+    // Skip if war is not active (notInWar state) to prevent spam
+    if (!warInfo || warInfo.state === 'notInWar') {
+      if (process.env.COC_DEBUG === '1') {
+        console.log(`[COC] Skipping war leaderboard refresh - war not active (state: ${warInfo?.state || 'no war data'}) for clan ${clanTag}`);
+      }
+      return;
+    }
+
+    // Get per-clan channel configuration from database
+    let effectiveChannelId = null;
+    try {
+      const [clanChannelRows] = await store.sqlPool.execute(
+        'SELECT war_leaderboard_channel_id, war_announce_channel_id FROM guild_clashofclans_watch WHERE guild_id = ? AND clan_tag = ? LIMIT 1',
+        [guild.id, clanTag]
+      );
+      if (clanChannelRows.length > 0) {
+        effectiveChannelId = clanChannelRows[0].war_leaderboard_channel_id || clanChannelRows[0].war_announce_channel_id || null;
+      }
+    } catch (channelErr) {
+      console.warn(`[COC] Error getting clan-specific channel for refresh ${clanTag}:`, channelErr.message);
+      // Fallback to global config if database lookup fails
+      effectiveChannelId = cfg.warLeaderboardChannelId || cfg.warAnnounceChannelId || null;
+    }
 
     // Check if war leaderboard is enabled and has a channel
     if (!effectiveChannelId) {
@@ -738,7 +930,6 @@ async function autoRefreshWarLeaderboard(guild, cfg, clanTag, warInfo, clanState
       attacks: (member.attacks || []).map(attack => ({
         stars: attack.stars,
         destruction: attack.destructionPercentage,
-        defenderPosition: attack.defenderPosition,
         order: attack.order
       }))
     }));
@@ -767,8 +958,7 @@ async function autoRefreshWarLeaderboard(guild, cfg, clanTag, warInfo, clanState
           
           if (!lastAttack || 
               currentAttack.stars !== lastAttack.stars ||
-              currentAttack.destruction !== lastAttack.destruction ||
-              currentAttack.defenderPosition !== lastAttack.defenderPosition) {
+              currentAttack.destruction !== lastAttack.destruction) {
             attacksChanged = true;
             break;
           }
@@ -786,15 +976,16 @@ async function autoRefreshWarLeaderboard(guild, cfg, clanTag, warInfo, clanState
         const LeaderboardEvents = require('../handlers/LeaderboardEvents');
         const leaderboardEvents = new LeaderboardEvents(guild.client, store.sqlPool);
         
-        // Get existing war message ID for this specific clan
+        // Get existing war message ID for this specific clan based on war state
         let existingMessageId = null;
+        const messageIdColumn = warInfo.state === 'preparation' ? 'war_preparing_message_id' : 'war_active_message_id';
         try {
           const [messageRows] = await store.sqlPool.execute(
-            'SELECT war_leaderboard_message_id FROM guild_clashofclans_watch WHERE guild_id = ? AND clan_tag = ?',
+            `SELECT ${messageIdColumn} FROM guild_clashofclans_watch WHERE guild_id = ? AND clan_tag = ?`,
             [guild.id, clanTag]
           );
-          if (messageRows.length > 0 && messageRows[0].war_leaderboard_message_id) {
-            existingMessageId = messageRows[0].war_leaderboard_message_id;
+          if (messageRows.length > 0 && messageRows[0][messageIdColumn]) {
+            existingMessageId = messageRows[0][messageIdColumn];
           }
         } catch (dbError) {
           console.warn(`[COC] Failed to get clan-specific war message ID for ${clanTag}:`, dbError.message);
@@ -821,7 +1012,7 @@ async function autoRefreshWarLeaderboard(guild, cfg, clanTag, warInfo, clanState
                 // Update database with found message ID for this specific clan
                 try {
                   await store.sqlPool.execute(
-                    'UPDATE guild_clashofclans_watch SET war_leaderboard_message_id = ? WHERE guild_id = ? AND clan_tag = ?',
+                    `UPDATE guild_clashofclans_watch SET ${messageIdColumn} = ? WHERE guild_id = ? AND clan_tag = ?`,
                     [existingMessageId, guild.id, clanTag]
                   );
                 } catch (updateError) {
@@ -840,7 +1031,8 @@ async function autoRefreshWarLeaderboard(guild, cfg, clanTag, warInfo, clanState
           effectiveChannelId, 
           existingMessageId,
           'war',
-          clanTag  // Pass clan tag for proper database updates
+          clanTag,  // Pass clan tag for proper database updates
+          true      // skipTransitions = true for watcher calls
         );
         
         if (result && result.success) {
