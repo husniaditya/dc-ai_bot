@@ -504,6 +504,9 @@
       },
       "streaming": {
         "title": "Streaming-Integration"
+      },
+      "valorant": {
+        "title": "Valorant"
       }
     },
     "toasts": {
@@ -751,6 +754,34 @@
       "coc config": {
         "usage": "/coc config <setting> <value>",
         "desc": "COC-Integrationseinstellungen konfigurieren (erfordert Server verwalten)."
+      },
+      "valorant profile": {
+        "usage": "/valorant profile <name> <tag> [region]",
+        "desc": "Spielerprofil mit Kontoinformationen und aktuellem Rang abrufen."
+      },
+      "valorant matches": {
+        "usage": "/valorant matches <name> <tag> [region] [modus] [anzahl]",
+        "desc": "Kürzliche Match-Historie mit Statistiken und Ergebnissen anzeigen."
+      },
+      "valorant leaderboard": {
+        "usage": "/valorant leaderboard <region> [anzahl]",
+        "desc": "Regionale Top-200-Rangliste anzeigen."
+      },
+      "valorant mmr": {
+        "usage": "/valorant mmr <name> <tag> [region]",
+        "desc": "Detailliertes MMR- und Rang-Tracking mit RR-Änderungen anzeigen."
+      },
+      "valorant stats": {
+        "usage": "/valorant stats <name> <tag> [region] [anzahl]",
+        "desc": "Durchschnittliche Leistungsstatistiken aus kürzlichen Matches anzeigen."
+      },
+      "valorant config": {
+        "usage": "/valorant config",
+        "desc": "Valorant-Spieler-Tracking und Benachrichtigungen konfigurieren (erfordert Manage Server)."
+      },
+      "valorant esports": {
+        "usage": "/valorant esports [region] [days]",
+        "desc": "Anstehende Valorant-Esports-Matches und Turnierpläne anzeigen."
       }
     }
   },
@@ -1494,7 +1525,7 @@
         },
         "bulk": {
           "enable": "Aktivieren",
-          "disable": "Deaktivieren", 
+          "disable": "Deaktivieren",
           "delete": "Löschen",
           "clear": "Leeren",
           "processing": "Verarbeitung...",
@@ -1806,7 +1837,7 @@
       },
       "valorant": {
         "label": "Valorant",
-        "desc": "Match-Updates, Highlights und Benachrichtigungen (geplant)"
+        "desc": "Match-Updates, Rang-Änderungen und Spieler-Statistik-Tracking"
       },
       "apex": {
         "label": "Apex Legends",
@@ -1956,7 +1987,7 @@
         "clanName": "Clan-Name",
         "clanNameHint": "Geben Sie Ihren Clan-Namen ein (z.B. Elite Warriors)",
         "warAnnouncements": "Kriegsankündigungen",
-        "memberAnnouncements": "Mitgliederankündigungen", 
+        "memberAnnouncements": "Mitgliederankündigungen",
         "donationAnnouncements": "Spendenankündigungen"
       },
       "announce": {
@@ -1985,14 +2016,14 @@
         "memberAnnouncementChannelHelp": "Kanal für Mitglieder-Beitritt/Verlassen-Ankündigungen für diesen spezifischen Clan",
         "warMentions": "Kriegs-Erwähnungen",
         "warMentionsHelp": "Rollen/Benutzer die bei Kriegsereignissen von diesem Clan erwähnt werden",
-        "memberMentions": "Mitglieder-Erwähnungen", 
+        "memberMentions": "Mitglieder-Erwähnungen",
         "memberMentionsHelp": "Rollen/Benutzer die bei Mitgliederereignissen von diesem Clan erwähnt werden",
         "donationMentions": "Spenden-Erwähnungen",
         "donationMentionsHelp": "Rollen/Benutzer die bei Spendenereignissen von diesem Clan erwähnt werden"
       },
       "tracking": {
         "trackWars": "Clan-Kriege verfolgen",
-        "trackMembers": "Mitgliederänderungen verfolgen", 
+        "trackMembers": "Mitgliederänderungen verfolgen",
         "trackDonations": "Spenden verfolgen",
         "trackWarStats": "Automatische Kriegsstatistik-Veröffentlichung aktivieren",
         "trackDonationLeaderboard": "Automatische Spenden-Bestenlisten-Veröffentlichung aktivieren",
@@ -2113,7 +2144,7 @@
         "mentionTargets": "Pro-Spieler-Erwähnungsziele",
         "profileAnnouncementChannel": "Profil-Ankündigungskanal",
         "profileAnnouncementChannelHelp": "Kanal für Profil-Update-Ankündigungen dieses spezifischen Spielers",
-        "buildAnnouncementChannel": "Build-Ankündigungskanal", 
+        "buildAnnouncementChannel": "Build-Ankündigungskanal",
         "buildAnnouncementChannelHelp": "Kanal für Build-Update-Ankündigungen dieses spezifischen Spielers",
         "profileMentions": "Profil-Erwähnungen",
         "profileMentionsHelp": "Rollen/Benutzer, die bei Profil-Updates dieses Spielers erwähnt werden",
@@ -2136,7 +2167,60 @@
     "leveling": "XP & Levelsystem",
     "economy": "Wirtschaftssystem",
     "socialFeatures": "Soziale Funktionen",
-    "miniGames": "Minispiele"
+    "miniGames": "Minispiele",
+    "valorant": {
+      "intervalHint": "Wie oft auf Match-Updates überprüft werden soll (in Sekunden). Mindestens 300 Sekunden (5 Minuten).",
+      "sections": {
+        "trackingFeatures": "Tracking-Funktionen",
+        "playerManagement": "Spielerverwaltung",
+        "matchTemplate": "Match-Ergebnis-Vorlage",
+        "rankChangeTemplate": "Rang-Änderungs-Vorlage",
+        "achievementTemplate": "Erfolgs-Vorlage"
+      },
+      "tracking": {
+        "trackMatches": "Match-Ergebnisse verfolgen",
+        "trackRankChanges": "Rang-Änderungen verfolgen",
+        "trackAchievements": "Erfolge verfolgen (Aces, MVPs, etc.)",
+        "matchTypes": "Zu verfolgende Match-Typen",
+        "minKills": "Mindest-Kills zum Ankündigen",
+        "minKillsHint": "Nur Matches mit mindestens dieser Anzahl an Kills ankündigen"
+      },
+      "matchTypes": {
+        "competitive": "Wettbewerb",
+        "unrated": "Unbewertet",
+        "deathmatch": "Deathmatch"
+      },
+      "announce": {
+        "globalMentions": "Globale Erwähnungs-Ziele",
+        "globalMentionsHelp": "Diese Rollen/Benutzer werden in allen Valorant-Ankündigungen erwähnt"
+      },
+      "fields": {
+        "matchAnnouncements": "Match-Ankündigungs-Kanal",
+        "rankAnnouncements": "Rang-Änderungs-Ankündigungs-Kanal",
+        "achievementAnnouncements": "Erfolgs-Ankündigungs-Kanal"
+      },
+      "players": {
+        "riotIdPlaceholder": "SpielerName#TAG",
+        "riotIdHelp": "Geben Sie die Riot-ID im Format ein: Name#TAG (z.B. Spieler#NA1)",
+        "region": "Region",
+        "addPlayer": "Spieler hinzufügen",
+        "noPlayers": "Noch keine Spieler hinzugefügt. Fügen Sie Spieler hinzu, um deren Matches zu verfolgen.",
+        "customMessage": "Benutzerdefinierte Nachrichten-Überschreibung",
+        "customMessagePlaceholder": "Optionale benutzerdefinierte Nachricht für die Ankündigungen dieses Spielers",
+        "customMessageHelp": "Leer lassen, um die Standardvorlage zu verwenden"
+      },
+      "templates": {
+        "matchPlaceholder": " {playerName} hat gerade ein Match auf {map} beendet!\\n{result}  {kills}/{deaths}/{assists} ({kd} K/D)\\nAgent: {agent}  Punktzahl: {score}",
+        "rankChangePlaceholder": " {playerName} Rang-Update!\\n{oldRank}  {newRank}\\nRR: {rr} ({rrChange})",
+        "achievementPlaceholder": " {playerName} Erfolg!\\n{achievement}: {description}"
+      },
+      "toasts": {
+        "invalidRiotId": "Ungültiges Riot-ID-Format. Bitte verwenden Sie das Format Name#TAG.",
+        "alreadyTracking": "Spieler wird bereits verfolgt: {player}",
+        "added": "Spieler erfolgreich hinzugefügt: {player}",
+        "addFailed": "Fehler beim Hinzufügen des Spielers. Bitte überprüfen Sie die Riot-ID und versuchen Sie es erneut."
+      }
+    }
   },
   "welcome": {
     "title": "Willkommenssystem",

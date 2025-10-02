@@ -30,20 +30,20 @@
     "next": "Selanjutnya",
     "previous": "Sebelumnya",
     "unsaved": "Belum disimpan",
-  "notAvailable": "Tidak tersedia",
-  "refresh": "Segarkan analitik",
-  "na": "Tidak tersedia",
-  "none": "Tidak ada",
-  "noMatches": "Tidak ada yang cocok",
-  "invalidData": "Data tidak valid",
-  "unknown": "Tidak diketahui",
-  "update": "Perbarui",
-  "editRule": "Edit Aturan",
-  "deleteRule": "Hapus Aturan",
-  "editWord": "Edit Kata",
-  "deleteWord": "Hapus Kata",
-  "editPattern": "Edit Pola",
-  "deletePattern": "Hapus Pola"
+    "notAvailable": "Tidak tersedia",
+    "refresh": "Segarkan analitik",
+    "na": "Tidak tersedia",
+    "none": "Tidak ada",
+    "noMatches": "Tidak ada yang cocok",
+    "invalidData": "Data tidak valid",
+    "unknown": "Tidak diketahui",
+    "update": "Perbarui",
+    "editRule": "Edit Aturan",
+    "deleteRule": "Hapus Aturan",
+    "editWord": "Edit Kata",
+    "deleteWord": "Hapus Kata",
+    "editPattern": "Edit Pola",
+    "deletePattern": "Hapus Pola"
   },
   "navigation": {
     "dashboard": "Dashboard",
@@ -406,17 +406,42 @@
       "unknownUser": "Tidak diketahui"
     },
     "groups": {
-      "core": { "title": "Inti" },
-      "ai": { "title": "AI & Bahasa" },
-      "polls": { "title": "Jajak Pendapat" },
-      "utilities": { "title": "Utilitas" },
-      "xp": { "title": "XP & Leveling" },
-      "roles": { "title": "Peran & Self-Assign" },
-      "moderation": { "title": "Moderasi & Keamanan" },
-      "passive": { "title": "Pasif / Otomatisasi" },
-      "scheduler": { "title": "Penjadwal" },
-      "coc": { "title": "Clash of Clans" },
-      "streaming": { "title": "Integrasi Streaming" }
+      "core": {
+        "title": "Inti"
+      },
+      "ai": {
+        "title": "AI & Bahasa"
+      },
+      "polls": {
+        "title": "Jajak Pendapat"
+      },
+      "utilities": {
+        "title": "Utilitas"
+      },
+      "xp": {
+        "title": "XP & Leveling"
+      },
+      "roles": {
+        "title": "Peran & Self-Assign"
+      },
+      "moderation": {
+        "title": "Moderasi & Keamanan"
+      },
+      "passive": {
+        "title": "Pasif / Otomatisasi"
+      },
+      "scheduler": {
+        "title": "Penjadwal"
+      },
+      "coc": {
+        "title": "Clash of Clans"
+      },
+      "streaming": {
+        "title": "Integrasi Streaming"
+      },
+      "valorant": {
+        "title": "Valorant"
+      }
     },
     "toasts": {
       "enabled": "Perintah \"{{name}}\" diaktifkan",
@@ -424,75 +449,274 @@
       "toggleFailed": "Gagal memperbarui {{name}}"
     },
     "items": {
-      "ping": { "usage": "/ping", "desc": "Pemeriksaan kesehatan — membalas dengan Pong." },
-      "uptime": { "usage": "/uptime", "desc": "Menampilkan waktu aktif proses bot." },
-      "whoami": { "usage": "/whoami", "desc": "Menampilkan tag & id pengguna Anda." },
-      "echo": { "usage": "/echo <text>", "desc": "Membalas dengan teks yang sama." },
-      "help": { "usage": "/help", "desc": "Menu bantuan kategori interaktif." },
-
-      "ask": { "usage": "/ask prompt:<text>", "desc": "Tanya AI sebuah pertanyaan (disimpan 3 menit)." },
-      "askfollow": { "usage": "/askfollow prompt:<text>", "desc": "Tindak lanjut menggunakan konteks percakapan terbaru." },
-      "explain_image": { "usage": "/explain_image image(1-3) [prompt]", "desc": "Jelaskan hingga 3 gambar dengan prompt opsional." },
-      "summarize": { "usage": "/summarize [count]", "desc": "Ringkas pesan terakhir (default 30)." },
-      "translate": { "usage": "/translate text target", "desc": "Terjemahkan teks ke bahasa target." },
-
-      "poll create": { "usage": "/poll create question options", "desc": "Buat jajak pendapat (maks 5 opsi)." },
-      "poll results": { "usage": "/poll results id", "desc": "Tampilkan hasil untuk id jajak pendapat." },
-
-      "math": { "usage": "/math add|sub|mul|div a b", "desc": "Operasi aritmetika dasar." },
-      "user info": { "usage": "/user info [target]", "desc": "Lihat info pengguna Discord." },
-      "remind": { "usage": "/remind minutes text", "desc": "Jadwalkan pengingat DM atau channel." },
-      "meme": { "usage": "/meme", "desc": "Gambar meme acak dari meme-api.com." },
-
-      "level": { "usage": "/level [user]", "desc": "Cek level Anda atau level XP orang lain." },
-      "xp": { "usage": "/xp check|leaderboard [user]", "desc": "Cek XP atau lihat papan peringkat server." },
-      "rank": { "usage": "/rank [user]", "desc": "Cek peringkat Anda di server." },
-      "leaderboard": { "usage": "/leaderboard [limit]", "desc": "Tampilkan papan peringkat XP server." },
-      "xpadmin": { "usage": "/xpadmin give|remove|set <user> <amount>", "desc": "Kelola XP pengguna (butuh Kelola Server)." },
-
-      "role list": { "usage": "/role list", "desc": "Tampilkan semua peran yang bisa dipilih sendiri." },
-      "role menu": { "usage": "/role menu", "desc": "Menu pemilihan peran interaktif (sementara)." },
-      "role add": { "usage": "/role add <role> [user]", "desc": "Tambah peran ke diri sendiri atau pengguna lain." },
-      "role remove": { "usage": "/role remove <role> [user]", "desc": "Hapus peran dari diri sendiri atau pengguna lain." },
-      "role setup": { "usage": "/role setup <action> <role> [options]", "desc": "Konfigurasikan peran yang bisa dipilih (butuh Kelola Peran)." },
-      "role toggle": { "usage": "/role toggle <command_name>", "desc": "Aktif/nonaktifkan perintah peran (butuh Kelola Peran)." },
-
-      "automod list": { "usage": "/automod list", "desc": "Tampilkan semua aturan automod yang dikonfigurasi." },
-      "automod info": { "usage": "/automod info <id>", "desc": "Lihat info detail untuk aturan automod." },
-      "automod toggle": { "usage": "/automod toggle <id> <enabled>", "desc": "Aktif/nonaktifkan aturan automod (butuh Kelola Server)." },
-      "antiraid status": { "usage": "/antiraid status", "desc": "Lihat status perlindungan anti-raid saat ini." },
-      "antiraid toggle": { "usage": "/antiraid toggle <enabled>", "desc": "Aktif/nonaktifkan perlindungan anti-raid (butuh Kelola Server)." },
-      "audit recent": { "usage": "/audit recent", "desc": "Lihat tindakan moderasi terbaru (butuh Kelola Server)." },
-
-      "autoreply": { "usage": "(passive)", "desc": "Balasan otomatis berdasarkan pola yang dikonfigurasi." },
-      "welcome preview": { "usage": "/welcome preview", "desc": "Pratinjau konfigurasi pesan sambutan saat ini." },
-      "welcome toggle": { "usage": "/welcome toggle <enabled>", "desc": "Aktif/nonaktifkan sistem sambutan (butuh Kelola Server)." },
-      "automod": { "usage": "(passive)", "desc": "Moderasi otomatis untuk spam, caps, tautan, dan kata kasar." },
-      "audit logs": { "usage": "(passive)", "desc": "Lacak semua tindakan moderasi dan perubahan server." },
-      "anti-raid": { "usage": "(passive)", "desc": "Perlindungan terhadap raid dan serangan mass join." },
-
-      "scheduler list": { "usage": "/scheduler list", "desc": "Daftar semua pesan terjadwal." },
-      "scheduler info": { "usage": "/scheduler info <id>", "desc": "Lihat info detail untuk pesan terjadwal." },
-      "scheduler enable": { "usage": "/scheduler enable <id>", "desc": "Aktifkan pesan terjadwal (butuh Kelola Server)." },
-      "scheduler disable": { "usage": "/scheduler disable <id>", "desc": "Nonaktifkan pesan terjadwal (butuh Kelola Server)." },
-      "scheduler run": { "usage": "/scheduler run <id>", "desc": "Jalankan pesan terjadwal sekarang (butuh Kelola Server)." },
-
-      "ytwatch": { "usage": "/ytwatch action:<enable|disable|addchannel|removechannel|announcechannel|mentionrole|interval|status>", "desc": "Kelola notifikasi YouTube (butuh Kelola Server)." },
-      "ytstats": { "usage": "/ytstats", "desc": "Tampilkan cache & statistik kuota YouTube watcher." },
-      "ytdebug": { "usage": "/ytdebug", "desc": "Tampilkan event debug YouTube watcher terbaru (butuh Kelola Server)." },
-      "twitchstats": { "usage": "/twitchstats", "desc": "Tampilkan cache & statistik API Twitch watcher." },
-      "twitchdebug": { "usage": "/twitchdebug action:<config|status|test|resolve>", "desc": "Debug integrasi Twitch dan uji notifikasi." },
-      "coc clan": { "usage": "/coc clan [tag]", "desc": "Dapatkan informasi klan berdasarkan tag atau klan yang dikonfigurasi." },
-      "coc player": { "usage": "/coc player <tag>", "desc": "Dapatkan informasi profil pemain." },
-      "coc war": { "usage": "/coc war [tag]", "desc": "Dapatkan informasi perang saat ini untuk klan." },
-      "coc search": { "usage": "/coc search <type> <query>", "desc": "Cari klan atau pemain." },
-      "coc compare": { "usage": "/coc compare <player1> <player2>", "desc": "Bandingkan statistik dua pemain." },
-      "coc attacks": { "usage": "/coc attacks <player_tag>", "desc": "Tampilkan riwayat serangan perang pemain." },
-      "coc top": { "usage": "/coc top <type> [limit]", "desc": "Tampilkan pemain teratas di berbagai kategori." },
-      "coc stats": { "usage": "/coc stats [tag]", "desc": "Dapatkan statistik klan atau pemain yang detail." },
-      "coc warlog": { "usage": "/coc warlog [tag] [limit]", "desc": "Tampilkan riwayat log perang klan." },
-      "coc watch": { "usage": "/coc watch <action> [tag]", "desc": "Kelola pengawasan perang untuk klan (butuh Kelola Server)." },
-      "coc config": { "usage": "/coc config <setting> <value>", "desc": "Konfigurasi pengaturan integrasi COC (butuh Kelola Server)." }
+      "ping": {
+        "usage": "/ping",
+        "desc": "Pemeriksaan kesehatan — membalas dengan Pong."
+      },
+      "uptime": {
+        "usage": "/uptime",
+        "desc": "Menampilkan waktu aktif proses bot."
+      },
+      "whoami": {
+        "usage": "/whoami",
+        "desc": "Menampilkan tag & id pengguna Anda."
+      },
+      "echo": {
+        "usage": "/echo <text>",
+        "desc": "Membalas dengan teks yang sama."
+      },
+      "help": {
+        "usage": "/help",
+        "desc": "Menu bantuan kategori interaktif."
+      },
+      "ask": {
+        "usage": "/ask prompt:<text>",
+        "desc": "Tanya AI sebuah pertanyaan (disimpan 3 menit)."
+      },
+      "askfollow": {
+        "usage": "/askfollow prompt:<text>",
+        "desc": "Tindak lanjut menggunakan konteks percakapan terbaru."
+      },
+      "explain_image": {
+        "usage": "/explain_image image(1-3) [prompt]",
+        "desc": "Jelaskan hingga 3 gambar dengan prompt opsional."
+      },
+      "summarize": {
+        "usage": "/summarize [count]",
+        "desc": "Ringkas pesan terakhir (default 30)."
+      },
+      "translate": {
+        "usage": "/translate text target",
+        "desc": "Terjemahkan teks ke bahasa target."
+      },
+      "poll create": {
+        "usage": "/poll create question options",
+        "desc": "Buat jajak pendapat (maks 5 opsi)."
+      },
+      "poll results": {
+        "usage": "/poll results id",
+        "desc": "Tampilkan hasil untuk id jajak pendapat."
+      },
+      "math": {
+        "usage": "/math add|sub|mul|div a b",
+        "desc": "Operasi aritmetika dasar."
+      },
+      "user info": {
+        "usage": "/user info [target]",
+        "desc": "Lihat info pengguna Discord."
+      },
+      "remind": {
+        "usage": "/remind minutes text",
+        "desc": "Jadwalkan pengingat DM atau channel."
+      },
+      "meme": {
+        "usage": "/meme",
+        "desc": "Gambar meme acak dari meme-api.com."
+      },
+      "level": {
+        "usage": "/level [user]",
+        "desc": "Cek level Anda atau level XP orang lain."
+      },
+      "xp": {
+        "usage": "/xp check|leaderboard [user]",
+        "desc": "Cek XP atau lihat papan peringkat server."
+      },
+      "rank": {
+        "usage": "/rank [user]",
+        "desc": "Cek peringkat Anda di server."
+      },
+      "leaderboard": {
+        "usage": "/leaderboard [limit]",
+        "desc": "Tampilkan papan peringkat XP server."
+      },
+      "xpadmin": {
+        "usage": "/xpadmin give|remove|set <user> <amount>",
+        "desc": "Kelola XP pengguna (butuh Kelola Server)."
+      },
+      "role list": {
+        "usage": "/role list",
+        "desc": "Tampilkan semua peran yang bisa dipilih sendiri."
+      },
+      "role menu": {
+        "usage": "/role menu",
+        "desc": "Menu pemilihan peran interaktif (sementara)."
+      },
+      "role add": {
+        "usage": "/role add <role> [user]",
+        "desc": "Tambah peran ke diri sendiri atau pengguna lain."
+      },
+      "role remove": {
+        "usage": "/role remove <role> [user]",
+        "desc": "Hapus peran dari diri sendiri atau pengguna lain."
+      },
+      "role setup": {
+        "usage": "/role setup <action> <role> [options]",
+        "desc": "Konfigurasikan peran yang bisa dipilih (butuh Kelola Peran)."
+      },
+      "role toggle": {
+        "usage": "/role toggle <command_name>",
+        "desc": "Aktif/nonaktifkan perintah peran (butuh Kelola Peran)."
+      },
+      "automod list": {
+        "usage": "/automod list",
+        "desc": "Tampilkan semua aturan automod yang dikonfigurasi."
+      },
+      "automod info": {
+        "usage": "/automod info <id>",
+        "desc": "Lihat info detail untuk aturan automod."
+      },
+      "automod toggle": {
+        "usage": "/automod toggle <id> <enabled>",
+        "desc": "Aktif/nonaktifkan aturan automod (butuh Kelola Server)."
+      },
+      "antiraid status": {
+        "usage": "/antiraid status",
+        "desc": "Lihat status perlindungan anti-raid saat ini."
+      },
+      "antiraid toggle": {
+        "usage": "/antiraid toggle <enabled>",
+        "desc": "Aktif/nonaktifkan perlindungan anti-raid (butuh Kelola Server)."
+      },
+      "audit recent": {
+        "usage": "/audit recent",
+        "desc": "Lihat tindakan moderasi terbaru (butuh Kelola Server)."
+      },
+      "autoreply": {
+        "usage": "(passive)",
+        "desc": "Balasan otomatis berdasarkan pola yang dikonfigurasi."
+      },
+      "welcome preview": {
+        "usage": "/welcome preview",
+        "desc": "Pratinjau konfigurasi pesan sambutan saat ini."
+      },
+      "welcome toggle": {
+        "usage": "/welcome toggle <enabled>",
+        "desc": "Aktif/nonaktifkan sistem sambutan (butuh Kelola Server)."
+      },
+      "automod": {
+        "usage": "(passive)",
+        "desc": "Moderasi otomatis untuk spam, caps, tautan, dan kata kasar."
+      },
+      "audit logs": {
+        "usage": "(passive)",
+        "desc": "Lacak semua tindakan moderasi dan perubahan server."
+      },
+      "anti-raid": {
+        "usage": "(passive)",
+        "desc": "Perlindungan terhadap raid dan serangan mass join."
+      },
+      "scheduler list": {
+        "usage": "/scheduler list",
+        "desc": "Daftar semua pesan terjadwal."
+      },
+      "scheduler info": {
+        "usage": "/scheduler info <id>",
+        "desc": "Lihat info detail untuk pesan terjadwal."
+      },
+      "scheduler enable": {
+        "usage": "/scheduler enable <id>",
+        "desc": "Aktifkan pesan terjadwal (butuh Kelola Server)."
+      },
+      "scheduler disable": {
+        "usage": "/scheduler disable <id>",
+        "desc": "Nonaktifkan pesan terjadwal (butuh Kelola Server)."
+      },
+      "scheduler run": {
+        "usage": "/scheduler run <id>",
+        "desc": "Jalankan pesan terjadwal sekarang (butuh Kelola Server)."
+      },
+      "ytwatch": {
+        "usage": "/ytwatch action:<enable|disable|addchannel|removechannel|announcechannel|mentionrole|interval|status>",
+        "desc": "Kelola notifikasi YouTube (butuh Kelola Server)."
+      },
+      "ytstats": {
+        "usage": "/ytstats",
+        "desc": "Tampilkan cache & statistik kuota YouTube watcher."
+      },
+      "ytdebug": {
+        "usage": "/ytdebug",
+        "desc": "Tampilkan event debug YouTube watcher terbaru (butuh Kelola Server)."
+      },
+      "twitchstats": {
+        "usage": "/twitchstats",
+        "desc": "Tampilkan cache & statistik API Twitch watcher."
+      },
+      "twitchdebug": {
+        "usage": "/twitchdebug action:<config|status|test|resolve>",
+        "desc": "Debug integrasi Twitch dan uji notifikasi."
+      },
+      "coc clan": {
+        "usage": "/coc clan [tag]",
+        "desc": "Dapatkan informasi klan berdasarkan tag atau klan yang dikonfigurasi."
+      },
+      "coc player": {
+        "usage": "/coc player <tag>",
+        "desc": "Dapatkan informasi profil pemain."
+      },
+      "coc war": {
+        "usage": "/coc war [tag]",
+        "desc": "Dapatkan informasi perang saat ini untuk klan."
+      },
+      "coc search": {
+        "usage": "/coc search <type> <query>",
+        "desc": "Cari klan atau pemain."
+      },
+      "coc compare": {
+        "usage": "/coc compare <player1> <player2>",
+        "desc": "Bandingkan statistik dua pemain."
+      },
+      "coc attacks": {
+        "usage": "/coc attacks <player_tag>",
+        "desc": "Tampilkan riwayat serangan perang pemain."
+      },
+      "coc top": {
+        "usage": "/coc top <type> [limit]",
+        "desc": "Tampilkan pemain teratas di berbagai kategori."
+      },
+      "coc stats": {
+        "usage": "/coc stats [tag]",
+        "desc": "Dapatkan statistik klan atau pemain yang detail."
+      },
+      "coc warlog": {
+        "usage": "/coc warlog [tag] [limit]",
+        "desc": "Tampilkan riwayat log perang klan."
+      },
+      "coc watch": {
+        "usage": "/coc watch <action> [tag]",
+        "desc": "Kelola pengawasan perang untuk klan (butuh Kelola Server)."
+      },
+      "coc config": {
+        "usage": "/coc config <setting> <value>",
+        "desc": "Konfigurasi pengaturan integrasi COC (butuh Kelola Server)."
+      },
+      "valorant profile": {
+        "usage": "/valorant profile <nama> <tag> [wilayah]",
+        "desc": "Dapatkan profil pemain dengan info akun dan peringkat saat ini."
+      },
+      "valorant matches": {
+        "usage": "/valorant matches <nama> <tag> [wilayah] [mode] [jumlah]",
+        "desc": "Tampilkan riwayat pertandingan terbaru dengan statistik dan hasil."
+      },
+      "valorant leaderboard": {
+        "usage": "/valorant leaderboard <wilayah> [jumlah]",
+        "desc": "Tampilkan leaderboard regional top 200."
+      },
+      "valorant mmr": {
+        "usage": "/valorant mmr <nama> <tag> [wilayah]",
+        "desc": "Lihat pelacakan MMR dan peringkat terperinci dengan perubahan RR."
+      },
+      "valorant stats": {
+        "usage": "/valorant stats <nama> <tag> [wilayah] [jumlah]",
+        "desc": "Tampilkan statistik performa rata-rata dari pertandingan terbaru."
+      },
+      "valorant config": {
+        "usage": "/valorant config",
+        "desc": "Konfigurasi pelacakan pemain Valorant dan notifikasi (memerlukan Manage Server)."
+      },
+      "valorant esports": {
+        "usage": "/valorant esports [region] [days]",
+        "desc": "Lihat jadwal pertandingan dan turnamen esports Valorant yang akan datang."
+      }
     }
   },
   "autosSection": {
@@ -544,9 +768,9 @@
     "toasts": {
       "bulkEnabled": "Berhasil diaktifkan",
       "bulkDisabled": "Berhasil dinonaktifkan",
-  "bulkDeleted": "Berhasil dihapus",
-  "deleted": "Dihapus",
-  "saved": "Respons otomatis tersimpan"
+      "bulkDeleted": "Berhasil dihapus",
+      "deleted": "Dihapus",
+      "saved": "Respons otomatis tersimpan"
     },
     "modal": {
       "titleAdd": "Tambah Respons Otomatis",
@@ -822,12 +1046,30 @@
             "desc": "Sertakan konteks dan metadata tambahan di log"
           },
           "channels": {
-            "message": { "label": "Pesan", "desc": "Ke mana mengirim log pesan" },
-            "member": { "label": "Anggota", "desc": "Ke mana mengirim log anggota" },
-            "channel": { "label": "Channel", "desc": "Ke mana mengirim log channel" },
-            "role": { "label": "Peran", "desc": "Ke mana mengirim log peran" },
-            "server": { "label": "Server", "desc": "Ke mana mengirim log server" },
-            "voice": { "label": "Suara", "desc": "Ke mana mengirim log voice" }
+            "message": {
+              "label": "Pesan",
+              "desc": "Ke mana mengirim log pesan"
+            },
+            "member": {
+              "label": "Anggota",
+              "desc": "Ke mana mengirim log anggota"
+            },
+            "channel": {
+              "label": "Channel",
+              "desc": "Ke mana mengirim log channel"
+            },
+            "role": {
+              "label": "Peran",
+              "desc": "Ke mana mengirim log peran"
+            },
+            "server": {
+              "label": "Server",
+              "desc": "Ke mana mengirim log server"
+            },
+            "voice": {
+              "label": "Suara",
+              "desc": "Ke mana mengirim log voice"
+            }
           }
         },
         "placeholders": {
@@ -856,33 +1098,124 @@
       "antiraid": {
         "header": "Perlindungan Anti-Raid",
         "badge": "Keamanan",
-        "info": { "description": "Deteksi dan blokir percobaan raid dengan batas laju bergabung, usia akun minimum, respons otomatis, dan perlindungan konten." },
+        "info": {
+          "description": "Deteksi dan blokir percobaan raid dengan batas laju bergabung, usia akun minimum, respons otomatis, dan perlindungan konten."
+        },
         "features": {
-          "joinRate": { "title": "Pemantauan laju bergabung", "items": { "trackPatterns": "Lacak lonjakan & pola bergabung yang mencurigakan", "detectAttacks": "Deteksi raid secara real-time", "thresholds": "Ambang yang bisa dikonfigurasi" } },
-          "accountAnalysis": { "title": "Analisis akun", "items": { "age": "Syarat usia akun minimum", "patterns": "Deteksi pola mirip bot", "avatarUsername": "Pertimbangkan avatar/nama pengguna" } },
-          "automatedResponse": { "title": "Respons otomatis", "items": { "lockdown": "Kunci otomatis atau mode lambat", "verification": "Wajibkan level verifikasi lebih tinggi", "removal": "Kick/ban atau timeout akun mencurigakan" } },
-          "contentFiltering": { "title": "Perlindungan konten", "items": { "inviteSpam": "Kurangi spam undangan dari akun baru", "massMention": "Kurangi spam mention massal", "newMember": "Filter ekstra untuk anggota baru" } }
+          "joinRate": {
+            "title": "Pemantauan laju bergabung",
+            "items": {
+              "trackPatterns": "Lacak lonjakan & pola bergabung yang mencurigakan",
+              "detectAttacks": "Deteksi raid secara real-time",
+              "thresholds": "Ambang yang bisa dikonfigurasi"
+            }
+          },
+          "accountAnalysis": {
+            "title": "Analisis akun",
+            "items": {
+              "age": "Syarat usia akun minimum",
+              "patterns": "Deteksi pola mirip bot",
+              "avatarUsername": "Pertimbangkan avatar/nama pengguna"
+            }
+          },
+          "automatedResponse": {
+            "title": "Respons otomatis",
+            "items": {
+              "lockdown": "Kunci otomatis atau mode lambat",
+              "verification": "Wajibkan level verifikasi lebih tinggi",
+              "removal": "Kick/ban atau timeout akun mencurigakan"
+            }
+          },
+          "contentFiltering": {
+            "title": "Perlindungan konten",
+            "items": {
+              "inviteSpam": "Kurangi spam undangan dari akun baru",
+              "massMention": "Kurangi spam mention massal",
+              "newMember": "Filter ekstra untuk anggota baru"
+            }
+          }
         },
-        "warning": { "title": "Catatan:", "message": "Tindakan anti-raid bisa ketat. Sesuaikan ambang agar tidak mengganggu anggota sah saat ramai." },
+        "warning": {
+          "title": "Catatan:",
+          "message": "Tindakan anti-raid bisa ketat. Sesuaikan ambang agar tidak mengganggu anggota sah saat ramai."
+        },
         "fields": {
-          "joinRate": { "label": "Laju Bergabung", "desc": "Maks bergabung dalam jendela waktu" },
-          "joinWindow": { "label": "Jendela Waktu (detik)", "desc": "Interval untuk pemeriksaan laju" },
-          "accountAge": { "label": "Usia Akun Minimum (hari)", "desc": "Blokir akun yang lebih baru dari ini" },
-          "raidAction": { "label": "Saat Raid Terdeteksi", "desc": "Aksi utama saat raid terdeteksi" },
-          "raidActionDuration": { "label": "Durasi Aksi (menit)", "desc": "Durasi untuk timeout/lockdown", "notApplicable": "Tidak berlaku untuk kick/ban/alert" },
-          "alertChannel": { "label": "Channel Peringatan", "desc": "Tempat mengirim peringatan & ringkasan anti-raid" },
-          "autoKick": { "label": "Kick Otomatis yang Mencurigakan", "desc": "Otomatis kick akun yang gagal pemeriksaan" },
-          "gracePeriod": { "label": "Periode Bertahan (menit)", "desc": "Waktu mempertahankan perlindungan tinggi setelah deteksi" },
-          "whitelistRoles": { "label": "Peran Pengecualian", "desc": "Anggota dengan peran ini melewati pemeriksaan anti-raid" }
+          "joinRate": {
+            "label": "Laju Bergabung",
+            "desc": "Maks bergabung dalam jendela waktu"
+          },
+          "joinWindow": {
+            "label": "Jendela Waktu (detik)",
+            "desc": "Interval untuk pemeriksaan laju"
+          },
+          "accountAge": {
+            "label": "Usia Akun Minimum (hari)",
+            "desc": "Blokir akun yang lebih baru dari ini"
+          },
+          "raidAction": {
+            "label": "Saat Raid Terdeteksi",
+            "desc": "Aksi utama saat raid terdeteksi"
+          },
+          "raidActionDuration": {
+            "label": "Durasi Aksi (menit)",
+            "desc": "Durasi untuk timeout/lockdown",
+            "notApplicable": "Tidak berlaku untuk kick/ban/alert"
+          },
+          "alertChannel": {
+            "label": "Channel Peringatan",
+            "desc": "Tempat mengirim peringatan & ringkasan anti-raid"
+          },
+          "autoKick": {
+            "label": "Kick Otomatis yang Mencurigakan",
+            "desc": "Otomatis kick akun yang gagal pemeriksaan"
+          },
+          "gracePeriod": {
+            "label": "Periode Bertahan (menit)",
+            "desc": "Waktu mempertahankan perlindungan tinggi setelah deteksi"
+          },
+          "whitelistRoles": {
+            "label": "Peran Pengecualian",
+            "desc": "Anggota dengan peran ini melewati pemeriksaan anti-raid"
+          }
         },
-        "actions": { "lockdown": "Lockdown", "kick": "Kick", "ban": "Ban", "timeout": "Timeout", "alert": "Hanya Peringatan" },
-        "verification": { "label": "Level Verifikasi Wajib", "levels": { "none": "Tidak Ada", "low": "Rendah", "medium": "Sedang", "high": "Tinggi", "highest": "Tertinggi" } },
-        "placeholders": { "noAlerts": "Tidak ada channel peringatan" },
-        "roles": { "placeholder": "Tambah peran untuk dikecualikan...", "meta": { "role": "peran" }, "noMatches": "Tidak ada peran yang cocok.", "allAdded": "Semua peran sudah ditambahkan" },
-        "modal": { "title": "Pengaturan Anti-Raid", "saving": "Menyimpan pengaturan anti-raid...", "saved": "Pengaturan anti-raid disimpan" },
-        "toasts": { "saved": "Pengaturan anti-raid disimpan", "saveFailed": "Gagal menyimpan pengaturan anti-raid" }
+        "actions": {
+          "lockdown": "Lockdown",
+          "kick": "Kick",
+          "ban": "Ban",
+          "timeout": "Timeout",
+          "alert": "Hanya Peringatan"
+        },
+        "verification": {
+          "label": "Level Verifikasi Wajib",
+          "levels": {
+            "none": "Tidak Ada",
+            "low": "Rendah",
+            "medium": "Sedang",
+            "high": "Tinggi",
+            "highest": "Tertinggi"
+          }
+        },
+        "placeholders": {
+          "noAlerts": "Tidak ada channel peringatan"
+        },
+        "roles": {
+          "placeholder": "Tambah peran untuk dikecualikan...",
+          "meta": {
+            "role": "peran"
+          },
+          "noMatches": "Tidak ada peran yang cocok.",
+          "allAdded": "Semua peran sudah ditambahkan"
+        },
+        "modal": {
+          "title": "Pengaturan Anti-Raid",
+          "saving": "Menyimpan pengaturan anti-raid...",
+          "saved": "Pengaturan anti-raid disimpan"
+        },
+        "toasts": {
+          "saved": "Pengaturan anti-raid disimpan",
+          "saveFailed": "Gagal menyimpan pengaturan anti-raid"
+        }
       },
-
       "automod": {
         "header": "Moderasi Otomatis",
         "badge": "Perlindungan",
@@ -939,19 +1272,52 @@
           }
         },
         "triggers": {
-          "spam": { "label": "Deteksi Spam", "description": "Deteksi pesan berulang dan pola spam" },
-          "caps": { "label": "Huruf Besar Berlebihan", "description": "Saring pesan dengan huruf besar berlebihan" },
-          "links": { "label": "Filter Tautan", "description": "Pindai dan blokir tautan/URL berbahaya" },
-          "invite_links": { "label": "Tautan Undangan", "description": "Pindai dan blokir tautan undangan Discord berbahaya" },
-          "profanity": { "label": "Filter Kata Kasar", "description": "Saring bahasa yang tidak pantas" },
-          "mention_spam": { "label": "Spam Mention", "description": "Cegah mention pengguna/peran berlebihan" }
+          "spam": {
+            "label": "Deteksi Spam",
+            "description": "Deteksi pesan berulang dan pola spam"
+          },
+          "caps": {
+            "label": "Huruf Besar Berlebihan",
+            "description": "Saring pesan dengan huruf besar berlebihan"
+          },
+          "links": {
+            "label": "Filter Tautan",
+            "description": "Pindai dan blokir tautan/URL berbahaya"
+          },
+          "invite_links": {
+            "label": "Tautan Undangan",
+            "description": "Pindai dan blokir tautan undangan Discord berbahaya"
+          },
+          "profanity": {
+            "label": "Filter Kata Kasar",
+            "description": "Saring bahasa yang tidak pantas"
+          },
+          "mention_spam": {
+            "label": "Spam Mention",
+            "description": "Cegah mention pengguna/peran berlebihan"
+          }
         },
         "actions": {
-          "warn": { "label": "Peringatkan Pengguna", "description": "Kirim peringatan ke pengguna" },
-          "delete": { "label": "Hapus Pesan", "description": "Hapus pesan yang melanggar" },
-          "mute": { "label": "Bisukan Sementara", "description": "Bisukan pengguna untuk durasi tertentu" },
-          "kick": { "label": "Keluarkan Pengguna", "description": "Keluarkan pengguna dari server" },
-          "ban": { "label": "Ban Pengguna", "description": "Ban pengguna secara permanen" }
+          "warn": {
+            "label": "Peringatkan Pengguna",
+            "description": "Kirim peringatan ke pengguna"
+          },
+          "delete": {
+            "label": "Hapus Pesan",
+            "description": "Hapus pesan yang melanggar"
+          },
+          "mute": {
+            "label": "Bisukan Sementara",
+            "description": "Bisukan pengguna untuk durasi tertentu"
+          },
+          "kick": {
+            "label": "Keluarkan Pengguna",
+            "description": "Keluarkan pengguna dari server"
+          },
+          "ban": {
+            "label": "Ban Pengguna",
+            "description": "Ban pengguna secara permanen"
+          }
         },
         "messageAction": {
           "keep": "Biarkan Pesan",
@@ -1110,7 +1476,7 @@
         "bulk": {
           "enable": "Aktifkan",
           "disable": "Nonaktifkan",
-          "delete": "Hapus", 
+          "delete": "Hapus",
           "clear": "Bersihkan",
           "processing": "Memproses...",
           "deleting": "Menghapus...",
@@ -1482,7 +1848,7 @@
       },
       "valorant": {
         "label": "Valorant",
-        "desc": "Update pertandingan, sorotan, dan notifikasi (direncanakan)"
+        "desc": "Pembaruan pertandingan, perubahan peringkat, dan pelacakan statistik pemain"
       },
       "apex": {
         "label": "Apex Legends",
@@ -1632,7 +1998,7 @@
         "clanName": "Nama Clan",
         "clanNameHint": "Masukkan nama clan Anda (contoh: Pejuang Elite)",
         "warAnnouncements": "Pengumuman Perang",
-        "memberAnnouncements": "Pengumuman Anggota", 
+        "memberAnnouncements": "Pengumuman Anggota",
         "donationAnnouncements": "Pengumuman Donasi"
       },
       "announce": {
@@ -1661,14 +2027,14 @@
         "memberAnnouncementChannelHelp": "Saluran untuk pengumuman anggota bergabung/keluar untuk clan ini",
         "warMentions": "Mention Perang",
         "warMentionsHelp": "Peran/pengguna yang akan di-mention untuk acara perang dari clan ini",
-        "memberMentions": "Mention Anggota", 
+        "memberMentions": "Mention Anggota",
         "memberMentionsHelp": "Peran/pengguna yang akan di-mention untuk acara anggota dari clan ini",
         "donationMentions": "Mention Donasi",
         "donationMentionsHelp": "Peran/pengguna yang akan di-mention untuk acara donasi dari clan ini"
       },
       "tracking": {
         "trackWars": "Lacak Perang Clan",
-        "trackMembers": "Lacak Perubahan Anggota", 
+        "trackMembers": "Lacak Perubahan Anggota",
         "trackDonations": "Lacak Donasi",
         "trackWarStats": "Aktifkan Posting Statistik Perang Otomatis",
         "trackDonationLeaderboard": "Aktifkan Posting Leaderboard Donasi Otomatis",
@@ -1764,7 +2130,7 @@
       "sections": {
         "general": "Konfigurasi Umum",
         "players": "Pemain yang Dilacak",
-        "tracking": "Konfigurasi Pelacakan", 
+        "tracking": "Konfigurasi Pelacakan",
         "templates": "Template Pesan",
         "preview": "Pratinjau template"
       },
@@ -1818,6 +2184,59 @@
         "networkError": "Error jaringan. Periksa koneksi Anda.",
         "templateSaved": "Template berhasil disimpan",
         "templateError": "Error menyimpan template"
+      }
+    },
+    "valorant": {
+      "intervalHint": "Seberapa sering memeriksa pembaruan pertandingan (dalam detik). Minimum 300 detik (5 menit).",
+      "sections": {
+        "trackingFeatures": "Fitur Pelacakan",
+        "playerManagement": "Manajemen Pemain",
+        "matchTemplate": "Template Hasil Pertandingan",
+        "rankChangeTemplate": "Template Perubahan Peringkat",
+        "achievementTemplate": "Template Prestasi"
+      },
+      "tracking": {
+        "trackMatches": "Lacak Hasil Pertandingan",
+        "trackRankChanges": "Lacak Perubahan Peringkat",
+        "trackAchievements": "Lacak Prestasi (Ace, MVP, dll.)",
+        "matchTypes": "Jenis Pertandingan yang Dilacak",
+        "minKills": "Minimum Kills untuk Diumumkan",
+        "minKillsHint": "Hanya umumkan pertandingan dengan setidaknya jumlah kills ini"
+      },
+      "matchTypes": {
+        "competitive": "Kompetitif",
+        "unrated": "Tidak Berperingkat",
+        "deathmatch": "Deathmatch"
+      },
+      "announce": {
+        "globalMentions": "Target Sebutan Global",
+        "globalMentionsHelp": "Peran/pengguna ini akan disebutkan di semua pengumuman Valorant"
+      },
+      "fields": {
+        "matchAnnouncements": "Saluran Pengumuman Pertandingan",
+        "rankAnnouncements": "Saluran Pengumuman Perubahan Peringkat",
+        "achievementAnnouncements": "Saluran Pengumuman Prestasi"
+      },
+      "players": {
+        "riotIdPlaceholder": "NamaPemain#TAG",
+        "riotIdHelp": "Masukkan Riot ID dalam format: Nama#TAG (contoh: Pemain#NA1)",
+        "region": "Wilayah",
+        "addPlayer": "Tambah Pemain",
+        "noPlayers": "Belum ada pemain yang ditambahkan. Tambahkan pemain untuk mulai melacak pertandingan mereka.",
+        "customMessage": "Override Pesan Kustom",
+        "customMessagePlaceholder": "Pesan kustom opsional untuk pengumuman pemain ini",
+        "customMessageHelp": "Biarkan kosong untuk menggunakan template default"
+      },
+      "templates": {
+        "matchPlaceholder": "🎮 {playerName} baru saja menyelesaikan pertandingan di {map}!\n{result} • {kills}/{deaths}/{assists} ({kd} K/D)\nAgen: {agent} • Skor: {score}",
+        "rankChangePlaceholder": "🎖️ {playerName} pembaruan peringkat!\n{oldRank} ➜ {newRank}\nRR: {rr} ({rrChange})",
+        "achievementPlaceholder": "🏆 {playerName} prestasi!\n{achievement}: {description}"
+      },
+      "toasts": {
+        "invalidRiotId": "Format Riot ID tidak valid. Harap gunakan format Nama#TAG.",
+        "alreadyTracking": "Sudah melacak pemain: {player}",
+        "added": "Berhasil menambahkan pemain: {player}",
+        "addFailed": "Gagal menambahkan pemain. Harap periksa Riot ID dan coba lagi."
       }
     },
     "leveling": "XP & Level",
