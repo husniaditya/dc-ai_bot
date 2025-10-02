@@ -333,8 +333,12 @@ class LeaderboardInteractionHandler {
             const pageData = clanData.players.slice(startIndex, endIndex);
 
             // For historical war leaderboards (war ended), generate dual-page layout without buttons
-            // Only generate historical when war state is 'warEnded', not 'notInWar'
-            if (view === 'war' && clanData.warState === 'warEnded') {
+            // Check DATABASE war state, not API war state, to avoid spam after war is finalized
+            const dbWarState = clanData.warStateData ? clanData.warStateData.currentState : null;
+            console.log(`[LeaderboardInteractionHandler] War leaderboard check - dbState: ${dbWarState}, apiState: ${clanData.warState}, view: ${view}, clanTag: ${clanTag}`);
+            
+            if (view === 'war' && dbWarState === 'warEnded') {
+                console.log(`[LeaderboardInteractionHandler] Generating historical war leaderboard due to dbState === 'warEnded' for ${clanTag}`);
                 return await this.generateHistoricalWarLeaderboard(interaction, config, clanData, false);
             }
 
@@ -480,8 +484,12 @@ class LeaderboardInteractionHandler {
             const pageData = clanData.players.slice(startIndex, endIndex);
 
             // For historical war leaderboards (war ended), generate dual-page layout without buttons
-            // Only generate historical when war state is 'warEnded', not 'notInWar'
-            if (view === 'war' && clanData.warState === 'warEnded') {
+            // Check DATABASE war state, not API war state, to avoid spam after war is finalized
+            const dbWarState = clanData.warStateData ? clanData.warStateData.currentState : null;
+            console.log(`[LeaderboardInteractionHandler] War leaderboard check (2nd location) - dbState: ${dbWarState}, apiState: ${clanData.warState}, view: ${view}, clanTag: ${clanTag}`);
+            
+            if (view === 'war' && dbWarState === 'warEnded') {
+                console.log(`[LeaderboardInteractionHandler] Generating historical war leaderboard due to dbState === 'warEnded' for ${clanTag} (2nd location)`);
                 return await this.generateHistoricalWarLeaderboard(interaction, config, clanData, isOriginalReply);
             }
 

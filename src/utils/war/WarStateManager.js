@@ -70,7 +70,8 @@ class WarStateManager {
 
             const [rows] = await this.db.execute(`
                 SELECT war_current_state, war_preparing_message_id, 
-                       war_active_message_id, war_last_state_change, war_state_data
+                       war_active_message_id, war_ended_message_id, 
+                       war_last_state_change, war_state_data
                 FROM guild_clashofclans_watch 
                 WHERE guild_id = ? AND clan_tag = ?
             `, [guildId, clanTag]);
@@ -133,6 +134,7 @@ class WarStateManager {
                 currentState: row.war_current_state || this.STATES.NOT_IN_WAR,
                 preparingMessageId: row.war_preparing_message_id,
                 activeMessageId: row.war_active_message_id,
+                endedMessageId: row.war_ended_message_id,
                 lastStateChange: row.war_last_state_change,
                 stateData: stateData || {},
                 // Legacy compatibility
@@ -270,7 +272,18 @@ class WarStateManager {
                     messageId: currentStateData.preparingMessageId
                 };
             }
-            // Already in NOT_IN_WAR or ENDED state - no action needed to prevent spam
+            if (currentState === this.STATES.ENDED) {
+                // War ended and no longer in war - just transition to notInWar without creating messages
+                console.log(`[WarStateManager] War transition: ${currentState} → ${newState} (finalize without messages)`);
+                return {
+                    action: 'transition',
+                    from: currentState,
+                    to: newState,
+                    messageAction: 'finalize_ended_war', // Finalize state without creating messages
+                    messageId: null
+                };
+            }
+            // Already in NOT_IN_WAR state - no action needed to prevent spam
             return { action: 'none' };
         }
 
@@ -354,16 +367,7 @@ class WarStateManager {
 
             case this.STATES.ENDED:
             case 'warEnd': // Handle legacy 'warEnd' state as alias for 'warEnded'
-                if (newState === this.STATES.NOT_IN_WAR) {
-                    // War ended and no longer in war - transition to notInWar to stop spam
-                    return {
-                        action: 'transition',
-                        from: currentState,
-                        to: newState,
-                        messageAction: 'finalize_ended_war',
-                        messageId: null
-                    };
-                }
+                // ENDED → NOT_IN_WAR transition is now handled in the NOT_IN_WAR section above
                 if (newState === this.STATES.PREPARING) {
                     // New war starting
                     return {
@@ -384,7 +388,32 @@ class WarStateManager {
                         messageId: null
                     };
                 }
-                break;
+                // For warEnded state, no messages should be generated
+                return { action: 'none' };
+        }
+
+        // Time-based transitions: Check if war has been in ENDED state too long
+        if (currentState === this.STATES.ENDED && newState === this.STATES.ENDED) {
+            // Check if war has been ended for more than 24 hours
+            if (currentStateData && currentStateData.lastStateChange) {
+                const lastChange = new Date(currentStateData.lastStateChange);
+                const now = new Date();
+                const hoursInEndedState = (now - lastChange) / (1000 * 60 * 60);
+                
+                // If war has been ended for more than X hours, auto-transition to notInWar
+                // This can be adjusted via environment variable WAR_ENDED_TIMEOUT_HOURS (default: 0.1 = 6 minutes for quick transition)
+                const timeoutHours = parseFloat(process.env.WAR_ENDED_TIMEOUT_HOURS || '0.1');
+                if (hoursInEndedState >= timeoutHours) {
+                    console.log(`[WarStateManager] War has been in ENDED state for ${hoursInEndedState.toFixed(1)} hours (timeout: ${timeoutHours}h), auto-transitioning to NOT_IN_WAR`);
+                    return {
+                        action: 'transition',
+                        from: currentState,
+                        to: this.STATES.NOT_IN_WAR,
+                        messageAction: 'finalize_ended_war', // Finalize state without creating messages
+                        messageId: null
+                    };
+                }
+            }
         }
 
         // Same state - check if we need to refresh
@@ -420,9 +449,8 @@ class WarStateManager {
             case this.STATES.ACTIVE:
                 return stateData.activeMessageId;
             case this.STATES.ENDED:
-                // For ended state, use the last active message ID to update it
-                // Note: after update, war_active_message_id will be cleared but we still need it for the transition
-                return stateData.activeMessageId;
+                // For ended state, use the ended message ID if available, or active message ID for transition
+                return stateData.endedMessageId || stateData.activeMessageId;
             default:
                 return null;
         }
@@ -558,6 +586,7 @@ class WarStateManager {
                 'war_current_state VARCHAR(20) DEFAULT "notInWar"',
                 'war_preparing_message_id VARCHAR(20)',
                 'war_active_message_id VARCHAR(20)', 
+                'war_ended_message_id VARCHAR(20)',
                 'war_last_state_change TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP',
                 'war_state_data JSON',
                 'war_last_updated DATETIME',
