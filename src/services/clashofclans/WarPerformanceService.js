@@ -273,7 +273,7 @@ class WarPerformanceService {
                     updated_at = CURRENT_TIMESTAMP
             `, values);
 
-            console.log(`✅ Updated statistics for ${stat.player_name} (${playerTag}) - ${stat.total_wars} wars, ${winRate.toFixed(1)}% win rate`);
+            // console.log(`✅ Updated statistics for ${stat.player_name} (${playerTag}) - ${stat.total_wars} wars, ${winRate.toFixed(1)}% win rate`);
             
         } catch (error) {
             console.error('❌ Error updating player statistics:', error);

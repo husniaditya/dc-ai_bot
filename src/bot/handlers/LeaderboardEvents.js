@@ -29,11 +29,31 @@ class LeaderboardEvents {
     async postLeaderboard(guildId, channelId, messageId = null, type = 'donations', clanTag = null, skipTransitions = false) {
         try {
             // For war leaderboards, use the new state-aware method
-            if (type === 'war' && clanTag) {
-                return await this.postWarLeaderboardWithStateManagement(guildId, channelId, clanTag, skipTransitions);
+            if (type === 'war') {
+                // If no clanTag provided, get the first clan from database
+                let effectiveClanTag = clanTag;
+                if (!effectiveClanTag) {
+                    try {
+                        const [clanRows] = await this.interactionHandler.db.execute(
+                            'SELECT clan_tag FROM guild_clashofclans_watch WHERE guild_id = ? AND war_leaderboard_channel_id IS NOT NULL LIMIT 1',
+                            [guildId]
+                        );
+                        if (clanRows.length > 0) {
+                            effectiveClanTag = clanRows[0].clan_tag;
+                        }
+                    } catch (clanErr) {
+                        console.warn(`[LeaderboardEvents] Could not determine clan tag for war leaderboard:`, clanErr.message);
+                    }
+                }
+                
+                if (effectiveClanTag) {
+                    return await this.postWarLeaderboardWithStateManagement(guildId, channelId, effectiveClanTag, skipTransitions);
+                } else {
+                    throw new Error('No clan tag available for war leaderboard');
+                }
             }
 
-            // Original logic for donation leaderboards and legacy war leaderboards
+            // Original logic for donation leaderboards only
             return await this.postOriginalLeaderboard(guildId, channelId, messageId, type, clanTag);
 
         } catch (error) {
@@ -172,17 +192,14 @@ class LeaderboardEvents {
                                 targetMessageId = null;
                                 break;
                             case 'finalize_ended_war':
-                                // War ended and should transition to notInWar to stop spam
+                                // No message action needed - just finalize the war state transition
+                                console.log(`[LeaderboardEvents] Finalizing ended war for ${clanTag} (warEnded -> notInWar)`);
                                 await this.warStateManager.finalizeEndedWar(guildId, clanTag);
-                                return {
-                                    success: true,
-                                    guildId,
-                                    channelId,
-                                    type: 'war',
-                                    clanTag,
-                                    action: 'finalized_ended_war',
-                                    warState: 'notInWar'
-                                };
+                                return { success: true, guildId, channelId, type: 'war', action: 'finalized_ended_war' };
+                            case 'none':
+                                // No message action needed - just transition state
+                                console.log(`[LeaderboardEvents] No message action needed for ${clanTag} (action: ${transitionAction.messageAction})`);
+                                return { success: true, guildId, channelId, type: 'war', action: 'no_message_action' };
                             default:
                                 // Default behavior - create new message
                                 shouldCreateNew = true;
@@ -203,14 +220,22 @@ class LeaderboardEvents {
 
                 case 'none':
                 default:
+                    // Check DATABASE state, not API state, to prevent spam after war finalization
+                    const dbWarState = currentStateData ? currentStateData.currentState : null;
+                    
+                    // If database state is notInWar, don't create any messages
+                    if (dbWarState === 'notInWar') {
+                        console.log(`[LeaderboardEvents] War already finalized in database (${dbWarState}), skipping message creation for ${clanTag}`);
+                        return { success: true, guildId, channelId, type: 'war', action: 'skipped_finalized_war' };
+                    }
+                    
                     // Even if no transition is needed, we might still want to post/update the leaderboard
-                    if (clanData.warState === 'warEnded') {
-                        // For ended wars, create a new historical leaderboard or update existing one
-                        targetMessageId = currentStateData?.activeMessageId; // Use active message ID to convert it
-                        shouldCreateNew = !targetMessageId; // Create new if no existing message
-                        shouldUpdate = !!targetMessageId; // Update existing if available
-                        break;
-                    } else if (clanData.warState === 'inWar') {
+                    if (dbWarState === 'warEnded') {
+                        // For warEnded state, do not create or update any messages
+                        // Historical messages are only created during inWar->warEnded transition
+                        console.log(`[LeaderboardEvents] War in warEnded state, no message action needed for ${clanTag}`);
+                        return { success: true, guildId, channelId, type: 'war', action: 'warEnded_no_action' };
+                    } else if (dbWarState === 'inWar' || clanData.warState === 'inWar') {
                         // For active wars, check if we have an active message
                         targetMessageId = currentStateData?.activeMessageId;
                         shouldCreateNew = !targetMessageId; // Create new if no existing message
@@ -220,7 +245,7 @@ class LeaderboardEvents {
                             console.log(`[LeaderboardEvents] No active message found for inWar state, creating new message for ${clanTag}`);
                         }
                         break;
-                    } else if (clanData.warState === 'preparation') {
+                    } else if (dbWarState === 'preparation' || clanData.warState === 'preparation') {
                         // For preparation wars, check if we have a preparing message
                         targetMessageId = currentStateData?.preparingMessageId;
                         shouldCreateNew = !targetMessageId; // Create new if no existing message
@@ -232,6 +257,7 @@ class LeaderboardEvents {
                         break;
                     }
                     // For other states with no action, just return
+                    console.log(`[LeaderboardEvents] No action needed for war state ${dbWarState} (API: ${clanData.warState}) for ${clanTag}`);
                     return { success: true, guildId, channelId, type: 'war', action: 'none' };
             }
 
@@ -251,10 +277,7 @@ class LeaderboardEvents {
 
                     if (shouldCreateNew) {
                         // Create new message
-                        console.log(`[LeaderboardEvents] Creating new war message for ${clanTag}`);
-                        resultMessage = await channel.send(options);
-                        createdMessageId = resultMessage.id;
-                        console.log(`[LeaderboardEvents] Created new war message for ${clanTag} (state: ${clanData.warState}) - Message ID: ${createdMessageId}`);
+
                         
                     } else if (shouldUpdate && targetMessageId) {
                         try {
@@ -311,8 +334,8 @@ class LeaderboardEvents {
                 }
             }
 
-            // Update database with message ID only if a new message was created (not updates)
-            if (createdMessageId && shouldCreateNew) {
+            // Update database with message ID if a new message was created OR if a message was recreated after deletion
+            if (createdMessageId) {
                 let messageField = null;
                 
                 // Determine the correct message field based on war state
@@ -323,7 +346,6 @@ class LeaderboardEvents {
                     case 'inWar':
                         messageField = 'war_active_message_id';
                         break;
-                    case 'warEnded':
                     default:
                         // For ended wars, we don't store a separate message ID
                         // The message is ephemeral and shows historical results
@@ -331,19 +353,38 @@ class LeaderboardEvents {
                         break;
                 }
                 
-                // Update the database - only for new messages, not updates
+                // Update the database - for both new messages and recreated messages after deletion
                 if (messageField) {
                     await this.warStateManager.db.execute(
                         `UPDATE guild_clashofclans_watch SET ${messageField} = ? WHERE guild_id = ? AND clan_tag = ?`,
                         [createdMessageId, guildId, clanTag]
                     );
-                    // console.log(`[LeaderboardEvents] Updated ${messageField} to ${createdMessageId} for new war leaderboard (clan ${clanTag})`);
+                    const actionType = shouldCreateNew ? 'new' : 'recreated (after deletion)';
+                    console.log(`[LeaderboardEvents] Updated ${messageField} to ${createdMessageId} for ${actionType} war leaderboard (clan ${clanTag})`);
                 }
                 
                 // If this was a historical message creation (warEnded state), finalize the war
-                if (clanData.warState === 'warEnded' && createdMessageId && transitionAction.action === 'transition' && transitionAction.messageAction === 'delete_and_create_historical') {
-                    console.log(`[LeaderboardEvents] Historical message created for ${clanTag}, finalizing ended war`);
-                    await this.warStateManager.finalizeEndedWar(guildId, clanTag);
+                // This applies to both new messages and recreated messages
+                if (clanData.warState === 'warEnded' && createdMessageId) {
+                    // Handle delete_and_create_historical action only (finalize_ended_war no longer creates messages)
+                    if (transitionAction.action === 'transition' && transitionAction.messageAction === 'delete_and_create_historical') {
+                        console.log(`[LeaderboardEvents] Historical message created for ${clanTag}, finalizing ended war (action: ${transitionAction.messageAction})`);
+                        
+                        // Update war_ended_message_id with the historical message ID
+                        try {
+                            await this.interactionHandler.db.execute(`
+                                UPDATE guild_clashofclans_watch 
+                                SET war_ended_message_id = ?
+                                WHERE guild_id = ? AND clan_tag = ?
+                            `, [createdMessageId, guildId, clanTag]);
+                            console.log(`[LeaderboardEvents] Updated war_ended_message_id to ${createdMessageId} for ${clanTag}`);
+                        } catch (updateError) {
+                            console.error(`[LeaderboardEvents] Failed to update war_ended_message_id for ${clanTag}:`, updateError.message);
+                        }
+                        
+                        // Finalize the war (transition to notInWar)
+                        await this.warStateManager.finalizeEndedWar(guildId, clanTag);
+                    }
                 }
             }
 

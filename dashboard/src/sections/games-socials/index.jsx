@@ -8,6 +8,8 @@ import {
   updateClashOfClansConfig,
   getGenshinConfig,
   updateGenshinConfig,
+  getValorantConfig,
+  updateValorantConfig,
   getChannels, 
   getRoles 
 } from '../../api';
@@ -24,6 +26,7 @@ import YouTubeConfig from './features/YouTubeConfig';
 import TwitchConfig from './features/TwitchConfig';
 import ClashOfClansConfig from './features/ClashOfClansConfig';
 import GenshinConfig from './features/GenshinConfig';
+import ValorantConfig from './features/ValorantConfig';
 
 // Utils
 import { cleanChannelIds, cleanStreamerUsernames, hasUnsavedChanges } from './utils';
@@ -60,6 +63,12 @@ export default function GamesSocialsSection({ guildId, pushToast }) {
   const [genshinLoading, setGenshinLoading] = useState(false);
   const [genshinSaving, setGenshinSaving] = useState(false);
   
+  // Valorant state
+  const [valorantConfig, setValorantConfig] = useState(null);
+  const [valorantOriginal, setValorantOriginal] = useState(null);
+  const [valorantLoading, setValorantLoading] = useState(false);
+  const [valorantSaving, setValorantSaving] = useState(false);
+  
   // Shared data
   const [discordChannels, setDiscordChannels] = useState([]);
   const [guildRoles, setGuildRoles] = useState([]);
@@ -74,12 +83,14 @@ export default function GamesSocialsSection({ guildId, pushToast }) {
         setTwitchLoading(true);
         setCocLoading(true);
         setGenshinLoading(true);
+        setValorantLoading(true);
         
-        const [ytCfg, twitchCfg, cocCfg, genshinCfg, ch, roles] = await Promise.all([
+        const [ytCfg, twitchCfg, cocCfg, genshinCfg, valorantCfg, ch, roles] = await Promise.all([
           getYouTubeConfig(guildId).catch(() => null),
           getTwitchConfig(guildId).catch(() => null),
           getClashOfClansConfig(guildId).catch(() => null),
           getGenshinConfig(guildId).catch(() => null),
+          getValorantConfig(guildId).catch(() => null),
           getChannels(guildId).catch(() => null),
           getRoles(guildId).catch(() => null)
         ]);
@@ -128,6 +139,17 @@ export default function GamesSocialsSection({ guildId, pushToast }) {
           setGenshinOriginal(cleanedGenshinCfg);
         }
         
+        // Set Valorant config
+        if (valorantCfg) {
+          const cleanedValorantCfg = {
+            ...DEFAULT_CONFIGS.valorant,
+            ...valorantCfg,
+            players: Array.isArray(valorantCfg.players) ? valorantCfg.players : []
+          };
+          setValorantConfig(cleanedValorantCfg);
+          setValorantOriginal(cleanedValorantCfg);
+        }
+        
         // Set shared data
         if (ch && Array.isArray(ch.channels)) setDiscordChannels(ch.channels);
         if (roles && Array.isArray(roles.roles)) setGuildRoles(roles.roles);
@@ -137,6 +159,7 @@ export default function GamesSocialsSection({ guildId, pushToast }) {
         setTwitchLoading(false);
         setCocLoading(false);
         setGenshinLoading(false);
+        setValorantLoading(false);
       }
     })();
   }, [guildId]);
@@ -241,6 +264,33 @@ export default function GamesSocialsSection({ guildId, pushToast }) {
       } catch (err) {
         pushToast && pushToast('error', t('gamesSocials.toasts.toggleFailed'));
         setGenshinConfig(prevConfig); // revert
+      }
+    } else if (serviceKey === 'valorant') {
+      if (!valorantConfig) return;
+      
+      const newEnabled = !valorantConfig.enabled;
+      const prevConfig = valorantConfig;
+      
+      // Optimistic update
+      setValorantConfig(prev => ({ ...prev, enabled: newEnabled }));
+      
+      try {
+        const updated = await updateValorantConfig({ ...prevConfig, enabled: newEnabled }, guildId);
+        const safeConfig = {
+          ...DEFAULT_CONFIGS.valorant,
+          ...updated,
+          players: Array.isArray(updated?.players) ? updated.players : [],
+          mentionTargets: Array.isArray(updated?.mentionTargets) ? updated.mentionTargets : [],
+          playerMessages: updated?.playerMessages || {},
+          playerNames: updated?.playerNames || {},
+          playerRegions: updated?.playerRegions || {}
+        };
+        setValorantConfig(safeConfig);
+        setValorantOriginal(safeConfig);
+        pushToast && pushToast('success', t(newEnabled ? 'gamesSocials.toasts.serviceEnabled' : 'gamesSocials.toasts.serviceDisabled', { service: t('gamesSocials.services.valorant.label') }));
+      } catch (err) {
+        pushToast && pushToast('error', t('gamesSocials.toasts.toggleFailed'));
+        setValorantConfig(prevConfig); // revert
       }
     }
   };
@@ -366,17 +416,50 @@ export default function GamesSocialsSection({ guildId, pushToast }) {
     if (genshinOriginal) setGenshinConfig(genshinOriginal);
   };
 
+  // Valorant Impact handlers
+  const handleValorantSave = async () => {
+    if (!valorantConfig) return;
+    
+    try { 
+      setValorantSaving(true); 
+      const updated = await updateValorantConfig(valorantConfig, guildId); 
+      const safe = {
+        ...DEFAULT_CONFIGS.valorant,
+        ...updated,
+        players: Array.isArray(updated?.players) ? updated.players : [],
+        mentionTargets: Array.isArray(updated?.mentionTargets) ? updated.mentionTargets : [],
+        playerMessages: updated?.playerMessages || {},
+        playerNames: updated?.playerNames || {},
+        playerRegions: updated?.playerRegions || {}
+      }; 
+      setValorantConfig(safe); 
+      setValorantOriginal(safe); 
+      pushToast && pushToast('success', t('gamesSocials.toasts.saved', { service: t('gamesSocials.services.valorant.label') })); 
+    } catch (e) { 
+      console.error('Valorant save error:', e);
+      pushToast && pushToast('error', t('gamesSocials.toasts.saveFailed')); 
+    } finally { 
+      setValorantSaving(false); 
+    }
+  };
+
+  const handleValorantReset = () => {
+    if (valorantOriginal) setValorantConfig(valorantOriginal);
+  };
+
   // Get current service and check states
   const currentService = SERVICES.find(s => s.key === activeService);
   const showOverlay = (activeService === 'youtube' && (ytLoading || (!ytConfig && guildId))) || 
                      (activeService === 'twitch' && (twitchLoading || (!twitchConfig && guildId))) ||
                      (activeService === 'clashofclans' && (cocLoading || (!cocConfig && guildId))) ||
-                     (activeService === 'genshin' && (genshinLoading || (!genshinConfig && guildId)));
+                     (activeService === 'genshin' && (genshinLoading || (!genshinConfig && guildId))) ||
+                     (activeService === 'valorant' && (valorantLoading || (!valorantConfig && guildId)));
 
   const ytHasChanges = hasUnsavedChanges(ytConfig, ytOriginal);
   const twitchHasChanges = hasUnsavedChanges(twitchConfig, twitchOriginal);
   const cocHasChanges = hasUnsavedChanges(cocConfig, cocOriginal);
   const genshinHasChanges = hasUnsavedChanges(genshinConfig, genshinOriginal);
+  const valorantHasChanges = hasUnsavedChanges(valorantConfig, valorantOriginal);
 
   return (
     <LoadingSection
@@ -393,6 +476,7 @@ export default function GamesSocialsSection({ guildId, pushToast }) {
         {activeService === 'twitch' && twitchHasChanges && <span className="dirty-badge">{t('common.unsaved')}</span>}
         {activeService === 'clashofclans' && cocHasChanges && <span className="dirty-badge">{t('common.unsaved')}</span>}
         {activeService === 'genshin' && genshinHasChanges && <span className="dirty-badge">{t('common.unsaved')}</span>}
+        {activeService === 'valorant' && valorantHasChanges && <span className="dirty-badge">{t('common.unsaved')}</span>}
       </div>
 
       {/* Service Cards Grid */}
@@ -401,11 +485,13 @@ export default function GamesSocialsSection({ guildId, pushToast }) {
           const isEnabled = service.key === 'youtube' ? (ytConfig?.enabled ?? false) : 
                            service.key === 'twitch' ? (twitchConfig?.enabled ?? false) : 
                            service.key === 'clashofclans' ? (cocConfig?.enabled ?? false) :
-                           service.key === 'genshin' ? (genshinConfig?.enabled ?? false) : false;
+                           service.key === 'genshin' ? (genshinConfig?.enabled ?? false) :
+                           service.key === 'valorant' ? (valorantConfig?.enabled ?? false) : false;
           const isLoading = service.key === 'youtube' ? ytLoading : 
                            service.key === 'twitch' ? twitchLoading : 
                            service.key === 'clashofclans' ? cocLoading :
-                           service.key === 'genshin' ? genshinLoading : false;
+                           service.key === 'genshin' ? genshinLoading :
+                           service.key === 'valorant' ? valorantLoading : false;
           
           return (
             <ServiceCard
@@ -419,7 +505,8 @@ export default function GamesSocialsSection({ guildId, pushToast }) {
                 (service.key === 'youtube' && ytConfig) || 
                 (service.key === 'twitch' && twitchConfig) ||
                 (service.key === 'clashofclans' && cocConfig) ||
-                (service.key === 'genshin' && genshinConfig)
+                (service.key === 'genshin' && genshinConfig) ||
+                (service.key === 'valorant' && valorantConfig)
               )}
               isLoading={isLoading}
             />
@@ -437,11 +524,13 @@ export default function GamesSocialsSection({ guildId, pushToast }) {
             isEnabled={activeService === 'youtube' ? (ytConfig?.enabled ?? false) : 
                       activeService === 'twitch' ? (twitchConfig?.enabled ?? false) : 
                       activeService === 'clashofclans' ? (cocConfig?.enabled ?? false) :
-                      activeService === 'genshin' ? (genshinConfig?.enabled ?? false) : false}
+                      activeService === 'genshin' ? (genshinConfig?.enabled ?? false) :
+                      activeService === 'valorant' ? (valorantConfig?.enabled ?? false) : false}
             hasUnsavedChanges={activeService === 'youtube' ? ytHasChanges : 
                              activeService === 'twitch' ? twitchHasChanges : 
                              activeService === 'clashofclans' ? cocHasChanges :
-                             activeService === 'genshin' ? genshinHasChanges : false}
+                             activeService === 'genshin' ? genshinHasChanges :
+                             activeService === 'valorant' ? valorantHasChanges : false}
           />
 
           {/* Render appropriate configuration component */}
@@ -566,6 +655,37 @@ export default function GamesSocialsSection({ guildId, pushToast }) {
                 >
                   <i className="fa-solid fa-floppy-disk me-2"/>
                   {genshinSaving ? t('common.saving') : t('common.save')}
+                </button>
+              </div>
+            </>
+          ) : activeService === 'valorant' ? (
+            <>
+              <ValorantConfig
+                config={valorantConfig}
+                onChange={setValorantConfig}
+                onSave={handleValorantSave}
+                discordChannels={discordChannels}
+                guildRoles={guildRoles}
+                guildId={guildId}
+                pushToast={pushToast}
+                isSaving={valorantSaving}
+              />
+              
+              <div className="d-flex gap-2 mt-3">
+                <button 
+                  className="btn btn-outline-secondary" 
+                  disabled={!valorantHasChanges || valorantSaving} 
+                  onClick={handleValorantReset}
+                >
+                  <i className="fa-solid fa-rotate-left me-2"/>{t('common.reset')}
+                </button>
+                <button 
+                  className="btn btn-primary" 
+                  disabled={!valorantHasChanges || valorantSaving} 
+                  onClick={handleValorantSave}
+                >
+                  <i className="fa-solid fa-floppy-disk me-2"/>
+                  {valorantSaving ? t('common.saving') : t('common.save')}
                 </button>
               </div>
             </>

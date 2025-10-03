@@ -288,6 +288,10 @@ export async function getGenshinConfig(guildId){ return authFetch('/api/genshin/
 export async function updateGenshinConfig(partial, guildId){ return authFetch('/api/genshin/config' + (guildId?`?guildId=${guildId}`:''), { method:'PUT', body: JSON.stringify(partial) }); }
 export async function resolveGenshinPlayer(uid){ return authFetch('/api/genshin/resolve-player', { method:'POST', body: JSON.stringify({ uid }) }); }
 
+// Valorant API
+export async function getValorantConfig(guildId){ return authFetch('/api/valorant/config' + (guildId?`?guildId=${guildId}`:'')); }
+export async function updateValorantConfig(partial, guildId){ return authFetch('/api/valorant/config' + (guildId?`?guildId=${guildId}`:''), { method:'PUT', body: JSON.stringify(partial) }); }
+
 // XP System config helpers
 export async function getXpConfig(guildId){ 
   const headers = guildId ? { 'X-Guild-Id': guildId } : {};

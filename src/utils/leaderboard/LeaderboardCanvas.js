@@ -147,7 +147,6 @@ class LeaderboardCanvas {
                     return await this.generateActiveWarCanvas(players, config, page, totalPages, warData);
                 case 'ended':
                 case 'warEnded':
-                case 'notInWar':
                 default:
                     return await this.generateHistoricalWarCanvas(players, config, page, totalPages, warData);
             }

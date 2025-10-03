@@ -1297,6 +1297,18 @@ export default function App(){
         { name:'coc config', usage:'/coc config <setting> <value>', desc:'Configure COC integration settings (requires Manage Server).', requiresManage:true }
       ]
     },
+    {
+      key: 'valorant', title: 'Valorant', icon: 'fa-crosshairs', accent: '#ff4655',
+      items: [
+        { name:'valorant profile', usage:'/valorant profile <name> <tag> [region]', desc:'Get player profile with account info and current rank.' },
+        { name:'valorant matches', usage:'/valorant matches <name> <tag> [region] [mode] [count]', desc:'Show recent match history with stats and results.' },
+        { name:'valorant leaderboard', usage:'/valorant leaderboard <region> [count]', desc:'Display regional top 200 leaderboard.' },
+        { name:'valorant mmr', usage:'/valorant mmr <name> <tag> [region]', desc:'View detailed MMR and rank tracking with RR changes.' },
+        { name:'valorant stats', usage:'/valorant stats <name> <tag> [region] [count]', desc:'Show average performance statistics from recent matches.' },
+        { name:'valorant esports', usage:'/valorant esports [region] [days]', desc:'View upcoming Valorant esports matches and tournament schedules.' },
+        { name:'valorant config', usage:'/valorant config', desc:'Configure Valorant player tracking and notifications (requires Manage Server).', requiresManage:true }
+      ]
+    },
     // Streaming group (conditionally shown if user has Manage Server permission in guild)
     {
       key: 'streaming', title: 'Streaming Integration', icon: 'fa-video', accent: '#7c3aed',

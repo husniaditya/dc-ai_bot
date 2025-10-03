@@ -265,22 +265,49 @@ async function pollGuild(guild) {
           );
           const existingMsgId = rows.length ? (rows[0].war_preparing_message_id || rows[0].war_active_message_id) : null;
           if (!existingMsgId) {
-            // Attempt to post real war leaderboard via unified system
-            const leaderboardEvents = getLeaderboardEventsInstance(guild.client);
-            let posted = false;
-            if (leaderboardEvents) {
-              try {
-                const result = await leaderboardEvents.postLeaderboard(
-                  guild.id,
-                  effectiveWarLeaderboardChannelId,
-                  null,
-                  'war',
-                  cleanTag
-                );
-                posted = result && result.success;
-              } catch (postErr) {
-                console.warn(`[COC] Initial war leaderboard generation failed for ${cleanTag}:`, postErr.message);
+            // Check war state before creating initial leaderboard to avoid duplicate historical messages
+            let shouldCreateInitialLeaderboard = true;
+            try {
+              const [stateRows] = await store.sqlPool.execute(
+                'SELECT war_current_state, war_ended_message_id FROM guild_clashofclans_watch WHERE guild_id = ? AND clan_tag = ? LIMIT 1',
+                [guild.id, cleanTag]
+              );
+              if (stateRows.length > 0) {
+                const currentState = stateRows[0].war_current_state;
+                const endedMessageId = stateRows[0].war_ended_message_id;
+                
+                // Don't create initial leaderboard if war is ended or already finalized
+                if (currentState === 'warEnded' || currentState === 'notInWar' || endedMessageId) {
+                  console.log(`[COC] Skipping initial war leaderboard for ${cleanTag} - war state: ${currentState}, ended message exists: ${!!endedMessageId}`);
+                  shouldCreateInitialLeaderboard = false;
+                }
               }
+            } catch (stateErr) {
+              console.warn(`[COC] Error checking war state for initial leaderboard ${cleanTag}:`, stateErr.message);
+            }
+            
+            // Declare posted variable before the conditional block
+            let posted = false;
+            
+            if (shouldCreateInitialLeaderboard) {
+              // Attempt to post real war leaderboard via unified system
+              const leaderboardEvents = getLeaderboardEventsInstance(guild.client);
+              if (leaderboardEvents) {
+                try {
+                  const result = await leaderboardEvents.postLeaderboard(
+                    guild.id,
+                    effectiveWarLeaderboardChannelId,
+                    null,
+                    'war',
+                    cleanTag
+                  );
+                  posted = result && result.success;
+                } catch (postErr) {
+                  console.warn(`[COC] Initial war leaderboard generation failed for ${cleanTag}:`, postErr.message);
+                }
+              }
+            } else {
+              posted = true; // Skip the fallback placeholder creation too
             }
             if (!posted) {
               // Fallback placeholder so message id is stored for later updates
@@ -622,9 +649,30 @@ async function pollGuild(guild) {
               clanState.lastWarEndTime = warInfo.endTime;
             }
           } else if (transitionAction.action === 'none') {
-            // No state transition, but check for historical war canvas posting
-            console.log(`[COC] WATCHER: No state transition for clan ${cleanTag}, checking for leaderboard events`);
+            // No state transition, but check if we should still call leaderboard events
+            console.log(`[COC] WATCHER: No state transition for clan ${cleanTag}, checking current database state`);
             
+            // Get current database war state to avoid spam when already notInWar
+            let currentDbState = null;
+            try {
+              const [stateRows] = await store.sqlPool.execute(
+                'SELECT war_current_state FROM guild_clashofclans_watch WHERE guild_id = ? AND clan_tag = ? LIMIT 1',
+                [guild.id, cleanTag]
+              );
+              if (stateRows.length > 0) {
+                currentDbState = stateRows[0].war_current_state;
+              }
+            } catch (stateErr) {
+              console.warn(`[COC] Error getting current war state for ${cleanTag}:`, stateErr.message);
+            }
+            
+            // Skip LeaderboardEvents if war is already in notInWar state to prevent spam
+            if (currentDbState === 'notInWar') {
+              console.log(`[COC] WATCHER: Skipping LeaderboardEvents for clan ${cleanTag} - war already finalized (state: ${currentDbState})`);
+              continue;
+            }
+            
+            console.log(`[COC] WATCHER: Database state is ${currentDbState}, proceeding with leaderboard events`);
             const leaderboardEvents = getLeaderboardEventsInstance(guild.client);
             
             // Get per-clan channel ID for this specific clan
