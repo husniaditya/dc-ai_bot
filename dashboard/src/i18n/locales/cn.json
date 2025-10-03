@@ -519,6 +519,9 @@
       },
       "streaming": {
         "title": "串流整合"
+      },
+      "valorant": {
+        "title": "Valorant"
       }
     },
     "toasts": {
@@ -766,6 +769,34 @@
       "coc config": {
         "usage": "/coc config <setting> <value>",
         "desc": "設定 COC 整合設定 (需要管理伺服器權限)。"
+      },
+      "valorant profile": {
+        "usage": "/valorant profile <名称> <标签> [地区]",
+        "desc": "获取玩家资料，包含账户信息和当前段位。"
+      },
+      "valorant matches": {
+        "usage": "/valorant matches <名称> <标签> [地区] [模式] [数量]",
+        "desc": "显示最近的比赛历史，包含统计和结果。"
+      },
+      "valorant leaderboard": {
+        "usage": "/valorant leaderboard <地区> [数量]",
+        "desc": "显示地区前200名排行榜。"
+      },
+      "valorant mmr": {
+        "usage": "/valorant mmr <名称> <标签> [地区]",
+        "desc": "查看详细的MMR和段位追踪及RR变化。"
+      },
+      "valorant stats": {
+        "usage": "/valorant stats <名称> <标签> [地区] [数量]",
+        "desc": "显示最近比赛的平均表现统计。"
+      },
+      "valorant config": {
+        "usage": "/valorant config",
+        "desc": "配置Valorant玩家追踪和通知（需要管理服务器权限）。"
+      },
+      "valorant esports": {
+        "usage": "/valorant esports [region] [days]",
+        "desc": "查看即将到来的Valorant电竞比赛和锦标赛赛程。"
       }
     }
   },
@@ -1261,7 +1292,7 @@
         },
         "bulk": {
           "enable": "啟用",
-          "disable": "停用", 
+          "disable": "停用",
           "delete": "刪除",
           "clear": "清除",
           "processing": "處理中...",
@@ -1463,7 +1494,8 @@
           "saved": "防突襲設定已儲存",
           "saveFailed": "防突襲設定儲存失敗"
         }
-      },"scheduler": {
+      },
+      "scheduler": {
         "header": "定時訊息系統",
         "badge": "自動公告",
         "info": {
@@ -1824,7 +1856,7 @@
       },
       "valorant": {
         "label": "Valorant",
-        "desc": "賽事更新、精華與通知（規劃中）"
+        "desc": "比赛更新、段位变化和玩家统计追踪"
       },
       "apex": {
         "label": "Apex Legends",
@@ -2133,7 +2165,7 @@
         "mentionTargets": "個別玩家標註目標",
         "profileAnnouncementChannel": "資料公告頻道",
         "profileAnnouncementChannelHelp": "此特定玩家的資料更新公告頻道",
-        "buildAnnouncementChannel": "配裝公告頻道", 
+        "buildAnnouncementChannel": "配裝公告頻道",
         "buildAnnouncementChannelHelp": "此特定玩家的配裝更新公告頻道",
         "profileMentions": "資料標註",
         "profileMentionsHelp": "此玩家資料更新時要標註的角色/用戶",
@@ -2156,7 +2188,60 @@
     "leveling": "經驗值與等級系統",
     "economy": "經濟系統",
     "socialFeatures": "社交功能",
-    "miniGames": "小遊戲"
+    "miniGames": "小遊戲",
+    "valorant": {
+      "intervalHint": "检查比赛更新的频率(以秒为单位)。最少300秒(5分钟)。",
+      "sections": {
+        "trackingFeatures": "追踪功能",
+        "playerManagement": "玩家管理",
+        "matchTemplate": "比赛结果模板",
+        "rankChangeTemplate": "段位变化模板",
+        "achievementTemplate": "成就模板"
+      },
+      "tracking": {
+        "trackMatches": "追踪比赛结果",
+        "trackRankChanges": "追踪段位变化",
+        "trackAchievements": "追踪成就(Ace、MVP等)",
+        "matchTypes": "要追踪的比赛类型",
+        "minKills": "通知的最低击杀数",
+        "minKillsHint": "仅通知至少有此击杀数的比赛"
+      },
+      "matchTypes": {
+        "competitive": "竞技",
+        "unrated": "非排位",
+        "deathmatch": "死斗"
+      },
+      "announce": {
+        "globalMentions": "全局提及目标",
+        "globalMentionsHelp": "这些角色/用户将在所有Valorant公告中被提及"
+      },
+      "fields": {
+        "matchAnnouncements": "比赛公告频道",
+        "rankAnnouncements": "段位变化公告频道",
+        "achievementAnnouncements": "成就公告频道"
+      },
+      "players": {
+        "riotIdPlaceholder": "玩家名称#TAG",
+        "riotIdHelp": "输入Riot ID,格式为:名称#TAG(例如:玩家#NA1)",
+        "region": "地区",
+        "addPlayer": "添加玩家",
+        "noPlayers": "尚未添加玩家。添加玩家以开始追踪他们的比赛。",
+        "customMessage": "自定义消息覆盖",
+        "customMessagePlaceholder": "此玩家公告的可选自定义消息",
+        "customMessageHelp": "留空以使用默认模板"
+      },
+      "templates": {
+        "matchPlaceholder": "🎮 {playerName}刚刚在{map}完成了一场比赛!\n{result} • {kills}/{deaths}/{assists} ({kd} K/D)\n特工: {agent} • 分数: {score}",
+        "rankChangePlaceholder": "🎖️ {playerName}段位更新!\n{oldRank} ➜ {newRank}\nRR: {rr} ({rrChange})",
+        "achievementPlaceholder": "🏆 {playerName}成就!\n{achievement}: {description}"
+      },
+      "toasts": {
+        "invalidRiotId": "无效的Riot ID格式。请使用名称#TAG格式。",
+        "alreadyTracking": "已经在追踪玩家: {player}",
+        "added": "成功添加玩家: {player}",
+        "addFailed": "添加玩家失败。请检查Riot ID并重试。"
+      }
+    }
   },
   "welcome": {
     "title": "歡迎系統",

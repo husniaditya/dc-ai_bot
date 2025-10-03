@@ -16,6 +16,7 @@ const youtubeService = require('./services/youtube');
 const twitchService = require('./services/twitch');
 const clashofclansService = require('./services/clashofclans-updated');
 const genshinService = require('./services/genshin');
+const valorantService = require('./services/valorant');
 const moderationService = require('./services/moderation');
 
 async function initPersistence() {
@@ -216,6 +217,12 @@ module.exports = {
   // Genshin Impact API
   getGuildGenshinConfig: genshinService.getGuildGenshinConfig,
   updateGuildGenshinConfig: genshinService.updateGuildGenshinConfig,
+  
+  // Valorant API
+  getGuildValorantConfig: valorantService.getGuildValorantConfig,
+  updateGuildValorantConfig: valorantService.updateGuildValorantConfig,
+  addValorantPlayer: valorantService.addValorantPlayer,
+  removeValorantPlayer: valorantService.removeValorantPlayer,
   
   // Moderation API
   getModerationFeatures: moderationService.getModerationFeatures,

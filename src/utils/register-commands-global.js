@@ -902,6 +902,207 @@ const commands = [
     ]
   },
   {
+    name: 'valorant',
+    description: 'Valorant player stats and information',
+    options: [
+      {
+        name: 'profile',
+        description: 'Get player profile and stats',
+        type: 1, // SUB_COMMAND
+        options: [
+          {
+            name: 'name',
+            description: 'Riot ID (e.g., PlayerName#TAG)',
+            type: 3, // STRING
+            required: true
+          },
+          {
+            name: 'region',
+            description: 'Region',
+            type: 3, // STRING
+            required: false,
+            choices: [
+              { name: 'North America', value: 'na' },
+              { name: 'Europe', value: 'eu' },
+              { name: 'Asia Pacific', value: 'ap' },
+              { name: 'Korea', value: 'kr' },
+              { name: 'Latin America', value: 'latam' },
+              { name: 'Brazil', value: 'br' }
+            ]
+          }
+        ]
+      },
+      {
+        name: 'matches',
+        description: 'Get recent match history',
+        type: 1, // SUB_COMMAND
+        options: [
+          {
+            name: 'name',
+            description: 'Riot ID (e.g., PlayerName#TAG)',
+            type: 3, // STRING
+            required: true
+          },
+          {
+            name: 'region',
+            description: 'Region',
+            type: 3, // STRING
+            required: false,
+            choices: [
+              { name: 'North America', value: 'na' },
+              { name: 'Europe', value: 'eu' },
+              { name: 'Asia Pacific', value: 'ap' },
+              { name: 'Korea', value: 'kr' },
+              { name: 'Latin America', value: 'latam' },
+              { name: 'Brazil', value: 'br' }
+            ]
+          },
+          {
+            name: 'limit',
+            description: 'Number of matches to show (1-5)',
+            type: 4, // INTEGER
+            required: false,
+            min_value: 1,
+            max_value: 5
+          }
+        ]
+      },
+      {
+        name: 'leaderboard',
+        description: 'Get competitive leaderboard',
+        type: 1, // SUB_COMMAND
+        options: [
+          {
+            name: 'region',
+            description: 'Region',
+            type: 3, // STRING
+            required: true,
+            choices: [
+              { name: 'North America', value: 'na' },
+              { name: 'Europe', value: 'eu' },
+              { name: 'Asia Pacific', value: 'ap' },
+              { name: 'Korea', value: 'kr' },
+              { name: 'Latin America', value: 'latam' },
+              { name: 'Brazil', value: 'br' }
+            ]
+          },
+          {
+            name: 'limit',
+            description: 'Number of players to show (1-20)',
+            type: 4, // INTEGER
+            required: false,
+            min_value: 1,
+            max_value: 20
+          }
+        ]
+      },
+      {
+        name: 'mmr',
+        description: 'Get competitive rank and MMR',
+        type: 1, // SUB_COMMAND
+        options: [
+          {
+            name: 'name',
+            description: 'Riot ID (e.g., PlayerName#TAG)',
+            type: 3, // STRING
+            required: true
+          },
+          {
+            name: 'region',
+            description: 'Region',
+            type: 3, // STRING
+            required: false,
+            choices: [
+              { name: 'North America', value: 'na' },
+              { name: 'Europe', value: 'eu' },
+              { name: 'Asia Pacific', value: 'ap' },
+              { name: 'Korea', value: 'kr' },
+              { name: 'Latin America', value: 'latam' },
+              { name: 'Brazil', value: 'br' }
+            ]
+          }
+        ]
+      },
+      {
+        name: 'stats',
+        description: 'Get detailed player statistics',
+        type: 1, // SUB_COMMAND
+        options: [
+          {
+            name: 'name',
+            description: 'Riot ID (e.g., PlayerName#TAG)',
+            type: 3, // STRING
+            required: true
+          },
+          {
+            name: 'region',
+            description: 'Region',
+            type: 3, // STRING
+            required: false,
+            choices: [
+              { name: 'North America', value: 'na' },
+              { name: 'Europe', value: 'eu' },
+              { name: 'Asia Pacific', value: 'ap' },
+              { name: 'Korea', value: 'kr' },
+              { name: 'Latin America', value: 'latam' },
+              { name: 'Brazil', value: 'br' }
+            ]
+          },
+          {
+            name: 'mode',
+            description: 'Game mode',
+            type: 3, // STRING
+            required: false,
+            choices: [
+              { name: 'Competitive', value: 'competitive' },
+              { name: 'Unrated', value: 'unrated' },
+              { name: 'Deathmatch', value: 'deathmatch' },
+              { name: 'Spike Rush', value: 'spikerush' }
+            ]
+          }
+        ]
+      },
+      {
+        name: 'esports',
+        description: 'Get upcoming Valorant esports matches',
+        type: 1, // SUB_COMMAND
+        options: [
+          {
+            name: 'region',
+            description: 'Filter by region',
+            type: 3, // STRING
+            required: false,
+            choices: [
+              { name: 'All Regions', value: 'all' },
+              { name: 'International', value: 'international' },
+              { name: 'North America', value: 'na' },
+              { name: 'Europe', value: 'emea' },
+              { name: 'Asia Pacific', value: 'apac' },
+              { name: 'Brazil', value: 'br' },
+              { name: 'Latin America', value: 'latam' },
+              { name: 'Korea', value: 'kr' },
+              { name: 'Japan', value: 'jp' },
+              { name: 'China', value: 'cn' }
+            ]
+          },
+          {
+            name: 'days',
+            description: 'Number of days to show (1-14)',
+            type: 4, // INTEGER
+            required: false,
+            min_value: 1,
+            max_value: 14
+          }
+        ]
+      },
+      {
+        name: 'config',
+        description: 'Show Valorant configuration (Admin only)',
+        type: 1 // SUB_COMMAND
+      }
+    ]
+  },
+  {
     name: 'Explain Image',
     type: 3 // MESSAGE context menu
   },

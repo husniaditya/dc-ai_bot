@@ -6643,3 +6643,176 @@ html:not(.dark) .twitch-channel-item.editing {
   background: rgba(255, 255, 255, 0.9);
   border-color: rgba(145, 70, 255, 0.3);
 }
+
+/* ============================================ */
+/* VALORANT CONFIG STYLES - Themed Colors      */
+/* ============================================ */
+
+/* Valorant brand colors */
+:root {
+  --valorant-red: #ff4655;
+  --valorant-red-dark: #e63946;
+  --valorant-red-light: #ff5a6c;
+  --valorant-red-subtle: rgba(255, 70, 85, 0.1);
+  --valorant-red-subtle-hover: rgba(255, 70, 85, 0.15);
+  --valorant-red-border: rgba(255, 70, 85, 0.25);
+}
+
+/* Valorant config blocks - Dark theme */
+.genshin-config-block:has(.text-uppercase:first-child) {
+  background: linear-gradient(135deg, 
+    rgba(255, 70, 85, 0.08) 0%, 
+    rgba(255, 70, 85, 0.03) 50%,
+    rgba(0, 0, 0, 0.1) 100%);
+  border: 1px solid rgba(255, 70, 85, 0.15);
+  border-radius: 12px;
+  padding: 1.25rem;
+  transition: all 0.3s ease;
+}
+
+.genshin-config-block:has(.text-uppercase:first-child):hover {
+  background: linear-gradient(135deg, 
+    rgba(255, 70, 85, 0.12) 0%, 
+    rgba(255, 70, 85, 0.05) 50%,
+    rgba(0, 0, 0, 0.12) 100%);
+  border-color: rgba(255, 70, 85, 0.25);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 70, 85, 0.15);
+}
+
+/* Player list items - Valorant themed */
+.genshin-player-list .genshin-player-item {
+  background: linear-gradient(135deg, 
+    rgba(255, 70, 85, 0.06) 0%, 
+    rgba(0, 0, 0, 0.05) 100%);
+  border: 1px solid rgba(255, 70, 85, 0.15);
+  transition: all 0.3s ease;
+}
+
+.genshin-player-list .genshin-player-item:hover {
+  background: linear-gradient(135deg, 
+    rgba(255, 70, 85, 0.1) 0%, 
+    rgba(0, 0, 0, 0.08) 100%);
+  border-color: rgba(255, 70, 85, 0.3);
+  transform: translateX(4px);
+  box-shadow: 0 2px 8px rgba(255, 70, 85, 0.2);
+}
+
+/* Accent button for Valorant */
+.btn-accent {
+  background: linear-gradient(135deg, var(--valorant-red) 0%, var(--valorant-red-dark) 100%);
+  border: 1px solid var(--valorant-red-border);
+  color: white;
+  transition: all 0.3s ease;
+}
+
+.btn-accent:hover:not(:disabled) {
+  background: linear-gradient(135deg, var(--valorant-red-light) 0%, var(--valorant-red) 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(255, 70, 85, 0.3);
+  border-color: var(--valorant-red);
+}
+
+.btn-accent:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Badge styling for regions */
+.genshin-player-list .badge.bg-secondary {
+  background: linear-gradient(135deg, 
+    rgba(255, 70, 85, 0.25) 0%, 
+    rgba(255, 70, 85, 0.15) 100%) !important;
+  border: 1px solid rgba(255, 70, 85, 0.3);
+  color: var(--valorant-red-light);
+  font-weight: 600;
+}
+
+/* Code tags - Riot IDs */
+.genshin-player-list code.text-primary {
+  color: var(--valorant-red-light) !important;
+  background: rgba(255, 70, 85, 0.1);
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 70, 85, 0.2);
+}
+
+/* Form controls focus state - Valorant red accent */
+.genshin-config-block .form-control:focus,
+.genshin-config-block .form-select:focus {
+  border-color: var(--valorant-red-border);
+  box-shadow: 0 0 0 0.2rem rgba(255, 70, 85, 0.15);
+}
+
+/* Switch toggles - Valorant theme */
+.genshin-config-block .form-check-input:checked {
+  background-color: var(--valorant-red);
+  border-color: var(--valorant-red);
+}
+
+.genshin-config-block .form-check-input:focus {
+  border-color: var(--valorant-red-border);
+  box-shadow: 0 0 0 0.2rem rgba(255, 70, 85, 0.15);
+}
+
+/* Badge soft styling */
+.badge-soft {
+  background: rgba(255, 70, 85, 0.15);
+  color: var(--valorant-red-light);
+  border: 1px solid rgba(255, 70, 85, 0.25);
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+/* Light theme overrides for Valorant styling */
+html:not(.dark) .genshin-config-block:has(.text-uppercase:first-child) {
+  background: linear-gradient(135deg, 
+    rgba(255, 70, 85, 0.08) 0%, 
+    rgba(255, 255, 255, 0.9) 50%,
+    rgba(255, 255, 255, 0.95) 100%);
+  border-color: rgba(255, 70, 85, 0.2);
+}
+
+html:not(.dark) .genshin-config-block:has(.text-uppercase:first-child):hover {
+  background: linear-gradient(135deg, 
+    rgba(255, 70, 85, 0.12) 0%, 
+    rgba(255, 255, 255, 0.95) 50%,
+    rgba(255, 255, 255, 1) 100%);
+  border-color: rgba(255, 70, 85, 0.3);
+  box-shadow: 0 4px 12px rgba(255, 70, 85, 0.12);
+}
+
+html:not(.dark) .genshin-player-list .genshin-player-item {
+  background: linear-gradient(135deg, 
+    rgba(255, 70, 85, 0.05) 0%, 
+    rgba(255, 255, 255, 0.95) 100%);
+  border-color: rgba(255, 70, 85, 0.2);
+}
+
+html:not(.dark) .genshin-player-list .genshin-player-item:hover {
+  background: linear-gradient(135deg, 
+    rgba(255, 70, 85, 0.1) 0%, 
+    rgba(255, 255, 255, 1) 100%);
+  border-color: rgba(255, 70, 85, 0.35);
+  box-shadow: 0 2px 8px rgba(255, 70, 85, 0.15);
+}
+
+html:not(.dark) .genshin-player-list .badge.bg-secondary {
+  background: linear-gradient(135deg, 
+    rgba(255, 70, 85, 0.2) 0%, 
+    rgba(255, 70, 85, 0.12) 100%) !important;
+  color: var(--valorant-red-dark);
+}
+
+html:not(.dark) .genshin-player-list code.text-primary {
+  color: var(--valorant-red-dark) !important;
+  background: rgba(255, 70, 85, 0.08);
+  border-color: rgba(255, 70, 85, 0.15);
+}
+
+html:not(.dark) .badge-soft {
+  background: rgba(255, 70, 85, 0.12);
+  color: var(--valorant-red-dark);
+  border-color: rgba(255, 70, 85, 0.2);
+}

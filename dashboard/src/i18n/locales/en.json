@@ -518,6 +518,9 @@
       "coc": {
         "title": "Clash of Clans"
       },
+      "valorant": {
+        "title": "Valorant"
+      },
       "streaming": {
         "title": "Streaming Integration"
       }
@@ -767,6 +770,34 @@
       "coc config": {
         "usage": "/coc config <setting> <value>",
         "desc": "Configure COC integration settings (requires Manage Server)."
+      },
+      "valorant profile": {
+        "usage": "/valorant profile <name> <tag> [region]",
+        "desc": "Get player profile with account info and current rank."
+      },
+      "valorant matches": {
+        "usage": "/valorant matches <name> <tag> [region] [mode] [count]",
+        "desc": "Show recent match history with stats and results."
+      },
+      "valorant leaderboard": {
+        "usage": "/valorant leaderboard <region> [count]",
+        "desc": "Display regional top 200 leaderboard."
+      },
+      "valorant mmr": {
+        "usage": "/valorant mmr <name> <tag> [region]",
+        "desc": "View detailed MMR and rank tracking with RR changes."
+      },
+      "valorant stats": {
+        "usage": "/valorant stats <name> <tag> [region] [count]",
+        "desc": "Show average performance statistics from recent matches."
+      },
+      "valorant config": {
+        "usage": "/valorant config",
+        "desc": "Configure Valorant player tracking and notifications (requires Manage Server)."
+      },
+      "valorant esports": {
+        "usage": "/valorant esports [region] [days]",
+        "desc": "View upcoming Valorant esports matches and tournament schedules."
       }
     }
   },
@@ -1832,7 +1863,7 @@
       },
       "valorant": {
         "label": "Valorant",
-        "desc": "Match updates, highlights, and notifications (planned)"
+        "desc": "Match updates, rank changes, and player stats tracking"
       },
       "apex": {
         "label": "Apex Legends",
@@ -1879,7 +1910,66 @@
           "adventureRank": "60",
           "worldLevel": "8",
           "characterName": "Hu Tao"
+        },
+        "valorant": {
+          "playerName": "Player#TAG",
+          "rank": "Gold 3",
+          "map": "Ascent",
+          "agent": "Jett"
         }
+      }
+    },
+    "valorant": {
+      "intervalHint": "How often to check for match updates (in seconds). Minimum 300 seconds (5 minutes).",
+      "sections": {
+        "trackingFeatures": "Tracking Features",
+        "playerManagement": "Player Management",
+        "matchTemplate": "Match Result Template",
+        "rankChangeTemplate": "Rank Change Template",
+        "achievementTemplate": "Achievement Template"
+      },
+      "tracking": {
+        "trackMatches": "Track Match Results",
+        "trackRankChanges": "Track Rank Changes",
+        "trackAchievements": "Track Achievements (Aces, MVPs, etc.)",
+        "matchTypes": "Match Types to Track",
+        "minKills": "Minimum Kills to Announce",
+        "minKillsHint": "Only announce matches with at least this many kills"
+      },
+      "matchTypes": {
+        "competitive": "Competitive",
+        "unrated": "Unrated",
+        "deathmatch": "Deathmatch"
+      },
+      "announce": {
+        "globalMentions": "Global Mention Targets",
+        "globalMentionsHelp": "These roles/users will be mentioned in all Valorant announcements"
+      },
+      "fields": {
+        "matchAnnouncements": "Match Announcements Channel",
+        "rankAnnouncements": "Rank Change Announcements Channel",
+        "achievementAnnouncements": "Achievement Announcements Channel"
+      },
+      "players": {
+        "riotIdPlaceholder": "PlayerName#TAG",
+        "riotIdHelp": "Enter Riot ID in format: Name#TAG (e.g., Player#NA1)",
+        "region": "Region",
+        "addPlayer": "Add Player",
+        "noPlayers": "No players added yet. Add players to start tracking their matches.",
+        "customMessage": "Custom Message Override",
+        "customMessagePlaceholder": "Optional custom message for this player's announcements",
+        "customMessageHelp": "Leave empty to use the default template"
+      },
+      "templates": {
+        "matchPlaceholder": "🎮 {playerName} just finished a match on {map}!\n{result} • {kills}/{deaths}/{assists} ({kd} K/D)\nAgent: {agent} • Score: {score}",
+        "rankChangePlaceholder": "🎖️ {playerName} rank update!\n{oldRank} ➜ {newRank}\nRR: {rr} ({rrChange})",
+        "achievementPlaceholder": "🏆 {playerName} achievement!\n{achievement}: {description}"
+      },
+      "toasts": {
+        "invalidRiotId": "Invalid Riot ID format. Please use Name#TAG format.",
+        "alreadyTracking": "Already tracking player: {player}",
+        "added": "Successfully added player: {player}",
+        "addFailed": "Failed to add player. Please check the Riot ID and try again."
       }
     },
     "common": {

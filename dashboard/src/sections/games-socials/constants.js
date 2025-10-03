@@ -34,7 +34,7 @@ export const SERVICES = [
     icon: 'fa-solid fa-bullseye', 
     color: '#e11d48', 
     descKey: 'gamesSocials.services.valorant.desc',
-    implemented: false
+    implemented: true
   },
   { 
     key: 'apex', 
@@ -137,6 +137,29 @@ export const TEMPLATE_PLACEHOLDERS = {
     '{roleMention}',
     '{characterCount}',
     '{lastUpdate}'
+  ],
+  valorant: [
+    '{playerName}',
+    '{region}',
+    '{rank}',
+    '{rr}',
+    '{rrChange}',
+    '{oldRank}',
+    '{newRank}',
+    '{map}',
+    '{agent}',
+    '{kills}',
+    '{deaths}',
+    '{assists}',
+    '{kd}',
+    '{acs}',
+    '{result}',
+    '{score}',
+    '{mode}',
+    '{achievement}',
+    '{description}',
+    '{roleNames}',
+    '{roleMention}'
   ]
 };
 
@@ -207,5 +230,31 @@ export const DEFAULT_CONFIGS = {
     trackAchievements: true,
     trackSpiralAbyss: true,
     minAchievementThreshold: 10
+  },
+  valorant: {
+    enabled: false,
+    intervalSec: 1800, // Check every 30 minutes for match updates
+    embedEnabled: true,
+    players: [], // Array of Riot IDs (Name#TAG) to track
+    mentionTargets: [],
+    playerMessages: {},
+    playerNames: {},
+    playerRegions: {},
+    matchTemplate: '',
+    rankChangeTemplate: '',
+    achievementTemplate: '',
+    matchAnnounceChannelId: null,
+    rankAnnounceChannelId: null,
+    achievementAnnounceChannelId: null,
+    trackMatches: true,
+    trackRankChanges: true,
+    trackAchievements: false,
+    matchTypes: {
+      competitive: true,
+      unrated: false,
+      deathmatch: false
+    },
+    minKillsThreshold: 10
   }
 };
+

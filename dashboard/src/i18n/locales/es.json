@@ -29,21 +29,21 @@
     "back": "Atrás",
     "next": "Siguiente",
     "previous": "Anterior",
-  "unsaved": "Sin guardar",
-  "notAvailable": "No disponible",
-  "refresh": "Actualizar analíticas",
-  "na": "N/D",
-  "none": "Ninguno",
-  "noMatches": "Sin coincidencias",
-  "invalidData": "Datos no válidos",
-  "unknown": "Desconocido",
-  "update": "Actualizar",
-  "editRule": "Editar regla",
-  "deleteRule": "Eliminar regla",
-  "editWord": "Editar palabra",
-  "deleteWord": "Eliminar palabra",
-  "editPattern": "Editar patrón",
-  "deletePattern": "Eliminar patrón"
+    "unsaved": "Sin guardar",
+    "notAvailable": "No disponible",
+    "refresh": "Actualizar analíticas",
+    "na": "N/D",
+    "none": "Ninguno",
+    "noMatches": "Sin coincidencias",
+    "invalidData": "Datos no válidos",
+    "unknown": "Desconocido",
+    "update": "Actualizar",
+    "editRule": "Editar regla",
+    "deleteRule": "Eliminar regla",
+    "editWord": "Editar palabra",
+    "deleteWord": "Eliminar palabra",
+    "editPattern": "Editar patrón",
+    "deletePattern": "Eliminar patrón"
   },
   "navigation": {
     "dashboard": "Panel",
@@ -472,17 +472,42 @@
       "unknownUser": "Desconocido"
     },
     "groups": {
-      "core": { "title": "Núcleo" },
-      "ai": { "title": "IA y Lenguaje" },
-      "polls": { "title": "Encuestas" },
-      "utilities": { "title": "Utilidades" },
-      "xp": { "title": "XP y Niveles" },
-      "roles": { "title": "Roles y Autoasignación" },
-      "moderation": { "title": "Moderación y Seguridad" },
-      "passive": { "title": "Pasivo / Automatización" },
-      "scheduler": { "title": "Programador" },
-      "coc": { "title": "Clash of Clans" },
-      "streaming": { "title": "Integración de Streaming" }
+      "core": {
+        "title": "Núcleo"
+      },
+      "ai": {
+        "title": "IA y Lenguaje"
+      },
+      "polls": {
+        "title": "Encuestas"
+      },
+      "utilities": {
+        "title": "Utilidades"
+      },
+      "xp": {
+        "title": "XP y Niveles"
+      },
+      "roles": {
+        "title": "Roles y Autoasignación"
+      },
+      "moderation": {
+        "title": "Moderación y Seguridad"
+      },
+      "passive": {
+        "title": "Pasivo / Automatización"
+      },
+      "scheduler": {
+        "title": "Programador"
+      },
+      "coc": {
+        "title": "Clash of Clans"
+      },
+      "streaming": {
+        "title": "Integración de Streaming"
+      },
+      "valorant": {
+        "title": "Valorant"
+      }
     },
     "toasts": {
       "enabled": "Comando \"{{name}}\" habilitado",
@@ -490,66 +515,274 @@
       "toggleFailed": "No se pudo actualizar {{name}}"
     },
     "items": {
-      "ping": { "usage": "/ping", "desc": "Comprobación de estado: responde con Pong." },
-      "uptime": { "usage": "/uptime", "desc": "Muestra el tiempo de actividad del bot." },
-      "whoami": { "usage": "/whoami", "desc": "Muestra tu etiqueta e ID de usuario." },
-      "echo": { "usage": "/echo <text>", "desc": "Responde con el mismo texto." },
-      "help": { "usage": "/help", "desc": "Menú de ayuda por categorías interactivo." },
-      "ask": { "usage": "/ask prompt:<text>", "desc": "Pregunta algo a la IA (en caché 3 min)." },
-      "askfollow": { "usage": "/askfollow prompt:<text>", "desc": "Seguimiento usando el contexto reciente de la conversación." },
-      "explain_image": { "usage": "/explain_image image(1-3) [prompt]", "desc": "Explica hasta 3 imágenes con un prompt opcional." },
-      "summarize": { "usage": "/summarize [count]", "desc": "Resume los últimos mensajes (por defecto 30)." },
-      "translate": { "usage": "/translate text target", "desc": "Traduce texto al idioma objetivo." },
-      "poll create": { "usage": "/poll create question options", "desc": "Crea una encuesta (hasta 5 opciones)." },
-      "poll results": { "usage": "/poll results id", "desc": "Muestra los resultados de una encuesta por id." },
-      "math": { "usage": "/math add|sub|mul|div a b", "desc": "Operaciones aritméticas básicas." },
-      "user info": { "usage": "/user info [target]", "desc": "Consultar información de usuario de Discord." },
-      "remind": { "usage": "/remind minutes text", "desc": "Programa un recordatorio por DM o en el canal." },
-      "meme": { "usage": "/meme", "desc": "Imagen de meme aleatoria de meme-api.com." },
-      "level": { "usage": "/level [user]", "desc": "Revisa tu nivel o el nivel de XP de otro usuario." },
-      "xp": { "usage": "/xp check|leaderboard [user]", "desc": "Revisa el XP o ve la tabla de clasificación del servidor." },
-      "rank": { "usage": "/rank [user]", "desc": "Revisa tu rango en el servidor." },
-      "leaderboard": { "usage": "/leaderboard [limit]", "desc": "Muestra la clasificación de XP del servidor." },
-      "xpadmin": { "usage": "/xpadmin give|remove|set <user> <amount>", "desc": "Gestiona el XP de usuarios (requiere Gestionar Servidor)." },
-      "role list": { "usage": "/role list", "desc": "Muestra todos los roles autoasignables disponibles." },
-      "role menu": { "usage": "/role menu", "desc": "Menú interactivo de selección de roles (efímero)." },
-      "role add": { "usage": "/role add <role> [user]", "desc": "Añade un rol autoasignable a ti o a otro usuario." },
-      "role remove": { "usage": "/role remove <role> [user]", "desc": "Quita un rol autoasignable de ti o de otro usuario." },
-      "role setup": { "usage": "/role setup <action> <role> [options]", "desc": "Configura roles autoasignables (requiere Gestionar Roles)." },
-      "role toggle": { "usage": "/role toggle <command_name>", "desc": "Activa/desactiva un comando de rol (requiere Gestionar Roles)." },
-      "automod list": { "usage": "/automod list", "desc": "Muestra todas las reglas de automod configuradas." },
-      "automod info": { "usage": "/automod info <id>", "desc": "Ver información detallada de una regla de automod." },
-      "automod toggle": { "usage": "/automod toggle <id> <enabled>", "desc": "Activa/desactiva una regla de automod (requiere Gestionar Servidor)." },
-      "antiraid status": { "usage": "/antiraid status", "desc": "Ver el estado actual de protección anti-raid." },
-      "antiraid toggle": { "usage": "/antiraid toggle <enabled>", "desc": "Activa/desactiva la protección anti-raid (requiere Gestionar Servidor)." },
-      "audit recent": { "usage": "/audit recent", "desc": "Ver acciones de moderación recientes (requiere Gestionar Servidor)." },
-      "autoreply": { "usage": "(passive)", "desc": "Respuestas automáticas basadas en patrones configurados." },
-      "welcome preview": { "usage": "/welcome preview", "desc": "Vista previa de la configuración actual de bienvenida." },
-      "welcome toggle": { "usage": "/welcome toggle <enabled>", "desc": "Activa/desactiva el sistema de bienvenida (requiere Gestionar Servidor)." },
-      "automod": { "usage": "(passive)", "desc": "Moderación automática para spam, mayúsculas, enlaces y groserías." },
-      "audit logs": { "usage": "(passive)", "desc": "Rastrea todas las acciones de moderación y cambios del servidor." },
-      "anti-raid": { "usage": "(passive)", "desc": "Protección contra raids y uniones masivas." },
-      "scheduler list": { "usage": "/scheduler list", "desc": "Lista todos los mensajes programados." },
-      "scheduler info": { "usage": "/scheduler info <id>", "desc": "Ver información detallada de un mensaje programado." },
-      "scheduler enable": { "usage": "/scheduler enable <id>", "desc": "Activa un mensaje programado (requiere Gestionar Servidor)." },
-      "scheduler disable": { "usage": "/scheduler disable <id>", "desc": "Desactiva un mensaje programado (requiere Gestionar Servidor)." },
-      "scheduler run": { "usage": "/scheduler run <id>", "desc": "Ejecuta manualmente un mensaje programado ahora (requiere Gestionar Servidor)." },
-      "ytwatch": { "usage": "/ytwatch action:<enable|disable|addchannel|removechannel|announcechannel|mentionrole|interval|status>", "desc": "Gestiona notificaciones de YouTube (requiere Gestionar Servidor)." },
-      "ytstats": { "usage": "/ytstats", "desc": "Muestra caché y estadísticas de cuota del watcher de YouTube." },
-      "ytdebug": { "usage": "/ytdebug", "desc": "Muestra eventos de depuración recientes del watcher de YouTube (requiere Gestionar Servidor)." },
-      "twitchstats": { "usage": "/twitchstats", "desc": "Muestra caché y estadísticas de la API del watcher de Twitch." },
-      "twitchdebug": { "usage": "/twitchdebug action:<config|status|test|resolve>", "desc": "Depura la integración de Twitch y prueba notificaciones." },
-      "coc clan": { "usage": "/coc clan [tag]", "desc": "Obtener información del clan por etiqueta o clan configurado." },
-      "coc player": { "usage": "/coc player <tag>", "desc": "Obtener información del perfil del jugador." },
-      "coc war": { "usage": "/coc war [tag]", "desc": "Obtener información de guerra actual para un clan." },
-      "coc search": { "usage": "/coc search <type> <query>", "desc": "Buscar clanes o jugadores." },
-      "coc compare": { "usage": "/coc compare <player1> <player2>", "desc": "Comparar estadísticas de dos jugadores." },
-      "coc attacks": { "usage": "/coc attacks <player_tag>", "desc": "Mostrar historial de ataques de guerra de un jugador." },
-      "coc top": { "usage": "/coc top <type> [limit]", "desc": "Mostrar mejores jugadores en varias categorías." },
-      "coc stats": { "usage": "/coc stats [tag]", "desc": "Obtener estadísticas detalladas del clan o jugador." },
-      "coc warlog": { "usage": "/coc warlog [tag] [limit]", "desc": "Mostrar historial de registro de guerras del clan." },
-      "coc watch": { "usage": "/coc watch <action> [tag]", "desc": "Gestionar vigilancia de guerras para clanes (requiere Gestionar Servidor)." },
-      "coc config": { "usage": "/coc config <setting> <value>", "desc": "Configurar ajustes de integración COC (requiere Gestionar Servidor)." }
+      "ping": {
+        "usage": "/ping",
+        "desc": "Comprobación de estado: responde con Pong."
+      },
+      "uptime": {
+        "usage": "/uptime",
+        "desc": "Muestra el tiempo de actividad del bot."
+      },
+      "whoami": {
+        "usage": "/whoami",
+        "desc": "Muestra tu etiqueta e ID de usuario."
+      },
+      "echo": {
+        "usage": "/echo <text>",
+        "desc": "Responde con el mismo texto."
+      },
+      "help": {
+        "usage": "/help",
+        "desc": "Menú de ayuda por categorías interactivo."
+      },
+      "ask": {
+        "usage": "/ask prompt:<text>",
+        "desc": "Pregunta algo a la IA (en caché 3 min)."
+      },
+      "askfollow": {
+        "usage": "/askfollow prompt:<text>",
+        "desc": "Seguimiento usando el contexto reciente de la conversación."
+      },
+      "explain_image": {
+        "usage": "/explain_image image(1-3) [prompt]",
+        "desc": "Explica hasta 3 imágenes con un prompt opcional."
+      },
+      "summarize": {
+        "usage": "/summarize [count]",
+        "desc": "Resume los últimos mensajes (por defecto 30)."
+      },
+      "translate": {
+        "usage": "/translate text target",
+        "desc": "Traduce texto al idioma objetivo."
+      },
+      "poll create": {
+        "usage": "/poll create question options",
+        "desc": "Crea una encuesta (hasta 5 opciones)."
+      },
+      "poll results": {
+        "usage": "/poll results id",
+        "desc": "Muestra los resultados de una encuesta por id."
+      },
+      "math": {
+        "usage": "/math add|sub|mul|div a b",
+        "desc": "Operaciones aritméticas básicas."
+      },
+      "user info": {
+        "usage": "/user info [target]",
+        "desc": "Consultar información de usuario de Discord."
+      },
+      "remind": {
+        "usage": "/remind minutes text",
+        "desc": "Programa un recordatorio por DM o en el canal."
+      },
+      "meme": {
+        "usage": "/meme",
+        "desc": "Imagen de meme aleatoria de meme-api.com."
+      },
+      "level": {
+        "usage": "/level [user]",
+        "desc": "Revisa tu nivel o el nivel de XP de otro usuario."
+      },
+      "xp": {
+        "usage": "/xp check|leaderboard [user]",
+        "desc": "Revisa el XP o ve la tabla de clasificación del servidor."
+      },
+      "rank": {
+        "usage": "/rank [user]",
+        "desc": "Revisa tu rango en el servidor."
+      },
+      "leaderboard": {
+        "usage": "/leaderboard [limit]",
+        "desc": "Muestra la clasificación de XP del servidor."
+      },
+      "xpadmin": {
+        "usage": "/xpadmin give|remove|set <user> <amount>",
+        "desc": "Gestiona el XP de usuarios (requiere Gestionar Servidor)."
+      },
+      "role list": {
+        "usage": "/role list",
+        "desc": "Muestra todos los roles autoasignables disponibles."
+      },
+      "role menu": {
+        "usage": "/role menu",
+        "desc": "Menú interactivo de selección de roles (efímero)."
+      },
+      "role add": {
+        "usage": "/role add <role> [user]",
+        "desc": "Añade un rol autoasignable a ti o a otro usuario."
+      },
+      "role remove": {
+        "usage": "/role remove <role> [user]",
+        "desc": "Quita un rol autoasignable de ti o de otro usuario."
+      },
+      "role setup": {
+        "usage": "/role setup <action> <role> [options]",
+        "desc": "Configura roles autoasignables (requiere Gestionar Roles)."
+      },
+      "role toggle": {
+        "usage": "/role toggle <command_name>",
+        "desc": "Activa/desactiva un comando de rol (requiere Gestionar Roles)."
+      },
+      "automod list": {
+        "usage": "/automod list",
+        "desc": "Muestra todas las reglas de automod configuradas."
+      },
+      "automod info": {
+        "usage": "/automod info <id>",
+        "desc": "Ver información detallada de una regla de automod."
+      },
+      "automod toggle": {
+        "usage": "/automod toggle <id> <enabled>",
+        "desc": "Activa/desactiva una regla de automod (requiere Gestionar Servidor)."
+      },
+      "antiraid status": {
+        "usage": "/antiraid status",
+        "desc": "Ver el estado actual de protección anti-raid."
+      },
+      "antiraid toggle": {
+        "usage": "/antiraid toggle <enabled>",
+        "desc": "Activa/desactiva la protección anti-raid (requiere Gestionar Servidor)."
+      },
+      "audit recent": {
+        "usage": "/audit recent",
+        "desc": "Ver acciones de moderación recientes (requiere Gestionar Servidor)."
+      },
+      "autoreply": {
+        "usage": "(passive)",
+        "desc": "Respuestas automáticas basadas en patrones configurados."
+      },
+      "welcome preview": {
+        "usage": "/welcome preview",
+        "desc": "Vista previa de la configuración actual de bienvenida."
+      },
+      "welcome toggle": {
+        "usage": "/welcome toggle <enabled>",
+        "desc": "Activa/desactiva el sistema de bienvenida (requiere Gestionar Servidor)."
+      },
+      "automod": {
+        "usage": "(passive)",
+        "desc": "Moderación automática para spam, mayúsculas, enlaces y groserías."
+      },
+      "audit logs": {
+        "usage": "(passive)",
+        "desc": "Rastrea todas las acciones de moderación y cambios del servidor."
+      },
+      "anti-raid": {
+        "usage": "(passive)",
+        "desc": "Protección contra raids y uniones masivas."
+      },
+      "scheduler list": {
+        "usage": "/scheduler list",
+        "desc": "Lista todos los mensajes programados."
+      },
+      "scheduler info": {
+        "usage": "/scheduler info <id>",
+        "desc": "Ver información detallada de un mensaje programado."
+      },
+      "scheduler enable": {
+        "usage": "/scheduler enable <id>",
+        "desc": "Activa un mensaje programado (requiere Gestionar Servidor)."
+      },
+      "scheduler disable": {
+        "usage": "/scheduler disable <id>",
+        "desc": "Desactiva un mensaje programado (requiere Gestionar Servidor)."
+      },
+      "scheduler run": {
+        "usage": "/scheduler run <id>",
+        "desc": "Ejecuta manualmente un mensaje programado ahora (requiere Gestionar Servidor)."
+      },
+      "ytwatch": {
+        "usage": "/ytwatch action:<enable|disable|addchannel|removechannel|announcechannel|mentionrole|interval|status>",
+        "desc": "Gestiona notificaciones de YouTube (requiere Gestionar Servidor)."
+      },
+      "ytstats": {
+        "usage": "/ytstats",
+        "desc": "Muestra caché y estadísticas de cuota del watcher de YouTube."
+      },
+      "ytdebug": {
+        "usage": "/ytdebug",
+        "desc": "Muestra eventos de depuración recientes del watcher de YouTube (requiere Gestionar Servidor)."
+      },
+      "twitchstats": {
+        "usage": "/twitchstats",
+        "desc": "Muestra caché y estadísticas de la API del watcher de Twitch."
+      },
+      "twitchdebug": {
+        "usage": "/twitchdebug action:<config|status|test|resolve>",
+        "desc": "Depura la integración de Twitch y prueba notificaciones."
+      },
+      "coc clan": {
+        "usage": "/coc clan [tag]",
+        "desc": "Obtener información del clan por etiqueta o clan configurado."
+      },
+      "coc player": {
+        "usage": "/coc player <tag>",
+        "desc": "Obtener información del perfil del jugador."
+      },
+      "coc war": {
+        "usage": "/coc war [tag]",
+        "desc": "Obtener información de guerra actual para un clan."
+      },
+      "coc search": {
+        "usage": "/coc search <type> <query>",
+        "desc": "Buscar clanes o jugadores."
+      },
+      "coc compare": {
+        "usage": "/coc compare <player1> <player2>",
+        "desc": "Comparar estadísticas de dos jugadores."
+      },
+      "coc attacks": {
+        "usage": "/coc attacks <player_tag>",
+        "desc": "Mostrar historial de ataques de guerra de un jugador."
+      },
+      "coc top": {
+        "usage": "/coc top <type> [limit]",
+        "desc": "Mostrar mejores jugadores en varias categorías."
+      },
+      "coc stats": {
+        "usage": "/coc stats [tag]",
+        "desc": "Obtener estadísticas detalladas del clan o jugador."
+      },
+      "coc warlog": {
+        "usage": "/coc warlog [tag] [limit]",
+        "desc": "Mostrar historial de registro de guerras del clan."
+      },
+      "coc watch": {
+        "usage": "/coc watch <action> [tag]",
+        "desc": "Gestionar vigilancia de guerras para clanes (requiere Gestionar Servidor)."
+      },
+      "coc config": {
+        "usage": "/coc config <setting> <value>",
+        "desc": "Configurar ajustes de integración COC (requiere Gestionar Servidor)."
+      },
+      "valorant profile": {
+        "usage": "/valorant profile <nombre> <tag> [región]",
+        "desc": "Obtener perfil de jugador con información de cuenta y rango actual."
+      },
+      "valorant matches": {
+        "usage": "/valorant matches <nombre> <tag> [región] [modo] [cantidad]",
+        "desc": "Mostrar historial de partidas recientes con estadísticas y resultados."
+      },
+      "valorant leaderboard": {
+        "usage": "/valorant leaderboard <región> [cantidad]",
+        "desc": "Mostrar clasificación regional de los 200 mejores."
+      },
+      "valorant mmr": {
+        "usage": "/valorant mmr <nombre> <tag> [región]",
+        "desc": "Ver seguimiento detallado de MMR y rango con cambios de RR."
+      },
+      "valorant stats": {
+        "usage": "/valorant stats <nombre> <tag> [región] [cantidad]",
+        "desc": "Mostrar estadísticas de rendimiento promedio de partidas recientes."
+      },
+      "valorant config": {
+        "usage": "/valorant config",
+        "desc": "Configurar seguimiento de jugadores de Valorant y notificaciones (requiere Manage Server)."
+      },
+      "valorant esports": {
+        "usage": "/valorant esports [region] [days]",
+        "desc": "Ver los próximos partidos de esports de Valorant y calendarios de torneos."
+      }
     }
   },
   "personalization": {
@@ -794,14 +1027,34 @@
           "selectRole": "Selecciona un rol...",
           "multiplier": "p. ej. 1.5"
         },
-        "aria": { "removeItem": "Quitar {{name}}" },
+        "aria": {
+          "removeItem": "Quitar {{name}}"
+        },
         "fields": {
-          "xpPerMessage": { "label": "XP por mensaje", "desc": "XP ganada por mensaje" },
-          "cooldownSeconds": { "label": "Enfriamiento de XP (segundos)", "desc": "Tiempo que deben esperar los usuarios entre ganancias de XP" },
-          "levelUpChannel": { "label": "Canal de nivel subida", "desc": "Dónde enviar mensajes de nivel subida (dejar vacío para el mismo canal)" },
-          "excludedChannels": { "label": "Canales excluidos", "desc": "Canales donde los usuarios no ganan XP" },
-          "excludedRoles": { "label": "Roles excluidos", "desc": "Roles que no ganan XP" },
-          "levelUpMessages": { "label": "Mensajes de nivel subida", "desc": "Enviar un mensaje cuando un usuario sube de nivel" }
+          "xpPerMessage": {
+            "label": "XP por mensaje",
+            "desc": "XP ganada por mensaje"
+          },
+          "cooldownSeconds": {
+            "label": "Enfriamiento de XP (segundos)",
+            "desc": "Tiempo que deben esperar los usuarios entre ganancias de XP"
+          },
+          "levelUpChannel": {
+            "label": "Canal de nivel subida",
+            "desc": "Dónde enviar mensajes de nivel subida (dejar vacío para el mismo canal)"
+          },
+          "excludedChannels": {
+            "label": "Canales excluidos",
+            "desc": "Canales donde los usuarios no ganan XP"
+          },
+          "excludedRoles": {
+            "label": "Roles excluidos",
+            "desc": "Roles que no ganan XP"
+          },
+          "levelUpMessages": {
+            "label": "Mensajes de nivel subida",
+            "desc": "Enviar un mensaje cuando un usuario sube de nivel"
+          }
         },
         "multipliers": {
           "label": "Roles multiplicadores de XP",
@@ -825,14 +1078,22 @@
       "automod": {
         "header": "Moderación automática",
         "badge": "Protección",
-        "info": { "pre": "La detección global de spam, enlaces y URL maliciosas se integra con fuentes de reputación de terceros como" },
+        "info": {
+          "pre": "La detección global de spam, enlaces y URL maliciosas se integra con fuentes de reputación de terceros como"
+        },
         "globalLog": {
           "label": "Canal de registro global",
           "desc": "Canal predeterminado para enviar registros de AutoMod cuando una regla no especifica un canal",
           "placeholder": "Selecciona un canal de registro (opcional)"
         },
-        "placeholders": { "addChannels": "Añadir canales", "addRoles": "Añadir roles" },
-        "meta": { "channel": "canal", "role": "rol" },
+        "placeholders": {
+          "addChannels": "Añadir canales",
+          "addRoles": "Añadir roles"
+        },
+        "meta": {
+          "channel": "canal",
+          "role": "rol"
+        },
         "rules": {
           "header": "Reglas",
           "subheader": "Crea reglas para detectar spam, mayúsculas, enlaces, groserías y más.",
@@ -870,21 +1131,57 @@
           }
         },
         "triggers": {
-          "spam": { "label": "Detección de spam", "description": "Detecta mensajes repetidos y patrones de spam" },
-          "caps": { "label": "Mayúsculas excesivas", "description": "Filtra mensajes con demasiadas mayúsculas" },
-          "links": { "label": "Filtro de enlaces", "description": "Escanea y bloquea enlaces/URLs maliciosos" },
-          "invite_links": { "label": "Enlaces de invitación", "description": "Escanea y bloquea enlaces de invitación de Discord maliciosos" },
-          "profanity": { "label": "Filtro de groserías", "description": "Filtra lenguaje inapropiado" },
-          "mention_spam": { "label": "Spam de menciones", "description": "Evita menciones excesivas de usuarios/roles" }
+          "spam": {
+            "label": "Detección de spam",
+            "description": "Detecta mensajes repetidos y patrones de spam"
+          },
+          "caps": {
+            "label": "Mayúsculas excesivas",
+            "description": "Filtra mensajes con demasiadas mayúsculas"
+          },
+          "links": {
+            "label": "Filtro de enlaces",
+            "description": "Escanea y bloquea enlaces/URLs maliciosos"
+          },
+          "invite_links": {
+            "label": "Enlaces de invitación",
+            "description": "Escanea y bloquea enlaces de invitación de Discord maliciosos"
+          },
+          "profanity": {
+            "label": "Filtro de groserías",
+            "description": "Filtra lenguaje inapropiado"
+          },
+          "mention_spam": {
+            "label": "Spam de menciones",
+            "description": "Evita menciones excesivas de usuarios/roles"
+          }
         },
         "actions": {
-          "warn": { "label": "Advertir al usuario", "description": "Enviar una advertencia al usuario" },
-          "delete": { "label": "Eliminar mensaje", "description": "Eliminar el mensaje que infringe" },
-          "mute": { "label": "Silencio temporal", "description": "Silenciar al usuario por una duración específica" },
-          "kick": { "label": "Expulsar usuario", "description": "Expulsar al usuario del servidor" },
-          "ban": { "label": "Banear usuario", "description": "Banear al usuario permanentemente" }
+          "warn": {
+            "label": "Advertir al usuario",
+            "description": "Enviar una advertencia al usuario"
+          },
+          "delete": {
+            "label": "Eliminar mensaje",
+            "description": "Eliminar el mensaje que infringe"
+          },
+          "mute": {
+            "label": "Silencio temporal",
+            "description": "Silenciar al usuario por una duración específica"
+          },
+          "kick": {
+            "label": "Expulsar usuario",
+            "description": "Expulsar al usuario del servidor"
+          },
+          "ban": {
+            "label": "Banear usuario",
+            "description": "Banear al usuario permanentemente"
+          }
         },
-        "messageAction": { "keep": "Mantener mensaje", "delete": "Eliminar mensaje" },
+        "messageAction": {
+          "keep": "Mantener mensaje",
+          "delete": "Eliminar mensaje"
+        },
         "table": {
           "status": "Activo",
           "name": "Nombre",
@@ -911,7 +1208,12 @@
             "empty": "Aún no hay palabras configuradas.",
             "emptyCta": "Haz clic en Añadir palabra para crear tu primera entrada.",
             "tryDifferent": "Prueba una búsqueda diferente.",
-            "table": { "word": "Palabra", "severity": "Severidad", "status": "Estado", "actions": "Acciones" },
+            "table": {
+              "word": "Palabra",
+              "severity": "Severidad",
+              "status": "Estado",
+              "actions": "Acciones"
+            },
             "wholeWord": "palabra completa",
             "partial": "parcial",
             "caseSensitive": "sensible a mayúsculas/minúsculas",
@@ -924,7 +1226,12 @@
               "caseSensitive": "sensible a mayúsculas/minúsculas",
               "wholeWordOnly": "Solo palabra completa"
             },
-            "delete": { "title": "Confirmar eliminación de palabra", "message": "¿Eliminar esta palabra?", "warning": "Esta acción no se puede deshacer.", "confirm": "Eliminar palabra" }
+            "delete": {
+              "title": "Confirmar eliminación de palabra",
+              "message": "¿Eliminar esta palabra?",
+              "warning": "Esta acción no se puede deshacer.",
+              "confirm": "Eliminar palabra"
+            }
           },
           "patterns": {
             "header": "Patrones",
@@ -934,7 +1241,12 @@
             "empty": "Aún no hay patrones configurados.",
             "emptyCta": "Haz clic en Añadir patrón para crear tu primera entrada.",
             "tryDifferent": "Prueba una búsqueda diferente.",
-            "table": { "pattern": "Patrón", "severity": "Severidad", "status": "Estado", "actions": "Acciones" },
+            "table": {
+              "pattern": "Patrón",
+              "severity": "Severidad",
+              "status": "Estado",
+              "actions": "Acciones"
+            },
             "modal": {
               "editTitle": "Editar patrón de grosería",
               "addTitle": "Añadir patrón de grosería",
@@ -949,12 +1261,33 @@
               "invalid": "No válido",
               "descriptionPlaceholder": "Descripción corta (opcional)"
             },
-            "delete": { "title": "Confirmar eliminación de patrón", "message": "¿Eliminar este patrón?", "warning": "Esta acción no se puede deshacer.", "confirm": "Eliminar patrón" }
+            "delete": {
+              "title": "Confirmar eliminación de patrón",
+              "message": "¿Eliminar este patrón?",
+              "warning": "Esta acción no se puede deshacer.",
+              "confirm": "Eliminar patrón"
+            }
           }
         },
-        "common": { "severity": "Severidad", "language": "Idioma", "description": "Descripción", "word": "Palabra", "pattern": "Patrón" },
-        "severity": { "low": "Baja", "medium": "Media", "high": "Alta", "extreme": "Extrema" },
-        "deleteRule": { "title": "Confirmar eliminación", "message": "¿Eliminar la regla de automod?", "warning": "Esta acción no se puede deshacer.", "confirm": "Eliminar regla" },
+        "common": {
+          "severity": "Severidad",
+          "language": "Idioma",
+          "description": "Descripción",
+          "word": "Palabra",
+          "pattern": "Patrón"
+        },
+        "severity": {
+          "low": "Baja",
+          "medium": "Media",
+          "high": "Alta",
+          "extreme": "Extrema"
+        },
+        "deleteRule": {
+          "title": "Confirmar eliminación",
+          "message": "¿Eliminar la regla de automod?",
+          "warning": "Esta acción no se puede deshacer.",
+          "confirm": "Eliminar regla"
+        },
         "toasts": {
           "ruleCreated": "¡Regla de automod \"{{name}}\" creada!",
           "ruleUpdated": "¡Regla de automod \"{{name}}\" actualizada!",
@@ -1003,7 +1336,7 @@
           "enable": "Habilitar",
           "disable": "Deshabilitar",
           "delete": "Eliminar",
-          "clear": "Limpiar", 
+          "clear": "Limpiar",
           "processing": "Procesando...",
           "deleting": "Eliminando...",
           "enableSelected": "Habilitar elementos seleccionados",
@@ -1204,8 +1537,7 @@
           "deleteFailed": "Error al eliminar el mensaje",
           "validationRequired": "Completa todos los campos obligatorios"
         }
-      }
-      ,
+      },
       "logging": {
         "header": "Registro de auditoría",
         "badge": "Monitoreo",
@@ -1227,12 +1559,30 @@
             "desc": "Incluir contexto adicional y metadatos en los registros"
           },
           "channels": {
-            "message": { "label": "Mensajes", "desc": "Dónde enviar los registros de mensajes" },
-            "member": { "label": "Miembros", "desc": "Dónde enviar los registros de miembros" },
-            "channel": { "label": "Canales", "desc": "Dónde enviar los registros de canales" },
-            "role": { "label": "Roles", "desc": "Dónde enviar los registros de roles" },
-            "server": { "label": "Servidor", "desc": "Dónde enviar los registros del servidor" },
-            "voice": { "label": "Voz", "desc": "Dónde enviar los registros de voz" }
+            "message": {
+              "label": "Mensajes",
+              "desc": "Dónde enviar los registros de mensajes"
+            },
+            "member": {
+              "label": "Miembros",
+              "desc": "Dónde enviar los registros de miembros"
+            },
+            "channel": {
+              "label": "Canales",
+              "desc": "Dónde enviar los registros de canales"
+            },
+            "role": {
+              "label": "Roles",
+              "desc": "Dónde enviar los registros de roles"
+            },
+            "server": {
+              "label": "Servidor",
+              "desc": "Dónde enviar los registros del servidor"
+            },
+            "voice": {
+              "label": "Voz",
+              "desc": "Dónde enviar los registros de voz"
+            }
           }
         },
         "placeholders": {
@@ -1257,8 +1607,7 @@
           "copiedToEmpty": "Canal global copiado a categorías vacías",
           "validationRequired": "Selecciona al menos un canal de registro o establece un canal global"
         }
-      }
-      ,
+      },
       "antiraid": {
         "header": "Protección Anti-Raid",
         "badge": "Seguridad",
@@ -1304,15 +1653,43 @@
           "message": "Las acciones anti-raid pueden ser estrictas. Ajusta los umbrales para no afectar a miembros legítimos en periodos de alta actividad."
         },
         "fields": {
-          "joinRate": { "label": "Tasa de uniones", "desc": "Uniones máximas permitidas dentro de la ventana" },
-          "joinWindow": { "label": "Ventana (segundos)", "desc": "Intervalo usado para revisar la tasa" },
-          "accountAge": { "label": "Antigüedad mínima de cuenta (días)", "desc": "Bloquear cuentas más recientes que esta antigüedad" },
-          "raidAction": { "label": "Al detectar raid", "desc": "Acción principal cuando se detecta raid" },
-          "raidActionDuration": { "label": "Duración de la acción (min)", "desc": "Duración para acciones de silencio/bloqueo", "notApplicable": "No aplica para expulsar/bloquear/alerta" },
-          "alertChannel": { "label": "Canal de alertas", "desc": "Dónde enviar alertas y resúmenes anti-raid" },
-          "autoKick": { "label": "Expulsión automática de sospechosos", "desc": "Expulsar automáticamente cuentas que fallen las verificaciones" },
-          "gracePeriod": { "label": "Periodo de gracia (min)", "desc": "Tiempo para mantener protección elevada tras la detección" },
-          "whitelistRoles": { "label": "Roles de omisión", "desc": "Miembros con estos roles omiten verificaciones anti-raid" }
+          "joinRate": {
+            "label": "Tasa de uniones",
+            "desc": "Uniones máximas permitidas dentro de la ventana"
+          },
+          "joinWindow": {
+            "label": "Ventana (segundos)",
+            "desc": "Intervalo usado para revisar la tasa"
+          },
+          "accountAge": {
+            "label": "Antigüedad mínima de cuenta (días)",
+            "desc": "Bloquear cuentas más recientes que esta antigüedad"
+          },
+          "raidAction": {
+            "label": "Al detectar raid",
+            "desc": "Acción principal cuando se detecta raid"
+          },
+          "raidActionDuration": {
+            "label": "Duración de la acción (min)",
+            "desc": "Duración para acciones de silencio/bloqueo",
+            "notApplicable": "No aplica para expulsar/bloquear/alerta"
+          },
+          "alertChannel": {
+            "label": "Canal de alertas",
+            "desc": "Dónde enviar alertas y resúmenes anti-raid"
+          },
+          "autoKick": {
+            "label": "Expulsión automática de sospechosos",
+            "desc": "Expulsar automáticamente cuentas que fallen las verificaciones"
+          },
+          "gracePeriod": {
+            "label": "Periodo de gracia (min)",
+            "desc": "Tiempo para mantener protección elevada tras la detección"
+          },
+          "whitelistRoles": {
+            "label": "Roles de omisión",
+            "desc": "Miembros con estos roles omiten verificaciones anti-raid"
+          }
         },
         "actions": {
           "lockdown": "Bloqueo",
@@ -1323,17 +1700,34 @@
         },
         "verification": {
           "label": "Nivel de verificación requerido",
-          "levels": { "none": "Ninguno", "low": "Bajo", "medium": "Medio", "high": "Alto", "highest": "Máximo" }
+          "levels": {
+            "none": "Ninguno",
+            "low": "Bajo",
+            "medium": "Medio",
+            "high": "Alto",
+            "highest": "Máximo"
+          }
         },
-        "placeholders": { "noAlerts": "Sin canal de alertas" },
+        "placeholders": {
+          "noAlerts": "Sin canal de alertas"
+        },
         "roles": {
           "placeholder": "Añade roles a omitir...",
-          "meta": { "role": "rol" },
+          "meta": {
+            "role": "rol"
+          },
           "noMatches": "No hay roles que coincidan con tu búsqueda.",
           "allAdded": "Todos los roles están añadidos"
         },
-        "modal": { "title": "Ajustes Anti-Raid", "saving": "Guardando ajustes anti-raid...", "saved": "Ajustes anti-raid guardados" },
-        "toasts": { "saved": "Ajustes anti-raid guardados", "saveFailed": "Error al guardar los ajustes anti-raid" }
+        "modal": {
+          "title": "Ajustes Anti-Raid",
+          "saving": "Guardando ajustes anti-raid...",
+          "saved": "Ajustes anti-raid guardados"
+        },
+        "toasts": {
+          "saved": "Ajustes anti-raid guardados",
+          "saveFailed": "Error al guardar los ajustes anti-raid"
+        }
       }
     },
     "cards": {
@@ -1443,7 +1837,7 @@
       },
       "valorant": {
         "label": "Valorant",
-        "desc": "Actualizaciones de partidas, resúmenes y notificaciones (planeado)"
+        "desc": "Actualizaciones de partidas, cambios de rango y seguimiento de estadísticas de jugadores"
       },
       "apex": {
         "label": "Apex Legends",
@@ -1593,7 +1987,7 @@
         "clanName": "Nombre del Clan",
         "clanNameHint": "Ingrese el nombre de su clan (ej. Guerreros Elite)",
         "warAnnouncements": "Anuncios de Guerra",
-        "memberAnnouncements": "Anuncios de Miembros", 
+        "memberAnnouncements": "Anuncios de Miembros",
         "donationAnnouncements": "Anuncios de Donaciones"
       },
       "announce": {
@@ -1622,14 +2016,14 @@
         "memberAnnouncementChannelHelp": "Canal para anuncios de ingreso/salida de miembros para este clan específico",
         "warMentions": "Menciones de Guerra",
         "warMentionsHelp": "Roles/usuarios a mencionar para eventos de guerra de este clan",
-        "memberMentions": "Menciones de Miembros", 
+        "memberMentions": "Menciones de Miembros",
         "memberMentionsHelp": "Roles/usuarios a mencionar para eventos de miembros de este clan",
         "donationMentions": "Menciones de Donaciones",
         "donationMentionsHelp": "Roles/usuarios a mencionar para eventos de donaciones de este clan"
       },
       "tracking": {
         "trackWars": "Rastrear Guerras de Clan",
-        "trackMembers": "Rastrear Cambios de Miembros", 
+        "trackMembers": "Rastrear Cambios de Miembros",
         "trackDonations": "Rastrear Donaciones",
         "trackWarStats": "Habilitar Publicación Automática de Estadísticas de Guerra",
         "trackDonationLeaderboard": "Habilitar Publicación Automática de Tabla de Liderazgo de Donaciones",
@@ -1725,7 +2119,7 @@
       "sections": {
         "general": "Configuración General",
         "players": "Jugadores Rastreados",
-        "tracking": "Configuración de Seguimiento", 
+        "tracking": "Configuración de Seguimiento",
         "templates": "Plantillas de Mensajes",
         "preview": "Vista previa de plantillas"
       },
@@ -1779,6 +2173,59 @@
         "networkError": "Error de red. Por favor verifica tu conexión.",
         "templateSaved": "Plantilla guardada exitosamente",
         "templateError": "Error al guardar la plantilla"
+      }
+    },
+    "valorant": {
+      "intervalHint": "Con qué frecuencia verificar actualizaciones de partidas (en segundos). Mínimo 300 segundos (5 minutos).",
+      "sections": {
+        "trackingFeatures": "Características de Seguimiento",
+        "playerManagement": "Gestión de Jugadores",
+        "matchTemplate": "Plantilla de Resultado de Partida",
+        "rankChangeTemplate": "Plantilla de Cambio de Rango",
+        "achievementTemplate": "Plantilla de Logros"
+      },
+      "tracking": {
+        "trackMatches": "Rastrear Resultados de Partidas",
+        "trackRankChanges": "Rastrear Cambios de Rango",
+        "trackAchievements": "Rastrear Logros (Aces, MVPs, etc.)",
+        "matchTypes": "Tipos de Partidas a Rastrear",
+        "minKills": "Mínimo de Asesinatos para Anunciar",
+        "minKillsHint": "Solo anunciar partidas con al menos esta cantidad de asesinatos"
+      },
+      "matchTypes": {
+        "competitive": "Competitivo",
+        "unrated": "Sin Clasificación",
+        "deathmatch": "Duelo a Muerte"
+      },
+      "announce": {
+        "globalMentions": "Objetivos de Mención Global",
+        "globalMentionsHelp": "Estos roles/usuarios serán mencionados en todos los anuncios de Valorant"
+      },
+      "fields": {
+        "matchAnnouncements": "Canal de Anuncios de Partidas",
+        "rankAnnouncements": "Canal de Anuncios de Cambios de Rango",
+        "achievementAnnouncements": "Canal de Anuncios de Logros"
+      },
+      "players": {
+        "riotIdPlaceholder": "NombreJugador#TAG",
+        "riotIdHelp": "Ingresa Riot ID en formato: Nombre#TAG (ej., Jugador#NA1)",
+        "region": "Región",
+        "addPlayer": "Agregar Jugador",
+        "noPlayers": "Aún no se han agregado jugadores. Agrega jugadores para comenzar a rastrear sus partidas.",
+        "customMessage": "Anulación de Mensaje Personalizado",
+        "customMessagePlaceholder": "Mensaje personalizado opcional para los anuncios de este jugador",
+        "customMessageHelp": "Dejar vacío para usar la plantilla predeterminada"
+      },
+      "templates": {
+        "matchPlaceholder": "🎮 ¡{playerName} acaba de terminar una partida en {map}!\n{result} • {kills}/{deaths}/{assists} ({kd} K/D)\nAgente: {agent} • Puntuación: {score}",
+        "rankChangePlaceholder": "🎖️ ¡Actualización de rango de {playerName}!\n{oldRank} ➜ {newRank}\nRR: {rr} ({rrChange})",
+        "achievementPlaceholder": "🏆 ¡Logro de {playerName}!\n{achievement}: {description}"
+      },
+      "toasts": {
+        "invalidRiotId": "Formato de Riot ID no válido. Por favor, usa el formato Nombre#TAG.",
+        "alreadyTracking": "Ya se está rastreando al jugador: {player}",
+        "added": "Jugador agregado con éxito: {player}",
+        "addFailed": "Error al agregar jugador. Por favor, verifica el Riot ID e inténtalo de nuevo."
       }
     },
     "leveling": "XP y nivelación",

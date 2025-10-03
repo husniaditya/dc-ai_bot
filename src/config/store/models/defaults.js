@@ -150,6 +150,33 @@ const defaultConfigs = {
     embedEnabled: true
   },
 
+  guildValorantConfig: {
+    players: [],
+    playerNames: {},
+    playerMessages: {},
+    playerRegions: {},
+    matchAnnounceChannelId: null,
+    rankAnnounceChannelId: null,
+    achievementAnnounceChannelId: null,
+    mentionTargets: [],
+    enabled: false,
+    intervalSec: 1800, // 30 minutes default
+    trackMatches: true,
+    trackRankChanges: true,
+    trackAchievements: true,
+    matchTypes: {
+      competitive: true,
+      unrated: false,
+      deathmatch: false,
+      spikerush: false
+    },
+    minKillsThreshold: 20,
+    matchTemplate: '🎮 {playerName} just played {map} as {agent}! K/D: {kills}/{deaths}/{assists}, Rank: {rank}. {roleMention}',
+    rankChangeTemplate: '📈 {playerName} ranked {rankChange}! Now {rank} with {rr} RR ({rrChange} RR). {roleMention}',
+    achievementTemplate: '🏆 {playerName} achieved {achievement}! {kills} kills in {map} as {agent}. {roleMention}',
+    embedEnabled: true
+  },
+
   guildXpSettings: {
     enabled: false,
     xpPerMessage: 15,
