@@ -2007,7 +2007,11 @@
         "clanNameHint": "輸入您的部落名稱（例如：精英戰士）",
         "warAnnouncements": "戰爭公告",
         "memberAnnouncements": "成員公告",
-        "donationAnnouncements": "捐贈公告"
+        "donationAnnouncements": "捐贈公告",
+        "cwlAnnouncements": "部落戰聯賽公告",
+        "cwlAnnouncementsHelp": "部落戰聯賽公告頻道",
+        "cwlLeaderboard": "部落戰聯賽排行榜",
+        "cwlLeaderboardHelp": "部落戰聯賽排行榜和統計頻道"
       },
       "announce": {
         "war": "戰爭",
@@ -2048,6 +2052,11 @@
         "trackWars": "追蹤部落戰爭",
         "trackMembers": "追蹤成員變化",
         "trackDonations": "追蹤捐贈",
+        "trackWarStats": "啟用自動戰爭統計發佈",
+        "trackWarStatsToggle": "啟用自動戰爭統計發佈",
+        "trackDonationLeaderboard": "啟用自動捐贈排行榜發佈",
+        "trackDonationLeaderboardToggle": "啟用自動捐贈排行榜發佈",
+        "trackCWL": "追蹤部落戰聯賽",
         "donationThreshold": "最小捐贈門檻",
         "donationThresholdHint": "觸發公告的每週最小捐贈數量"
       },

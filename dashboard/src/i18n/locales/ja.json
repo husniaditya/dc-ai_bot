@@ -2026,7 +2026,10 @@
         "trackMembers": "メンバー変更を追跡",
         "trackDonations": "寄付を追跡",
         "trackWarStats": "自動戦争統計投稿を有効にする",
+        "trackWarStatsToggle": "自動戦争統計投稿を有効にする",
         "trackDonationLeaderboard": "自動寄付リーダーボード投稿を有効にする",
+        "trackDonationLeaderboardToggle": "自動寄付リーダーボード投稿を有効にする",
+        "trackCWL": "クランウォーリーグを追跡",
         "donationThreshold": "最小寄付閾値",
         "donationThresholdHint": "アナウンスをトリガーするための週間最小寄付数"
       },

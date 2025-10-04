@@ -34,7 +34,7 @@ async function getGuildClashOfClansConfig(guildId) {
                donation_leaderboard_channel_id, war_leaderboard_channel_id, 
                donation_message_id, war_preparing_message_id, war_active_message_id, 
                war_mention_target, member_mention_target, donation_mention_target, 
-               enabled, interval_sec, track_wars, track_members, track_donations, track_donation_leaderboard,
+               enabled, interval_sec, track_wars, track_members, track_donations, track_donation_leaderboard, track_cwl,
                donation_threshold, donation_leaderboard_schedule, donation_leaderboard_time, 
                war_start_template, war_end_template, member_join_template, donation_template, 
                donation_leaderboard_template, embed_enabled, clan_data,
@@ -143,6 +143,28 @@ async function getGuildClashOfClansConfig(guildId) {
           }
         });
         
+        // Load CWL channel configurations from guild_clashofclans_cwl_state table
+        if (clans.length > 0 && firstRow.track_cwl) {
+          try {
+            const [cwlRows] = await db.sqlPool.query(`
+              SELECT clan_tag, cwl_announce_channel_id, cwl_leaderboard_channel_id
+              FROM guild_clashofclans_cwl_state
+              WHERE guild_id = ?
+              ORDER BY created_at DESC
+            `, [guildId]);
+            
+            // Merge CWL channel data into clanConfigs
+            cwlRows.forEach(cwlRow => {
+              if (clanConfigs[cwlRow.clan_tag]) {
+                clanConfigs[cwlRow.clan_tag].cwlAnnounceChannelId = cwlRow.cwl_announce_channel_id;
+                clanConfigs[cwlRow.clan_tag].cwlLeaderboardChannelId = cwlRow.cwl_leaderboard_channel_id;
+              }
+            });
+          } catch (cwlError) {
+            console.warn('[CWL] Error loading CWL channel config:', cwlError.message);
+          }
+        }
+        
         const config = {
           // Guild information
           guildId: guildId, // Add the guild ID to the config
@@ -178,6 +200,8 @@ async function getGuildClashOfClansConfig(guildId) {
           trackMembers: !!firstRow.track_members,
           trackDonations: !!firstRow.track_donations,
           trackDonationLeaderboard: !!firstRow.track_donation_leaderboard,
+          trackCWL: !!firstRow.track_cwl,
+          track_cwl: !!firstRow.track_cwl,
           trackWarLeaderboard: !!firstRow.war_leaderboard_channel_id || (!!firstRow.track_wars && !!firstRow.war_announce_channel_id),
           trackWarEvents: !!firstRow.track_wars,
           trackMemberEvents: !!firstRow.track_members,
@@ -281,6 +305,8 @@ async function setGuildClashOfClansConfig(guildId, partial) {
   
   // Handle tracking settings
   if (partial.trackDonationLeaderboard !== undefined) next.trackDonationLeaderboard = partial.trackDonationLeaderboard;
+  if (partial.trackCWL !== undefined) next.trackCWL = partial.trackCWL;
+  if (partial.track_cwl !== undefined) next.trackCWL = partial.track_cwl;
   if (partial.donationLeaderboardSchedule !== undefined) next.donationLeaderboardSchedule = partial.donationLeaderboardSchedule;
   if (partial.donationLeaderboardTime !== undefined) next.donationLeaderboardTime = partial.donationLeaderboardTime;
   if (partial.donationLeaderboardTemplate !== undefined) next.donationLeaderboardTemplate = partial.donationLeaderboardTemplate;
@@ -452,12 +478,11 @@ async function setGuildClashOfClansConfig(guildId, partial) {
           donation_leaderboard_channel_id, war_leaderboard_channel_id,
           donation_message_id, war_preparing_message_id, war_active_message_id, 
           war_mention_target, member_mention_target, donation_mention_target,
-          enabled, interval_sec, track_wars, track_members, track_donations, track_donation_leaderboard,
+          enabled, interval_sec, track_wars, track_members, track_donations, track_donation_leaderboard, track_cwl,
           donation_threshold, donation_leaderboard_schedule, donation_leaderboard_time,
           war_start_template, war_end_template, member_join_template, donation_template, 
           donation_leaderboard_template, embed_enabled, clan_data,
-          war_current_state, war_preparing_message_id, war_active_message_id, 
-          war_last_state_change, war_state_data
+          war_current_state, war_last_state_change, war_state_data
         ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
       `, [
         guildId, '', '', 0, // Empty clan data
@@ -466,11 +491,11 @@ async function setGuildClashOfClansConfig(guildId, partial) {
         next.donationMessageId, next.warPreparingMessageId, next.warActiveMessageId,
         next.warMentionTarget || '', next.memberMentionTarget || '', next.donationMentionTarget || '',
         next.enabled ? 1 : 0, next.intervalSec || 3600, 
-        next.trackWars ? 1 : 0, next.trackMembers ? 1 : 0, next.trackDonations ? 1 : 0, next.trackDonationLeaderboard ? 1 : 0,
+        next.trackWars ? 1 : 0, next.trackMembers ? 1 : 0, next.trackDonations ? 1 : 0, next.trackDonationLeaderboard ? 1 : 0, next.trackCWL ? 1 : 0,
         next.donationThreshold || 100, next.donationLeaderboardSchedule || 'hourly', next.donationLeaderboardTime || '20:00',
         next.warStartTemplate, next.warEndTemplate, next.memberJoinTemplate, next.donationTemplate,
         next.donationLeaderboardTemplate, next.embedEnabled ? 1 : 0, JSON.stringify(next.clanData || {}),
-        'notInWar', null, null, formatDateForMySQL(new Date()), null
+        'notInWar', formatDateForMySQL(new Date()), null
       ]);
     } else {
       // Insert records for each clan
@@ -486,12 +511,11 @@ async function setGuildClashOfClansConfig(guildId, partial) {
             donation_leaderboard_channel_id, war_leaderboard_channel_id,
             donation_message_id, war_preparing_message_id, war_active_message_id, 
             war_mention_target, member_mention_target, donation_mention_target,
-            enabled, interval_sec, track_wars, track_members, track_donations, track_donation_leaderboard,
+            enabled, interval_sec, track_wars, track_members, track_donations, track_donation_leaderboard, track_cwl,
             donation_threshold, donation_leaderboard_schedule, donation_leaderboard_time,
             war_start_template, war_end_template, member_join_template, donation_template, 
             donation_leaderboard_template, embed_enabled, clan_data,
-            war_current_state, war_preparing_message_id, war_active_message_id, 
-            war_last_state_change, war_state_data
+            war_current_state, war_last_state_change, war_state_data
           ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
         `, [
           guildId, clan.tag, clan.name, clan.order,
@@ -505,14 +529,12 @@ async function setGuildClashOfClansConfig(guildId, partial) {
           Array.isArray(clan.memberMentionTargets) ? clan.memberMentionTargets.join(',') : '',
           Array.isArray(clan.donationMentionTargets) ? clan.donationMentionTargets.join(',') : '',
           next.enabled ? 1 : 0, next.intervalSec || 3600, 
-          next.trackWars ? 1 : 0, next.trackMembers ? 1 : 0, next.trackDonations ? 1 : 0, next.trackDonationLeaderboard ? 1 : 0,
+          next.trackWars ? 1 : 0, next.trackMembers ? 1 : 0, next.trackDonations ? 1 : 0, next.trackDonationLeaderboard ? 1 : 0, next.trackCWL ? 1 : 0,
           next.donationThreshold || 100, next.donationLeaderboardSchedule || 'hourly', next.donationLeaderboardTime || '20:00',
           next.warStartTemplate, next.warEndTemplate, next.memberJoinTemplate, next.donationTemplate,
           next.donationLeaderboardTemplate, next.embedEnabled ? 1 : 0, JSON.stringify(next.clanData || {}),
           // War state management fields - preserve existing values or set defaults
-          clan.warCurrentState || 'notInWar', 
-          clan.warPreparingMessageId || null, 
-          clan.warActiveMessageId || null,
+          clan.warCurrentState || 'notInWar',
           clan.warLastStateChange ? formatDateForMySQL(new Date(clan.warLastStateChange)) : formatDateForMySQL(new Date()),
           // Safe stringification for warStateData
           (() => {
@@ -544,6 +566,51 @@ async function setGuildClashOfClansConfig(guildId, partial) {
           })()
         ]);
       }
+    }
+  }
+  
+  // Save CWL channel configurations to guild_clashofclans_cwl_state table
+  if (next.trackCWL && next.clanConfigs) {
+    try {
+      for (const [clanTag, clanConfig] of Object.entries(next.clanConfigs)) {
+        // Skip if no CWL channels configured
+        if (!clanConfig.cwlAnnounceChannelId && !clanConfig.cwlLeaderboardChannelId) {
+          continue;
+        }
+        
+        const season = (() => {
+          const now = new Date();
+          const year = now.getFullYear();
+          const month = String(now.getMonth() + 1).padStart(2, '0');
+          return `${year}-${month}`;
+        })();
+        
+        // Check if record exists for this clan in current season
+        const [existing] = await db.sqlPool.query(
+          'SELECT id FROM guild_clashofclans_cwl_state WHERE guild_id = ? AND clan_tag = ? AND season = ?',
+          [guildId, clanTag, season]
+        );
+        
+        if (existing.length > 0) {
+          // Update existing record
+          await db.sqlPool.query(
+            `UPDATE guild_clashofclans_cwl_state 
+             SET cwl_announce_channel_id = ?, cwl_leaderboard_channel_id = ? 
+             WHERE id = ?`,
+            [clanConfig.cwlAnnounceChannelId || null, clanConfig.cwlLeaderboardChannelId || null, existing[0].id]
+          );
+        } else {
+          // Insert new record for CWL channel configuration
+          await db.sqlPool.query(
+            `INSERT INTO guild_clashofclans_cwl_state 
+             (guild_id, clan_tag, season, cwl_announce_channel_id, cwl_leaderboard_channel_id, cwl_state) 
+             VALUES (?, ?, ?, ?, ?, 'not_in_cwl')`,
+            [guildId, clanTag, season, clanConfig.cwlAnnounceChannelId || null, clanConfig.cwlLeaderboardChannelId || null]
+          );
+        }
+      }
+    } catch (cwlSaveError) {
+      console.error('[CWL] Error saving CWL channel config:', cwlSaveError.message);
     }
   }
   

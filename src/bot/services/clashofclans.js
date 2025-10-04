@@ -154,6 +154,99 @@ async function fetchClanWar(clanTag) {
   }
 }
 
+// Fetch CWL league group information
+async function fetchCWLLeagueGroup(clanTag) {
+  if (!COC_API_TOKEN) return null;
+  
+  const cleanTag = cleanClanTag(clanTag);
+  if (!cleanTag) return null;
+  
+  cocStats.apiCalls++;
+  pushDebug(`API_CALL: Fetching CWL league group for ${formatClanTag(cleanTag)}`);
+  
+  const url = `https://api.clashofclans.com/v1/clans/%23${encodeURIComponent(cleanTag)}/currentwar/leaguegroup`;
+  
+  try {
+    const res = await fetchFn(url, {
+      headers: {
+        'Authorization': `Bearer ${COC_API_TOKEN}`,
+        'Accept': 'application/json'
+      }
+    });
+    
+    if (!res.ok) {
+      if (res.status === 404) {
+        pushDebug(`CWL_NOT_FOUND: Clan ${formatClanTag(cleanTag)} not in CWL`);
+        return null;
+      }
+      if (res.status === 429) {
+        cocStats.quotaErrors++;
+        pushDebug(`RATE_LIMITED: COC API rate limit exceeded for CWL`);
+        return null;
+      }
+      pushDebug(`CWL_API_ERROR: ${res.status} for clan ${formatClanTag(cleanTag)}`);
+      cocStats.totalErrors++;
+      return null;
+    }
+    
+    const leagueData = await res.json();
+    pushDebug(`CWL_FETCHED: ${leagueData.season} - ${leagueData.clans?.length || 0} clans`);
+    return leagueData;
+  } catch (error) {
+    cocStats.totalErrors++;
+    pushDebug(`CWL_FETCH_ERROR: ${error.message} for clan ${formatClanTag(cleanTag)}`);
+    return null;
+  }
+}
+
+// Fetch specific CWL war by war tag
+async function fetchCWLWar(warTag) {
+  if (!COC_API_TOKEN) return null;
+  
+  if (!warTag || !warTag.startsWith('#')) {
+    pushDebug(`INVALID_WAR_TAG: ${warTag}`);
+    return null;
+  }
+  
+  const cleanWarTag = warTag.replace(/^#/, '');
+  cocStats.apiCalls++;
+  pushDebug(`API_CALL: Fetching CWL war ${warTag}`);
+  
+  const url = `https://api.clashofclans.com/v1/clanwarleagues/wars/%23${encodeURIComponent(cleanWarTag)}`;
+  
+  try {
+    const res = await fetchFn(url, {
+      headers: {
+        'Authorization': `Bearer ${COC_API_TOKEN}`,
+        'Accept': 'application/json'
+      }
+    });
+    
+    if (!res.ok) {
+      if (res.status === 404) {
+        pushDebug(`CWL_WAR_NOT_FOUND: ${warTag}`);
+        return null;
+      }
+      if (res.status === 429) {
+        cocStats.quotaErrors++;
+        pushDebug(`RATE_LIMITED: COC API rate limit exceeded for CWL war`);
+        return null;
+      }
+      pushDebug(`CWL_WAR_API_ERROR: ${res.status} for war ${warTag}`);
+      cocStats.totalErrors++;
+      return null;
+    }
+    
+    const warData = await res.json();
+    pushDebug(`CWL_WAR_FETCHED: ${warData.clan?.name || 'Unknown'} vs ${warData.opponent?.name || 'Unknown'} - ${warData.state}`);
+    return warData;
+  } catch (error) {
+    cocStats.totalErrors++;
+    pushDebug(`CWL_WAR_FETCH_ERROR: ${error.message} for war ${warTag}`);
+    return null;
+  }
+}
+
 // Build role mention string from mention targets
 function buildRoleMention(mentionTargets = [], guild) {
   if (!Array.isArray(mentionTargets) || !mentionTargets.length) return '';
@@ -725,6 +818,8 @@ async function updateDonationMessageId(guildId, messageId) {
 module.exports = {
   fetchClanInfo,
   fetchClanWar,
+  fetchCWLLeagueGroup,
+  fetchCWLWar,
   announce,
   cleanClanTag,
   formatClanTag,
