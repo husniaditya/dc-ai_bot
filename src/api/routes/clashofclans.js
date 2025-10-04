@@ -2,6 +2,18 @@ const express = require('express');
 const { PermissionsBitField } = require('discord.js');
 const { audit } = require('../middleware/audit');
 
+/**
+ * Validates if a clan tag has the correct format
+ * @param {string} tag - Clan tag to validate (with or without #)
+ * @returns {boolean} Whether the tag is valid
+ */
+function isValidClanTag(tag) {
+  if (!tag) return false;
+  const cleanTag = tag.replace('#', '').trim();
+  // Valid CoC clan tag characters: 0289PYLQGRJCUV, Length: 3-9 characters
+  return /^[0289PYLQGRJCUV]{3,9}$/i.test(cleanTag);
+}
+
 function createClashOfClansRoutes(client, store) {
   const router = express.Router();
 
@@ -112,6 +124,12 @@ function createClashOfClansRoutes(client, store) {
           if (cfg.clanConfigs && typeof cfg.clanConfigs === 'object') {
             // Process each clan individually
             for (const [clanTag, clanConfig] of Object.entries(cfg.clanConfigs)) {
+              // Validate clan tag before processing
+              if (!isValidClanTag(clanTag)) {
+                console.warn(`[API] Skipping invalid clan tag "${clanTag}" during leaderboard creation`);
+                continue;
+              }
+
               try {
                 // Create donation leaderboard message if tracking is enabled and channel is configured
                 if (partial.trackDonationLeaderboard && clanConfig.donationAnnounceChannelId) {
@@ -136,9 +154,8 @@ function createClashOfClansRoutes(client, store) {
                     guild.id, 
                     clanConfig.warAnnounceChannelId, 
                     clanConfig.warPreparingMessageId || null,
-                    clanConfig.warActiveMessageId || null,
-                    'war',
-                    clanTag  // Pass clan tag to update specific clan row
+                    'war',  // type parameter
+                    clanTag  // clan tag parameter
                   );
                   
                   if (warResult && warResult.success) {
@@ -159,36 +176,47 @@ function createClashOfClansRoutes(client, store) {
             // Fallback: handle legacy single-clan configuration
             if (partial.trackDonationLeaderboard && cfg.donationLeaderboardChannelId) {
               const firstClanTag = cfg.clans && cfg.clans.length > 0 ? cfg.clans[0] : null;
-              const donationResult = await leaderboardEvents.postLeaderboard(
-                guild.id, 
-                cfg.donationLeaderboardChannelId, 
-                cfg.donationMessageId || null,
-                'donations',
-                firstClanTag
-              );
               
-              if (donationResult && donationResult.success) {
-                console.log(`[API] Created/updated donation leaderboard (legacy) for guild ${guild.id}`);
+              // Validate clan tag before processing
+              if (firstClanTag && isValidClanTag(firstClanTag)) {
+                const donationResult = await leaderboardEvents.postLeaderboard(
+                  guild.id, 
+                  cfg.donationLeaderboardChannelId, 
+                  cfg.donationMessageId || null,
+                  'donations',
+                  firstClanTag
+                );
+                
+                if (donationResult && donationResult.success) {
+                  console.log(`[API] Created/updated donation leaderboard (legacy) for guild ${guild.id}`);
+                } else {
+                  console.error(`[API] Failed to create donation leaderboard (legacy) for guild ${guild.id}:`, donationResult?.error);
+                }
               } else {
-                console.error(`[API] Failed to create donation leaderboard (legacy) for guild ${guild.id}:`, donationResult?.error);
+                console.warn(`[API] Skipping donation leaderboard - invalid clan tag: "${firstClanTag}"`);
               }
             }
             
             if (partial.trackWarLeaderboard && cfg.warLeaderboardChannelId) {
               const firstClanTag = cfg.clans && cfg.clans.length > 0 ? cfg.clans[0] : null;
-              const warResult = await leaderboardEvents.postLeaderboard(
-                guild.id, 
-                cfg.warLeaderboardChannelId, 
-                cfg.warPreparingMessageId || null,
-                cfg.warActiveMessageId || null,
-                'war',
-                firstClanTag
-              );
               
-              if (warResult && warResult.success) {
-                console.log(`[API] Created/updated war leaderboard (legacy) for guild ${guild.id}`);
+              // Validate clan tag before processing
+              if (firstClanTag && isValidClanTag(firstClanTag)) {
+                const warResult = await leaderboardEvents.postLeaderboard(
+                  guild.id, 
+                  cfg.warLeaderboardChannelId, 
+                  cfg.warPreparingMessageId || null,
+                  'war',  // type parameter
+                  firstClanTag  // clan tag parameter
+                );
+                
+                if (warResult && warResult.success) {
+                  console.log(`[API] Created/updated war leaderboard (legacy) for guild ${guild.id}`);
+                } else {
+                  console.error(`[API] Failed to create war leaderboard (legacy) for guild ${guild.id}:`, warResult?.error);
+                }
               } else {
-                console.error(`[API] Failed to create war leaderboard (legacy) for guild ${guild.id}:`, warResult?.error);
+                console.warn(`[API] Skipping war leaderboard - invalid clan tag: "${firstClanTag}"`);
               }
             }
           }

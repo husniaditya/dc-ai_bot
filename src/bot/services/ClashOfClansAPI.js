@@ -75,6 +75,10 @@ class ClashOfClansAPI {
      */
     async getClan(clanTag) {
         const tag = this.formatClanTag(clanTag);
+        if (!this.isValidClanTag(tag)) {
+            console.error(`[ClashOfClansAPI] Invalid clan tag format: "${clanTag}" (formatted: "${tag}")`);
+            throw new Error(`Invalid clan tag format: ${clanTag}`);
+        }
         const endpoint = `/clans/${encodeURIComponent(tag)}`;
         return await this.makeRequest(endpoint);
     }
@@ -86,6 +90,10 @@ class ClashOfClansAPI {
      */
     async getClanMembers(clanTag) {
         const tag = this.formatClanTag(clanTag);
+        if (!this.isValidClanTag(tag)) {
+            console.error(`[ClashOfClansAPI] Invalid clan tag format: "${clanTag}" (formatted: "${tag}")`);
+            throw new Error(`Invalid clan tag format: ${clanTag}`);
+        }
         const endpoint = `/clans/${encodeURIComponent(tag)}/members`;
         return await this.makeRequest(endpoint);
     }
@@ -108,6 +116,10 @@ class ClashOfClansAPI {
      */
     async getCurrentWar(clanTag) {
         const tag = this.formatClanTag(clanTag);
+        if (!this.isValidClanTag(tag)) {
+            console.error(`[ClashOfClansAPI] Invalid clan tag format: "${clanTag}" (formatted: "${tag}")`);
+            throw new Error(`Invalid clan tag format: ${clanTag}`);
+        }
         const endpoint = `/clans/${encodeURIComponent(tag)}/currentwar`;
         return await this.makeRequest(endpoint);
     }
@@ -119,6 +131,10 @@ class ClashOfClansAPI {
      */
     async getWarLeague(clanTag) {
         const tag = this.formatClanTag(clanTag);
+        if (!this.isValidClanTag(tag)) {
+            console.error(`[ClashOfClansAPI] Invalid clan tag format: "${clanTag}" (formatted: "${tag}")`);
+            throw new Error(`Invalid clan tag format: ${clanTag}`);
+        }
         const endpoint = `/clans/${encodeURIComponent(tag)}/currentwar/leaguegroup`;
         return await this.makeRequest(endpoint);
     }
@@ -130,6 +146,10 @@ class ClashOfClansAPI {
      */
     async getWarLog(clanTag) {
         const tag = this.formatClanTag(clanTag);
+        if (!this.isValidClanTag(tag)) {
+            console.error(`[ClashOfClansAPI] Invalid clan tag format: "${clanTag}" (formatted: "${tag}")`);
+            throw new Error(`Invalid clan tag format: ${clanTag}`);
+        }
         const endpoint = `/clans/${encodeURIComponent(tag)}/warlog`;
         return await this.makeRequest(endpoint);
     }

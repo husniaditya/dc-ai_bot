@@ -12,6 +12,20 @@ function formatDateForMySQL(date = new Date()) {
     return date.toISOString().slice(0, 19).replace('T', ' ');
 }
 
+/**
+ * Validates if a clan tag has the correct format
+ * Valid CoC clan tags: 3-9 characters, only specific characters allowed
+ * @param {string} tag - Clan tag to validate (with or without #)
+ * @returns {boolean} Whether the tag is valid
+ */
+function isValidClanTag(tag) {
+    if (!tag) return false;
+    const cleanTag = tag.replace('#', '').trim();
+    // Valid CoC clan tag characters: 0289PYLQGRJCUV
+    // Length: 3-9 characters
+    return /^[0289PYLQGRJCUV]{3,9}$/i.test(cleanTag);
+}
+
 async function getGuildClashOfClansConfig(guildId) {
   if (!guildId) return { ...defaultConfigs.guildClashOfClansConfig };
   
@@ -46,9 +60,25 @@ async function getGuildClashOfClansConfig(guildId) {
       `, [guildId]);
       
       if (rows.length > 0) {
+        // Filter out rows with invalid clan tags
+        const validRows = rows.filter(row => {
+          const isValid = isValidClanTag(row.clan_tag);
+          if (!isValid) {
+            console.warn(`[Config] Skipping invalid clan tag in database: "${row.clan_tag}" for guild ${guildId}`);
+          }
+          return isValid;
+        });
+
+        if (validRows.length === 0) {
+          console.warn(`[Config] No valid clan tags found for guild ${guildId}`);
+          const cfg = { ...defaultConfigs.guildClashOfClansConfig };
+          cacheData.guildClashOfClansConfigCache.set(guildId, cfg);
+          return cfg;
+        }
+
         // Build configuration from multiple clan rows
-        const firstRow = rows[0];
-        const clans = rows.map(row => ({
+        const firstRow = validRows[0];
+        const clans = validRows.map(row => ({
           tag: row.clan_tag,
           name: row.clan_name || '',
           order: row.clan_order || 0,
@@ -63,7 +93,7 @@ async function getGuildClashOfClansConfig(guildId) {
         
         // Extract clan names mapping
         const clanNames = {};
-        rows.forEach(row => {
+        validRows.forEach(row => {
           if (row.clan_tag && row.clan_name) {
             clanNames[row.clan_tag] = row.clan_name;
           }
@@ -71,7 +101,7 @@ async function getGuildClashOfClansConfig(guildId) {
         
         // Build per-clan configurations for frontend
         const clanConfigs = {};
-        rows.forEach(row => {
+        validRows.forEach(row => {
           if (row.clan_tag) {
             clanConfigs[row.clan_tag] = {
               warMentionTargets: row.war_mention_target ? row.war_mention_target.split(',').filter(Boolean) : [],
@@ -407,6 +437,12 @@ async function setGuildClashOfClansConfig(guildId, partial) {
         // Handle clanConfigs as object (per-clan configuration with clan tags as keys)
         for (const [clanTag, clanConfig] of Object.entries(next.clanConfigs)) {
           
+          // Validate clan tag format - reject if it's not a valid CoC clan tag
+          if (!isValidClanTag(clanTag)) {
+            console.warn(`[Config] Skipping invalid clan tag in clanConfigs: "${clanTag}" - not a valid Clash of Clans clan tag`);
+            continue; // Skip this invalid entry instead of throwing error
+          }
+          
           // Validate clan tag format - reject if it looks like an array index
           if (/^\d+$/.test(clanTag)) {
             console.error('Invalid clan tag detected:', clanTag, '- looks like array index, not real clan tag');
@@ -438,6 +474,12 @@ async function setGuildClashOfClansConfig(guildId, partial) {
     } else if (next.clans?.length > 0) {
       // Handle legacy clans array
       next.clans.forEach((tag, index) => {
+        
+        // Validate clan tag format - skip if not valid
+        if (!isValidClanTag(tag)) {
+          console.warn(`[Config] Skipping invalid clan tag in clans array: "${tag}" at index ${index}`);
+          return; // Skip this invalid entry
+        }
         
         // Validate clan tag format - reject if it looks like an array index
         if (/^\d+$/.test(tag)) {
