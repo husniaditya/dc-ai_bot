@@ -2026,7 +2026,10 @@
         "trackMembers": "Mitgliederänderungen verfolgen",
         "trackDonations": "Spenden verfolgen",
         "trackWarStats": "Automatische Kriegsstatistik-Veröffentlichung aktivieren",
+        "trackWarStatsToggle": "Automatische Kriegsstatistik-Veröffentlichung aktivieren",
         "trackDonationLeaderboard": "Automatische Spenden-Bestenlisten-Veröffentlichung aktivieren",
+        "trackDonationLeaderboardToggle": "Automatische Spenden-Bestenlisten-Veröffentlichung aktivieren",
+        "trackCWL": "Clankriegsliga verfolgen",
         "donationThreshold": "Minimaler Spendenschwellenwert",
         "donationThresholdHint": "Mindestspenden pro Woche um Ankündigungen auszulösen"
       },

@@ -2073,7 +2073,11 @@
         "clanNameHint": "Enter your clan name (e.g., Elite Warriors)",
         "warAnnouncements": "War Announcements",
         "memberAnnouncements": "Member Announcements", 
-        "donationAnnouncements": "Donation Announcements"
+        "donationAnnouncements": "Donation Announcements",
+        "cwlAnnouncements": "CWL Announcements",
+        "cwlAnnouncementsHelp": "Channel for Clan War League announcements",
+        "cwlLeaderboard": "CWL Leaderboard",
+        "cwlLeaderboardHelp": "Channel for CWL leaderboard and statistics"
       },
       "announce": {
         "war": "War",
@@ -2111,7 +2115,10 @@
         "trackMembers": "Track Member Changes", 
         "trackDonations": "Track Donations",
         "trackWarStats": "Enable Automatic War Statistics Posting",
+        "trackWarStatsToggle": "Enable Automatic War Statistics Posting",
         "trackDonationLeaderboard": "Enable Automatic Donation Leaderboard Posting",
+        "trackDonationLeaderboardToggle": "Enable Automatic Donation Leaderboard Posting",
+        "trackCWL": "Track Clan War League",
         "donationThreshold": "Minimum Donation Threshold",
         "donationThresholdHint": "Minimum donations per week to trigger announcements"
       },

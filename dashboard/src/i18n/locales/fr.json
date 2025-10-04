@@ -2026,7 +2026,10 @@
         "trackMembers": "Suivre les Changements de Membres",
         "trackDonations": "Suivre les Dons",
         "trackWarStats": "Activer la Publication Automatique des Statistiques de Guerre",
+        "trackWarStatsToggle": "Activer la Publication Automatique des Statistiques de Guerre",
         "trackDonationLeaderboard": "Activer la Publication Automatique du Classement des Dons",
+        "trackDonationLeaderboardToggle": "Activer la Publication Automatique du Classement des Dons",
+        "trackCWL": "Suivre la Ligue de Guerre de Clan",
         "donationThreshold": "Seuil Minimum de Dons",
         "donationThresholdHint": "Dons minimum par semaine pour déclencher les annonces"
       },

@@ -4,6 +4,7 @@ const { ActivityType } = require('discord.js');
 const { startYouTubeWatcher } = require('../services/youtube');
 const { startTwitchWatcher } = require('../services/twitch');
 const { startCOCWatcher } = require('../watchers/clashofclans');
+const { startCWLWatcher } = require('../watchers/cwl');
 
 // Initialize leaderboard events (relocated to handlers directory)
 const LeaderboardEvents = require('../handlers/LeaderboardEvents');
@@ -82,6 +83,13 @@ function setupReadyHandler(client, store, startTimestamp, commandMap) {
       startCOCWatcher(client);
     } catch(e) { 
       console.warn('COC watcher failed to start', e.message); 
+    }
+
+    // Start CWL watcher (announces CWL events if env configured)
+    try {
+      startCWLWatcher(client);
+    } catch(e) { 
+      console.warn('CWL watcher failed to start', e.message); 
     }
 
     // Initialize leaderboard button interactions

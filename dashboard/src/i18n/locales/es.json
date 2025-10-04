@@ -2026,7 +2026,10 @@
         "trackMembers": "Rastrear Cambios de Miembros",
         "trackDonations": "Rastrear Donaciones",
         "trackWarStats": "Habilitar Publicación Automática de Estadísticas de Guerra",
+        "trackWarStatsToggle": "Habilitar Publicación Automática de Estadísticas de Guerra",
         "trackDonationLeaderboard": "Habilitar Publicación Automática de Tabla de Liderazgo de Donaciones",
+        "trackDonationLeaderboardToggle": "Habilitar Publicación Automática de Tabla de Liderazgo de Donaciones",
+        "trackCWL": "Rastrear Liga de Guerra de Clanes",
         "donationThreshold": "Umbral Mínimo de Donaciones",
         "donationThresholdHint": "Donaciones mínimas por semana para activar anuncios"
       },
