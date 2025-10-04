@@ -2037,7 +2037,10 @@
         "trackMembers": "Lacak Perubahan Anggota",
         "trackDonations": "Lacak Donasi",
         "trackWarStats": "Aktifkan Posting Statistik Perang Otomatis",
+        "trackWarStatsToggle": "Aktifkan Posting Statistik Perang Otomatis",
         "trackDonationLeaderboard": "Aktifkan Posting Leaderboard Donasi Otomatis",
+        "trackDonationLeaderboardToggle": "Aktifkan Posting Leaderboard Donasi Otomatis",
+        "trackCWL": "Lacak Liga Perang Klan",
         "donationThreshold": "Batas Minimum Donasi",
         "donationThresholdHint": "Minimum donasi per minggu untuk memicu pengumuman"
       },

@@ -78,6 +78,8 @@ function createClashOfClansRoutes(client, store) {
         trackDonationLeaderboard: req.body.trackDonationLeaderboard,
         // War leaderboard tracking (also missing!)
         trackWarLeaderboard: req.body.trackWarLeaderboard || req.body.track_war_leaderboard,
+        // CWL tracking
+        trackCWL: req.body.trackCWL || req.body.track_cwl,
         // Map frontend tracking fields to backend
         trackWarEvents: req.body.trackWarEvents,
         trackMemberEvents: req.body.trackMemberEvents,

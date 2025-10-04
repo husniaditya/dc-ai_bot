@@ -299,6 +299,27 @@ export default function ClashOfClansConfig({
                     {t('gamesSocials.clashofclans.tracking.trackDonationLeaderboard')}
                   </label>
                 </div>
+                
+                <div className="form-check form-switch">
+                  <input
+                    id="trackCWLToggle"
+                    className="form-check-input"
+                    type="checkbox"
+                    checked={config.trackCWL || config.track_cwl || false}
+                    onChange={e => onChange(prev => ({ 
+                      ...prev, 
+                      trackCWL: e.target.checked,
+                      track_cwl: e.target.checked
+                    }))}
+                  />
+                  <label 
+                    className="form-check-label user-select-none" 
+                    htmlFor="trackCWLToggle"
+                    style={{ cursor: 'pointer' }}
+                  >
+                    {t('gamesSocials.clashofclans.tracking.trackCWL', 'Track Clan War League')}
+                  </label>
+                </div>
               </div>
 
               {/* Donation Threshold */}
@@ -518,6 +539,73 @@ export default function ClashOfClansConfig({
                             ))}
                           </select>
                         </div>
+                        
+                        {/* CWL Channels */}
+                        {(config.trackCWL || config.track_cwl) && (
+                          <>
+                            <div className="col-md-6">
+                              <label className="form-label small fw-medium">
+                                {t('gamesSocials.clashofclans.fields.cwlAnnouncements', 'CWL Announcements')}
+                              </label>
+                              <select
+                                className="form-select form-select-sm"
+                                value={clanConfig.cwlAnnounceChannelId || ''}
+                                onChange={e => {
+                                  const updatedClanConfigs = {
+                                    ...config.clanConfigs,
+                                    [clanTag]: {
+                                      ...clanConfig,
+                                      cwlAnnounceChannelId: e.target.value || null
+                                    }
+                                  };
+                                  onChange(prev => ({ 
+                                    ...prev, 
+                                    clanConfigs: updatedClanConfigs
+                                  }));
+                                }}
+                              >
+                                <option value="">{t('gamesSocials.common.select')}</option>
+                                {discordChannels.map(ch => (
+                                  <option key={ch.id} value={ch.id}>#{ch.name}</option>
+                                ))}
+                              </select>
+                              <div className="form-text tiny">
+                                {t('gamesSocials.clashofclans.fields.cwlAnnouncementsHelp', 'Announce CWL start, daily rounds, and final results')}
+                              </div>
+                            </div>
+                            
+                            <div className="col-md-6">
+                              <label className="form-label small fw-medium">
+                                {t('gamesSocials.clashofclans.fields.cwlLeaderboard', 'CWL Leaderboard')}
+                              </label>
+                              <select
+                                className="form-select form-select-sm"
+                                value={clanConfig.cwlLeaderboardChannelId || ''}
+                                onChange={e => {
+                                  const updatedClanConfigs = {
+                                    ...config.clanConfigs,
+                                    [clanTag]: {
+                                      ...clanConfig,
+                                      cwlLeaderboardChannelId: e.target.value || null
+                                    }
+                                  };
+                                  onChange(prev => ({ 
+                                    ...prev, 
+                                    clanConfigs: updatedClanConfigs
+                                  }));
+                                }}
+                              >
+                                <option value="">{t('gamesSocials.common.select')}</option>
+                                {discordChannels.map(ch => (
+                                  <option key={ch.id} value={ch.id}>#{ch.name}</option>
+                                ))}
+                              </select>
+                              <div className="form-text tiny">
+                                {t('gamesSocials.clashofclans.fields.cwlLeaderboardHelp', 'Live CWL standings and statistics')}
+                              </div>
+                            </div>
+                          </>
+                        )}
                       </div>
                       
                       <div className="row g-3">
