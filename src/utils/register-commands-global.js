@@ -862,102 +862,113 @@ const commands = [
     description: 'Show COC watcher debug events and statistics (Manage Server)'
   },
   {
-    name: 'cwl-dashboard',
-    description: 'Show comprehensive CWL statistics dashboard',
+    name: 'cwl',
+    description: 'Clan War League (CWL) information and commands',
     options: [
       {
-        name: 'clan',
-        description: 'Clan tag (optional - uses primary clan if not specified)',
-        type: 3, // STRING
-        required: false
-      }
-    ]
-  },
-  {
-    name: 'cwl-export',
-    description: 'Export CWL data to file',
-    options: [
-      {
-        name: 'type',
-        description: 'Type of data to export',
-        type: 3, // STRING
-        required: true,
-        choices: [
-          { name: 'Player Performance', value: 'performance' },
-          { name: 'Standings History', value: 'standings' },
-          { name: 'Season Report', value: 'report' }
+        name: 'dashboard',
+        description: 'Show comprehensive CWL statistics dashboard',
+        type: 1, // SUB_COMMAND
+        options: [
+          {
+            name: 'clan',
+            description: 'Clan tag (optional - uses primary clan if not specified)',
+            type: 3, // STRING
+            required: false
+          }
         ]
       },
       {
-        name: 'format',
-        description: 'Export format',
-        type: 3, // STRING
-        required: true,
-        choices: [
-          { name: 'JSON', value: 'json' },
-          { name: 'CSV', value: 'csv' }
+        name: 'export',
+        description: 'Export CWL data to file',
+        type: 1, // SUB_COMMAND
+        options: [
+          {
+            name: 'type',
+            description: 'Type of data to export',
+            type: 3, // STRING
+            required: true,
+            choices: [
+              { name: 'Player Performance', value: 'performance' },
+              { name: 'Standings History', value: 'standings' },
+              { name: 'Season Report', value: 'report' }
+            ]
+          },
+          {
+            name: 'format',
+            description: 'Export format',
+            type: 3, // STRING
+            required: true,
+            choices: [
+              { name: 'JSON', value: 'json' },
+              { name: 'CSV', value: 'csv' }
+            ]
+          },
+          {
+            name: 'clan',
+            description: 'Clan tag (optional - uses primary clan if not specified)',
+            type: 3, // STRING
+            required: false
+          }
         ]
       },
       {
-        name: 'clan',
-        description: 'Clan tag (optional - uses primary clan if not specified)',
-        type: 3, // STRING
-        required: false
-      }
-    ]
-  },
-  {
-    name: 'cwl-mvp',
-    description: 'Show CWL MVP awards',
-    options: [
-      {
-        name: 'round',
-        description: 'Round number (leave empty for season MVP)',
-        type: 4, // INTEGER
-        required: false,
-        min_value: 1,
-        max_value: 7
-      },
-      {
-        name: 'clan',
-        description: 'Clan tag (optional - uses primary clan if not specified)',
-        type: 3, // STRING
-        required: false
-      }
-    ]
-  },
-  {
-    name: 'cwl-roster',
-    description: 'Show CWL lineup recommendations',
-    options: [
-      {
-        name: 'size',
-        description: 'Roster size',
-        type: 4, // INTEGER
-        required: false,
-        choices: [
-          { name: '15 players', value: 15 },
-          { name: '30 players', value: 30 },
-          { name: '50 players', value: 50 }
+        name: 'mvp',
+        description: 'Show CWL MVP awards',
+        type: 1, // SUB_COMMAND
+        options: [
+          {
+            name: 'round',
+            description: 'Round number (leave empty for season MVP)',
+            type: 4, // INTEGER
+            required: false,
+            min_value: 1,
+            max_value: 7
+          },
+          {
+            name: 'clan',
+            description: 'Clan tag (optional - uses primary clan if not specified)',
+            type: 3, // STRING
+            required: false
+          }
         ]
       },
       {
-        name: 'clan',
-        description: 'Clan tag (optional - uses primary clan if not specified)',
-        type: 3, // STRING
-        required: false
-      }
-    ]
-  },
-  {
-    name: 'cwl-alerts',
-    description: 'Check for CWL performance issues',
-    options: [
+        name: 'roster',
+        description: 'Show CWL lineup recommendations',
+        type: 1, // SUB_COMMAND
+        options: [
+          {
+            name: 'size',
+            description: 'Roster size',
+            type: 4, // INTEGER
+            required: false,
+            choices: [
+              { name: '15 players', value: 15 },
+              { name: '30 players', value: 30 },
+              { name: '50 players', value: 50 }
+            ]
+          },
+          {
+            name: 'clan',
+            description: 'Clan tag (optional - uses primary clan if not specified)',
+            type: 3, // STRING
+            required: false
+          }
+        ]
+      },
       {
-        name: 'clan',
-        description: 'Clan tag (optional - uses primary clan if not specified)',
-        type: 3, // STRING
-        required: false
+        name: 'alerts',
+        description: 'Check for CWL performance issues',
+        type: 1, // SUB_COMMAND
+        options: [
+          {
+            name: 'clan',
+            description: 'Clan tag (optional - uses primary clan if not specified)',
+            type: 3, // STRING
+            required: false
+          }
+        ]
       }
     ]
   },
