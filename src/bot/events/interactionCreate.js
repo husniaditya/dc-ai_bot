@@ -16,6 +16,14 @@ function setupInteractionCreateHandler(client, store, startTimestamp, commandMap
         await handleHelpSelect(interaction);
       } else if (interaction.customId.startsWith('role_menu_')) {
         await handleRoleMenuSelect(interaction);
+      } else if (interaction.customId.startsWith('cwl_player_select_')) {
+        // Handle CWL player select menu
+        const cwlHandler = require('../handlers/cwlInteractionHandler');
+        try {
+          await cwlHandler.handleCWLSelectMenuInteraction(interaction);
+        } catch (error) {
+          console.error('CWL select menu error:', error);
+        }
       }
     } else if (interaction.isButton()) {
       await handleButtonInteraction(interaction, client, commandMap);
@@ -276,6 +284,28 @@ async function handleHelpSelect(interaction) {
 }
 
 async function handleButtonInteraction(interaction, client, commandMap) {
+  // Handle CWL buttons
+  if (interaction.customId.startsWith('cwl_')) {
+    const cwlHandler = require('../handlers/cwlInteractionHandler');
+    try {
+      const handled = await cwlHandler.handleCWLButtonInteraction(interaction);
+      if (handled) return;
+    } catch (error) {
+      console.error('CWL button error:', error);
+      if (!interaction.replied && !interaction.deferred) {
+        try {
+          await interaction.reply({ 
+            content: '❌ CWL interaction failed. Please try again.', 
+            ephemeral: true 
+          });
+        } catch (replyError) {
+          console.error('Failed to send CWL error reply:', replyError);
+        }
+      }
+      return;
+    }
+  }
+  
   // Handle leaderboard buttons first
   if (interaction.customId.startsWith('leaderboard_')) {
     // Get leaderboard handler from client if available

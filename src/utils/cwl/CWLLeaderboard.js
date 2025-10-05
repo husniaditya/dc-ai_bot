@@ -7,18 +7,27 @@ class CWLLeaderboard {
   /**
    * Update standings for a specific round
    * @param {string} guildId - Guild ID
-   * @param {string} clanTag - Clan tag
+   * @param {string} clanTag - Clan tag (cleaned, without #)
    * @param {string} season - Season (YYYY-MM)
    * @param {number} roundNumber - Round number
    * @param {Object} leagueGroup - League group data from API
    */
   async updateRoundStandings(guildId, clanTag, season, roundNumber, leagueGroup) {
     try {
-      // Find our clan in the league group
-      const ourClan = leagueGroup.clans.find(c => c.tag === clanTag);
+      // Clean tag helper
+      const cleanTag = (tag) => {
+        if (!tag) return null;
+        return tag.replace(/^#/, '').toUpperCase();
+      };
+      
+      const ourClanTag = cleanTag(clanTag);
+      
+      // Find our clan in the league group (compare cleaned tags)
+      const ourClan = leagueGroup.clans.find(c => cleanTag(c.tag) === ourClanTag);
       
       if (!ourClan) {
         console.warn('[CWL Leaderboard] Could not find our clan in league group');
+        console.warn(`[CWL Leaderboard] Looking for: ${ourClanTag}, Available: ${leagueGroup.clans.map(c => cleanTag(c.tag)).join(', ')}`);
         return;
       }
 
@@ -30,7 +39,7 @@ class CWLLeaderboard {
         return b.destructionPercentage - a.destructionPercentage;
       });
 
-      const position = sortedClans.findIndex(c => c.tag === clanTag) + 1;
+      const position = sortedClans.findIndex(c => cleanTag(c.tag) === ourClanTag) + 1;
 
       // Calculate wins/losses from rounds
       let wins = 0;
