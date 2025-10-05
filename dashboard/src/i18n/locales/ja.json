@@ -2249,5 +2249,151 @@
       "disabled": "ウェルカムメッセージが無効になりました",
       "toggleFailed": "トグルの更新に失敗しました"
     }
+  },
+  "homepage": {
+    "hero": {
+      "title": "Choco Maid",
+      "typingPhrases": [
+        "あなたのスマートなDiscordコンパニオン",
+        "AI搭載会話",
+        "高度なモデレーションツール",
+        "ゲーミング統合ハブ",
+        "自動サーバー管理"
+      ],
+      "description": "高度な自動化、包括的なモデレーション、シームレスなゲーミング統合を組み合わせた、インテリジェントなAIアシスタントでDiscordサーバーをレベルアップしましょう—すべてが1つの強力なボットに。",
+      "loginButton": "ダッシュボードにログイン",
+      "addButton": "サーバーに追加",
+      "connecting": "接続中...",
+      "processing": "Discordサインインを完了しています…",
+      "stats": {
+        "commands": "30+",
+        "commandsLabel": "スラッシュコマンド",
+        "languages": "7",
+        "languagesLabel": "言語",
+        "uptime": "99.9%",
+        "uptimeLabel": "稼働時間",
+        "online": "24/7",
+        "onlineLabel": "オンライン"
+      },
+      "showcaseCards": {
+        "ai": "AI会話",
+        "moderation": "自動モデレーション",
+        "gaming": "ゲーミングハブ"
+      }
+    },
+    "features": {
+      "title": "強力な機能",
+      "subtitle": "Discordサーバーを管理し、強化するために必要なすべて",
+      "ai": {
+        "title": "AI搭載インテリジェンス",
+        "description": "Google Gemini 2.0 Flashを活用した高度な会話で、コンテキスト保持、マルチイメージ分析、インテリジェントなコンテンツ処理を実現。",
+        "highlights": [
+          "スマートQ&Aシステム",
+          "画像分析",
+          "コンテンツ要約",
+          "多言語翻訳"
+        ]
+      },
+      "moderation": {
+        "title": "高度なモデレーション",
+        "description": "スパム検出、コンテンツフィルタリング、アンチレイド保護、VirusTotal統合によるリアルタイム脅威検出を備えた包括的なモデレーションスイート。",
+        "highlights": [
+          "自動モデレーションルール",
+          "アンチレイドシステム",
+          "監査ログ",
+          "リンクセキュリティスキャン"
+        ]
+      },
+      "gaming": {
+        "title": "ゲーミング統合",
+        "description": "Clash of Clans、YouTube、Twitch、Valorant、Genshin Impactの一流サポートで、自動アナウンスとリーダーボードを提供。",
+        "highlights": [
+          "クラン戦争追跡",
+          "ライブストリームアラート",
+          "寄付リーダーボード",
+          "メンバーアクティビティ監視"
+        ]
+      },
+      "automation": {
+        "title": "サーバー自動化",
+        "description": "スケジュールされたメッセージ、ウェルカムシステム、オートロール、XPレベリング、カスタマイズ可能な自動応答でサーバーを自動化。",
+        "highlights": [
+          "スケジュールされたアナウンス",
+          "ウェルカムメッセージ",
+          "XP＆レベリングシステム",
+          "リアクションロール"
+        ]
+      },
+      "dashboard": {
+        "title": "分析ダッシュボード",
+        "description": "リアルタイム統計、アクティビティ監視、包括的なサーバー管理ツールを備えた美しく現代的なダッシュボード。",
+        "highlights": [
+          "リアルタイム統計",
+          "アクティビティ追跡",
+          "ユーザー管理",
+          "設定パネル"
+        ]
+      },
+      "i18n": {
+        "title": "多言語サポート",
+        "description": "7つの言語をサポートする完全な国際化。英語、インドネシア語、スペイン語、フランス語、ドイツ語、日本語、中国語の間でシームレスに切り替え。",
+        "highlights": [
+          "7言語利用可能",
+          "自動検出",
+          "リアルタイム切り替え",
+          "完全なUI対応"
+        ]
+      }
+    },
+    "commands": {
+      "title": "30+のスラッシュコマンド",
+      "subtitle": "すべてのニーズに対応する直感的なコマンド",
+      "ai": {
+        "title": "AI＆インテリジェンス",
+        "ask": "コンテキストキャッシングでGemini AIに何でも質問",
+        "explainImage": "AIで最大3枚の画像を分析",
+        "summarize": "チャットメッセージをインテリジェントに要約",
+        "translate": "任意の言語にテキストを翻訳"
+      },
+      "moderation": {
+        "title": "モデレーション＆セキュリティ",
+        "antiraid": "アンチレイド保護システムを管理",
+        "automod": "自動モデレーションルールを設定",
+        "audit": "詳細な監査ログを表示",
+        "welcome": "ウェルカムメッセージとオートロールを設定"
+      },
+      "gaming": {
+        "title": "ゲーミング統合",
+        "coc": "Clash of Clans追跡＆リーダーボード",
+        "ytwatch": "YouTubeチャンネル監視",
+        "twitchstats": "Twitchライブストリーム通知",
+        "valorant": "Valorantの統計とプレイヤーランキングを追跡"
+      },
+      "leveling": {
+        "title": "レベリング＆エンゲージメント",
+        "xpCheck": "ユーザーのXPとレベル進行を確認",
+        "leaderboard": "サーバーXPリーダーボードを表示",
+        "role": "自己割り当て可能なロールを管理",
+        "pollCreate": "インタラクティブなボタン投票を作成"
+      }
+    },
+    "cta": {
+      "title": "Discordサーバーを変革する準備はできましたか？",
+      "description": "Choco Maidを使用してコミュニティを自動化、モデレート、エンゲージする何千ものサーバーに参加しましょう。",
+      "accessDashboard": "ダッシュボードにアクセス",
+      "inviteBot": "今すぐボットを招待",
+      "processing": "処理中..."
+    },
+    "footer": {
+      "brandDescription": "自動化、モデレーション、コミュニティエンゲージメントのためのインテリジェントなDiscordコンパニオン。",
+      "resources": "リソース",
+      "github": "GitHubリポジトリ",
+      "support": "サポートサーバー",
+      "documentation": "ドキュメント",
+      "commandList": "コマンドリスト",
+      "features": "機能",
+      "setupGuide": "セットアップガイド",
+      "copyright": "Choco Maid • Discord AI Bot"
+    }
   }
 }

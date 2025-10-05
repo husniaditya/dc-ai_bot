@@ -19,24 +19,38 @@ class CWLPlayerPerformance {
     }
 
     try {
-      const ourClan = warData.clan.tag === clanTag ? warData.clan : warData.opponent;
+      // Clean tag helper
+      const cleanTag = (tag) => {
+        if (!tag) return null;
+        return tag.replace(/^#/, '').toUpperCase();
+      };
+      
+      const ourClanTag = cleanTag(clanTag);
+      const clan1Tag = cleanTag(warData.clan?.tag);
+      const clan2Tag = cleanTag(warData.opponent?.tag);
+      
+      // Find our clan (compare cleaned tags)
+      const ourClan = (clan1Tag === ourClanTag) ? warData.clan : 
+                      (clan2Tag === ourClanTag) ? warData.opponent : null;
       
       if (!ourClan) {
         console.warn('[CWL Performance] Could not identify our clan in war data');
+        console.warn(`[CWL Performance] Looking for: ${ourClanTag}, Found: ${clan1Tag} vs ${clan2Tag}`);
         return;
       }
 
       for (const member of ourClan.members) {
         const attacks = member.attacks || [];
         const attacksUsed = attacks.length;
-        const attacksRemaining = (member.townhallLevel >= 12 ? 2 : 1) - attacksUsed;
+        // CWL: Everyone gets exactly 1 attack regardless of Town Hall level
+        const attacksRemaining = 1 - attacksUsed;
 
         // Process each attack
         for (let i = 0; i < attacks.length; i++) {
           const attack = attacks[i];
           
-          // Find opponent target
-          const opponentClan = warData.clan.tag === clanTag ? warData.opponent : warData.clan;
+          // Find opponent clan (the one that's NOT us)
+          const opponentClan = (clan1Tag === ourClanTag) ? warData.opponent : warData.clan;
           const target = opponentClan.members.find(m => m.tag === attack.defenderTag);
 
           await this.sqlPool.query(
@@ -87,7 +101,7 @@ class CWLPlayerPerformance {
               member.tag,
               member.name,
               0,
-              (member.townhallLevel >= 12 ? 2 : 1),
+              1, // CWL: Everyone gets exactly 1 attack
               0,
               0.00
             ]

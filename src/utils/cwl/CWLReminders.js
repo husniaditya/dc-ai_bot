@@ -16,15 +16,51 @@ class CWLReminders {
    */
   async sendAttackReminders(guildId, clanTag, season, roundNumber, warData) {
     try {
+      // CRITICAL: Ensure warData.clan is OUR clan
+      const cleanTag = (tag) => {
+        if (!tag) return null;
+        return tag.replace(/^#/, '').toUpperCase();
+      };
+      
+      const ourClanTag = cleanTag(clanTag);
+      const clan1Tag = cleanTag(warData.clan?.tag);
+      const clan2Tag = cleanTag(warData.opponent?.tag);
+      
+      if (clan2Tag === ourClanTag && clan1Tag !== ourClanTag) {
+        // Swap so our clan is always in warData.clan
+        const temp = warData.clan;
+        warData.clan = warData.opponent;
+        warData.opponent = temp;
+        console.log(`[CWL Reminders] Swapped clan/opponent for correct perspective`);
+      }
+      
       // Check if war is still active
       if (warData.state !== 'inWar') {
         console.log('[CWL Reminders] War not active, skipping reminders');
         return 0;
       }
 
-      // Calculate time remaining
+      // Calculate time remaining (handle multiple date formats)
       const now = new Date();
-      const endTime = new Date(warData.endTime);
+      let endTime;
+      
+      // Try parsing the endTime in different formats
+      if (warData.endTime) {
+        endTime = new Date(warData.endTime);
+      } else if (warData.endTimeUtc) {
+        endTime = new Date(warData.endTimeUtc);
+      } else if (warData.preparationStartTime) {
+        // Fallback: estimate from preparation start (24h prep + 24h war)
+        const prepStart = new Date(warData.preparationStartTime);
+        endTime = new Date(prepStart.getTime() + 48 * 60 * 60 * 1000);
+      }
+      
+      // Validate endTime
+      if (!endTime || isNaN(endTime.getTime())) {
+        console.error('[CWL Reminders] Invalid endTime in warData:', warData.endTime);
+        return 0;
+      }
+      
       const hoursRemaining = (endTime - now) / (1000 * 60 * 60);
 
       // Only send reminders in final 4 hours
@@ -92,13 +128,19 @@ class CWLReminders {
       }
 
       // Build reminder message
+      const hours = Math.floor(hoursRemaining);
+      const minutes = Math.floor((hoursRemaining % 1) * 60);
+      const timeText = hours > 0 
+        ? `${hours} hour${hours !== 1 ? 's' : ''} ${minutes} minute${minutes !== 1 ? 's' : ''}` 
+        : `${minutes} minute${minutes !== 1 ? 's' : ''}`;
+      
       const playerList = players
         .map(p => `• ${p.player_name} (${p.attacks_remaining} attack${p.attacks_remaining > 1 ? 's' : ''} remaining)`)
         .join('\n');
 
       const embed = {
         title: '⚠️ CWL Attack Reminder',
-        description: `**Round ${roundNumber}** - ${Math.floor(hoursRemaining)} hours ${Math.floor((hoursRemaining % 1) * 60)} minutes remaining`,
+        description: `**${warData.clan.name}** vs **${warData.opponent.name}**\n**Round ${roundNumber}** - ${timeText} remaining`,
         fields: [
           {
             name: `${players.length} Player${players.length > 1 ? 's' : ''} Haven't Attacked`,
@@ -118,7 +160,7 @@ class CWLReminders {
       remindersSent.push(roundNumber);
       await this._updateRemindersSent(guildId, clanTag, season, remindersSent);
 
-      console.log(`[CWL Reminders] Sent reminder for ${players.length} players in round ${roundNumber}`);
+      console.log(`[CWL Reminders] Sent reminder for ${players.length} players in round ${roundNumber} for ${warData.clan.name}`);
       return players.length;
     } catch (error) {
       console.error('[CWL Reminders] Error sending attack reminders:', error.message);

@@ -213,8 +213,25 @@ async function checkCWLRounds(guild, cfg, clanTag, clanInfo, leagueData, current
     // Skip if already announced
     if (announcedRounds.includes(roundNumber)) continue;
 
-    // Find our war in this round
-    const ourWarTag = round.warTags.find(tag => tag && tag !== '#0');
+    // Find our war in this round by checking all war tags
+    let ourWarTag = null;
+    for (const warTag of round.warTags) {
+      if (!warTag || warTag === '#0') continue;
+      
+      const warData = await fetchCWLWar(warTag);
+      if (!warData) continue;
+      
+      // Check if this war includes our clan
+      const ourClanTag = cleanClanTag(clanTag);
+      const clan1Tag = cleanClanTag(warData.clan?.tag);
+      const clan2Tag = cleanClanTag(warData.opponent?.tag);
+      
+      if (clan1Tag === ourClanTag || clan2Tag === ourClanTag) {
+        ourWarTag = warTag;
+        break;
+      }
+    }
+    
     if (!ourWarTag) continue;
 
     // Fetch the war details
@@ -234,18 +251,24 @@ async function checkCWLRounds(guild, cfg, clanTag, clanInfo, leagueData, current
  */
 async function announceCWLStarted(guild, cfg, clanTag, clanInfo, leagueData) {
   try {
-    // Get CWL announce channel from per-clan config or fallback to war channel
+    // Get CWL announce channel from per-clan config (REQUIRED - no fallback)
     const clanConfigs = cfg.clanConfigs || {};
     const clanConfig = clanConfigs[clanTag] || {};
-    const channelId = clanConfig.cwlAnnounceChannelId || clanConfig.warAnnounceChannelId || cfg.warAnnounceChannelId;
+    const channelId = clanConfig.cwlAnnounceChannelId;
 
     if (!channelId) {
-      console.warn(`[CWL] No announce channel configured for clan ${clanTag}`);
+      console.warn(`[CWL] ⚠️  Clan ${clanTag} (${clanInfo.name}) has no CWL Announce Channel configured!`);
+      console.warn(`[CWL] ℹ️  Please set 'CWL Announcements' channel in Dashboard → Games & Socials → Clash of Clans → Clan Configuration`);
       return;
     }
 
     const channel = guild.channels.cache.get(channelId);
-    if (!channel) return;
+    if (!channel) {
+      console.warn(`[CWL] Channel ${channelId} not found for clan ${clanTag}`);
+      return;
+    }
+
+    console.log(`[CWL] Announcing CWL started for ${clanInfo.name} in channel ${channel.name} (cwlAnnounceChannelId)`);
 
     const numClans = leagueData.clans?.length || 0;
     const numRounds = leagueData.rounds?.length || 0;
@@ -293,12 +316,21 @@ async function announceCWLWarsStarted(guild, cfg, clanTag, clanInfo, leagueData)
   try {
     const clanConfigs = cfg.clanConfigs || {};
     const clanConfig = clanConfigs[clanTag] || {};
-    const channelId = clanConfig.cwlAnnounceChannelId || clanConfig.warAnnounceChannelId || cfg.warAnnounceChannelId;
+    const channelId = clanConfig.cwlAnnounceChannelId;
 
-    if (!channelId) return;
+    if (!channelId) {
+      console.warn(`[CWL] ⚠️  Clan ${clanTag} (${clanInfo.name}) has no CWL Announce Channel configured!`);
+      console.warn(`[CWL] ℹ️  Please set 'CWL Announcements' channel in Dashboard → Games & Socials → Clash of Clans → Clan Configuration`);
+      return;
+    }
 
     const channel = guild.channels.cache.get(channelId);
-    if (!channel) return;
+    if (!channel) {
+      console.warn(`[CWL] Channel ${channelId} not found for clan ${clanTag}`);
+      return;
+    }
+
+    console.log(`[CWL] Announcing CWL wars started for ${clanInfo.name} in channel ${channel.name} (cwlAnnounceChannelId)`);
 
     const embed = {
       title: '⚔️ CWL Wars Started!',
@@ -331,13 +363,36 @@ async function announceCWLRound(guild, cfg, clanTag, clanInfo, warData, roundNum
   try {
     const clanConfigs = cfg.clanConfigs || {};
     const clanConfig = clanConfigs[clanTag] || {};
-    // Use leaderboard channel for round results, fallback to announce channel or war channel
-    const channelId = clanConfig.cwlLeaderboardChannelId || clanConfig.cwlAnnounceChannelId || clanConfig.warLeaderboardChannelId || cfg.warLeaderboardChannelId;
+    // Require CWL Leaderboard channel (no fallback to war channels)
+    const channelId = clanConfig.cwlLeaderboardChannelId;
 
-    if (!channelId) return;
+    if (!channelId) {
+      console.warn(`[CWL] ⚠️  Clan ${clanTag} (${clanInfo.name}) has no CWL Leaderboard Channel configured!`);
+      console.warn(`[CWL] ℹ️  Please set 'CWL Leaderboard' channel in Dashboard → Games & Socials → Clash of Clans → Clan Configuration`);
+      return;
+    }
 
     const channel = guild.channels.cache.get(channelId);
-    if (!channel) return;
+    if (!channel) {
+      console.warn(`[CWL] Channel ${channelId} not found for clan ${clanTag}`);
+      return;
+    }
+
+    // CRITICAL: Ensure warData.clan is OUR clan, not the opponent
+    // The API might return clans in any order, so we need to check and swap if needed
+    const ourClanTag = cleanClanTag(clanTag);
+    const clan1Tag = cleanClanTag(warData.clan?.tag);
+    const clan2Tag = cleanClanTag(warData.opponent?.tag);
+    
+    if (clan2Tag === ourClanTag && clan1Tag !== ourClanTag) {
+      // Swap clan and opponent so our clan is always in warData.clan
+      const temp = warData.clan;
+      warData.clan = warData.opponent;
+      warData.opponent = temp;
+      console.log(`[CWL] Swapped clan/opponent for correct perspective (clan ${clanTag})`);
+    }
+
+    console.log(`[CWL] Announcing round ${roundNumber} for ${warData.clan.name} vs ${warData.opponent.name} in channel ${channel.name} (cwlLeaderboardChannelId)`);
 
     // Determine war result
     let warResult = 'Tie';
@@ -463,12 +518,21 @@ async function announceCWLEnded(guild, cfg, clanTag, clanInfo, leagueData, curre
   try {
     const clanConfigs = cfg.clanConfigs || {};
     const clanConfig = clanConfigs[clanTag] || {};
-    const channelId = clanConfig.cwlAnnounceChannelId || clanConfig.warAnnounceChannelId || cfg.warAnnounceChannelId;
+    const channelId = clanConfig.cwlAnnounceChannelId;
 
-    if (!channelId) return;
+    if (!channelId) {
+      console.warn(`[CWL] ⚠️  Clan ${clanTag} (${clanInfo.name}) has no CWL Announce Channel configured!`);
+      console.warn(`[CWL] ℹ️  Please set 'CWL Announcements' channel in Dashboard → Games & Socials → Clash of Clans → Clan Configuration`);
+      return;
+    }
 
     const channel = guild.channels.cache.get(channelId);
-    if (!channel) return;
+    if (!channel) {
+      console.warn(`[CWL] Channel ${channelId} not found for clan ${clanTag}`);
+      return;
+    }
+
+    console.log(`[CWL] Announcing CWL ended for ${clanInfo.name} in channel ${channel.name} (cwlAnnounceChannelId)`);
 
     // Calculate final standings if available
     let standingsText = '';

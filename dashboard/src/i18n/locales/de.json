@@ -2239,5 +2239,151 @@
       "disabled": "Willkommensnachrichten deaktiviert",
       "toggleFailed": "Aktualisierung des Schalters fehlgeschlagen"
     }
+  },
+  "homepage": {
+    "hero": {
+      "title": "Choco Maid",
+      "typingPhrases": [
+        "Dein Intelligenter Discord-Begleiter",
+        "AI-Gestützte Gespräche",
+        "Erweiterte Moderationstools",
+        "Gaming-Integrations-Hub",
+        "Automatisierte Serververwaltung"
+      ],
+      "description": "Verbessere deinen Discord-Server mit einem intelligenten KI-Assistenten, der fortschrittliche Automatisierung, umfassende Moderation und nahtlose Gaming-Integrationen kombiniert—alles in einem leistungsstarken Bot.",
+      "loginButton": "Zum Dashboard anmelden",
+      "addButton": "Zum Server hinzufügen",
+      "connecting": "Verbinde...",
+      "processing": "Discord-Anmeldung wird abgeschlossen…",
+      "stats": {
+        "commands": "30+",
+        "commandsLabel": "Slash-Befehle",
+        "languages": "7",
+        "languagesLabel": "Sprachen",
+        "uptime": "99.9%",
+        "uptimeLabel": "Betriebszeit",
+        "online": "24/7",
+        "onlineLabel": "Online"
+      },
+      "showcaseCards": {
+        "ai": "AI-Gespräche",
+        "moderation": "Auto-Moderation",
+        "gaming": "Gaming-Hub"
+      }
+    },
+    "features": {
+      "title": "Leistungsstarke Funktionen",
+      "subtitle": "Alles, was du brauchst, um deinen Discord-Server zu verwalten und zu verbessern",
+      "ai": {
+        "title": "AI-Gestützte Intelligenz",
+        "description": "Erweiterte Gespräche mit Google Gemini 2.0 Flash mit Kontextbehaltung, Multi-Bildanalyse und intelligenter Inhaltsverarbeitung.",
+        "highlights": [
+          "Intelligentes Q&A-System",
+          "Bildanalyse",
+          "Inhaltszusammenfassung",
+          "Mehrsprachige Übersetzung"
+        ]
+      },
+      "moderation": {
+        "title": "Erweiterte Moderation",
+        "description": "Umfassendes Moderations-Suite mit Spam-Erkennung, Inhaltsfilterung, Anti-Raid-Schutz und Echtzeit-Bedrohungserkennung mit VirusTotal-Integration.",
+        "highlights": [
+          "Auto-Moderationsregeln",
+          "Anti-Raid-System",
+          "Audit-Protokollierung",
+          "Link-Sicherheits-Scanning"
+        ]
+      },
+      "gaming": {
+        "title": "Gaming-Integration",
+        "description": "Erstklassiger Support für Clash of Clans, YouTube, Twitch, Valorant und Genshin Impact mit automatischen Ankündigungen und Ranglisten.",
+        "highlights": [
+          "Clan-Kriegs-Verfolgung",
+          "Live-Stream-Benachrichtigungen",
+          "Spenden-Ranglisten",
+          "Mitgliederaktivitäts-Überwachung"
+        ]
+      },
+      "automation": {
+        "title": "Server-Automatisierung",
+        "description": "Automatisiere deinen Server mit geplanten Nachrichten, Willkommenssystemen, Auto-Rollen, XP-Leveling und anpassbaren Auto-Antworten.",
+        "highlights": [
+          "Geplante Ankündigungen",
+          "Willkommensnachrichten",
+          "XP & Leveling-System",
+          "Reaktionsrollen"
+        ]
+      },
+      "dashboard": {
+        "title": "Analyse-Dashboard",
+        "description": "Schönes, modernes Dashboard mit Echtzeit-Statistiken, Aktivitätsüberwachung und umfassenden Serververwaltungstools.",
+        "highlights": [
+          "Echtzeit-Statistiken",
+          "Aktivitätsverfolgung",
+          "Benutzerverwaltung",
+          "Konfigurations-Panel"
+        ]
+      },
+      "i18n": {
+        "title": "Mehrsprachige Unterstützung",
+        "description": "Vollständige Internationalisierung mit 7 unterstützten Sprachen. Wechsle nahtlos zwischen Englisch, Indonesisch, Spanisch, Französisch, Deutsch, Japanisch und Chinesisch.",
+        "highlights": [
+          "7 Sprachen Verfügbar",
+          "Auto-Erkennung",
+          "Echtzeit-Wechsel",
+          "Vollständige UI-Abdeckung"
+        ]
+      }
+    },
+    "commands": {
+      "title": "30+ Slash-Befehle",
+      "subtitle": "Intuitive Befehle für jeden Bedarf",
+      "ai": {
+        "title": "AI & Intelligenz",
+        "ask": "Frage Gemini AI alles mit Kontext-Caching",
+        "explainImage": "Analysiere bis zu 3 Bilder mit AI",
+        "summarize": "Fasse Chat-Nachrichten intelligent zusammen",
+        "translate": "Übersetze Text in jede Sprache"
+      },
+      "moderation": {
+        "title": "Moderation & Sicherheit",
+        "antiraid": "Verwalte das Anti-Raid-Schutzsystem",
+        "automod": "Konfiguriere Auto-Moderationsregeln",
+        "audit": "Detaillierte Audit-Protokolle anzeigen",
+        "welcome": "Richte Willkommensnachrichten und Auto-Rollen ein"
+      },
+      "gaming": {
+        "title": "Gaming-Integration",
+        "coc": "Clash of Clans-Tracking und Ranglisten",
+        "ytwatch": "YouTube-Kanal-Überwachung",
+        "twitchstats": "Twitch-Live-Stream-Benachrichtigungen",
+        "valorant": "Valorant-Statistiken und Spieler-Rankings verfolgen"
+      },
+      "leveling": {
+        "title": "Leveling & Engagement",
+        "xpCheck": "Überprüfe Benutzer-XP und Level-Fortschritt",
+        "leaderboard": "Server-XP-Rangliste anzeigen",
+        "role": "Verwalte selbstzuweisbare Rollen",
+        "pollCreate": "Erstelle interaktive Button-Umfragen"
+      }
+    },
+    "cta": {
+      "title": "Bereit, Deinen Discord-Server zu Transformieren?",
+      "description": "Trete Tausenden von Servern bei, die Choco Maid verwenden, um ihre Communities zu automatisieren, zu moderieren und einzubinden.",
+      "accessDashboard": "Auf Dashboard zugreifen",
+      "inviteBot": "Bot Jetzt Einladen",
+      "processing": "Verarbeitung..."
+    },
+    "footer": {
+      "brandDescription": "Dein intelligenter Discord-Begleiter für Automatisierung, Moderation und Community-Engagement.",
+      "resources": "Ressourcen",
+      "github": "GitHub-Repository",
+      "support": "Support-Server",
+      "documentation": "Dokumentation",
+      "commandList": "Befehlsliste",
+      "features": "Funktionen",
+      "setupGuide": "Einrichtungsanleitung",
+      "copyright": "Choco Maid • Discord AI Bot"
+    }
   }
 }

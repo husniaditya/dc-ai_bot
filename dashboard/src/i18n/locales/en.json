@@ -344,7 +344,7 @@
         },
         "ruleTypes": {
           "spam": "Spam",
-          "caps": "Excessive Caps", 
+          "caps": "Excessive Caps",
           "links": "Links",
           "invite_links": "Invite Links",
           "profanity": "Profanity",
@@ -419,7 +419,7 @@
       "select": "Select",
       "key": "Key",
       "pattern": "Pattern",
-      "matchType": "Match Type", 
+      "matchType": "Match Type",
       "flags": "Flags",
       "replies": "Replies",
       "enabled": "On"
@@ -1293,7 +1293,7 @@
         },
         "bulk": {
           "enable": "Enable",
-          "disable": "Disable", 
+          "disable": "Disable",
           "delete": "Delete",
           "clear": "Clear",
           "processing": "Processing...",
@@ -2069,10 +2069,10 @@
       "fields": {
         "clanTag": "Clan Tag",
         "clanTagHint": "Enter your clan tag (e.g., #ABC123)",
-        "clanName": "Clan Name", 
+        "clanName": "Clan Name",
         "clanNameHint": "Enter your clan name (e.g., Elite Warriors)",
         "warAnnouncements": "War Announcements",
-        "memberAnnouncements": "Member Announcements", 
+        "memberAnnouncements": "Member Announcements",
         "donationAnnouncements": "Donation Announcements",
         "cwlAnnouncements": "CWL Announcements",
         "cwlAnnouncementsHelp": "Channel for Clan War League announcements",
@@ -2105,14 +2105,14 @@
         "memberAnnouncementChannelHelp": "Channel for member join/leave announcements for this specific clan",
         "warMentions": "War Mentions",
         "warMentionsHelp": "Roles/users to mention for war events from this clan",
-        "memberMentions": "Member Mentions", 
+        "memberMentions": "Member Mentions",
         "memberMentionsHelp": "Roles/users to mention for member events from this clan",
         "donationMentions": "Donation Mentions",
         "donationMentionsHelp": "Roles/users to mention for donation events from this clan"
       },
       "tracking": {
         "trackWars": "Track Clan Wars",
-        "trackMembers": "Track Member Changes", 
+        "trackMembers": "Track Member Changes",
         "trackDonations": "Track Donations",
         "trackWarStats": "Enable Automatic War Statistics Posting",
         "trackWarStatsToggle": "Enable Automatic War Statistics Posting",
@@ -2154,7 +2154,7 @@
       "templates": {
         "warStartPlaceholder": "🛡️ War started against {warOpponent}! Preparation ends {warEndTime}. Good luck {roleMention}!",
         "warEndPlaceholder": "⚔️ War against {warOpponent} ended! Result: {warResult} - {warStars} stars with {warDestructionPercentage}% destruction. Great job {roleMention}!",
-        "memberJoinPlaceholder": "👋 New member joined {clanName}! We now have {memberCount} members. Welcome!",
+        "memberJoinPlaceholder": "👋 Updated member {clanName}! We now have {memberCount} members!!",
         "donationPlaceholder": "💎 Weekly donations summary for {clanName}: Top contributors this week! {roleMention}"
       },
       "toasts": {
@@ -2182,7 +2182,7 @@
       },
       "channels": {
         "profileUpdates": "Profile Updates Channel",
-        "achievements": "Achievements Channel", 
+        "achievements": "Achievements Channel",
         "spiralAbyss": "Spiral Abyss Channel"
       },
       "templates": {
@@ -2238,7 +2238,7 @@
         "mentionTargets": "Per-Player Mention Targets",
         "profileAnnouncementChannel": "Profile Announcement Channel",
         "profileAnnouncementChannelHelp": "Channel for profile update announcements for this specific player",
-        "buildAnnouncementChannel": "Build Announcement Channel", 
+        "buildAnnouncementChannel": "Build Announcement Channel",
         "buildAnnouncementChannelHelp": "Channel for build update announcements for this specific player",
         "profileMentions": "Profile Mentions",
         "profileMentionsHelp": "Roles/users to mention for profile updates from this player",
@@ -2276,6 +2276,152 @@
       "enabled": "Welcome message enabled",
       "disabled": "Welcome message disabled",
       "toggleFailed": "Couldn't update changes"
+    }
+  },
+  "homepage": {
+    "hero": {
+      "title": "Choco Maid",
+      "typingPhrases": [
+        "Your Smart Discord Companion",
+        "AI-Powered Conversations",
+        "Advanced Moderation Tools",
+        "Gaming Integration Hub",
+        "Automated Server Management"
+      ],
+      "description": "Elevate your Discord server with an intelligent AI assistant that combines advanced automation, comprehensive moderation, and seamless gaming integrations—all in one powerful bot.",
+      "loginButton": "Login to Dashboard",
+      "addButton": "Add to Server",
+      "connecting": "Connecting...",
+      "processing": "Completing Discord sign-in…",
+      "stats": {
+        "commands": "30+",
+        "commandsLabel": "Slash Commands",
+        "languages": "7",
+        "languagesLabel": "Languages",
+        "uptime": "99.9%",
+        "uptimeLabel": "Uptime",
+        "online": "24/7",
+        "onlineLabel": "Online"
+      },
+      "showcaseCards": {
+        "ai": "AI Conversations",
+        "moderation": "Auto Moderation",
+        "gaming": "Gaming Hub"
+      }
+    },
+    "features": {
+      "title": "Powerful Features",
+      "subtitle": "Everything you need to manage and enhance your Discord server",
+      "ai": {
+        "title": "AI-Powered Intelligence",
+        "description": "Advanced conversations powered by Google Gemini 2.0 Flash with context retention, multi-image analysis, and intelligent content processing.",
+        "highlights": [
+          "Smart Q&A System",
+          "Image Analysis",
+          "Content Summarization",
+          "Multi-language Translation"
+        ]
+      },
+      "moderation": {
+        "title": "Advanced Moderation",
+        "description": "Comprehensive moderation suite with spam detection, content filtering, anti-raid protection, and real-time threat detection with VirusTotal integration.",
+        "highlights": [
+          "Auto Moderation Rules",
+          "Anti-Raid System",
+          "Audit Logging",
+          "Link Security Scanning"
+        ]
+      },
+      "gaming": {
+        "title": "Gaming Integration",
+        "description": "First-class support for Clash of Clans, YouTube, Twitch, Valorant, and Genshin Impact with automated announcements and leaderboards.",
+        "highlights": [
+          "Clan War Tracking",
+          "Live Stream Alerts",
+          "Donation Leaderboards",
+          "Member Activity Monitoring"
+        ]
+      },
+      "automation": {
+        "title": "Server Automation",
+        "description": "Automate your server with scheduled messages, welcome systems, auto-roles, XP leveling, and customizable auto-responses.",
+        "highlights": [
+          "Scheduled Announcements",
+          "Welcome Messages",
+          "XP & Leveling System",
+          "Reaction Roles"
+        ]
+      },
+      "dashboard": {
+        "title": "Analytics Dashboard",
+        "description": "Beautiful, modern dashboard with real-time statistics, activity monitoring, and comprehensive server management tools.",
+        "highlights": [
+          "Real-time Statistics",
+          "Activity Tracking",
+          "User Management",
+          "Configuration Panel"
+        ]
+      },
+      "i18n": {
+        "title": "Multi-Language Support",
+        "description": "Full internationalization with 7 languages supported. Seamlessly switch between English, Indonesian, Spanish, French, German, Japanese, and Chinese.",
+        "highlights": [
+          "7 Languages Available",
+          "Auto-Detection",
+          "Real-time Switching",
+          "Complete UI Coverage"
+        ]
+      }
+    },
+    "commands": {
+      "title": "30+ Slash Commands",
+      "subtitle": "Intuitive commands for every need",
+      "ai": {
+        "title": "AI & Intelligence",
+        "ask": "Ask Gemini AI anything with context caching",
+        "explainImage": "Analyze up to 3 images with AI",
+        "summarize": "Summarize chat messages intelligently",
+        "translate": "Translate text to any language"
+      },
+      "moderation": {
+        "title": "Moderation & Security",
+        "antiraid": "Manage anti-raid protection system",
+        "automod": "Configure automatic moderation rules",
+        "audit": "View detailed audit logs",
+        "welcome": "Set up welcome messages & auto-roles"
+      },
+      "gaming": {
+        "title": "Gaming Integration",
+        "coc": "Clash of Clans tracking & leaderboards",
+        "ytwatch": "YouTube channel monitoring",
+        "twitchstats": "Twitch live stream notifications",
+        "valorant": "Track Valorant stats & player rankings"
+      },
+      "leveling": {
+        "title": "Leveling & Engagement",
+        "xpCheck": "Check user XP and level progress",
+        "leaderboard": "View server XP leaderboard",
+        "role": "Manage self-assignable roles",
+        "pollCreate": "Create interactive button polls"
+      }
+    },
+    "cta": {
+      "title": "Ready to Transform Your Discord Server?",
+      "description": "Join thousands of servers using Choco Maid to automate, moderate, and engage their communities.",
+      "accessDashboard": "Access Dashboard",
+      "inviteBot": "Invite Bot Now",
+      "processing": "Processing..."
+    },
+    "footer": {
+      "brandDescription": "Your intelligent Discord companion for automation, moderation, and community engagement.",
+      "resources": "Resources",
+      "github": "GitHub Repository",
+      "support": "Support Server",
+      "documentation": "Documentation",
+      "commandList": "Command List",
+      "features": "Features",
+      "setupGuide": "Setup Guide",
+      "copyright": "Choco Maid • Discord AI Bot"
     }
   }
 }
