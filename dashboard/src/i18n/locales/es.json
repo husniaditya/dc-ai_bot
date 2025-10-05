@@ -2250,5 +2250,151 @@
       "disabled": "Mensajes de bienvenida desactivados",
       "toggleFailed": "No se pudo actualizar la opción"
     }
+  },
+  "homepage": {
+    "hero": {
+      "title": "Choco Maid",
+      "typingPhrases": [
+        "Tu Compañero Inteligente de Discord",
+        "Conversaciones con AI",
+        "Herramientas de Moderación Avanzadas",
+        "Centro de Integración Gaming",
+        "Gestión Automática del Servidor"
+      ],
+      "description": "Eleva tu servidor de Discord con un asistente de IA inteligente que combina automatización avanzada, moderación integral e integraciones de juegos perfectas, todo en un bot potente.",
+      "loginButton": "Iniciar sesión en el Dashboard",
+      "addButton": "Agregar al Servidor",
+      "connecting": "Conectando...",
+      "processing": "Completando inicio de sesión en Discord…",
+      "stats": {
+        "commands": "30+",
+        "commandsLabel": "Comandos Slash",
+        "languages": "7",
+        "languagesLabel": "Idiomas",
+        "uptime": "99.9%",
+        "uptimeLabel": "Tiempo Activo",
+        "online": "24/7",
+        "onlineLabel": "En Línea"
+      },
+      "showcaseCards": {
+        "ai": "Conversaciones AI",
+        "moderation": "Moderación Automática",
+        "gaming": "Centro Gaming"
+      }
+    },
+    "features": {
+      "title": "Características Potentes",
+      "subtitle": "Todo lo que necesitas para administrar y mejorar tu servidor de Discord",
+      "ai": {
+        "title": "Inteligencia con AI",
+        "description": "Conversaciones avanzadas impulsadas por Google Gemini 2.0 Flash con retención de contexto, análisis de múltiples imágenes y procesamiento inteligente de contenido.",
+        "highlights": [
+          "Sistema de Preguntas y Respuestas Inteligente",
+          "Análisis de Imágenes",
+          "Resumen de Contenido",
+          "Traducción Multiidioma"
+        ]
+      },
+      "moderation": {
+        "title": "Moderación Avanzada",
+        "description": "Suite completa de moderación con detección de spam, filtrado de contenido, protección anti-raid y detección de amenazas en tiempo real con integración de VirusTotal.",
+        "highlights": [
+          "Reglas de Moderación Automática",
+          "Sistema Anti-Raid",
+          "Registro de Auditoría",
+          "Escaneo de Seguridad de Enlaces"
+        ]
+      },
+      "gaming": {
+        "title": "Integración Gaming",
+        "description": "Soporte de primera clase para Clash of Clans, YouTube, Twitch, Valorant y Genshin Impact con anuncios automáticos y tablas de clasificación.",
+        "highlights": [
+          "Seguimiento de Guerra de Clanes",
+          "Alertas de Streaming en Vivo",
+          "Tablas de Clasificación de Donaciones",
+          "Monitoreo de Actividad de Miembros"
+        ]
+      },
+      "automation": {
+        "title": "Automatización del Servidor",
+        "description": "Automatiza tu servidor con mensajes programados, sistemas de bienvenida, roles automáticos, nivelación de XP y respuestas automáticas personalizables.",
+        "highlights": [
+          "Anuncios Programados",
+          "Mensajes de Bienvenida",
+          "Sistema de XP y Nivelación",
+          "Roles de Reacción"
+        ]
+      },
+      "dashboard": {
+        "title": "Dashboard de Análisis",
+        "description": "Dashboard moderno y hermoso con estadísticas en tiempo real, monitoreo de actividad y herramientas completas de gestión del servidor.",
+        "highlights": [
+          "Estadísticas en Tiempo Real",
+          "Seguimiento de Actividad",
+          "Gestión de Usuarios",
+          "Panel de Configuración"
+        ]
+      },
+      "i18n": {
+        "title": "Soporte Multiidioma",
+        "description": "Internacionalización completa con 7 idiomas compatibles. Cambia sin problemas entre inglés, indonesio, español, francés, alemán, japonés y chino.",
+        "highlights": [
+          "7 Idiomas Disponibles",
+          "Detección Automática",
+          "Cambio en Tiempo Real",
+          "Cobertura Completa de UI"
+        ]
+      }
+    },
+    "commands": {
+      "title": "30+ Comandos Slash",
+      "subtitle": "Comandos intuitivos para cada necesidad",
+      "ai": {
+        "title": "AI e Inteligencia",
+        "ask": "Pregunta lo que sea a Gemini AI con caché de contexto",
+        "explainImage": "Analiza hasta 3 imágenes con AI",
+        "summarize": "Resume mensajes de chat inteligentemente",
+        "translate": "Traduce texto a cualquier idioma"
+      },
+      "moderation": {
+        "title": "Moderación y Seguridad",
+        "antiraid": "Gestiona el sistema de protección anti-raid",
+        "automod": "Configura reglas de moderación automática",
+        "audit": "Ver registros de auditoría detallados",
+        "welcome": "Configura mensajes de bienvenida y roles automáticos"
+      },
+      "gaming": {
+        "title": "Integración Gaming",
+        "coc": "Seguimiento y tablas de clasificación de Clash of Clans",
+        "ytwatch": "Monitoreo de canal de YouTube",
+        "twitchstats": "Notificaciones de streaming en vivo de Twitch",
+        "valorant": "Seguimiento de estadísticas de Valorant y clasificaciones"
+      },
+      "leveling": {
+        "title": "Nivelación y Engagement",
+        "xpCheck": "Verifica XP y progreso de nivel del usuario",
+        "leaderboard": "Ver tabla de clasificación de XP del servidor",
+        "role": "Gestiona roles auto-asignables",
+        "pollCreate": "Crea encuestas de botones interactivos"
+      }
+    },
+    "cta": {
+      "title": "¿Listo para Transformar tu Servidor de Discord?",
+      "description": "Únete a miles de servidores que usan Choco Maid para automatizar, moderar e involucrar a sus comunidades.",
+      "accessDashboard": "Acceder al Dashboard",
+      "inviteBot": "Invitar Bot Ahora",
+      "processing": "Procesando..."
+    },
+    "footer": {
+      "brandDescription": "Tu compañero inteligente de Discord para automatización, moderación e interacción con la comunidad.",
+      "resources": "Recursos",
+      "github": "Repositorio de GitHub",
+      "support": "Servidor de Soporte",
+      "documentation": "Documentación",
+      "commandList": "Lista de Comandos",
+      "features": "Características",
+      "setupGuide": "Guía de Configuración",
+      "copyright": "Choco Maid • Discord AI Bot"
+    }
   }
 }

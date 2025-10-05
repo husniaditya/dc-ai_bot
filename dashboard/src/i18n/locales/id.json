@@ -2261,5 +2261,151 @@
       "disabled": "Pesan sambutan dinonaktifkan",
       "toggleFailed": "Gagal memperbarui pengaturan"
     }
+  },
+  "homepage": {
+    "hero": {
+      "title": "Choco Maid",
+      "typingPhrases": [
+        "Pendamping Discord Cerdas Anda",
+        "Percakapan Bertenaga AI",
+        "Alat Moderasi Canggih",
+        "Hub Integrasi Gaming",
+        "Manajemen Server Otomatis"
+      ],
+      "description": "Tingkatkan server Discord Anda dengan asisten AI cerdas yang menggabungkan otomasi canggih, moderasi komprehensif, dan integrasi gaming yang mulus—semuanya dalam satu bot yang powerful.",
+      "loginButton": "Masuk ke Dashboard",
+      "addButton": "Tambahkan ke Server",
+      "connecting": "Menghubungkan...",
+      "processing": "Menyelesaikan masuk Discord…",
+      "stats": {
+        "commands": "30+",
+        "commandsLabel": "Perintah Slash",
+        "languages": "7",
+        "languagesLabel": "Bahasa",
+        "uptime": "99.9%",
+        "uptimeLabel": "Waktu Aktif",
+        "online": "24/7",
+        "onlineLabel": "Online"
+      },
+      "showcaseCards": {
+        "ai": "Percakapan AI",
+        "moderation": "Moderasi Otomatis",
+        "gaming": "Hub Gaming"
+      }
+    },
+    "features": {
+      "title": "Fitur Powerful",
+      "subtitle": "Semua yang Anda butuhkan untuk mengelola dan meningkatkan server Discord Anda",
+      "ai": {
+        "title": "Kecerdasan Bertenaga AI",
+        "description": "Percakapan canggih yang didukung oleh Google Gemini 2.0 Flash dengan retensi konteks, analisis multi-gambar, dan pemrosesan konten cerdas.",
+        "highlights": [
+          "Sistem Tanya Jawab Cerdas",
+          "Analisis Gambar",
+          "Ringkasan Konten",
+          "Terjemahan Multi-bahasa"
+        ]
+      },
+      "moderation": {
+        "title": "Moderasi Canggih",
+        "description": "Suite moderasi komprehensif dengan deteksi spam, penyaringan konten, perlindungan anti-raid, dan deteksi ancaman real-time dengan integrasi VirusTotal.",
+        "highlights": [
+          "Aturan Moderasi Otomatis",
+          "Sistem Anti-Raid",
+          "Logging Audit",
+          "Pemindaian Keamanan Link"
+        ]
+      },
+      "gaming": {
+        "title": "Integrasi Gaming",
+        "description": "Dukungan kelas satu untuk Clash of Clans, YouTube, Twitch, Valorant, dan Genshin Impact dengan pengumuman otomatis dan leaderboard.",
+        "highlights": [
+          "Pelacakan Perang Klan",
+          "Peringatan Live Stream",
+          "Leaderboard Donasi",
+          "Pemantauan Aktivitas Anggota"
+        ]
+      },
+      "automation": {
+        "title": "Otomasi Server",
+        "description": "Otomatiskan server Anda dengan pesan terjadwal, sistem sambutan, peran otomatis, leveling XP, dan respons otomatis yang dapat dikustomisasi.",
+        "highlights": [
+          "Pengumuman Terjadwal",
+          "Pesan Sambutan",
+          "Sistem XP & Leveling",
+          "Peran Reaksi"
+        ]
+      },
+      "dashboard": {
+        "title": "Dashboard Analitik",
+        "description": "Dashboard modern dan indah dengan statistik real-time, pemantauan aktivitas, dan alat manajemen server yang komprehensif.",
+        "highlights": [
+          "Statistik Real-time",
+          "Pelacakan Aktivitas",
+          "Manajemen Pengguna",
+          "Panel Konfigurasi"
+        ]
+      },
+      "i18n": {
+        "title": "Dukungan Multi-Bahasa",
+        "description": "Internasionalisasi penuh dengan 7 bahasa yang didukung. Beralih dengan mulus antara Inggris, Indonesia, Spanyol, Prancis, Jerman, Jepang, dan Mandarin.",
+        "highlights": [
+          "7 Bahasa Tersedia",
+          "Deteksi Otomatis",
+          "Peralihan Real-time",
+          "Cakupan UI Lengkap"
+        ]
+      }
+    },
+    "commands": {
+      "title": "30+ Perintah Slash",
+      "subtitle": "Perintah intuitif untuk setiap kebutuhan",
+      "ai": {
+        "title": "AI & Kecerdasan",
+        "ask": "Tanyakan apa saja pada Gemini AI dengan caching konteks",
+        "explainImage": "Analisis hingga 3 gambar dengan AI",
+        "summarize": "Ringkas pesan chat dengan cerdas",
+        "translate": "Terjemahkan teks ke bahasa apa pun"
+      },
+      "moderation": {
+        "title": "Moderasi & Keamanan",
+        "antiraid": "Kelola sistem perlindungan anti-raid",
+        "automod": "Konfigurasi aturan moderasi otomatis",
+        "audit": "Lihat log audit terperinci",
+        "welcome": "Atur pesan sambutan & peran otomatis"
+      },
+      "gaming": {
+        "title": "Integrasi Gaming",
+        "coc": "Pelacakan & leaderboard Clash of Clans",
+        "ytwatch": "Pemantauan channel YouTube",
+        "twitchstats": "Notifikasi live stream Twitch",
+        "valorant": "Lacak statistik Valorant & peringkat pemain"
+      },
+      "leveling": {
+        "title": "Leveling & Engagement",
+        "xpCheck": "Cek XP dan progres level pengguna",
+        "leaderboard": "Lihat leaderboard XP server",
+        "role": "Kelola peran yang dapat ditugaskan sendiri",
+        "pollCreate": "Buat polling tombol interaktif"
+      }
+    },
+    "cta": {
+      "title": "Siap Mentransformasi Server Discord Anda?",
+      "description": "Bergabunglah dengan ribuan server yang menggunakan Choco Maid untuk mengotomatisasi, memoderasi, dan melibatkan komunitas mereka.",
+      "accessDashboard": "Akses Dashboard",
+      "inviteBot": "Undang Bot Sekarang",
+      "processing": "Memproses..."
+    },
+    "footer": {
+      "brandDescription": "Pendamping Discord cerdas Anda untuk otomasi, moderasi, dan keterlibatan komunitas.",
+      "resources": "Sumber Daya",
+      "github": "Repositori GitHub",
+      "support": "Server Dukungan",
+      "documentation": "Dokumentasi",
+      "commandList": "Daftar Perintah",
+      "features": "Fitur",
+      "setupGuide": "Panduan Pengaturan",
+      "copyright": "Choco Maid • Discord AI Bot"
+    }
   }
 }

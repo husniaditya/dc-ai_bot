@@ -2266,5 +2266,151 @@
       "disabled": "歡迎訊息已停用",
       "toggleFailed": "切換更新失敗"
     }
+  },
+  "homepage": {
+    "hero": {
+      "title": "Choco Maid",
+      "typingPhrases": [
+        "您的智能Discord伙伴",
+        "AI驱动的对话",
+        "高级管理工具",
+        "游戏集成中心",
+        "自动化服务器管理"
+      ],
+      "description": "使用智能AI助手提升您的Discord服务器，结合高级自动化、全面审核和无缝游戏集成——全部集成在一个强大的机器人中。",
+      "loginButton": "登录仪表板",
+      "addButton": "添加到服务器",
+      "connecting": "连接中...",
+      "processing": "正在完成Discord登录…",
+      "stats": {
+        "commands": "30+",
+        "commandsLabel": "斜杠命令",
+        "languages": "7",
+        "languagesLabel": "语言",
+        "uptime": "99.9%",
+        "uptimeLabel": "正常运行时间",
+        "online": "24/7",
+        "onlineLabel": "在线"
+      },
+      "showcaseCards": {
+        "ai": "AI对话",
+        "moderation": "自动审核",
+        "gaming": "游戏中心"
+      }
+    },
+    "features": {
+      "title": "强大的功能",
+      "subtitle": "管理和增强Discord服务器所需的一切",
+      "ai": {
+        "title": "AI驱动的智能",
+        "description": "由Google Gemini 2.0 Flash提供支持的高级对话，具有上下文保留、多图像分析和智能内容处理功能。",
+        "highlights": [
+          "智能问答系统",
+          "图像分析",
+          "内容摘要",
+          "多语言翻译"
+        ]
+      },
+      "moderation": {
+        "title": "高级审核",
+        "description": "全面的审核套件，包括垃圾邮件检测、内容过滤、反突袭保护以及与VirusTotal集成的实时威胁检测。",
+        "highlights": [
+          "自动审核规则",
+          "反突袭系统",
+          "审计日志",
+          "链接安全扫描"
+        ]
+      },
+      "gaming": {
+        "title": "游戏集成",
+        "description": "一流支持Clash of Clans、YouTube、Twitch、Valorant和Genshin Impact，提供自动公告和排行榜。",
+        "highlights": [
+          "部落战争追踪",
+          "直播提醒",
+          "捐赠排行榜",
+          "成员活动监控"
+        ]
+      },
+      "automation": {
+        "title": "服务器自动化",
+        "description": "使用计划消息、欢迎系统、自动角色、XP升级和可自定义的自动回复来自动化您的服务器。",
+        "highlights": [
+          "计划公告",
+          "欢迎消息",
+          "XP和升级系统",
+          "反应角色"
+        ]
+      },
+      "dashboard": {
+        "title": "分析仪表板",
+        "description": "美观现代的仪表板，具有实时统计、活动监控和全面的服务器管理工具。",
+        "highlights": [
+          "实时统计",
+          "活动追踪",
+          "用户管理",
+          "配置面板"
+        ]
+      },
+      "i18n": {
+        "title": "多语言支持",
+        "description": "完全国际化，支持7种语言。在英语、印尼语、西班牙语、法语、德语、日语和中文之间无缝切换。",
+        "highlights": [
+          "7种语言可用",
+          "自动检测",
+          "实时切换",
+          "完整UI覆盖"
+        ]
+      }
+    },
+    "commands": {
+      "title": "30+斜杠命令",
+      "subtitle": "满足各种需求的直观命令",
+      "ai": {
+        "title": "AI与智能",
+        "ask": "使用上下文缓存向Gemini AI提问任何问题",
+        "explainImage": "使用AI分析最多3张图像",
+        "summarize": "智能总结聊天消息",
+        "translate": "将文本翻译成任何语言"
+      },
+      "moderation": {
+        "title": "审核与安全",
+        "antiraid": "管理反突袭保护系统",
+        "automod": "配置自动审核规则",
+        "audit": "查看详细审计日志",
+        "welcome": "设置欢迎消息和自动角色"
+      },
+      "gaming": {
+        "title": "游戏集成",
+        "coc": "Clash of Clans追踪和排行榜",
+        "ytwatch": "YouTube频道监控",
+        "twitchstats": "Twitch直播通知",
+        "valorant": "追踪Valorant统计数据和玩家排名"
+      },
+      "leveling": {
+        "title": "升级与互动",
+        "xpCheck": "检查用户XP和等级进度",
+        "leaderboard": "查看服务器XP排行榜",
+        "role": "管理自我分配角色",
+        "pollCreate": "创建交互式按钮投票"
+      }
+    },
+    "cta": {
+      "title": "准备好转变您的Discord服务器了吗？",
+      "description": "加入数千个使用Choco Maid自动化、审核和吸引社区的服务器。",
+      "accessDashboard": "访问仪表板",
+      "inviteBot": "立即邀请机器人",
+      "processing": "处理中..."
+    },
+    "footer": {
+      "brandDescription": "您的智能Discord伙伴，用于自动化、审核和社区互动。",
+      "resources": "资源",
+      "github": "GitHub仓库",
+      "support": "支持服务器",
+      "documentation": "文档",
+      "commandList": "命令列表",
+      "features": "功能",
+      "setupGuide": "设置指南",
+      "copyright": "Choco Maid • Discord AI Bot"
+    }
   }
 }
