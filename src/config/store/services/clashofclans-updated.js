@@ -114,6 +114,12 @@ async function getGuildClashOfClansConfig(guildId) {
               warPreparingMessageId: row.war_preparing_message_id || null,
               warActiveMessageId: row.war_active_message_id || null,
               donationMessageId: row.donation_message_id || null,
+              // Per-clan donation leaderboard settings
+              donationLeaderboardChannelId: row.donation_leaderboard_channel_id || null,
+              warLeaderboardChannelId: row.war_leaderboard_channel_id || null,
+              trackDonationLeaderboard: !!row.track_donation_leaderboard,
+              donationLeaderboardSchedule: row.donation_leaderboard_schedule || 'hourly',
+              donationLeaderboardTime: row.donation_leaderboard_time || '20:00',
               // War state management fields
               warCurrentState: row.war_current_state || 'notInWar',
               warPreparingMessageId: row.war_preparing_message_id || null,

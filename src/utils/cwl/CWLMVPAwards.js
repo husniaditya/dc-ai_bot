@@ -170,7 +170,7 @@ class CWLMVPAwards {
       if (awards.mostDestruction) {
         fields.push({
           name: '💥 Best Destruction',
-          value: `**${awards.mostDestruction.player_name}**\n${awards.mostDestruction.avg_destruction.toFixed(2)}%`,
+          value: `**${awards.mostDestruction.player_name}**\n${(parseFloat(awards.mostDestruction.avg_destruction) || 0).toFixed(2)}%`,
           inline: true
         });
       }
@@ -232,7 +232,7 @@ class CWLMVPAwards {
       );
 
       const leaderboard = top5.map((p, idx) => 
-        `${idx + 1}. **${p.player_name}** - ${p.total_stars}⭐ (${p.avg_destruction.toFixed(1)}%)`
+        `${idx + 1}. **${p.player_name}** - ${p.total_stars}⭐ (${(parseFloat(p.avg_destruction) || 0).toFixed(1)}%)`
       ).join('\n');
 
       return {
@@ -250,7 +250,7 @@ class CWLMVPAwards {
           },
           {
             name: '💥 Avg Destruction',
-            value: `${mvp.avg_destruction.toFixed(2)}%`,
+            value: `${(parseFloat(mvp.avg_destruction) || 0).toFixed(2)}%`,
             inline: true
           },
           {

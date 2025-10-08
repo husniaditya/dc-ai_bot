@@ -1,5 +1,6 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const store = require('../../config/store');
+const { cleanClanTag } = require('../services/clashofclans');
 const {
   getCWLStateManager,
   getCWLStatisticsDashboard,
@@ -112,7 +113,7 @@ module.exports = {
           await handleAlertsCommand(interaction);
           break;
         default:
-          await interaction.reply({ content: 'Unknown subcommand!', ephemeral: true });
+          await interaction.reply({ content: 'Unknown subcommand!', flags: 64 }); // 64 = EPHEMERAL
       }
     } catch (error) {
       console.error('[CWL Command] Error:', error);
@@ -122,7 +123,7 @@ module.exports = {
       if (interaction.deferred) {
         await interaction.editReply({ content: errorMessage });
       } else {
-        await interaction.reply({ content: errorMessage, ephemeral: true });
+        await interaction.reply({ content: errorMessage, flags: 64 }); // 64 = EPHEMERAL
       }
     }
   }
@@ -147,6 +148,9 @@ async function handleDashboardCommand(interaction) {
     return interaction.editReply({ content: '❌ No clan specified and no default clan configured!' });
   }
 
+  // Clean the clan tag (remove # if present)
+  clanTag = cleanClanTag(clanTag);
+
   // Get current season
   const stateManager = getCWLStateManager();
   const season = stateManager.getCurrentSeason();
@@ -168,7 +172,7 @@ async function handleDashboardCommand(interaction) {
 
 // Export subcommand
 async function handleExportCommand(interaction) {
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ flags: 64 }); // 64 = EPHEMERAL
 
   const cfg = await store.getGuildClashOfClansConfig(interaction.guildId);
   if (!cfg.enabled || !cfg.trackCWL) {
@@ -187,6 +191,9 @@ async function handleExportCommand(interaction) {
   if (!clanTag) {
     return interaction.editReply({ content: '❌ No clan specified!' });
   }
+
+  // Clean the clan tag (remove # if present)
+  clanTag = cleanClanTag(clanTag);
 
   // Get current season
   const stateManager = getCWLStateManager();
@@ -236,6 +243,9 @@ async function handleMvpCommand(interaction) {
     return interaction.editReply({ content: '❌ No clan specified!' });
   }
 
+  // Clean the clan tag (remove # if present)
+  clanTag = cleanClanTag(clanTag);
+
   // Get current season
   const stateManager = getCWLStateManager();
   const season = stateManager.getCurrentSeason();
@@ -259,7 +269,7 @@ async function handleMvpCommand(interaction) {
 
 // Roster subcommand
 async function handleRosterCommand(interaction) {
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ flags: 64 }); // 64 = EPHEMERAL
 
   const cfg = await store.getGuildClashOfClansConfig(interaction.guildId);
   if (!cfg.enabled || !cfg.trackCWL) {
@@ -277,6 +287,9 @@ async function handleRosterCommand(interaction) {
   if (!clanTag) {
     return interaction.editReply({ content: '❌ No clan specified!' });
   }
+
+  // Clean the clan tag (remove # if present)
+  clanTag = cleanClanTag(clanTag);
 
   // Get current season
   const stateManager = getCWLStateManager();
@@ -300,7 +313,7 @@ async function handleRosterCommand(interaction) {
 
 // Alerts subcommand
 async function handleAlertsCommand(interaction) {
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ flags: 64 }); // 64 = EPHEMERAL
 
   const cfg = await store.getGuildClashOfClansConfig(interaction.guildId);
   if (!cfg.enabled || !cfg.trackCWL) {
@@ -316,6 +329,9 @@ async function handleAlertsCommand(interaction) {
   if (!clanTag) {
     return interaction.editReply({ content: '❌ No clan specified!' });
   }
+
+  // Clean the clan tag (remove # if present)
+  clanTag = cleanClanTag(clanTag);
 
   // Get current season
   const stateManager = getCWLStateManager();

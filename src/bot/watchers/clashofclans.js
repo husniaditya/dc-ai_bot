@@ -199,11 +199,12 @@ async function pollGuild(guild) {
   cocStats.lastPoll = new Date().toISOString();
   
   const debug = process.env.COC_DEBUG === '1';
-  if (debug) console.log('[COC] poll guild', guild.id, 'clans', cfg.clans.length);
+  if (debug) console.log('[COC] poll guild', guild.id, 'clans', cfg.clans.length, 'tags:', cfg.clans);
   
   for (const clanTag of cfg.clans) {
     try {
       const cleanTag = cleanClanTag(clanTag);
+      if (debug) console.log(`[COC] Processing clan ${clanTag} -> ${cleanTag}`);
       if (!cleanTag) continue;
       
       const clanInfo = await fetchClanInfo(cleanTag);
@@ -211,6 +212,7 @@ async function pollGuild(guild) {
       
       const k = key(guild.id, cleanTag);
       if (!state.clans[k]) {
+        if (debug) console.log(`[COC] Initializing new state for clan ${cleanTag}`);
         state.clans[k] = {
           lastMemberCount: 0,
           knownMembers: [],
@@ -224,6 +226,10 @@ async function pollGuild(guild) {
       }
       
       const clanState = state.clans[k];
+      if (debug) console.log(`[COC] Clan ${cleanTag} state loaded:`, {
+        hasLastDonationPost: !!clanState.lastDonationLeaderboardPost,
+        lastDonationPost: clanState.lastDonationLeaderboardPost
+      });
       
       // Ensure knownDonationMilestones is a Map (JSON loading converts it to object)
       if (!(clanState.knownDonationMilestones instanceof Map)) {
@@ -667,53 +673,53 @@ async function pollGuild(guild) {
             }
             
             // Skip LeaderboardEvents if war is already in notInWar state to prevent spam
-            if (currentDbState === 'notInWar') {
-              console.log(`[COC] WATCHER: Skipping LeaderboardEvents for clan ${cleanTag} - war already finalized (state: ${currentDbState})`);
-              continue;
-            }
-            
-            console.log(`[COC] WATCHER: Database state is ${currentDbState}, proceeding with leaderboard events`);
-            const leaderboardEvents = getLeaderboardEventsInstance(guild.client);
-            
-            // Get per-clan channel ID for this specific clan
-            let noneClanChannelId = null;
-            try {
-              const [noneClanChannelRows] = await store.sqlPool.execute(
-                'SELECT war_leaderboard_channel_id, war_announce_channel_id FROM guild_clashofclans_watch WHERE guild_id = ? AND clan_tag = ? LIMIT 1',
-                [guild.id, cleanTag]
-              );
-              if (noneClanChannelRows.length > 0) {
-                noneClanChannelId = noneClanChannelRows[0].war_leaderboard_channel_id || noneClanChannelRows[0].war_announce_channel_id || null;
-              }
-            } catch (noneChannelErr) {
-              console.warn(`[COC] Error getting clan-specific channel for none action ${cleanTag}:`, noneChannelErr.message);
-              noneClanChannelId = cfg.warLeaderboardChannelId || cfg.warAnnounceChannelId;
-            }
-            
-            if (leaderboardEvents && noneClanChannelId) {
+            // BUT DO NOT SKIP donation leaderboard processing - only skip war leaderboard
+            if (currentDbState !== 'notInWar') {
+              console.log(`[COC] WATCHER: Database state is ${currentDbState}, proceeding with leaderboard events`);
+              const leaderboardEvents = getLeaderboardEventsInstance(guild.client);
+              
+              // Get per-clan channel ID for this specific clan
+              let noneClanChannelId = null;
               try {
-                // console.log(`[COC] WATCHER: Calling LeaderboardEvents for 'none' action, current state: ${warInfo.state}`);
-                
-                // Use per-clan channel ID
-                const channelId = noneClanChannelId;
-                
-                const result = await leaderboardEvents.postWarLeaderboardWithStateManagement(
-                  guild.id, 
-                  channelId,   // Correct channel ID from config
-                  cleanTag,    // Clan tag as the third parameter
-                  true         // skipTransitions = true for 'none' action from watcher
+                const [noneClanChannelRows] = await store.sqlPool.execute(
+                  'SELECT war_leaderboard_channel_id, war_announce_channel_id FROM guild_clashofclans_watch WHERE guild_id = ? AND clan_tag = ? LIMIT 1',
+                  [guild.id, cleanTag]
                 );
-                
-                if (result && result.success) {
-                  // console.log(`[COC] WATCHER: LeaderboardEvents handled successfully for clan ${cleanTag}`);
-                } else {
-                  // console.log(`[COC] WATCHER: LeaderboardEvents returned no action needed for clan ${cleanTag}`);
+                if (noneClanChannelRows.length > 0) {
+                  noneClanChannelId = noneClanChannelRows[0].war_leaderboard_channel_id || noneClanChannelRows[0].war_announce_channel_id || null;
                 }
-              } catch (leaderboardError) {
-                console.error(`[COC] WATCHER: Error calling LeaderboardEvents for clan ${cleanTag}:`, leaderboardError.message);
+              } catch (noneChannelErr) {
+                console.warn(`[COC] Error getting clan-specific channel for none action ${cleanTag}:`, noneChannelErr.message);
+                noneClanChannelId = cfg.warLeaderboardChannelId || cfg.warAnnounceChannelId;
+              }
+              
+              if (leaderboardEvents && noneClanChannelId) {
+                try {
+                  // console.log(`[COC] WATCHER: Calling LeaderboardEvents for 'none' action, current state: ${warInfo.state}`);
+                  
+                  // Use per-clan channel ID
+                  const channelId = noneClanChannelId;
+                  
+                  const result = await leaderboardEvents.postWarLeaderboardWithStateManagement(
+                    guild.id, 
+                    channelId,   // Correct channel ID from config
+                    cleanTag,    // Clan tag as the third parameter
+                    true         // skipTransitions = true for 'none' action from watcher
+                  );
+                  
+                  if (result && result.success) {
+                    // console.log(`[COC] WATCHER: LeaderboardEvents handled successfully for clan ${cleanTag}`);
+                  } else {
+                    // console.log(`[COC] WATCHER: LeaderboardEvents returned no action needed for clan ${cleanTag}`);
+                  }
+                } catch (leaderboardError) {
+                  console.error(`[COC] WATCHER: Error calling LeaderboardEvents for clan ${cleanTag}:`, leaderboardError.message);
+                }
+              } else {
+                console.log(`[COC] WATCHER: LeaderboardEvents not available or war channels not configured for clan ${cleanTag}`);
               }
             } else {
-              console.log(`[COC] WATCHER: LeaderboardEvents not available or war channels not configured for clan ${cleanTag}`);
+              console.log(`[COC] WATCHER: Skipping war LeaderboardEvents for clan ${cleanTag} - war already finalized (state: ${currentDbState})`);
             }
           }
           
@@ -768,29 +774,75 @@ async function pollGuild(guild) {
       
       clanState.lastMemberCount = currentMembers.length;
 
+      // SIMPLIFIED: Use global config directly like the old working code
+      // The per-clan config logic was causing issues - revert to simple global config
+      const trackDonationLeaderboard = cfg.trackDonationLeaderboard;
+      const donationLeaderboardChannelId = cfg.donationLeaderboardChannelId;
+      const donationLeaderboardSchedule = cfg.donationLeaderboardSchedule;
+      
+      if (process.env.COC_DEBUG === '1') {
+        console.log(`[COC] Clan ${cleanTag} donation leaderboard config:`, {
+          enabled: trackDonationLeaderboard,
+          channel: donationLeaderboardChannelId,
+          schedule: donationLeaderboardSchedule,
+          fromGlobal: true
+        });
+      }
+
       // Ensure donation leaderboard message id exists early (even before schedule triggers) to prevent duplicate messages
-      if (cfg.trackDonationLeaderboard && cfg.donationLeaderboardChannelId) {
+      if (trackDonationLeaderboard && donationLeaderboardChannelId) {
         await ensureLeaderboardMessage(guild, cfg, 'donations', cleanTag, clanInfo);
       }
 
       // Per-clan donation leaderboard scheduling (replaces single primary-only logic)
-      if (cfg.trackDonationLeaderboard && cfg.donationLeaderboardSchedule && cfg.donationLeaderboardChannelId) {
+      if (trackDonationLeaderboard && donationLeaderboardSchedule && donationLeaderboardChannelId) {
         const now = new Date();
         // Backward compatibility: migrate old field name the first time
         if (!clanState.lastDonationLeaderboardPost && clanState.lastLeaderboardPost) {
           clanState.lastDonationLeaderboardPost = clanState.lastLeaderboardPost;
         }
         const lastPost = clanState.lastDonationLeaderboardPost ? new Date(clanState.lastDonationLeaderboardPost) : null;
+        
+        // Debug logging to see what's happening
+        if (process.env.COC_DEBUG === '1') {
+          console.log(`[COC] Checking donation leaderboard schedule for clan ${cleanTag}:`, {
+            schedule: donationLeaderboardSchedule,
+            lastPost: lastPost?.toISOString() || 'never',
+            timeSinceLastPost: lastPost ? `${Math.floor((now - lastPost) / 1000 / 60)} minutes` : 'N/A',
+            channelId: donationLeaderboardChannelId
+          });
+        }
+        
         let shouldUpdate = false;
-        switch (cfg.donationLeaderboardSchedule) {
+        switch (donationLeaderboardSchedule) {
           case 'hourly':
-            shouldUpdate = !lastPost || (now - lastPost) >= 60 * 60 * 1000; break;
+            shouldUpdate = !lastPost || (now - lastPost) >= 60 * 60 * 1000; 
+            if (process.env.COC_DEBUG === '1' && lastPost) {
+              console.log(`[COC] Hourly check: time diff = ${(now - lastPost) / 1000 / 60} minutes, threshold = 60 minutes`);
+            }
+            break;
           case 'daily':
-            shouldUpdate = !lastPost || (now - lastPost) >= 24 * 60 * 60 * 1000; break;
+            shouldUpdate = !lastPost || (now - lastPost) >= 24 * 60 * 60 * 1000; 
+            if (process.env.COC_DEBUG === '1' && lastPost) {
+              console.log(`[COC] Daily check: time diff = ${(now - lastPost) / 1000 / 60 / 60} hours, threshold = 24 hours`);
+            }
+            break;
           case 'weekly':
-            shouldUpdate = !lastPost || (now - lastPost) >= 7 * 24 * 60 * 60 * 1000; break;
+            shouldUpdate = !lastPost || (now - lastPost) >= 7 * 24 * 60 * 60 * 1000; 
+            if (process.env.COC_DEBUG === '1' && lastPost) {
+              console.log(`[COC] Weekly check: time diff = ${(now - lastPost) / 1000 / 60 / 60 / 24} days, threshold = 7 days`);
+            }
+            break;
           case 'monthly':
-            shouldUpdate = !lastPost || now.getMonth() !== lastPost.getMonth() || now.getFullYear() !== lastPost.getFullYear(); break;
+            shouldUpdate = !lastPost || now.getMonth() !== lastPost.getMonth() || now.getFullYear() !== lastPost.getFullYear(); 
+            if (process.env.COC_DEBUG === '1' && lastPost) {
+              console.log(`[COC] Monthly check: current month = ${now.getMonth()}, last month = ${lastPost.getMonth()}`);
+            }
+            break;
+        }
+        
+        if (process.env.COC_DEBUG === '1') {
+          console.log(`[COC] Donation leaderboard update decision for clan ${cleanTag}: shouldUpdate=${shouldUpdate}, schedule=${donationLeaderboardSchedule}, lastPost=${lastPost?.toISOString() || 'never'}`);
         }
         // Force update if database row lacks donation_message_id even if schedule not yet due
         if (!shouldUpdate) {
@@ -828,7 +880,7 @@ async function pollGuild(guild) {
             // Tight filter: embed footer must contain the exact clan tag to avoid sharing one message across clans.
             if (!existingMessageId) {
               try {
-                const channel = guild.channels.cache.get(cfg.donationLeaderboardChannelId);
+                const channel = guild.channels.cache.get(donationLeaderboardChannelId);
                 if (channel) {
                   const messages = await channel.messages.fetch({ limit: 50 });
                   const existingMessage = messages.find(msg => {
@@ -859,23 +911,52 @@ async function pollGuild(guild) {
             } else {
               const result = await leaderboardEvents.postLeaderboard(
                 guild.id,
-                cfg.donationLeaderboardChannelId,
+                donationLeaderboardChannelId,
                 existingMessageId,
                 'donations',
                 cleanTag // pass clanTag to persist per-row id
               );
               if (result && result.success) {
                 clanState.lastDonationLeaderboardPost = now.toISOString();
+                // Force immediate state save (synchronous) to ensure this clan's timestamp is persisted
+                // before processing the next clan, preventing debounce timer resets from losing updates
+                try {
+                  const stateToSave = {
+                    clans: {}
+                  };
+                  
+                  for (const [stateKey, stateClanState] of Object.entries(state.clans)) {
+                    stateToSave.clans[stateKey] = {
+                      ...stateClanState,
+                      knownDonationMilestones: stateClanState.knownDonationMilestones instanceof Map 
+                        ? Object.fromEntries(stateClanState.knownDonationMilestones.entries())
+                        : stateClanState.knownDonationMilestones || {}
+                    };
+                  }
+                  
+                  fs.writeFileSync(STATE_PATH, JSON.stringify(stateToSave, null, 2));
+                  if (process.env.COC_DEBUG === '1') {
+                    console.log(`[COC] State immediately saved after donation leaderboard update for clan ${cleanTag}`);
+                  }
+                } catch (saveErr) {
+                  console.error(`[COC] Failed to immediately save state after donation update for clan ${cleanTag}:`, saveErr.message);
+                }
+                
                 if (process.env.COC_DEBUG === '1') {
-                  console.log(`[COC] Donation leaderboard updated guild=${guild.id} clan=${cleanTag} msgId=${existingMessageId || 'new'}`);
+                  console.log(`[COC] Donation leaderboard updated successfully guild=${guild.id} clan=${cleanTag} msgId=${existingMessageId || 'new'} nextUpdate=${new Date(now.getTime() + (donationLeaderboardSchedule === 'hourly' ? 60*60*1000 : 24*60*60*1000)).toISOString()}`);
                 }
               } else {
-                console.error(`[COC] Donation leaderboard update failed (guild=${guild.id} clan=${cleanTag}):`, result?.error);
+                console.error(`[COC] Donation leaderboard update failed (guild=${guild.id} clan=${cleanTag}):`, result?.error || 'Unknown error');
               }
             }
           } catch (donErr) {
-            console.error(`[COC] Error updating donation leaderboard (guild=${guild.id} clan=${cleanTag}):`, donErr.message);
+            console.error(`[COC] Error updating donation leaderboard (guild=${guild.id} clan=${cleanTag}):`, donErr.message, donErr.stack);
           }
+        }
+      } else if (trackDonationLeaderboard) {
+        // Log why donation leaderboard is not being updated
+        if (process.env.COC_DEBUG === '1') {
+          console.log(`[COC] Donation leaderboard skipped for clan ${cleanTag}: trackEnabled=${trackDonationLeaderboard}, schedule=${donationLeaderboardSchedule}, channel=${donationLeaderboardChannelId}`);
         }
       }
       

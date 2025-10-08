@@ -34,16 +34,20 @@ class CWLPlayerPerformance {
                       (clan2Tag === ourClanTag) ? warData.opponent : null;
       
       if (!ourClan) {
-        console.warn('[CWL Performance] Could not identify our clan in war data');
-        console.warn(`[CWL Performance] Looking for: ${ourClanTag}, Found: ${clan1Tag} vs ${clan2Tag}`);
+        // console.warn('[CWL Performance] Could not identify our clan in war data');
+        // console.warn(`[CWL Performance] Looking for: ${ourClanTag}, Found: ${clan1Tag} vs ${clan2Tag}`);
         return;
       }
+
+      // console.log(`[CWL Performance] Processing ${ourClan.members.length} members for round ${roundNumber}`);
 
       for (const member of ourClan.members) {
         const attacks = member.attacks || [];
         const attacksUsed = attacks.length;
         // CWL: Everyone gets exactly 1 attack regardless of Town Hall level
         const attacksRemaining = 1 - attacksUsed;
+
+        // console.log(`[CWL Performance] Processing member: ${member.name} (${member.tag}), attacks: ${attacksUsed}`);
 
         // Process each attack
         for (let i = 0; i < attacks.length; i++) {
@@ -53,63 +57,73 @@ class CWLPlayerPerformance {
           const opponentClan = (clan1Tag === ourClanTag) ? warData.opponent : warData.clan;
           const target = opponentClan.members.find(m => m.tag === attack.defenderTag);
 
-          await this.sqlPool.query(
-            `INSERT INTO guild_clashofclans_cwl_player_performance (
-              guild_id, clan_tag, season, round_number, player_tag, player_name,
-              attacks_used, attacks_remaining, stars_earned, destruction_percentage,
-              target_position, target_tag, target_townhall_level,
-              attack_order, is_best_attack, three_star, attack_time
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
-            ON DUPLICATE KEY UPDATE
-              stars_earned = VALUES(stars_earned),
-              destruction_percentage = VALUES(destruction_percentage),
-              attacks_used = VALUES(attacks_used),
-              attacks_remaining = VALUES(attacks_remaining)`,
-            [
-              guildId,
-              clanTag,
-              season,
-              roundNumber,
-              member.tag,
-              member.name,
-              attacksUsed,
-              attacksRemaining,
-              attack.stars,
-              attack.destructionPercentage,
-              target ? target.mapPosition : null,
-              attack.defenderTag,
-              target ? target.townhallLevel : null,
-              i + 1, // attack_order (1st or 2nd attack)
-              attack.stars === 3 ? 1 : 0, // is_best_attack (3-star is always best)
-              attack.stars === 3 ? 1 : 0, // three_star
-            ]
-          );
+          try {
+            await this.sqlPool.query(
+              `INSERT INTO guild_clashofclans_cwl_player_performance (
+                guild_id, clan_tag, season, round_number, player_tag, player_name,
+                attacks_used, attacks_remaining, stars_earned, destruction_percentage,
+                target_position, target_tag, target_townhall_level,
+                attack_order, is_best_attack, three_star, attack_time
+              ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
+              ON DUPLICATE KEY UPDATE
+                stars_earned = VALUES(stars_earned),
+                destruction_percentage = VALUES(destruction_percentage),
+                attacks_used = VALUES(attacks_used),
+                attacks_remaining = VALUES(attacks_remaining)`,
+              [
+                guildId,
+                clanTag,
+                season,
+                roundNumber,
+                member.tag,
+                member.name,
+                attacksUsed,
+                attacksRemaining,
+                attack.stars,
+                attack.destructionPercentage,
+                target ? target.mapPosition : null,
+                attack.defenderTag,
+                target ? target.townhallLevel : null,
+                i + 1, // attack_order (1st or 2nd attack)
+                attack.stars === 3 ? 1 : 0, // is_best_attack (3-star is always best)
+                attack.stars === 3 ? 1 : 0, // three_star
+              ]
+            );
+            // console.log(`[CWL Performance] ✓ Recorded attack for ${member.name}: ${attack.stars}⭐`);
+          } catch (dbError) {
+            console.error(`[CWL Performance] ✗ Failed to record attack for ${member.name}:`, dbError.message);
+          }
         }
 
         // If player hasn't attacked yet, record them with 0 attacks
         if (attacksUsed === 0) {
-          await this.sqlPool.query(
-            `INSERT IGNORE INTO guild_clashofclans_cwl_player_performance (
-              guild_id, clan_tag, season, round_number, player_tag, player_name,
-              attacks_used, attacks_remaining, stars_earned, destruction_percentage
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-            [
-              guildId,
-              clanTag,
-              season,
-              roundNumber,
-              member.tag,
-              member.name,
-              0,
-              1, // CWL: Everyone gets exactly 1 attack
-              0,
-              0.00
-            ]
-          );
+          try {
+            await this.sqlPool.query(
+              `INSERT IGNORE INTO guild_clashofclans_cwl_player_performance (
+                guild_id, clan_tag, season, round_number, player_tag, player_name,
+                attacks_used, attacks_remaining, stars_earned, destruction_percentage
+              ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+              [
+                guildId,
+                clanTag,
+                season,
+                roundNumber,
+                member.tag,
+                member.name,
+                0,
+                1, // CWL: Everyone gets exactly 1 attack
+                0,
+                0.00
+              ]
+            );
+            // console.log(`[CWL Performance] ✓ Recorded no-attack for ${member.name}`);
+          } catch (dbError) {
+            console.error(`[CWL Performance] ✗ Failed to record no-attack for ${member.name}:`, dbError.message);
+          }
         }
       }
 
-      console.log(`[CWL Performance] Recorded round ${roundNumber} attacks for ${clanTag}`);
+      // console.log(`[CWL Performance] Recorded round ${roundNumber} attacks for ${clanTag}`);
     } catch (error) {
       console.error('[CWL Performance] Error recording round attacks:', error.message);
     }

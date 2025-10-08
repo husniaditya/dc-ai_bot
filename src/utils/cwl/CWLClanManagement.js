@@ -126,7 +126,7 @@ class CWLClanManagement {
         }
 
         if (player.avg_destruction < minDestructionPercent && player.attacks_used >= 3) {
-          issues.push(`Low destruction: ${player.avg_destruction.toFixed(1)}%`);
+          issues.push(`Low destruction: ${(parseFloat(player.avg_destruction) || 0).toFixed(1)}%`);
         }
 
         // Categorize
@@ -159,7 +159,7 @@ class CWLClanManagement {
 
     const topPlayers = lineup.recommended.slice(0, 10)
       .map((p, i) => 
-        `${i + 1}. **${p.player_name}**: ${p.total_stars}⭐ | ${p.avg_destruction.toFixed(1)}% | Score: ${p.performance_score.toFixed(0)}`
+        `${i + 1}. **${p.player_name}**: ${p.total_stars}⭐ | ${(parseFloat(p.avg_destruction) || 0).toFixed(1)}% | Score: ${(parseFloat(p.performance_score) || 0).toFixed(0)}`
       )
       .join('\n') || 'No data';
 

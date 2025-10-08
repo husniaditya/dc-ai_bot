@@ -7189,7 +7189,8 @@ body.login-mode:has(.home-viewport) {
 
 /* Commands Section */
 .commands-section {
-  padding: 5rem 0;
+  padding: 0 0 5rem 0;
+  position: relative;
 }
 
 .command-category-card {
@@ -7636,4 +7637,268 @@ html:not(.dark) .hero-section::before {
 html:not(.dark) .hero-section::after {
   background: radial-gradient(circle at center, rgba(99, 102, 241, 0.25) 0%, transparent 70%);
   opacity: 0.2;
+}
+
+/* ============================================= */
+/* Scroll Animations */
+/* ============================================= */
+
+/* Base states for scroll animations */
+.fade-in-on-scroll {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+}
+
+.slide-up-on-scroll {
+  opacity: 0;
+  transform: translateY(40px);
+  transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+}
+
+.scale-in-on-scroll {
+  opacity: 0;
+  transform: scale(0.95);
+  transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+}
+
+/* Animated state when in view */
+.fade-in-on-scroll.animate-in {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.slide-up-on-scroll.animate-in {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.scale-in-on-scroll.animate-in {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* Staggered animation delays for feature cards */
+.features-section .col-lg-4:nth-child(1) .feature-card { transition-delay: 0ms; }
+.features-section .col-lg-4:nth-child(2) .feature-card { transition-delay: 100ms; }
+.features-section .col-lg-4:nth-child(3) .feature-card { transition-delay: 200ms; }
+.features-section .col-lg-4:nth-child(4) .feature-card { transition-delay: 300ms; }
+.features-section .col-lg-4:nth-child(5) .feature-card { transition-delay: 400ms; }
+.features-section .col-lg-4:nth-child(6) .feature-card { transition-delay: 500ms; }
+
+/* Staggered animation delays for command cards */
+.commands-section .col-md-6:nth-child(1) .command-category-card { transition-delay: 0ms; }
+.commands-section .col-md-6:nth-child(2) .command-category-card { transition-delay: 150ms; }
+.commands-section .col-md-6:nth-child(3) .command-category-card { transition-delay: 300ms; }
+.commands-section .col-md-6:nth-child(4) .command-category-card { transition-delay: 450ms; }
+
+/* Enhanced hero animations */
+.fade-in {
+  animation: fadeInUp 0.8s ease-out forwards;
+}
+
+.fade-in-delay-1 {
+  animation: fadeInUp 0.8s ease-out 0.2s forwards;
+  opacity: 0;
+}
+
+.fade-in-delay-2 {
+  animation: fadeInUp 0.8s ease-out 0.4s forwards;
+  opacity: 0;
+}
+
+.fade-in-delay-3 {
+  animation: fadeInUp 0.8s ease-out 0.6s forwards;
+  opacity: 0;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Feature card hover animations */
+.feature-card {
+  transform-origin: center;
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.4s ease;
+}
+
+.feature-card:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 20px 60px rgba(99, 102, 241, 0.3), 0 12px 40px rgba(168, 85, 247, 0.2) !important;
+}
+
+/* Command card animations */
+.command-category-card {
+  transform-origin: center;
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.4s ease;
+}
+
+.command-category-card:hover {
+  transform: translateY(-6px) scale(1.01);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Command item hover effect */
+.command-item {
+  transition: transform 0.3s ease, background-color 0.3s ease;
+}
+
+.command-item:hover {
+  transform: translateX(4px);
+  background: rgba(99, 102, 241, 0.1);
+}
+
+/* CTA card pulse animation */
+.cta-card {
+  animation: subtlePulse 3s ease-in-out infinite;
+}
+
+@keyframes subtlePulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 20px 60px rgba(99, 102, 241, 0.2), 0 12px 40px rgba(168, 85, 247, 0.1);
+  }
+  50% {
+    transform: scale(1.01);
+    box-shadow: 0 24px 72px rgba(99, 102, 241, 0.3), 0 16px 48px rgba(168, 85, 247, 0.15);
+  }
+}
+
+/* Stat card animations */
+.stat-card {
+  transition: transform 0.3s ease, background-color 0.3s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-4px);
+  background: rgba(99, 102, 241, 0.15);
+}
+
+/* Showcase card float animation */
+.showcase-card {
+  /* Float animation will be applied after fade-in completes */
+  opacity: 0;
+}
+
+.showcase-card.card-1 {
+  animation: fadeInFloat 0.8s ease-out 0.2s forwards, float 6s ease-in-out 1.2s infinite;
+}
+
+.showcase-card.card-2 {
+  animation: fadeInFloat 0.8s ease-out 0.4s forwards, float 6s ease-in-out 1.4s infinite;
+}
+
+.showcase-card.card-3 {
+  animation: fadeInFloat 0.8s ease-out 0.6s forwards, float 6s ease-in-out 1.6s infinite;
+}
+
+@keyframes fadeInFloat {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  25% {
+    transform: translateY(-10px) rotate(1deg);
+  }
+  50% {
+    transform: translateY(-5px) rotate(0deg);
+  }
+  75% {
+    transform: translateY(-15px) rotate(-1deg);
+  }
+}
+
+/* Section reveal animations */
+.section-header {
+  transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+}
+
+/* Smooth scroll behavior */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Parallax effect for hero section */
+.hero-section {
+  position: relative;
+  overflow: hidden;
+}
+
+/* Enhanced typing cursor blink */
+.typing-cursor {
+  animation: blink 1s step-end infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+/* Button ripple effect */
+.btn-hero-primary,
+.btn-hero-secondary,
+.btn-cta-primary,
+.btn-cta-secondary {
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-hero-primary::after,
+.btn-hero-secondary::after,
+.btn-cta-primary::after,
+.btn-cta-secondary::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+
+.btn-hero-primary:active::after,
+.btn-hero-secondary:active::after,
+.btn-cta-primary:active::after,
+.btn-cta-secondary:active::after {
+  width: 300px;
+  height: 300px;
+}
+
+/* Reduce motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  
+  .fade-in-on-scroll,
+  .slide-up-on-scroll,
+  .scale-in-on-scroll {
+    opacity: 1 !important;
+    transform: none !important;
+  }
 }
