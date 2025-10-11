@@ -3,6 +3,15 @@ class CWLReminders {
   constructor(sqlPool, discordClient) {
     this.sqlPool = sqlPool;
     this.client = discordClient;
+    
+    // Test mode: send reminders every minute (set CWL_REMINDER_TEST=1 to enable)
+    this.testMode = process.env.CWL_REMINDER_TEST === '1';
+    this.testInterval = parseInt(process.env.CWL_REMINDER_TEST_INTERVAL_SEC || '60', 10); // Default 60 seconds
+    this.lastTestReminder = {}; // Track last reminder time per clan+round in test mode
+    
+    if (this.testMode) {
+      console.log(`[CWL Reminders] 🧪 TEST MODE ENABLED - Reminders will send every ${this.testInterval} seconds (bypassing 4-hour threshold)`);
+    }
   }
 
   /**
@@ -96,33 +105,52 @@ class CWLReminders {
       
       const hoursRemaining = (endTime - now) / (1000 * 60 * 60);
 
-      console.log(`[CWL Reminders] Time check: ${hoursRemaining.toFixed(2)} hours remaining (threshold: 4 hours)`);
+      console.log(`[CWL Reminders] Time check: ${hoursRemaining.toFixed(2)} hours remaining (threshold: ${this.testMode ? 'TEST MODE' : '4 hours'})`);
 
-      // Only send reminders in final 4 hours
-      if (hoursRemaining > 4) {
-        // console.log('[CWL Reminders] More than 4 hours remaining, skipping reminders');
-        return 0;
-      }
+      // TEST MODE: Skip time check and send reminders every minute
+      if (this.testMode) {
+        const testKey = `${guildId}:${clanTag}:${roundNumber}`;
+        const lastSent = this.lastTestReminder[testKey] || 0;
+        const timeSinceLastTest = (Date.now() - lastSent) / 1000;
+        
+        if (timeSinceLastTest < this.testInterval) {
+          console.log(`[CWL Reminders] 🧪 TEST MODE: Skipping - only ${timeSinceLastTest.toFixed(0)}s since last test reminder (interval: ${this.testInterval}s)`);
+          return 0;
+        }
+        
+        console.log(`[CWL Reminders] 🧪 TEST MODE: Sending test reminder (${timeSinceLastTest.toFixed(0)}s since last)`);
+        this.lastTestReminder[testKey] = Date.now();
+        // Continue to send reminder (skip DB check)
+      } else {
+        // NORMAL MODE: Only send reminders in final 4 hours
+        if (hoursRemaining > 4) {
+          // console.log('[CWL Reminders] More than 4 hours remaining, skipping reminders');
+          return 0;
+        }
 
-      // Check if we've already sent reminders for this round
-      const [reminderCheck] = await this.sqlPool.query(
-        `SELECT attack_reminders_sent FROM guild_clashofclans_cwl_state
-         WHERE guild_id = ? AND clan_tag = ? AND season = ?`,
-        [guildId, clanTag, season]
-      );
+        // Check if we've already sent reminders for this round in the past hour
+        const [reminderCheck] = await this.sqlPool.query(
+          `SELECT attack_reminders_sent, last_reminder_time FROM guild_clashofclans_cwl_state
+           WHERE guild_id = ? AND clan_tag = ? AND season = ?`,
+          [guildId, clanTag, season]
+        );
 
-      if (reminderCheck.length === 0) {
-        return 0;
-      }
+        if (reminderCheck.length === 0) {
+          return 0;
+        }
 
-      const remindersSent = reminderCheck[0].attack_reminders_sent 
-        ? JSON.parse(reminderCheck[0].attack_reminders_sent) 
-        : [];
-
-      // Check if we already sent reminder for this round
-      if (remindersSent.includes(roundNumber)) {
-        console.log(`[CWL Reminders] Already sent reminders for round ${roundNumber}`);
-        return 0;
+        // Check last reminder time to avoid spamming (send max once per hour)
+        const lastReminderTime = reminderCheck[0].last_reminder_time 
+          ? new Date(reminderCheck[0].last_reminder_time) 
+          : null;
+        
+        if (lastReminderTime) {
+          const hoursSinceLastReminder = (Date.now() - lastReminderTime.getTime()) / (1000 * 60 * 60);
+          if (hoursSinceLastReminder < 1) {
+            console.log(`[CWL Reminders] Sent reminder ${hoursSinceLastReminder.toFixed(1)}h ago, waiting for next hour`);
+            return 0;
+          }
+        }
       }
 
       // Get players without attacks (CWL = 1 attack per player per round)
@@ -137,9 +165,34 @@ class CWLReminders {
 
       if (players.length === 0) {
         console.log('[CWL Reminders] All players have attacked');
-        // Mark as sent even if no one needed reminder
-        remindersSent.push(roundNumber);
-        await this._updateRemindersSent(guildId, clanTag, season, remindersSent);
+        
+        // In test mode, send a message anyway to confirm it's working
+        if (this.testMode) {
+          const clanConfigs = cfg.clanConfigs || {};
+          const clanConfig = clanConfigs[clanTag] || {};
+          const channelId = clanConfig.cwlAnnounceChannelId;
+          
+          if (channelId) {
+            try {
+              const channel = await this.client.channels.fetch(channelId);
+              if (channel) {
+                await channel.send(`🧪 **[TEST MODE]** CWL Reminder Check - All players have used their attacks! ✅\nRound ${roundNumber} - ${warData.clan.name} vs ${warData.opponent.name}`);
+              }
+            } catch (err) {
+              console.error('[CWL Reminders] Test mode message send error:', err.message);
+            }
+          }
+        }
+        
+        // Mark as sent even if no one needed reminder (only in normal mode)
+        if (!this.testMode) {
+          await this.sqlPool.query(
+            `UPDATE guild_clashofclans_cwl_state
+             SET last_reminder_time = NOW()
+             WHERE guild_id = ? AND clan_tag = ? AND season = ?`,
+            [guildId, clanTag, season]
+          );
+        }
         return 0;
       }
 
@@ -167,57 +220,73 @@ class CWLReminders {
         : `${minutes} minute${minutes !== 1 ? 's' : ''}`;
       
       // Split players into chunks to avoid embed size limits
-      // Each field can have max 1024 chars, and total embed must be under 6000
-      const maxPlayersPerField = 20; // Conservative limit to stay under 1024 chars per field
-      const playerChunks = [];
+      // Discord limits: 6000 chars total, 1024 chars per field, 25 fields max
+      // Conservative approach: max 10 players per field, max 15 fields = 150 players max
+      const maxPlayersPerField = 10;
+      const maxFields = 15;
+      const maxTotalPlayers = maxPlayersPerField * maxFields; // 150 players
       
-      for (let i = 0; i < players.length; i += maxPlayersPerField) {
-        const chunk = players.slice(i, i + maxPlayersPerField);
+      const playersToShow = players.slice(0, maxTotalPlayers);
+      const remainingPlayers = players.length - playersToShow.length;
+      
+      const playerChunks = [];
+      for (let i = 0; i < playersToShow.length; i += maxPlayersPerField) {
+        const chunk = playersToShow.slice(i, i + maxPlayersPerField);
         const playerList = chunk
-          .map(p => `• ${p.player_name} (${p.attacks_remaining} attack${p.attacks_remaining > 1 ? 's' : ''} remaining)`)
+          .map(p => `• ${p.player_name}`)
           .join('\n');
         playerChunks.push(playerList);
       }
 
       // Create embed with proper field handling
       const embed = {
-        title: '⚠️ CWL Attack Reminder',
-        description: `**${warData.clan.name}** vs **${warData.opponent.name}**\n**Round ${roundNumber}** - ${timeText} remaining`,
+        title: this.testMode ? '🧪 [TEST MODE] ⚠️ CWL Attack Reminder' : '⚠️ CWL Attack Reminder',
+        description: `**${warData.clan.name}** vs **${warData.opponent.name}**\n**Round ${roundNumber}** - ${timeText} remaining\n**${players.length} player${players.length > 1 ? 's' : ''} haven't attacked yet!**${this.testMode ? '\n\n*This is a test reminder sent every minute*' : ''}`,
         fields: [],
-        color: 0xFF6B6B,
+        color: this.testMode ? 0xFFA500 : 0xFF6B6B, // Orange in test mode, red in normal mode
         timestamp: new Date(),
         footer: {
-          text: 'Make sure to use all attacks!'
+          text: this.testMode ? '🧪 TEST MODE - Reminders every minute' : 'Make sure to use all attacks!'
         }
       };
 
-      // Add player chunks as fields (max 25 fields per embed)
-      const maxFields = 25;
-      for (let i = 0; i < Math.min(playerChunks.length, maxFields); i++) {
+      // Add player chunks as fields
+      for (let i = 0; i < playerChunks.length; i++) {
         const startIdx = i * maxPlayersPerField + 1;
-        const endIdx = Math.min((i + 1) * maxPlayersPerField, players.length);
+        const endIdx = Math.min((i + 1) * maxPlayersPerField, playersToShow.length);
         const fieldName = playerChunks.length === 1 
-          ? `${players.length} Player${players.length > 1 ? 's' : ''} Haven't Attacked`
-          : `Players ${startIdx}-${endIdx} (${players.length} total)`;
+          ? `Players Without Attacks`
+          : `Players ${startIdx}-${endIdx}`;
         
         embed.fields.push({
           name: fieldName,
-          value: playerChunks[i]
+          value: playerChunks[i],
+          inline: true
         });
       }
 
-      // If we still have too many players, send a warning
-      if (playerChunks.length > maxFields) {
-        embed.fields[maxFields - 1].value += `\n\n*...and ${players.length - (maxFields * maxPlayersPerField)} more players*`;
+      // Add warning if there are more players
+      if (remainingPlayers > 0) {
+        embed.fields.push({
+          name: '⚠️ More Players',
+          value: `...and ${remainingPlayers} more player${remainingPlayers > 1 ? 's' : ''} without attacks`,
+          inline: false
+        });
       }
 
       await channel.send({ embeds: [embed] });
 
-      // Mark reminder as sent
-      remindersSent.push(roundNumber);
-      await this._updateRemindersSent(guildId, clanTag, season, remindersSent);
+      // Mark reminder as sent (only in normal mode)
+      if (!this.testMode) {
+        await this.sqlPool.query(
+          `UPDATE guild_clashofclans_cwl_state
+           SET last_reminder_time = NOW()
+           WHERE guild_id = ? AND clan_tag = ? AND season = ?`,
+          [guildId, clanTag, season]
+        );
+      }
 
-      // console.log(`[CWL Reminders] Sent reminder for ${players.length} players in round ${roundNumber} for ${warData.clan.name}`);
+      console.log(`[CWL Reminders] ${this.testMode ? '🧪 TEST: ' : ''}Sent reminder for ${players.length} players in round ${roundNumber} for ${warData.clan.name}`);
       return players.length;
     } catch (error) {
       console.error('[CWL Reminders] Error sending attack reminders:', error.message);

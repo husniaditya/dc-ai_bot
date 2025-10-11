@@ -4,6 +4,8 @@ const { createApiServer } = require('./api/server');
 // Use built-in global fetch (Node 18+) to avoid ESM require issues
 const fetchFn = (...args) => globalThis.fetch(...args);
 require('dotenv').config();
+// Initialize HTTP logging (captures axios + fetch responses)
+try { require('./utils/http-logger').init(); } catch { /* ignore */ }
 const { askGemini, explainImage } = require('./utils/ai-client');
 const axios = require('axios');
 const fs = require('fs');
