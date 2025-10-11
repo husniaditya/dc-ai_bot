@@ -1255,11 +1255,12 @@ class LeaderboardCanvas {
             
             // Calculate total width of the attack display (text + stars + percentage)
             // Fix: Use proper null check instead of falsy || operator to handle position 0 correctly
-            const defenderPos = (attack.defenderPosition !== null && attack.defenderPosition !== undefined && attack.defenderPosition > 0) 
-                ? attack.defenderPosition 
+            const defenderPos = (typeof attack.defenderPosition === 'number' && attack.defenderPosition > 0)
+                ? attack.defenderPosition
                 : '?';
             const attackText = `${defenderPos}/${attack.attackNumber} `;
-            const percentText = ` ${attack.destructionPercentage}%`;
+            const pctVal = typeof attack.destructionPercentage === 'number' ? attack.destructionPercentage : parseFloat(attack.destructionPercentage || '0');
+            const percentText = ` ${pctVal.toFixed ? pctVal.toFixed(2) : pctVal}%`;
             
             ctx.font = '27px Arial';
             const textWidth = ctx.measureText(attackText).width;

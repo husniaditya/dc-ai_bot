@@ -490,7 +490,8 @@ class WarPerformanceService {
             // Attack 1
             if (data.attack_1_defender_tag) {
                 attacks.push({
-                    defenderPosition: '?', // You might need to map defender tags to positions
+                    defenderTag: data.attack_1_defender_tag,
+                    defenderPosition: 0, // Map to position in integration using current war opponent roster
                     attackNumber: 1,
                     stars: data.attack_1_stars,
                     destructionPercentage: data.attack_1_destruction_percentage
@@ -500,7 +501,8 @@ class WarPerformanceService {
             // Attack 2
             if (data.attack_2_defender_tag) {
                 attacks.push({
-                    defenderPosition: '?',
+                    defenderTag: data.attack_2_defender_tag,
+                    defenderPosition: 0,
                     attackNumber: 2,
                     stars: data.attack_2_stars,
                     destructionPercentage: data.attack_2_destruction_percentage
