@@ -643,6 +643,30 @@
         "usage": "/antiraid toggle <enabled>",
         "desc": "Activa/desactiva la protección anti-raid (requiere Gestionar Servidor)."
       },
+      "moderation ban": {
+        "usage": "/moderation ban <user> [reason] [del_days]",
+        "desc": "Banear a un usuario y opcionalmente borrar hasta 7 días de mensajes (requiere Banear Miembros)."
+      },
+      "moderation unban": {
+        "usage": "/moderation unban <user_id> [reason]",
+        "desc": "Quitar el baneo de un usuario por ID (requiere Banear Miembros)."
+      },
+      "moderation kick": {
+        "usage": "/moderation kick <user> [reason]",
+        "desc": "Expulsar a un usuario del servidor (requiere Expulsar Miembros)."
+      },
+      "moderation mute": {
+        "usage": "/moderation mute <user> <duration> [reason]",
+        "desc": "Silenciar (timeout) a un usuario por una duración, ej. 10m, 2h, 1d (requiere Modera Miembros)."
+      },
+      "moderation unmute": {
+        "usage": "/moderation unmute <user> [reason]",
+        "desc": "Quitar el timeout de un usuario (requiere Modera Miembros)."
+      },
+      "moderation slowmode": {
+        "usage": "/moderation slowmode <seconds> [channel] [reason]",
+        "desc": "Configurar slowmode en un canal de texto (requiere Gestionar Canales)."
+      },
       "audit recent": {
         "usage": "/audit recent",
         "desc": "Ver acciones de moderación recientes (requiere Gestionar Servidor)."
