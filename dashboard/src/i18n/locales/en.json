@@ -659,6 +659,30 @@
         "usage": "/antiraid toggle <enabled>",
         "desc": "Enable/disable anti-raid protection (requires Manage Server)."
       },
+      "moderation ban": {
+        "usage": "/moderation ban <user> [reason] [del_days]",
+        "desc": "Ban a user and optionally delete up to 7 days of messages (requires Ban Members)."
+      },
+      "moderation unban": {
+        "usage": "/moderation unban <user_id> [reason]",
+        "desc": "Unban a user by ID (requires Ban Members)."
+      },
+      "moderation kick": {
+        "usage": "/moderation kick <user> [reason]",
+        "desc": "Kick a user from the server (requires Kick Members)."
+      },
+      "moderation mute": {
+        "usage": "/moderation mute <user> <duration> [reason]",
+        "desc": "Timeout a user for a duration, e.g., 10m, 2h, 1d (requires Moderate Members)."
+      },
+      "moderation unmute": {
+        "usage": "/moderation unmute <user> [reason]",
+        "desc": "Remove timeout from a user (requires Moderate Members)."
+      },
+      "moderation slowmode": {
+        "usage": "/moderation slowmode <seconds> [channel] [reason]",
+        "desc": "Set slowmode on a text channel (requires Manage Channels)."
+      },
       "audit recent": {
         "usage": "/audit recent",
         "desc": "View recent moderation actions (requires Manage Server)."

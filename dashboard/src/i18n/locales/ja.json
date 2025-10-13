@@ -643,6 +643,30 @@
         "usage": "/antiraid toggle <enabled>",
         "desc": "アンチレイドの有効/無効（サーバー管理権限）。"
       },
+      "moderation ban": {
+        "usage": "/moderation ban <user> [reason] [del_days]",
+        "desc": "ユーザーをBANし、最大7日分のメッセージを削除可能（BANメンバー権限）。"
+      },
+      "moderation unban": {
+        "usage": "/moderation unban <user_id> [reason]",
+        "desc": "ユーザーIDでBAN解除（BANメンバー権限）。"
+      },
+      "moderation kick": {
+        "usage": "/moderation kick <user> [reason]",
+        "desc": "ユーザーをサーバーからキック（キックメンバー権限）。"
+      },
+      "moderation mute": {
+        "usage": "/moderation mute <user> <duration> [reason]",
+        "desc": "ユーザーを一定時間タイムアウト。例: 10m, 2h, 1d（メンバーのモデレート権限）。"
+      },
+      "moderation unmute": {
+        "usage": "/moderation unmute <user> [reason]",
+        "desc": "ユーザーのタイムアウトを解除（メンバーのモデレート権限）。"
+      },
+      "moderation slowmode": {
+        "usage": "/moderation slowmode <seconds> [channel] [reason]",
+        "desc": "テキストチャンネルにスローモードを設定（チャンネル管理権限）。"
+      },
       "audit recent": {
         "usage": "/audit recent",
         "desc": "最近のモデレーションアクション（サーバー管理権限）。"

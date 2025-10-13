@@ -658,6 +658,30 @@
         "usage": "/antiraid toggle <enabled>",
         "desc": "啟用／停用防刷頻保護（需伺服器管理權限）。"
       },
+      "moderation ban": {
+        "usage": "/moderation ban <user> [reason] [del_days]",
+        "desc": "封鎖使用者，並可選擇刪除最多 7 天訊息（需封鎖成員權限）。"
+      },
+      "moderation unban": {
+        "usage": "/moderation unban <user_id> [reason]",
+        "desc": "依使用者 ID 解除封鎖（需封鎖成員權限）。"
+      },
+      "moderation kick": {
+        "usage": "/moderation kick <user> [reason]",
+        "desc": "將使用者踢出伺服器（需踢出成員權限）。"
+      },
+      "moderation mute": {
+        "usage": "/moderation mute <user> <duration> [reason]",
+        "desc": "將使用者設為逾時（Timeout），例如 10m、2h、1d（需成員管理權限）。"
+      },
+      "moderation unmute": {
+        "usage": "/moderation unmute <user> [reason]",
+        "desc": "解除使用者的逾時狀態（需成員管理權限）。"
+      },
+      "moderation slowmode": {
+        "usage": "/moderation slowmode <seconds> [channel] [reason]",
+        "desc": "在文字頻道設定慢速模式（需管理頻道權限）。"
+      },
       "audit recent": {
         "usage": "/audit recent",
         "desc": "檢視最近的管理行為紀錄（需伺服器管理權限）。"

@@ -36,29 +36,29 @@ class CWLStatisticsDashboard {
     const [overview] = await this.sqlPool.query(
       `SELECT 
         COUNT(DISTINCT player_tag) as total_players,
-        SUM(attacks_used) as total_attacks,
-        SUM(attacks_remaining) as missed_attacks,
+        SUM(CASE WHEN attacks_used > 0 THEN attacks_used ELSE 0 END) as total_attacks,
+        SUM(CASE WHEN attacks_remaining > 0 THEN attacks_remaining ELSE 0 END) as missed_attacks,
         SUM(stars_earned) as total_stars,
-        AVG(destruction_percentage) as avg_destruction,
+        AVG(CASE WHEN attacks_used > 0 THEN destruction_percentage ELSE NULL END) as avg_destruction,
         SUM(three_star) as three_stars,
-        SUM(CASE WHEN stars_earned >= 2 THEN 1 ELSE 0 END) as two_star_plus
+        SUM(CASE WHEN stars_earned >= 2 AND attacks_used > 0 THEN 1 ELSE 0 END) as two_star_plus,
+        COUNT(DISTINCT round_number) as rounds_completed
        FROM guild_clashofclans_cwl_player_performance
        WHERE guild_id = ? AND clan_tag = ? AND season = ?`,
       [guildId, clanTag, season]
     );
 
-    const [rounds] = await this.sqlPool.query(
-      `SELECT COUNT(DISTINCT round_number) as rounds_completed
-       FROM guild_clashofclans_cwl_round_standings
-       WHERE guild_id = ? AND clan_tag = ? AND season = ?`,
-      [guildId, clanTag, season]
-    );
+    const totalPossibleAttacks = (overview[0].total_attacks || 0) + (overview[0].missed_attacks || 0);
+    const attackCompletionRate = totalPossibleAttacks > 0 
+      ? ((overview[0].total_attacks || 0) / totalPossibleAttacks * 100) 
+      : 0;
 
     return {
       ...overview[0],
-      rounds_completed: rounds[0]?.rounds_completed || 0,
-      attack_completion_rate: overview[0].total_attacks / (overview[0].total_attacks + overview[0].missed_attacks) * 100,
-      stars_per_attack: overview[0].total_attacks > 0 ? overview[0].total_stars / overview[0].total_attacks : 0
+      attack_completion_rate: attackCompletionRate,
+      stars_per_attack: (overview[0].total_attacks || 0) > 0 
+        ? (overview[0].total_stars || 0) / overview[0].total_attacks 
+        : 0
     };
   }
 
@@ -75,12 +75,12 @@ class CWLStatisticsDashboard {
         AVG(destruction_percentage) as avg_destruction,
         SUM(three_star) as three_stars,
         SUM(attacks_used) as attacks,
-        (SUM(stars_earned) / SUM(attacks_used)) as stars_per_attack
+        (SUM(stars_earned) / NULLIF(SUM(attacks_used), 0)) as stars_per_attack
        FROM guild_clashofclans_cwl_player_performance
        WHERE guild_id = ? AND clan_tag = ? AND season = ?
        AND attacks_used > 0
        GROUP BY player_tag, player_name
-       HAVING attacks >= 3
+       HAVING attacks >= 1
        ORDER BY total_stars DESC, avg_destruction DESC
        LIMIT ?`,
       [guildId, clanTag, season, limit]
@@ -238,14 +238,26 @@ class CWLStatisticsDashboard {
 
     const { overview, topPerformers, attackEfficiency, participation, matchupAnalysis, trends } = stats;
 
+    // Check if we have any data at all
+    if (!overview || overview.total_players === 0) {
+      return {
+        title: '📊 CWL Statistics Dashboard',
+        description: `**Season ${season}** - No data available yet.\n\nData will appear once players start attacking in CWL rounds.`,
+        color: 0x95a5a6,
+        timestamp: new Date()
+      };
+    }
+
     // Top 5 performers
-    const top5 = topPerformers.slice(0, 5)
-      .map((p, i) => `${i + 1}. **${p.player_name}**: ${p.total_stars}⭐ (${p.avg_destruction.toFixed(1)}%)`)
-      .join('\n') || 'No data';
+    const top5 = topPerformers && topPerformers.length > 0
+      ? topPerformers.slice(0, 5)
+          .map((p, i) => `${i + 1}. **${p.player_name}**: ${p.total_stars}⭐ (${(parseFloat(p.avg_destruction) || 0).toFixed(1)}%)`)
+          .join('\n')
+      : 'No data';
 
     // Trend emoji
-    const trendEmoji = trends.trend === 'improving' ? '📈' : 
-                       trends.trend === 'declining' ? '📉' : '➡️';
+    const trendEmoji = trends?.trend === 'improving' ? '📈' : 
+                       trends?.trend === 'declining' ? '📉' : '➡️';
 
     const embed = {
       title: '📊 CWL Statistics Dashboard',
@@ -254,26 +266,26 @@ class CWLStatisticsDashboard {
       fields: [
         {
           name: '📋 Overview',
-          value: `**Players:** ${overview.total_players}\n` +
-                 `**Rounds:** ${overview.rounds_completed}/7\n` +
-                 `**Total Stars:** ${overview.total_stars}⭐\n` +
-                 `**Avg Destruction:** ${overview.avg_destruction?.toFixed(2) || 0}%`,
+          value: `**Players:** ${overview.total_players || 0}\n` +
+                 `**Rounds:** ${overview.rounds_completed || 0}/7\n` +
+                 `**Total Stars:** ${overview.total_stars || 0}⭐\n` +
+                 `**Avg Destruction:** ${(parseFloat(overview.avg_destruction) || 0).toFixed(2)}%`,
           inline: true
         },
         {
           name: '⚔️ Attack Stats',
-          value: `**Total:** ${overview.total_attacks}\n` +
-                 `**Missed:** ${overview.missed_attacks}\n` +
-                 `**Completion:** ${overview.attack_completion_rate?.toFixed(1) || 0}%\n` +
-                 `**Stars/Attack:** ${overview.stars_per_attack?.toFixed(2) || 0}`,
+          value: `**Total:** ${overview.total_attacks || 0}\n` +
+                 `**Missed:** ${overview.missed_attacks || 0}\n` +
+                 `**Completion:** ${(parseFloat(overview.attack_completion_rate) || 0).toFixed(1)}%\n` +
+                 `**Stars/Attack:** ${(parseFloat(overview.stars_per_attack) || 0).toFixed(2)}`,
           inline: true
         },
         {
           name: '🎯 Efficiency',
-          value: `**Three Stars:** ${attackEfficiency.three_star_rate?.toFixed(1) || 0}%\n` +
-                 `**Two Stars:** ${attackEfficiency.two_star_rate?.toFixed(1) || 0}%\n` +
-                 `**Success Rate:** ${attackEfficiency.star_success_rate?.toFixed(1) || 0}%\n` +
-                 `**Perfect:** ${overview.three_stars}`,
+          value: `**Three Stars:** ${(parseFloat(attackEfficiency?.three_star_rate) || 0).toFixed(1)}%\n` +
+                 `**Two Stars:** ${(parseFloat(attackEfficiency?.two_star_rate) || 0).toFixed(1)}%\n` +
+                 `**Success Rate:** ${(parseFloat(attackEfficiency?.star_success_rate) || 0).toFixed(1)}%\n` +
+                 `**Perfect:** ${overview.three_stars || 0}`,
           inline: true
         },
         {
@@ -286,34 +298,38 @@ class CWLStatisticsDashboard {
     };
 
     // Add matchup analysis if available
-    if (matchupAnalysis) {
+    if (matchupAnalysis && matchupAnalysis.current_position) {
       embed.fields.push({
         name: '📊 Standings',
         value: `**Position:** ${matchupAnalysis.current_position}/${matchupAnalysis.total_clans}\n` +
-               `**Change:** ${matchupAnalysis.position_change > 0 ? '+' : ''}${matchupAnalysis.position_change}\n` +
-               `**Record:** ${matchupAnalysis.total_wins}W-${matchupAnalysis.total_losses}L\n` +
-               `**Win Rate:** ${matchupAnalysis.win_rate.toFixed(1)}%`,
+               `**Change:** ${matchupAnalysis.position_change > 0 ? '+' : ''}${matchupAnalysis.position_change || 0}\n` +
+               `**Record:** ${matchupAnalysis.total_wins || 0}W-${matchupAnalysis.total_losses || 0}L\n` +
+               `**Win Rate:** ${(parseFloat(matchupAnalysis.win_rate) || 0).toFixed(1)}%`,
         inline: true
       });
     }
 
     // Add participation
-    embed.fields.push({
-      name: '👥 Participation',
-      value: `**Active:** ${participation.active_players}\n` +
-             `**Inactive:** ${participation.inactive_players}\n` +
-             `**Perfect:** ${participation.perfect_attendance}`,
-      inline: true
-    });
+    if (participation) {
+      embed.fields.push({
+        name: '👥 Participation',
+        value: `**Active:** ${participation.active_players || 0}\n` +
+               `**Inactive:** ${participation.inactive_players || 0}\n` +
+               `**Perfect:** ${participation.perfect_attendance || 0}`,
+        inline: true
+      });
+    }
 
     // Add trend
-    embed.fields.push({
-      name: `${trendEmoji} Performance Trend`,
-      value: `**Status:** ${trends.trend.toUpperCase()}\n` +
-             `**Recent Avg:** ${trends.avg_recent_stars?.toFixed(1) || 0}⭐\n` +
-             `**Earlier Avg:** ${trends.avg_earlier_stars?.toFixed(1) || 0}⭐`,
-      inline: true
-    });
+    if (trends && trends.trend) {
+      embed.fields.push({
+        name: `${trendEmoji} Performance Trend`,
+        value: `**Status:** ${(trends.trend || 'INSUFFICIENT_DATA').toUpperCase()}\n` +
+               `**Recent Avg:** ${(parseFloat(trends.avg_recent_stars) || 0).toFixed(1)}⭐\n` +
+               `**Earlier Avg:** ${(parseFloat(trends.avg_earlier_stars) || 0).toFixed(1)}⭐`,
+        inline: true
+      });
+    }
 
     return embed;
   }
@@ -358,7 +374,7 @@ class CWLStatisticsDashboard {
       fields: players.map(p => ({
         name: `${p.player_name}`,
         value: `**Stars:** ${p.total_stars}⭐\n` +
-               `**Destruction:** ${p.avg_destruction.toFixed(1)}%\n` +
+               `**Destruction:** ${(parseFloat(p.avg_destruction) || 0).toFixed(1)}%\n` +
                `**Three Stars:** ${p.three_stars}\n` +
                `**Attacks:** ${p.attacks} (${p.rounds} rounds)`,
         inline: true

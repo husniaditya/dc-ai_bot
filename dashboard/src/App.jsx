@@ -1252,6 +1252,12 @@ export default function App(){
     {
       key: 'moderation', title: 'Moderation & Security', icon: 'fa-shield-halved', accent: '#dc2626',
       items: [
+        { name:'moderation ban', usage:'/moderation ban <user> [reason] [del_days]', desc:'Ban a user and optionally delete up to 7 days of messages (requires Ban Members).', requiresManage:true },
+        { name:'moderation unban', usage:'/moderation unban <user_id> [reason]', desc:'Unban a user by ID (requires Ban Members).', requiresManage:true },
+        { name:'moderation kick', usage:'/moderation kick <user> [reason]', desc:'Kick a user from the server (requires Kick Members).', requiresManage:true },
+        { name:'moderation mute', usage:'/moderation mute <user> <duration> [reason]', desc:'Timeout a user for a duration, e.g., 10m, 2h, 1d (requires Moderate Members).', requiresManage:true },
+        { name:'moderation unmute', usage:'/moderation unmute <user> [reason]', desc:'Remove timeout from a user (requires Moderate Members).', requiresManage:true },
+        { name:'moderation slowmode', usage:'/moderation slowmode <seconds> [channel] [reason]', desc:'Set slowmode on a text channel (requires Manage Channels).', requiresManage:true },
         { name:'automod list', usage:'/automod list', desc:'Show all configured automod rules.' },
         { name:'automod info', usage:'/automod info <id>', desc:'View detailed info for an automod rule.' },
         { name:'automod toggle', usage:'/automod toggle <id> <enabled>', desc:'Enable/disable an automod rule (requires Manage Server).', requiresManage:true },
@@ -1294,7 +1300,13 @@ export default function App(){
         { name:'coc stats', usage:'/coc stats [tag]', desc:'Get detailed clan or player statistics.' },
         { name:'coc warlog', usage:'/coc warlog [tag] [limit]', desc:'Show war log history for a clan.' },
         { name:'coc watch', usage:'/coc watch <action> [tag]', desc:'Manage war watching for clans (requires Manage Server).', requiresManage:true },
-        { name:'coc config', usage:'/coc config <setting> <value>', desc:'Configure COC integration settings (requires Manage Server).', requiresManage:true }
+        { name:'coc config', usage:'/coc config <setting> <value>', desc:'Configure COC integration settings (requires Manage Server).', requiresManage:true },
+        // CWL commands (moved under Clash of Clans group)
+        { name:'cwl dashboard', usage:'/cwl dashboard [clan]', desc:'Show comprehensive CWL statistics dashboard.' },
+        { name:'cwl export', usage:'/cwl export type:<performance|standings|report> format:<json|csv> [clan]', desc:'Export CWL data to a file (JSON or CSV).' },
+        { name:'cwl mvp', usage:'/cwl mvp [round] [clan]', desc:'Show CWL MVP awards (season or a specific round).'},
+        { name:'cwl roster', usage:'/cwl roster [size] [clan]', desc:'Show lineup recommendations for the specified roster size.' },
+        { name:'cwl alerts', usage:'/cwl alerts [clan]', desc:'Check for CWL performance issues and alerts.' }
       ]
     },
     {
@@ -1423,7 +1435,13 @@ export default function App(){
   }
 
   const effectiveSidebarMode = isMobile ? 'full' : sidebarMode; // force full on mobile
-  const content = <div className="container-fluid py-4 fade-in">
+  // Important: avoid applying transform-based animations around fixed elements on mobile.
+  // The 'fade-in' class uses a translateY transform which creates a new containing block.
+  // On some mobile browsers (iOS Safari, etc.), position:fixed descendants inside a transformed
+  // ancestor behave like position:absolute relative to that ancestor, which breaks the FAB
+  // and the mobile sidebar overlay placement. So only apply 'fade-in' on non-mobile.
+  const containerClass = "container-fluid py-4" + (isMobile ? '' : ' fade-in');
+  const content = <div className={containerClass}>
     {guildBanner}
     <div className={"dashboard-flex sidebar-"+effectiveSidebarMode}>
       <Sidebar

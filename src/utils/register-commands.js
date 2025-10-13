@@ -645,6 +645,69 @@ const commands = [
     ]
   },
   {
+    name: 'moderation',
+    description: 'Moderation commands',
+    options: [
+      {
+        name: 'ban',
+        description: 'Ban a user',
+        type: 1, // SUB_COMMAND
+        options: [
+          { name: 'user', description: 'User to ban', type: 6, required: true },
+          { name: 'reason', description: 'Reason', type: 3, required: false },
+          { name: 'del_days', description: 'Delete message history (0-7 days)', type: 4, required: false, min_value: 0, max_value: 7 }
+        ]
+      },
+      {
+        name: 'unban',
+        description: 'Unban a user by ID',
+        type: 1, // SUB_COMMAND
+        options: [
+          { name: 'user_id', description: 'User ID to unban', type: 3, required: true },
+          { name: 'reason', description: 'Reason', type: 3, required: false }
+        ]
+      },
+      {
+        name: 'kick',
+        description: 'Kick a user',
+        type: 1, // SUB_COMMAND
+        options: [
+          { name: 'user', description: 'User to kick', type: 6, required: true },
+          { name: 'reason', description: 'Reason', type: 3, required: false }
+        ]
+      },
+      {
+        name: 'mute',
+        description: 'Timeout (mute) a user',
+        type: 1, // SUB_COMMAND
+        options: [
+          { name: 'user', description: 'User to mute', type: 6, required: true },
+          { name: 'duration', description: 'Duration (e.g., 10m, 2h, 1d)', type: 3, required: true },
+          { name: 'reason', description: 'Reason', type: 3, required: false }
+        ]
+      },
+      {
+        name: 'unmute',
+        description: 'Remove timeout (unmute) a user',
+        type: 1, // SUB_COMMAND
+        options: [
+          { name: 'user', description: 'User to unmute', type: 6, required: true },
+          { name: 'reason', description: 'Reason', type: 3, required: false }
+        ]
+      },
+      {
+        name: 'slowmode',
+        description: 'Set channel slowmode',
+        type: 1, // SUB_COMMAND
+        options: [
+          { name: 'seconds', description: 'Seconds between messages (0-21600)', type: 4, required: true, min_value: 0, max_value: 21600 },
+          { name: 'channel', description: 'Channel to apply slowmode to', type: 7, required: false },
+          { name: 'reason', description: 'Reason', type: 3, required: false }
+        ]
+      }
+    ]
+  },
+  {
     name: 'audit',
     description: 'View audit logs and moderation history',
     options: [

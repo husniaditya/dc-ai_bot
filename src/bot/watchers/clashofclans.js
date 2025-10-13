@@ -164,22 +164,156 @@ function saveStateDebounced(){
 function key(guildId, clanTag){ return guildId + ':' + clanTag; }
 
 // Calculate time remaining for war
+// Parse Clash of Clans timestamps like 20251011T114500.000Z to a JS Date
+function parseCOCTime(ts) {
+  if (!ts) return null;
+  // Match e.g., 20251011T114500.000Z (fractional seconds optional)
+  const m = /^([0-9]{4})([0-9]{2})([0-9]{2})T([0-9]{2})([0-9]{2})([0-9]{2})(?:\.[0-9]+)?Z$/.exec(ts);
+  if (m) {
+    const [, y, mo, d, h, mi, s] = m;
+    const iso = `${y}-${mo}-${d}T${h}:${mi}:${s}.000Z`;
+    const dte = new Date(iso);
+    return isNaN(dte.getTime()) ? null : dte;
+  }
+  const dte = new Date(ts);
+  return isNaN(dte.getTime()) ? null : dte;
+}
+
 function getWarTimeRemaining(endTime) {
   if (!endTime) return 'Unknown';
-  
-  const end = new Date(endTime);
+  const end = parseCOCTime(endTime);
+  if (!end) return 'Unknown';
   const now = new Date();
-  const diff = end - now;
-  
+  const diff = end.getTime() - now.getTime();
   if (diff <= 0) return 'Ended';
-  
   const hours = Math.floor(diff / (1000 * 60 * 60));
   const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-  
-  if (hours > 0) {
-    return `${hours}h ${minutes}m`;
-  } else {
-    return `${minutes}m`;
+  return hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
+}
+
+/**
+ * Send regular war attack reminders in the final 4 hours, once per hour.
+ * Posts to war_leaderboard_channel_id (fallback war_announce_channel_id).
+ */
+async function maybeSendRegularWarReminder(guild, cfg, cleanTag, clanInfo, warInfo, clanState) {
+  try {
+    if (!warInfo || warInfo.state !== 'inWar' || !warInfo.endTime) return;
+
+    // Only remind in the last 4 hours
+    const now = Date.now();
+    const endDate = parseCOCTime(warInfo.endTime);
+    if (!endDate) return;
+    const endMs = endDate.getTime();
+    const msRemaining = endMs - now;
+    if (msRemaining <= 0) return; // already ended
+    const hoursRemaining = msRemaining / (1000 * 60 * 60);
+    if (hoursRemaining > 4) return;
+
+    // Per-clan channel lookup (leaderboard preferred)
+    let channelId = null;
+    try {
+      const [rows] = await store.sqlPool.execute(
+        'SELECT war_leaderboard_channel_id, war_announce_channel_id FROM guild_clashofclans_watch WHERE guild_id = ? AND clan_tag = ? LIMIT 1',
+        [guild.id, cleanTag]
+      );
+      if (rows.length > 0) {
+        channelId = rows[0].war_leaderboard_channel_id || rows[0].war_announce_channel_id || null;
+      }
+    } catch (err) {
+      console.warn(`[COC] War reminder: channel lookup failed guild=${guild.id} clan=${cleanTag}:`, err.message);
+      channelId = cfg.warLeaderboardChannelId || cfg.warAnnounceChannelId || null;
+    }
+    if (!channelId) return;
+
+    // Throttle to at most once per hour per war. Reset when war changes (use endTime as identifier)
+    const currentWarId = `end:${warInfo.endTime}`;
+    if (clanState.lastWarReminderWarId !== currentWarId) {
+      clanState.lastWarReminderWarId = currentWarId;
+      clanState.lastWarReminderAt = 0;
+    }
+    const lastAt = clanState.lastWarReminderAt || 0;
+    if (now - lastAt < 60 * 60 * 1000) return; // < 1 hour since last reminder
+
+    // Build list of members with attacks remaining
+    const members = Array.isArray(warInfo.clan?.members) ? warInfo.clan.members : [];
+    const needs = [];
+    for (const m of members) {
+      const used = Array.isArray(m.attacks) ? m.attacks.length : 0;
+      // In regular wars, each member typically has 2 attacks
+      const remaining = Math.max(0, 2 - used);
+      if (remaining > 0) {
+        needs.push({ name: m.name || m.tag, remaining, townHall: m.townhallLevel || m.townHallLevel || undefined });
+      }
+    }
+    if (needs.length === 0) return; // nothing to remind about
+
+    // Sort by remaining desc, then by name
+    needs.sort((a, b) => {
+      if (b.remaining !== a.remaining) return b.remaining - a.remaining;
+      return (a.name || '').localeCompare(b.name || '');
+    });
+
+    // Prepare embed content with chunking to avoid size overflow
+    const lines = needs.map((p, idx) => `${idx + 1}. ${p.name}${p.townHall ? ` (TH${p.townHall})` : ''} — ${p.remaining} attack${p.remaining > 1 ? 's' : ''} left`);
+    const chunkSize = 10; // 10 lines per field
+    const maxFields = 15; // safety cap
+    const fields = [];
+    // Highlight section: players with 2 attacks remaining (high priority)
+    const priorityPlayers = needs.filter(p => p.remaining === 2);
+    if (priorityPlayers.length > 0) {
+      const maxPriority = 8;
+      const pLines = priorityPlayers.slice(0, maxPriority).map((p, i) => `${i + 1}. ${p.name}${p.townHall ? ` (TH${p.townHall})` : ''}`);
+      fields.push({ name: 'High priority — 2 attacks left', value: pLines.join('\n'), inline: false });
+    }
+    for (let i = 0; i < lines.length && fields.length < maxFields; i += chunkSize) {
+      const chunk = lines.slice(i, i + chunkSize).join('\n');
+      const isFirst = fields.length === 0;
+      fields.push({ name: isFirst ? 'Players needing to attack' : '\u200B', value: chunk, inline: false });
+    }
+
+  const overflow = lines.length - chunkSize * maxFields;
+  const timeLeft = getWarTimeRemaining(warInfo.endTime);
+  // Current score and opponent info
+  const oppName = warInfo.opponent?.name || 'Opponent';
+  const ourStars = typeof warInfo.clan?.stars === 'number' ? warInfo.clan.stars : 0;
+  const oppStars = typeof warInfo.opponent?.stars === 'number' ? warInfo.opponent.stars : 0;
+  const ourPct = typeof warInfo.clan?.destructionPercentage === 'number' ? warInfo.clan.destructionPercentage.toFixed(1) : '0.0';
+  const oppPct = typeof warInfo.opponent?.destructionPercentage === 'number' ? warInfo.opponent.destructionPercentage.toFixed(1) : '0.0';
+    // Attacks used overview
+    const teamSize = Number.isInteger(warInfo.teamSize) ? warInfo.teamSize : (Array.isArray(members) ? members.length : 0);
+    const expectedTotal = teamSize > 0 ? teamSize * 2 : (Array.isArray(members) ? members.length * 2 : 0);
+    const usedAttacks = members.reduce((sum, m) => sum + Math.min(Array.isArray(m.attacks) ? m.attacks.length : 0, 2), 0);
+
+    const embed = {
+      title: `⚠️ War Reminder — ${timeLeft} remaining • ${ourStars}-${oppStars}`,
+      description: `Some players still have attacks remaining for ${clanInfo?.name || cleanTag}. Please plan your hits.\nvs ${oppName} • Score: ${ourStars}-${oppStars} | Destruction: ${ourPct}%–${oppPct}% | ${usedAttacks}/${expectedTotal} attacks used`,
+      color: 0xF39C12, // orange
+      fields,
+      footer: { text: `${cleanTag} • Reminder posts hourly in the final 4h` },
+      timestamp: new Date().toISOString()
+    };
+    if (overflow > 0) {
+      embed.fields.push({ name: 'More players…', value: `+${overflow} not shown.`, inline: false });
+    }
+
+    // Send the reminder
+    let channel = guild.channels.cache.get(channelId);
+    if (!channel) {
+      try { channel = await guild.channels.fetch(channelId); } catch {}
+    }
+    if (!channel) return;
+
+    await channel.send({ embeds: [embed] });
+
+    // Persist throttle state and save
+    clanState.lastWarReminderAt = now;
+    saveStateDebounced();
+
+    if (process.env.COC_DEBUG === '1') {
+      console.log(`[COC] War reminder sent guild=${guild.id} clan=${cleanTag} timeLeft=${timeLeft} needing=${needs.length}`);
+    }
+  } catch (err) {
+    console.warn(`[COC] War reminder error guild=${guild.id} clan=${cleanTag}:`, err.message);
   }
 }
 
@@ -199,11 +333,12 @@ async function pollGuild(guild) {
   cocStats.lastPoll = new Date().toISOString();
   
   const debug = process.env.COC_DEBUG === '1';
-  if (debug) console.log('[COC] poll guild', guild.id, 'clans', cfg.clans.length);
+  if (debug) console.log('[COC] poll guild', guild.id, 'clans', cfg.clans.length, 'tags:', cfg.clans);
   
   for (const clanTag of cfg.clans) {
     try {
       const cleanTag = cleanClanTag(clanTag);
+      if (debug) console.log(`[COC] Processing clan ${clanTag} -> ${cleanTag}`);
       if (!cleanTag) continue;
       
       const clanInfo = await fetchClanInfo(cleanTag);
@@ -211,6 +346,7 @@ async function pollGuild(guild) {
       
       const k = key(guild.id, cleanTag);
       if (!state.clans[k]) {
+        if (debug) console.log(`[COC] Initializing new state for clan ${cleanTag}`);
         state.clans[k] = {
           lastMemberCount: 0,
           knownMembers: [],
@@ -224,6 +360,10 @@ async function pollGuild(guild) {
       }
       
       const clanState = state.clans[k];
+      if (debug) console.log(`[COC] Clan ${cleanTag} state loaded:`, {
+        hasLastDonationPost: !!clanState.lastDonationLeaderboardPost,
+        lastDonationPost: clanState.lastDonationLeaderboardPost
+      });
       
       // Ensure knownDonationMilestones is a Map (JSON loading converts it to object)
       if (!(clanState.knownDonationMilestones instanceof Map)) {
@@ -667,53 +807,53 @@ async function pollGuild(guild) {
             }
             
             // Skip LeaderboardEvents if war is already in notInWar state to prevent spam
-            if (currentDbState === 'notInWar') {
-              console.log(`[COC] WATCHER: Skipping LeaderboardEvents for clan ${cleanTag} - war already finalized (state: ${currentDbState})`);
-              continue;
-            }
-            
-            console.log(`[COC] WATCHER: Database state is ${currentDbState}, proceeding with leaderboard events`);
-            const leaderboardEvents = getLeaderboardEventsInstance(guild.client);
-            
-            // Get per-clan channel ID for this specific clan
-            let noneClanChannelId = null;
-            try {
-              const [noneClanChannelRows] = await store.sqlPool.execute(
-                'SELECT war_leaderboard_channel_id, war_announce_channel_id FROM guild_clashofclans_watch WHERE guild_id = ? AND clan_tag = ? LIMIT 1',
-                [guild.id, cleanTag]
-              );
-              if (noneClanChannelRows.length > 0) {
-                noneClanChannelId = noneClanChannelRows[0].war_leaderboard_channel_id || noneClanChannelRows[0].war_announce_channel_id || null;
-              }
-            } catch (noneChannelErr) {
-              console.warn(`[COC] Error getting clan-specific channel for none action ${cleanTag}:`, noneChannelErr.message);
-              noneClanChannelId = cfg.warLeaderboardChannelId || cfg.warAnnounceChannelId;
-            }
-            
-            if (leaderboardEvents && noneClanChannelId) {
+            // BUT DO NOT SKIP donation leaderboard processing - only skip war leaderboard
+            if (currentDbState !== 'notInWar') {
+              console.log(`[COC] WATCHER: Database state is ${currentDbState}, proceeding with leaderboard events`);
+              const leaderboardEvents = getLeaderboardEventsInstance(guild.client);
+              
+              // Get per-clan channel ID for this specific clan
+              let noneClanChannelId = null;
               try {
-                // console.log(`[COC] WATCHER: Calling LeaderboardEvents for 'none' action, current state: ${warInfo.state}`);
-                
-                // Use per-clan channel ID
-                const channelId = noneClanChannelId;
-                
-                const result = await leaderboardEvents.postWarLeaderboardWithStateManagement(
-                  guild.id, 
-                  channelId,   // Correct channel ID from config
-                  cleanTag,    // Clan tag as the third parameter
-                  true         // skipTransitions = true for 'none' action from watcher
+                const [noneClanChannelRows] = await store.sqlPool.execute(
+                  'SELECT war_leaderboard_channel_id, war_announce_channel_id FROM guild_clashofclans_watch WHERE guild_id = ? AND clan_tag = ? LIMIT 1',
+                  [guild.id, cleanTag]
                 );
-                
-                if (result && result.success) {
-                  // console.log(`[COC] WATCHER: LeaderboardEvents handled successfully for clan ${cleanTag}`);
-                } else {
-                  // console.log(`[COC] WATCHER: LeaderboardEvents returned no action needed for clan ${cleanTag}`);
+                if (noneClanChannelRows.length > 0) {
+                  noneClanChannelId = noneClanChannelRows[0].war_leaderboard_channel_id || noneClanChannelRows[0].war_announce_channel_id || null;
                 }
-              } catch (leaderboardError) {
-                console.error(`[COC] WATCHER: Error calling LeaderboardEvents for clan ${cleanTag}:`, leaderboardError.message);
+              } catch (noneChannelErr) {
+                console.warn(`[COC] Error getting clan-specific channel for none action ${cleanTag}:`, noneChannelErr.message);
+                noneClanChannelId = cfg.warLeaderboardChannelId || cfg.warAnnounceChannelId;
+              }
+              
+              if (leaderboardEvents && noneClanChannelId) {
+                try {
+                  // console.log(`[COC] WATCHER: Calling LeaderboardEvents for 'none' action, current state: ${warInfo.state}`);
+                  
+                  // Use per-clan channel ID
+                  const channelId = noneClanChannelId;
+                  
+                  const result = await leaderboardEvents.postWarLeaderboardWithStateManagement(
+                    guild.id, 
+                    channelId,   // Correct channel ID from config
+                    cleanTag,    // Clan tag as the third parameter
+                    true         // skipTransitions = true for 'none' action from watcher
+                  );
+                  
+                  if (result && result.success) {
+                    // console.log(`[COC] WATCHER: LeaderboardEvents handled successfully for clan ${cleanTag}`);
+                  } else {
+                    // console.log(`[COC] WATCHER: LeaderboardEvents returned no action needed for clan ${cleanTag}`);
+                  }
+                } catch (leaderboardError) {
+                  console.error(`[COC] WATCHER: Error calling LeaderboardEvents for clan ${cleanTag}:`, leaderboardError.message);
+                }
+              } else {
+                console.log(`[COC] WATCHER: LeaderboardEvents not available or war channels not configured for clan ${cleanTag}`);
               }
             } else {
-              console.log(`[COC] WATCHER: LeaderboardEvents not available or war channels not configured for clan ${cleanTag}`);
+              console.log(`[COC] WATCHER: Skipping war LeaderboardEvents for clan ${cleanTag} - war already finalized (state: ${currentDbState})`);
             }
           }
           
@@ -741,6 +881,8 @@ async function pollGuild(guild) {
             // Only refresh war leaderboard if war is active (not notInWar)
             if (warInfo.state === 'inWar' && refreshClanChannelId) {
               await autoRefreshWarLeaderboard(guild, cfg, cleanTag, warInfo, clanState);
+              // Also send periodic reminders to attack during final 4 hours
+              await maybeSendRegularWarReminder(guild, cfg, cleanTag, clanInfo, warInfo, clanState);
             } else if (warInfo.state === 'notInWar' && process.env.COC_DEBUG === '1') {
               console.log(`[COC] Skipping war leaderboard refresh - war not active (notInWar) for clan ${cleanTag}`);
             }
@@ -768,29 +910,75 @@ async function pollGuild(guild) {
       
       clanState.lastMemberCount = currentMembers.length;
 
+      // SIMPLIFIED: Use global config directly like the old working code
+      // The per-clan config logic was causing issues - revert to simple global config
+      const trackDonationLeaderboard = cfg.trackDonationLeaderboard;
+      const donationLeaderboardChannelId = cfg.donationLeaderboardChannelId;
+      const donationLeaderboardSchedule = cfg.donationLeaderboardSchedule;
+      
+      if (process.env.COC_DEBUG === '1') {
+        console.log(`[COC] Clan ${cleanTag} donation leaderboard config:`, {
+          enabled: trackDonationLeaderboard,
+          channel: donationLeaderboardChannelId,
+          schedule: donationLeaderboardSchedule,
+          fromGlobal: true
+        });
+      }
+
       // Ensure donation leaderboard message id exists early (even before schedule triggers) to prevent duplicate messages
-      if (cfg.trackDonationLeaderboard && cfg.donationLeaderboardChannelId) {
+      if (trackDonationLeaderboard && donationLeaderboardChannelId) {
         await ensureLeaderboardMessage(guild, cfg, 'donations', cleanTag, clanInfo);
       }
 
       // Per-clan donation leaderboard scheduling (replaces single primary-only logic)
-      if (cfg.trackDonationLeaderboard && cfg.donationLeaderboardSchedule && cfg.donationLeaderboardChannelId) {
+      if (trackDonationLeaderboard && donationLeaderboardSchedule && donationLeaderboardChannelId) {
         const now = new Date();
         // Backward compatibility: migrate old field name the first time
         if (!clanState.lastDonationLeaderboardPost && clanState.lastLeaderboardPost) {
           clanState.lastDonationLeaderboardPost = clanState.lastLeaderboardPost;
         }
         const lastPost = clanState.lastDonationLeaderboardPost ? new Date(clanState.lastDonationLeaderboardPost) : null;
+        
+        // Debug logging to see what's happening
+        if (process.env.COC_DEBUG === '1') {
+          console.log(`[COC] Checking donation leaderboard schedule for clan ${cleanTag}:`, {
+            schedule: donationLeaderboardSchedule,
+            lastPost: lastPost?.toISOString() || 'never',
+            timeSinceLastPost: lastPost ? `${Math.floor((now - lastPost) / 1000 / 60)} minutes` : 'N/A',
+            channelId: donationLeaderboardChannelId
+          });
+        }
+        
         let shouldUpdate = false;
-        switch (cfg.donationLeaderboardSchedule) {
+        switch (donationLeaderboardSchedule) {
           case 'hourly':
-            shouldUpdate = !lastPost || (now - lastPost) >= 60 * 60 * 1000; break;
+            shouldUpdate = !lastPost || (now - lastPost) >= 60 * 60 * 1000; 
+            if (process.env.COC_DEBUG === '1' && lastPost) {
+              console.log(`[COC] Hourly check: time diff = ${(now - lastPost) / 1000 / 60} minutes, threshold = 60 minutes`);
+            }
+            break;
           case 'daily':
-            shouldUpdate = !lastPost || (now - lastPost) >= 24 * 60 * 60 * 1000; break;
+            shouldUpdate = !lastPost || (now - lastPost) >= 24 * 60 * 60 * 1000; 
+            if (process.env.COC_DEBUG === '1' && lastPost) {
+              console.log(`[COC] Daily check: time diff = ${(now - lastPost) / 1000 / 60 / 60} hours, threshold = 24 hours`);
+            }
+            break;
           case 'weekly':
-            shouldUpdate = !lastPost || (now - lastPost) >= 7 * 24 * 60 * 60 * 1000; break;
+            shouldUpdate = !lastPost || (now - lastPost) >= 7 * 24 * 60 * 60 * 1000; 
+            if (process.env.COC_DEBUG === '1' && lastPost) {
+              console.log(`[COC] Weekly check: time diff = ${(now - lastPost) / 1000 / 60 / 60 / 24} days, threshold = 7 days`);
+            }
+            break;
           case 'monthly':
-            shouldUpdate = !lastPost || now.getMonth() !== lastPost.getMonth() || now.getFullYear() !== lastPost.getFullYear(); break;
+            shouldUpdate = !lastPost || now.getMonth() !== lastPost.getMonth() || now.getFullYear() !== lastPost.getFullYear(); 
+            if (process.env.COC_DEBUG === '1' && lastPost) {
+              console.log(`[COC] Monthly check: current month = ${now.getMonth()}, last month = ${lastPost.getMonth()}`);
+            }
+            break;
+        }
+        
+        if (process.env.COC_DEBUG === '1') {
+          console.log(`[COC] Donation leaderboard update decision for clan ${cleanTag}: shouldUpdate=${shouldUpdate}, schedule=${donationLeaderboardSchedule}, lastPost=${lastPost?.toISOString() || 'never'}`);
         }
         // Force update if database row lacks donation_message_id even if schedule not yet due
         if (!shouldUpdate) {
@@ -828,7 +1016,7 @@ async function pollGuild(guild) {
             // Tight filter: embed footer must contain the exact clan tag to avoid sharing one message across clans.
             if (!existingMessageId) {
               try {
-                const channel = guild.channels.cache.get(cfg.donationLeaderboardChannelId);
+                const channel = guild.channels.cache.get(donationLeaderboardChannelId);
                 if (channel) {
                   const messages = await channel.messages.fetch({ limit: 50 });
                   const existingMessage = messages.find(msg => {
@@ -859,23 +1047,52 @@ async function pollGuild(guild) {
             } else {
               const result = await leaderboardEvents.postLeaderboard(
                 guild.id,
-                cfg.donationLeaderboardChannelId,
+                donationLeaderboardChannelId,
                 existingMessageId,
                 'donations',
                 cleanTag // pass clanTag to persist per-row id
               );
               if (result && result.success) {
                 clanState.lastDonationLeaderboardPost = now.toISOString();
+                // Force immediate state save (synchronous) to ensure this clan's timestamp is persisted
+                // before processing the next clan, preventing debounce timer resets from losing updates
+                try {
+                  const stateToSave = {
+                    clans: {}
+                  };
+                  
+                  for (const [stateKey, stateClanState] of Object.entries(state.clans)) {
+                    stateToSave.clans[stateKey] = {
+                      ...stateClanState,
+                      knownDonationMilestones: stateClanState.knownDonationMilestones instanceof Map 
+                        ? Object.fromEntries(stateClanState.knownDonationMilestones.entries())
+                        : stateClanState.knownDonationMilestones || {}
+                    };
+                  }
+                  
+                  fs.writeFileSync(STATE_PATH, JSON.stringify(stateToSave, null, 2));
+                  if (process.env.COC_DEBUG === '1') {
+                    console.log(`[COC] State immediately saved after donation leaderboard update for clan ${cleanTag}`);
+                  }
+                } catch (saveErr) {
+                  console.error(`[COC] Failed to immediately save state after donation update for clan ${cleanTag}:`, saveErr.message);
+                }
+                
                 if (process.env.COC_DEBUG === '1') {
-                  console.log(`[COC] Donation leaderboard updated guild=${guild.id} clan=${cleanTag} msgId=${existingMessageId || 'new'}`);
+                  console.log(`[COC] Donation leaderboard updated successfully guild=${guild.id} clan=${cleanTag} msgId=${existingMessageId || 'new'} nextUpdate=${new Date(now.getTime() + (donationLeaderboardSchedule === 'hourly' ? 60*60*1000 : 24*60*60*1000)).toISOString()}`);
                 }
               } else {
-                console.error(`[COC] Donation leaderboard update failed (guild=${guild.id} clan=${cleanTag}):`, result?.error);
+                console.error(`[COC] Donation leaderboard update failed (guild=${guild.id} clan=${cleanTag}):`, result?.error || 'Unknown error');
               }
             }
           } catch (donErr) {
-            console.error(`[COC] Error updating donation leaderboard (guild=${guild.id} clan=${cleanTag}):`, donErr.message);
+            console.error(`[COC] Error updating donation leaderboard (guild=${guild.id} clan=${cleanTag}):`, donErr.message, donErr.stack);
           }
+        }
+      } else if (trackDonationLeaderboard) {
+        // Log why donation leaderboard is not being updated
+        if (process.env.COC_DEBUG === '1') {
+          console.log(`[COC] Donation leaderboard skipped for clan ${cleanTag}: trackEnabled=${trackDonationLeaderboard}, schedule=${donationLeaderboardSchedule}, channel=${donationLeaderboardChannelId}`);
         }
       }
       
@@ -942,6 +1159,26 @@ async function autoRefreshWarLeaderboard(guild, cfg, clanTag, warInfo, clanState
       return;
     }
 
+    // Persist war performance to DB every 5 minutes regardless of channel availability
+    try {
+      const perfInterval = 5 * 60 * 1000; // 5 minutes
+      const nowTs = Date.now();
+      const lastPerfAt = clanState?.lastWarPerfUpdate || 0;
+      if (nowTs - lastPerfAt >= perfInterval) {
+        const warPerformanceIntegration = getWarPerformanceIntegration();
+        if (warPerformanceIntegration) {
+          await warPerformanceIntegration.processWarPerformance(guild.id, warInfo);
+          clanState.lastWarPerfUpdate = nowTs;
+          if (process.env.COC_DEBUG === '1') {
+            console.log(`[COC] Persisted war performance (5m) guild=${guild.id} clan=${clanTag}`);
+          }
+          saveStateDebounced();
+        }
+      }
+    } catch (perfErr) {
+      console.warn(`[COC] War performance periodic persist failed guild=${guild.id} clan=${clanTag}:`, perfErr.message);
+    }
+
     // Get per-clan channel configuration from database
     let effectiveChannelId = null;
     try {
@@ -966,7 +1203,7 @@ async function autoRefreshWarLeaderboard(guild, cfg, clanTag, warInfo, clanState
       return; // No channel configured
     }
 
-    if (!clanState) return;
+  if (!clanState) return;
 
     const now = Date.now();
     const lastWarRefresh = clanState.lastWarLeaderboardRefresh || 0;

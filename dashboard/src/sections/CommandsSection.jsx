@@ -10,6 +10,21 @@ export default function CommandsSection({ commandGroups, commandTogglesState, co
     return tx === key ? (fallback ?? key) : tx;
   };
   
+  // Sort groups by number of commands (ascending). Tie-breaker: title/key for stable order.
+  const sortedGroups = React.useMemo(() => {
+    const copy = Array.isArray(commandGroups) ? [...commandGroups] : [];
+    copy.sort((a, b) => {
+      const ac = (a?.items?.length) || 0;
+      const bc = (b?.items?.length) || 0;
+      if (ac !== bc) return ac - bc;
+      // deterministic tie-breaker: by title (fallback to key)
+      const an = (a?.title || a?.key || '').toString().toLowerCase();
+      const bn = (b?.title || b?.key || '').toString().toLowerCase();
+      return an.localeCompare(bn);
+    });
+    return copy;
+  }, [commandGroups]);
+  
   return (
     <LoadingSection
       loading={loading}
@@ -19,7 +34,7 @@ export default function CommandsSection({ commandGroups, commandTogglesState, co
     >
       <h5 className="mb-3">{t('commands.title')}</h5>
     <div className="cmd-groups">
-      {commandGroups.map(gr => {
+      {sortedGroups.map(gr => {
         const groupTitle = localizeOrDefault(`commands.groups.${gr.key}.title`, gr.title);
         const count = gr.items.length;
         const countLabel = count === 1 ? t('commands.section.commandOne') : t('commands.section.commandMany', { count });

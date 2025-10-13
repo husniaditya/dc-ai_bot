@@ -1,5 +1,6 @@
 // CWL Interactive Leaderboard - Discord components with buttons and reactions
 const { ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder } = require('discord.js');
+const { cleanClanTag } = require('../../bot/services/clashofclans');
 
 class CWLInteractiveLeaderboard {
   constructor(sqlPool) {
@@ -99,16 +100,17 @@ class CWLInteractiveLeaderboard {
     // Parse custom ID
     const parts = customId.split('_');
     const action = parts[1];
-    const clanTag = parts[2];
+    let clanTag = parts[2];
+    clanTag = cleanClanTag(clanTag);
     const season = parts[3];
     const guildId = interaction.guildId;
 
     try {
-      await interaction.deferReply({ ephemeral: true });
+      await interaction.deferReply({ flags: 64 }); // 64 = EPHEMERAL
 
       switch (action) {
         case 'refresh':
-          await this.handleRefresh(interaction, managers.leaderboard, guildId, clanTag, season);
+          await this.handleRefresh(interaction, managers.dashboard, guildId, clanTag, season);
           break;
         case 'stats':
           await this.handleFullStats(interaction, guildId, clanTag, season);
@@ -144,7 +146,7 @@ class CWLInteractiveLeaderboard {
    */
   async handlePlayerSelect(interaction, guildId, clanTag, season, playerTag) {
     try {
-      await interaction.deferReply({ ephemeral: true });
+      await interaction.deferReply({ flags: 64 }); // 64 = EPHEMERAL
 
       // Get player stats
       const [stats] = await this.sqlPool.query(
@@ -181,7 +183,7 @@ class CWLInteractiveLeaderboard {
       );
 
       const roundBreakdown = rounds.map(r => 
-        `Round ${r.round_number}: ${r.stars}⭐ (${r.destruction.toFixed(1)}%)`
+        `Round ${r.round_number}: ${r.stars}⭐ (${(parseFloat(r.destruction) || 0).toFixed(1)}%)`
       ).join('\n') || 'No data';
 
       const embed = {
@@ -196,7 +198,7 @@ class CWLInteractiveLeaderboard {
           },
           {
             name: '💥 Avg Destruction',
-            value: `${player.avg_destruction.toFixed(2)}%`,
+            value: `${(parseFloat(player.avg_destruction) || 0).toFixed(2)}%`,
             inline: true
           },
           {
@@ -236,12 +238,13 @@ class CWLInteractiveLeaderboard {
   }
 
   // Handler methods
-  async handleRefresh(interaction, leaderboardManager, guildId, clanTag, season) {
-    const embed = await leaderboardManager.generateLeaderboardEmbed(guildId, clanTag, season);
+  async handleRefresh(interaction, dashboardManager, guildId, clanTag, season) {
+    const embed = await dashboardManager.generateDashboardEmbed(guildId, clanTag, season);
     if (embed) {
-      await interaction.editReply({ content: '✅ Leaderboard refreshed!', embeds: [embed] });
+      const buttons = this.createLeaderboardButtons(clanTag, season);
+      await interaction.editReply({ content: '✅ Dashboard refreshed!', embeds: [embed], components: buttons });
     } else {
-      await interaction.editReply({ content: '❌ Could not refresh leaderboard!' });
+      await interaction.editReply({ content: '❌ Could not refresh dashboard!' });
     }
   }
 
@@ -284,7 +287,7 @@ class CWLInteractiveLeaderboard {
         },
         {
           name: '💥 Avg Destruction',
-          value: `${teamStats.avg_destruction?.toFixed(2) || 0}%`,
+          value: `${(parseFloat(teamStats.avg_destruction) || 0).toFixed(2)}%`,
           inline: true
         },
         {
@@ -294,7 +297,7 @@ class CWLInteractiveLeaderboard {
         },
         {
           name: '📊 Avg Stars/Attack',
-          value: `${teamStats.avg_stars_per_attack?.toFixed(2) || 0}`,
+          value: `${(parseFloat(teamStats.avg_stars_per_attack) || 0).toFixed(2)}`,
           inline: true
         }
       ],
@@ -313,7 +316,7 @@ class CWLInteractiveLeaderboard {
     }
 
     const historyText = history.map(h => 
-      `Round ${h.round_number}: Position **${h.position}**/${h.total_clans} - ${h.stars_earned}⭐ (${h.destruction_percentage.toFixed(1)}%)`
+      `Round ${h.round_number}: Position **${h.position}**/${h.total_clans} - ${h.stars_earned}⭐ (${(parseFloat(h.destruction_percentage) || 0).toFixed(1)}%)`
     ).join('\n');
 
     const embed = {

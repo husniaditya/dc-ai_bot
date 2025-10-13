@@ -67,12 +67,23 @@ class CWLPredictions {
         [guildId, clanTag, season]
       );
 
-      // Calculate average stars per round
-      const avgStarsPerRound = current.stars_earned / roundsPlayed;
+      // Calculate average stars per round from ALL rounds (not just current)
+      // Since stars_earned now stores per-round data, we need to sum all rounds
+      const [totalStarsResult] = await this.sqlPool.query(
+        `SELECT SUM(stars_earned) as total_stars, SUM(destruction_percentage) as total_destruction
+         FROM guild_clashofclans_cwl_round_standings
+         WHERE guild_id = ? AND clan_tag = ? AND season = ?`,
+        [guildId, clanTag, season]
+      );
+      
+      const totalStars = totalStarsResult[0]?.total_stars || 0;
+      const avgStarsPerRound = roundsPlayed > 0 ? totalStars / roundsPlayed : 0;
+      
+      console.log(`[CWL Predictions] Season ${season}, Round ${roundsPlayed}: Total stars = ${totalStars}, Avg = ${avgStarsPerRound}`);
       
       // Predict remaining stars
       const predictedRemainingStars = Math.round(avgStarsPerRound * roundsRemaining);
-      const predictedTotalStars = current.stars_earned + predictedRemainingStars;
+      const predictedTotalStars = totalStars + predictedRemainingStars;
 
       // Simple prediction: assume we maintain current position +/- 1
       let predictedPosition = current.position;
@@ -243,12 +254,12 @@ class CWLPredictions {
           },
           {
             name: 'Predicted Total Stars',
-            value: `⭐ ${prediction.predicted_total_stars || 'N/A'}`,
+            value: `⭐ ${prediction.predicted_total_stars != null ? prediction.predicted_total_stars : 'N/A'}`,
             inline: true
           },
           {
             name: 'Avg Stars/Round',
-            value: `${prediction.avg_stars_per_round || 'N/A'}`,
+            value: `${prediction.avg_stars_per_round != null ? prediction.avg_stars_per_round : 'N/A'}`,
             inline: true
           },
           {

@@ -1,7 +1,71 @@
 // CWL Leaderboard Manager - Track and display live CWL standings
+const { fetchCWLWar } = require('../../bot/services/clashofclans');
+
 class CWLLeaderboard {
   constructor(sqlPool) {
     this.sqlPool = sqlPool;
+    // lightweight in-memory cache to avoid fetching all wars too often
+    this._standingsCache = new Map(); // key: cacheKey -> { at:number, totals: Map<tag,{stars,destruction,name}> }
+    this._cacheTtlMs = 60 * 1000; // 60s
+  }
+
+  _makeCacheKey(leagueGroup, roundNumber) {
+    // Use season + number of rounds considered + first clan tag to scope cache
+    const season = leagueGroup?.season || 'unknown';
+    const firstTag = (leagueGroup?.clans?.[0]?.tag || 'na').toUpperCase();
+    return `${season}:${roundNumber}:${firstTag}`;
+  }
+
+  async _computeTotalsFromLeague(leagueGroup, upToRoundNumber) {
+    const cacheKey = this._makeCacheKey(leagueGroup, upToRoundNumber);
+    const now = Date.now();
+    const cached = this._standingsCache.get(cacheKey);
+    if (cached && now - cached.at < this._cacheTtlMs) {
+      return cached.totals;
+    }
+
+    const totals = new Map(); // tag -> { stars, destruction, name }
+    const norm = (tag) => (tag || '').replace(/^#/, '').toUpperCase();
+
+    // seed with clans from group so absent wars still produce entries
+    if (Array.isArray(leagueGroup?.clans)) {
+      for (const c of leagueGroup.clans) {
+        const tag = norm(c.tag);
+        if (!totals.has(tag)) {
+          totals.set(tag, { stars: 0, destruction: 0, name: c.name || tag });
+        }
+      }
+    }
+
+    const rounds = Array.isArray(leagueGroup?.rounds) ? leagueGroup.rounds : [];
+    for (let i = 0; i < rounds.length && i < upToRoundNumber; i++) {
+      const round = rounds[i];
+      const warTags = Array.isArray(round.warTags) ? round.warTags : [];
+      for (const wtag of warTags) {
+        if (!wtag || wtag === '#0') continue;
+        try {
+          const war = await fetchCWLWar(wtag);
+          if (!war || !war.clan || !war.opponent) continue;
+          const clanTag = norm(war.clan.tag);
+          const oppTag = norm(war.opponent.tag);
+          const clanName = war.clan.name || clanTag;
+          const oppName = war.opponent.name || oppTag;
+          if (!totals.has(clanTag)) totals.set(clanTag, { stars: 0, destruction: 0, name: clanName });
+          if (!totals.has(oppTag)) totals.set(oppTag, { stars: 0, destruction: 0, name: oppName });
+          const t1 = totals.get(clanTag);
+          const t2 = totals.get(oppTag);
+          t1.stars += (war.clan.stars || 0);
+          t1.destruction += (war.clan.destructionPercentage || 0);
+          t2.stars += (war.opponent.stars || 0);
+          t2.destruction += (war.opponent.destructionPercentage || 0);
+        } catch (e) {
+          // swallow individual war fetch failures
+        }
+      }
+    }
+
+    this._standingsCache.set(cacheKey, { at: now, totals });
+    return totals;
   }
 
   /**
@@ -11,8 +75,9 @@ class CWLLeaderboard {
    * @param {string} season - Season (YYYY-MM)
    * @param {number} roundNumber - Round number
    * @param {Object} leagueGroup - League group data from API
+   * @param {Object} warData - War data from API (contains this round's results)
    */
-  async updateRoundStandings(guildId, clanTag, season, roundNumber, leagueGroup) {
+  async updateRoundStandings(guildId, clanTag, season, roundNumber, leagueGroup, warData) {
     try {
       // Clean tag helper
       const cleanTag = (tag) => {
@@ -22,38 +87,96 @@ class CWLLeaderboard {
       
       const ourClanTag = cleanTag(clanTag);
       
-      // Find our clan in the league group (compare cleaned tags)
-      const ourClan = leagueGroup.clans.find(c => cleanTag(c.tag) === ourClanTag);
-      
-      if (!ourClan) {
-        console.warn('[CWL Leaderboard] Could not find our clan in league group');
-        console.warn(`[CWL Leaderboard] Looking for: ${ourClanTag}, Available: ${leagueGroup.clans.map(c => cleanTag(c.tag)).join(', ')}`);
-        return;
-      }
-
-      // Sort clans by stars and destruction to get positions
-      const sortedClans = [...leagueGroup.clans].sort((a, b) => {
-        // First by stars
-        if (b.stars !== a.stars) return b.stars - a.stars;
-        // Then by destruction percentage
-        return b.destructionPercentage - a.destructionPercentage;
-      });
-
-      const position = sortedClans.findIndex(c => cleanTag(c.tag) === ourClanTag) + 1;
-
-      // Calculate wins/losses from rounds
-      let wins = 0;
-      let losses = 0;
-
-      if (leagueGroup.rounds && roundNumber > 0) {
-        for (let i = 0; i < Math.min(roundNumber, leagueGroup.rounds.length); i++) {
-          const round = leagueGroup.rounds[i];
-          const warTag = round.warTags.find(wt => wt.includes(clanTag.replace('#', '')));
-          
-          // We'll need to fetch individual war to know win/loss
-          // For now, estimate from stars
+      // Prefer official leagueGroup standings when available; fallback to derived totals from wars
+      let position = 0;
+      let positionSource = 'official';
+      const norm = (tag) => (tag || '').replace(/^#/, '').toUpperCase();
+      let oursOfficialStars = 0;
+      let oursOfficialDestr = 0;
+      if (Array.isArray(leagueGroup?.clans) && leagueGroup.clans.length > 0) {
+        const sortedOfficial = [...leagueGroup.clans].sort((a, b) => {
+          if ((b.stars || 0) !== (a.stars || 0)) return (b.stars || 0) - (a.stars || 0);
+          return (b.destructionPercentage || 0) - (a.destructionPercentage || 0);
+        });
+        position = Math.max(1, sortedOfficial.findIndex(c => norm(c.tag) === ourClanTag) + 1);
+        const oursOff = sortedOfficial.find(c => norm(c.tag) === ourClanTag);
+        if (oursOff) {
+          oursOfficialStars = oursOff.stars || 0;
+          oursOfficialDestr = oursOff.destructionPercentage || 0;
         }
       }
+
+      // If official says nothing (position 0) or zeroed stats, compute from wars and use that
+      let totals = null;
+      if (!position || (!oursOfficialStars && !oursOfficialDestr)) {
+        positionSource = 'derived';
+        totals = await this._computeTotalsFromLeague(leagueGroup, roundNumber);
+        if (!totals || totals.size === 0) return;
+        const sorted = Array.from(totals.entries()).sort(([, A], [, B]) => {
+          if (B.stars !== A.stars) return B.stars - A.stars;
+          return B.destruction - A.destruction;
+        });
+        position = Math.max(1, sorted.findIndex(([tag]) => tag === ourClanTag) + 1);
+      }
+
+      if (process.env.COC_DEBUG === '1') {
+        console.log(`[CWL Leaderboard] Round ${roundNumber} position=${position} source=${positionSource} (guild=${guildId}, clan=${clanTag})`);
+      }
+      
+      // console.log(`[CWL Leaderboard] Position calculation for round ${roundNumber}:`);
+      // console.log(`[CWL Leaderboard] Our clan stars: ${ourClan.stars}, Our position: ${position}/${sortedClans.length}`);
+      // console.log(`[CWL Leaderboard] Top 3: ${sortedClans.slice(0, 3).map((c, i) => `${i+1}. ${c.name} (${c.stars}⭐)`).join(', ')}`);
+
+      // Get round-specific war result data
+  // Keep per-round stars/destruction for round standings
+  let roundStars = 0;
+  let roundDestruction = 0;
+      let isWin = false;
+      let isLoss = false;
+
+      if (warData && warData.clan) {
+        // Use this round's war stats for the round standings row
+        roundStars = warData.clan.stars || 0;
+        roundDestruction = warData.clan.destructionPercentage || 0;
+        
+        // Determine win/loss from war result
+        if (warData.state === 'warEnded') {
+          const ourStars = warData.clan.stars || 0;
+          const theirStars = warData.opponent?.stars || 0;
+          
+          if (ourStars > theirStars) {
+            isWin = true;
+          } else if (ourStars < theirStars) {
+            isLoss = true;
+          } else {
+            // Tie on stars, check destruction
+            const ourDestruction = warData.clan.destructionPercentage || 0;
+            const theirDestruction = warData.opponent?.destructionPercentage || 0;
+            if (ourDestruction > theirDestruction) {
+              isWin = true;
+            } else if (ourDestruction < theirDestruction) {
+              isLoss = true;
+            }
+          }
+        }
+      }
+
+      // Calculate cumulative wins/losses
+      // Get the most recent round's cumulative values (not SUM, as each round already stores cumulative)
+      const [previousRounds] = await this.sqlPool.query(
+        `SELECT wins as total_wins, losses as total_losses
+         FROM guild_clashofclans_cwl_round_standings
+         WHERE guild_id = ? AND clan_tag = ? AND season = ? AND round_number < ?
+         ORDER BY round_number DESC
+         LIMIT 1`,
+        [guildId, clanTag, season, roundNumber]
+      );
+      
+      const cumulativeWins = (previousRounds[0]?.total_wins || 0) + (isWin ? 1 : 0);
+      const cumulativeLosses = (previousRounds[0]?.total_losses || 0) + (isLoss ? 1 : 0);
+      
+      // console.log(`[CWL Leaderboard] Win/Loss calculation for round ${roundNumber}:`);
+      // console.log(`[CWL Leaderboard] Previous: ${previousRounds[0]?.total_wins || 0}W-${previousRounds[0]?.total_losses || 0}L, This round: ${isWin ? 'WIN' : (isLoss ? 'LOSS' : 'TIE')}, New total: ${cumulativeWins}W-${cumulativeLosses}L`);
 
       await this.sqlPool.query(
         `INSERT INTO guild_clashofclans_cwl_round_standings (
@@ -74,23 +197,30 @@ class CWLLeaderboard {
           season,
           roundNumber,
           position,
-          ourClan.stars || 0,
-          ourClan.destructionPercentage || 0,
-          wins,
-          losses,
+          roundStars,
+          roundDestruction,
+          cumulativeWins,
+          cumulativeLosses,
           leagueGroup.league?.name || 'Unknown',
-          leagueGroup.clans.length
+          (leagueGroup.clans || []).length
         ]
       );
 
-      // Also update the main CWL state table with aggregate stats
+      // Also update the main CWL state table with aggregate stats (cumulative to date)
+      let aggStars = oursOfficialStars;
+      let aggDestr = oursOfficialDestr;
+      if (positionSource === 'derived') {
+        const oursTotals = (totals && totals.get(ourClanTag)) || { stars: 0, destruction: 0 };
+        aggStars = oursTotals.stars || 0;
+        aggDestr = oursTotals.destruction || 0;
+      }
       await this.sqlPool.query(
         `UPDATE guild_clashofclans_cwl_state
          SET total_stars = ?, total_destruction = ?, predicted_position = ?
          WHERE guild_id = ? AND clan_tag = ? AND season = ?`,
         [
-          ourClan.stars || 0,
-          ourClan.destructionPercentage || 0,
+          aggStars,
+          aggDestr,
           position,
           guildId,
           clanTag,
@@ -98,7 +228,7 @@ class CWLLeaderboard {
         ]
       );
 
-      console.log(`[CWL Leaderboard] Updated standings: Round ${roundNumber}, Position ${position}/${leagueGroup.clans.length}`);
+      // console.log(`[CWL Leaderboard] Updated standings: Round ${roundNumber}, Position ${position}/${leagueGroup.clans.length}`);
     } catch (error) {
       console.error('[CWL Leaderboard] Error updating round standings:', error.message);
     }

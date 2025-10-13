@@ -255,11 +255,25 @@ class WarPerformanceIntegration {
             
             // If there's a current war, add current war attack details
             if (currentWarId) {
+                // Build defenderTag -> opponent mapPosition mapping once
+                const defenderTagToPos = new Map();
+                try {
+                    const opponentMembers = warData?.opponent?.members || [];
+                    for (const m of opponentMembers) {
+                        if (m?.tag) defenderTagToPos.set(m.tag, m.mapPosition || 0);
+                    }
+                } catch {}
                 for (const player of warStats) {
                     try {
                         // Get current war attack details for canvas display
                         const currentWarAttacks = await this.warPerformanceService.getCurrentWarAttacks(currentWarId, player.player_tag);
-                        player.currentWarAttackDetails = currentWarAttacks;
+                        // Map defenderTag to actual position when possible
+                        player.currentWarAttackDetails = (currentWarAttacks || []).map(a => ({
+                            ...a,
+                            defenderPosition: (a.defenderPosition && a.defenderPosition > 0)
+                                ? a.defenderPosition
+                                : (a.defenderTag ? (defenderTagToPos.get(a.defenderTag) || 0) : 0)
+                        }));
                     } catch (attackError) {
                         console.warn(`[WarPerformance] Failed to get current war attacks for player ${player.player_tag}:`, attackError.message);
                         player.currentWarAttackDetails = [];

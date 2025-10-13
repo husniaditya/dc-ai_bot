@@ -46,6 +46,31 @@ export default function LoginView({ error, authProcessing, loginLoading, startDi
     return () => clearTimeout(timer);
   }, [typedText, isDeleting, currentPhraseIndex]);
 
+  // Scroll animation effect
+  useEffect(() => {
+    const observerOptions = {
+      root: null,
+      rootMargin: '0px',
+      threshold: 0.1
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('animate-in');
+        }
+      });
+    }, observerOptions);
+
+    // Observe all elements with scroll animation classes
+    const animatedElements = document.querySelectorAll('.fade-in-on-scroll, .slide-up-on-scroll, .scale-in-on-scroll');
+    animatedElements.forEach(el => observer.observe(el));
+
+    return () => {
+      animatedElements.forEach(el => observer.unobserve(el));
+    };
+  }, []);
+
   // Ensure body can scroll for homepage
   useEffect(() => {
     // Allow scrolling on mount
@@ -115,19 +140,19 @@ export default function LoginView({ error, authProcessing, loginLoading, startDi
       <section className="hero-section">
         <div className="container">
           <div className="row align-items-center">
-            <div className="col-lg-6 hero-content fade-in">
-              <div className="logo-badge mb-4">
+            <div className="col-lg-6 hero-content">
+              <div className="logo-badge mb-4 fade-in">
                 <img src="/images.jpg" alt="Choco Maid" className="logo-img-hero" onError={(e)=>{ e.currentTarget.style.display='none'; }} />
                 <span className="logo-text">CM</span>
               </div>
-              <h1 className="hero-title mb-3">
+              <h1 className="hero-title mb-3 fade-in" style={{ animationDelay: '100ms' }}>
                 {t('homepage.hero.title')}
               </h1>
-              <div className="hero-subtitle mb-4">
+              <div className="hero-subtitle mb-4 fade-in" style={{ animationDelay: '200ms' }}>
                 <span className="typing-text">{typedText}</span>
                 <span className="typing-cursor">|</span>
               </div>
-              <p className="hero-description mb-4">
+              <p className="hero-description mb-4 fade-in" style={{ animationDelay: '300ms' }}>
                 {t('homepage.hero.description')}
               </p>
               
@@ -145,14 +170,14 @@ export default function LoginView({ error, authProcessing, loginLoading, startDi
               )}
 
               {authProcessing ? (
-                <div className="auth-processing-hero mb-4">
+                <div className="auth-processing-hero mb-4 fade-in" style={{ animationDelay: '400ms' }}>
                   <div className="spinner-border text-primary me-2" role="status">
                     <span className="visually-hidden">{t('common.loading')}</span>
                   </div>
                   <span>{t('homepage.hero.processing')}</span>
                 </div>
               ) : (
-                <div className="hero-actions d-flex gap-3 mb-4">
+                <div className="hero-actions d-flex gap-3 mb-4 fade-in" style={{ animationDelay: '400ms' }}>
                   <button 
                     onClick={startDiscordLogin} 
                     className="btn btn-hero-primary"
@@ -185,10 +210,10 @@ export default function LoginView({ error, authProcessing, loginLoading, startDi
               )}
 
               {/* Stats */}
-              <div className="hero-stats row g-3">
+              <div className="hero-stats row g-3 fade-in" style={{ animationDelay: '500ms' }}>
                 {stats.map((stat, idx) => (
                   <div key={idx} className="col-3">
-                    <div className="stat-card">
+                    <div className="stat-card" style={{ animationDelay: `${500 + idx * 50}ms` }}>
                       <div className="stat-value">{stat.value}</div>
                       <div className="stat-label">{stat.label}</div>
                     </div>
@@ -199,15 +224,15 @@ export default function LoginView({ error, authProcessing, loginLoading, startDi
             
             <div className="col-lg-6 hero-visual d-none d-lg-block">
               <div className="hero-card-showcase">
-                <div className="showcase-card card-1 fade-in-delay-1">
+                <div className="showcase-card card-1">
                   <i className="fa-solid fa-robot showcase-icon"></i>
                   <div className="showcase-text">{t('homepage.hero.showcaseCards.ai')}</div>
                 </div>
-                <div className="showcase-card card-2 fade-in-delay-2">
+                <div className="showcase-card card-2">
                   <i className="fa-solid fa-shield-halved showcase-icon"></i>
                   <div className="showcase-text">{t('homepage.hero.showcaseCards.moderation')}</div>
                 </div>
-                <div className="showcase-card card-3 fade-in-delay-3">
+                <div className="showcase-card card-3">
                   <i className="fa-solid fa-gamepad showcase-icon"></i>
                   <div className="showcase-text">{t('homepage.hero.showcaseCards.gaming')}</div>
                 </div>
@@ -220,7 +245,7 @@ export default function LoginView({ error, authProcessing, loginLoading, startDi
       {/* Features Section */}
       <section className="features-section">
         <div className="container">
-          <div className="section-header text-center mb-5">
+          <div className="section-header text-center mb-5 fade-in-on-scroll">
             <h2 className="section-title mb-3">{t('homepage.features.title')}</h2>
             <p className="section-subtitle">{t('homepage.features.subtitle')}</p>
           </div>
@@ -252,14 +277,14 @@ export default function LoginView({ error, authProcessing, loginLoading, startDi
       {/* Commands Section */}
       <section className="commands-section">
         <div className="container">
-          <div className="section-header text-center mb-5">
+          <div className="section-header text-center mb-5 fade-in-on-scroll">
             <h2 className="section-title mb-3">{t('homepage.commands.title')}</h2>
             <p className="section-subtitle">{t('homepage.commands.subtitle')}</p>
           </div>
           
           <div className="row g-4">
             <div className="col-md-6">
-              <div className="command-category-card">
+              <div className="command-category-card slide-up-on-scroll">
                 <h4 className="command-category-title">
                   <i className="fa-solid fa-brain me-2"></i>
                   {t('homepage.commands.ai.title')}
@@ -286,7 +311,7 @@ export default function LoginView({ error, authProcessing, loginLoading, startDi
             </div>
 
             <div className="col-md-6">
-              <div className="command-category-card">
+              <div className="command-category-card slide-up-on-scroll">
                 <h4 className="command-category-title">
                   <i className="fa-solid fa-shield me-2"></i>
                   {t('homepage.commands.moderation.title')}
@@ -313,7 +338,7 @@ export default function LoginView({ error, authProcessing, loginLoading, startDi
             </div>
 
             <div className="col-md-6">
-              <div className="command-category-card">
+              <div className="command-category-card slide-up-on-scroll">
                 <h4 className="command-category-title">
                   <i className="fa-solid fa-gamepad me-2"></i>
                   {t('homepage.commands.gaming.title')}
@@ -340,7 +365,7 @@ export default function LoginView({ error, authProcessing, loginLoading, startDi
             </div>
 
             <div className="col-md-6">
-              <div className="command-category-card">
+              <div className="command-category-card slide-up-on-scroll">
                 <h4 className="command-category-title">
                   <i className="fa-solid fa-chart-line me-2"></i>
                   {t('homepage.commands.leveling.title')}
@@ -372,7 +397,7 @@ export default function LoginView({ error, authProcessing, loginLoading, startDi
       {/* CTA Section */}
       <section className="cta-section">
         <div className="container">
-          <div className="cta-card">
+          <div className="cta-card scale-in-on-scroll">
             <h2 className="cta-title mb-3">{t('homepage.cta.title')}</h2>
             <p className="cta-description mb-4">
               {t('homepage.cta.description')}

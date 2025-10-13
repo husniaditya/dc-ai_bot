@@ -210,9 +210,6 @@ async function checkCWLRounds(guild, cfg, clanTag, clanInfo, leagueData, current
     const round = leagueData.rounds[roundIndex];
     const roundNumber = roundIndex + 1;
 
-    // Skip if already announced
-    if (announcedRounds.includes(roundNumber)) continue;
-
     // Find our war in this round by checking all war tags
     let ourWarTag = null;
     for (const warTag of round.warTags) {
@@ -237,6 +234,30 @@ async function checkCWLRounds(guild, cfg, clanTag, clanInfo, leagueData, current
     // Fetch the war details
     const warData = await fetchCWLWar(ourWarTag);
     if (!warData) continue;
+
+    // === CONTINUOUS PLAYER PERFORMANCE TRACKING ===
+    // Update player performance data on EVERY poll (not just when announcing)
+    // This ensures we capture all attacks as they happen
+    if (warData.state === 'inWar' || warData.state === 'warEnded') {
+      const playerPerformance = getCWLPlayerPerformance();
+      const season = stateManager.getCurrentSeason();
+      await playerPerformance.recordRoundAttacks(guild.id, clanTag, season, roundNumber, warData);
+      // console.log(`[CWL] Updated player performance for round ${roundNumber} (${warData.state})`);
+      
+      // Also update round standings continuously (even if already announced)
+      const leaderboard = getCWLLeaderboard();
+      await leaderboard.updateRoundStandings(guild.id, clanTag, season, roundNumber, leagueData, warData);
+      // console.log(`[CWL] Updated round standings for round ${roundNumber} (${warData.state})`);
+      
+      // Check for attack reminders continuously (if war is still active)
+      if (warData.state === 'inWar') {
+        const reminders = getCWLReminders(guild.client);
+        await reminders.sendAttackReminders(guild.id, clanTag, season, roundNumber, warData, cfg);
+      }
+    }
+
+    // Skip announcement if already announced
+    if (announcedRounds.includes(roundNumber)) continue;
 
     // Only announce if war is in progress or ended
     if (warData.state === 'inWar' || warData.state === 'warEnded') {
@@ -446,16 +467,12 @@ async function announceCWLRound(guild, cfg, clanTag, clanInfo, warData, roundNum
 
     // === NEW ENHANCED FEATURES ===
     
-    // 1. Record player performance
-    const playerPerformance = getCWLPlayerPerformance();
-    const season = stateManager.getCurrentSeason();
-    await playerPerformance.recordRoundAttacks(guild.id, clanTag, season, roundNumber, warData);
+    // Note: Player performance and standings are now tracked continuously in checkCWLRounds()
+    // This announcement function only handles the announcement and related features
     
-    // 2. Update leaderboard standings
+    // 1. Send leaderboard update (if war ended)
     const leaderboard = getCWLLeaderboard();
-    await leaderboard.updateRoundStandings(guild.id, clanTag, season, roundNumber, leagueData);
-    
-    // 3. Send leaderboard update (if war ended)
+    const season = stateManager.getCurrentSeason();
     if (warData.state === 'warEnded') {
       const leaderboardEmbed = await leaderboard.generateLeaderboardEmbed(guild.id, clanTag, season);
       if (leaderboardEmbed) {
@@ -463,7 +480,7 @@ async function announceCWLRound(guild, cfg, clanTag, clanInfo, warData, roundNum
         await leaderboard.updateLeaderboardMessageId(guild.id, clanTag, season, roundNumber, leaderboardMsg.id);
       }
       
-      // 4. Send predictions update (after round 3+)
+      // 2. Send predictions update (after round 3+)
       if (roundNumber >= 3) {
         const predictions = getCWLPredictions();
         const predictionEmbed = await predictions.generatePredictionEmbed(guild.id, clanTag, season);
@@ -473,15 +490,9 @@ async function announceCWLRound(guild, cfg, clanTag, clanInfo, warData, roundNum
       }
     }
     
-    // 5. Check for attack reminders (if war is still active)
-    if (warData.state === 'inWar') {
-      const reminders = getCWLReminders(guild.client);
-      await reminders.sendAttackReminders(guild.id, clanTag, season, roundNumber, warData);
-    }
-    
     // === PHASE 2 FEATURES ===
     
-    // 6. Announce MVP awards (if round ended)
+    // 4. Announce MVP awards (if round ended)
     if (warData.state === 'warEnded') {
       const mvpAwards = getCWLMVPAwards();
       const roundMVPEmbed = await mvpAwards.generateRoundMVPEmbed(guild.id, clanTag, season, roundNumber);
@@ -587,14 +598,14 @@ function startCWLWatcher(client) {
       console.error('[CWL] Polling error:', error.message);
     }
 
-    // CWL polling interval (check every 30 minutes)
-    const interval = parseInt(process.env.CWL_POLLING_INTERVAL || '1800', 10);
-    setTimeout(tick, Math.max(300, interval) * 1000); // Minimum 5 minutes
+    // CWL polling interval (check every 1 minute for real-time tracking)
+    const interval = parseInt(process.env.CWL_POLLING_INTERVAL || '60', 10);
+    setTimeout(tick, Math.max(60, interval) * 1000); // Minimum 1 minute
   }
 
   // Initial delay (1 minute after bot starts)
   setTimeout(tick, 60000);
-  console.log('CWL watcher started');
+  console.log('CWL watcher started (polling every 1 minute)');
 }
 
 module.exports = {
