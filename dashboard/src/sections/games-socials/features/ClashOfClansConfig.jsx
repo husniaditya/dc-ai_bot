@@ -223,23 +223,6 @@ export default function ClashOfClansConfig({
                 
                 <div className="form-check form-switch">
                   <input
-                    id="trackDonationsToggle"
-                    className="form-check-input"
-                    type="checkbox"
-                    checked={config.trackDonationEvents || config.trackDonations}
-                    onChange={e => onChange(prev => ({ ...prev, trackDonationEvents: e.target.checked, trackDonations: e.target.checked }))}
-                  />
-                  <label 
-                    className="form-check-label user-select-none" 
-                    htmlFor="trackDonationsToggle"
-                    style={{ cursor: 'pointer' }}
-                  >
-                    {t('gamesSocials.clashofclans.tracking.trackDonations')}
-                  </label>
-                </div>
-                
-                <div className="form-check form-switch">
-                  <input
                     id="trackWarStatsToggle"
                     className="form-check-input"
                     type="checkbox"
@@ -322,20 +305,7 @@ export default function ClashOfClansConfig({
                 </div>
               </div>
 
-              {/* Donation Threshold */}
-              {(config.trackDonationEvents || config.trackDonations) && (
-                <div className="mb-3">
-                  <label className="form-label">{t('gamesSocials.clashofclans.tracking.donationThreshold')}</label>
-                  <input
-                    type="number"
-                    className="form-control"
-                    min="1"
-                    value={config.minDonationThreshold || 100}
-                    onChange={e => onChange(prev => ({ ...prev, minDonationThreshold: parseInt(e.target.value) || 100 }))}
-                  />
-                  <div className="form-text">{t('gamesSocials.clashofclans.tracking.donationThresholdHint')}</div>
-                </div>
-              )}
+              {/* Donation event-based tracking is not supported; threshold input removed */}
             </div>
           </div>
         </div>
@@ -531,7 +501,7 @@ export default function ClashOfClansConfig({
                                 clanConfigs: updatedClanConfigs
                               }));
                             }}
-                            disabled={!(config.trackDonationEvents || config.trackDonations || config.trackDonationLeaderboard)}
+                            disabled={!config.trackDonationLeaderboard}
                           >
                             <option value="">{t('gamesSocials.common.select')}</option>
                             {discordChannels.map(ch => (
@@ -782,30 +752,7 @@ export default function ClashOfClansConfig({
             </div>
           </div>
 
-          {(config.trackDonationEvents || config.trackDonations) && (
-            <div className="clash-config-block mb-3">
-              <div className="card-body">
-                <h6 className="card-title">{t('gamesSocials.clashofclans.sections.donationTemplate')}</h6>
-                <textarea
-                  className="form-control mb-2"
-                  rows="3"
-                  value={config.donationTemplate || ''}
-                  onChange={e => onChange(prev => ({ ...prev, donationTemplate: e.target.value }))}
-                  placeholder={t('gamesSocials.clashofclans.templates.donationPlaceholder')}
-                />
-                <TemplatePreview
-                  template={config.donationTemplate || ''}
-                  placeholders={TEMPLATE_PLACEHOLDERS.clashofclans}
-                  sampleData={{
-                    clanName: 'Example Clan',
-                    memberCount: '48/50',
-                    roleNames: 'Clan Members',
-                    roleMention: '@Clan Members'
-                  }}
-                />
-              </div>
-            </div>
-          )}
+          {/* Donation event template removed because donation request tracking is not supported */}
         </div>
       </div>
 
