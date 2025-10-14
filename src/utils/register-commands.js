@@ -80,6 +80,46 @@ const commands = [
     description: 'Replies with Pong!'
   },
   {
+    name: 'roblox',
+    description: 'Roblox user info and utilities',
+    options: [
+      {
+        name: 'user',
+        description: 'Get Roblox user profile',
+        type: 1, // SUB_COMMAND
+        options: [
+          { name: 'username', description: 'Roblox username', type: 3, required: false },
+          { name: 'id', description: 'Roblox user ID', type: 4, required: false }
+        ]
+      },
+      {
+        name: 'avatar',
+        description: 'Get Roblox user avatar',
+        type: 1, // SUB_COMMAND
+        options: [
+          { name: 'username', description: 'Roblox username', type: 3, required: false },
+          { name: 'id', description: 'Roblox user ID', type: 4, required: false },
+          { name: 'size', description: 'Avatar size', type: 3, required: false, choices: [
+            { name: '150x150', value: '150x150' },
+            { name: '352x352', value: '352x352' },
+            { name: '420x420', value: '420x420' },
+            { name: '720x720', value: '720x720' }
+          ] }
+        ]
+      },
+      {
+        name: 'groups',
+        description: 'List user groups and roles',
+        type: 1, // SUB_COMMAND
+        options: [
+          { name: 'username', description: 'Roblox username', type: 3, required: false },
+          { name: 'id', description: 'Roblox user ID', type: 4, required: false },
+          { name: 'limit', description: 'How many groups to show (1-10)', type: 4, required: false, min_value: 1, max_value: 10 }
+        ]
+      }
+    ]
+  },
+  {
     name: 'whoami',
     description: 'Shows your username and ID'
   },
