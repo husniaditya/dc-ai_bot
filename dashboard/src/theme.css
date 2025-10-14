@@ -1979,6 +1979,16 @@ html:not(.dark) .btn-regex:hover {
 /* Brand logo */
 .brand-logo { width:34px; height:34px; display:block; object-fit:cover; border-radius:10px; box-shadow:0 2px 6px -2px rgba(0,0,0,0.55),0 0 0 1px rgba(255,255,255,0.18); }
 
+/* --------------------------------------------- */
+/* Clash of Clans config: help text in dark mode */
+/* Increase contrast for helper text under inputs */
+/* --------------------------------------------- */
+html.dark .clash-config-wrapper .form-text,
+html.dark .clash-config-wrapper .form-text.small,
+html.dark .clash-config-wrapper .form-text.tiny {
+  color: var(--text-soft) !important; /* brighter than muted for readability */
+}
+
 /* Modern theme switch */
 .theme-toggle { position:relative; display:inline-flex; align-items:center; cursor:pointer; }
 .theme-toggle input { position:absolute; opacity:0; inset:0; margin:0; cursor:pointer; }
