@@ -521,6 +521,9 @@
       "valorant": {
         "title": "Valorant"
       },
+      "roblox": {
+        "title": "Roblox"
+      },
       "streaming": {
         "title": "Streaming Integration"
       }
@@ -822,6 +825,26 @@
       "valorant esports": {
         "usage": "/valorant esports [region] [days]",
         "desc": "View upcoming Valorant esports matches and tournament schedules."
+      },
+      "roblox user": {
+        "usage": "/roblox user <username>",
+        "desc": "Get Roblox user profile and stats."
+      },
+      "roblox avatar": {
+        "usage": "/roblox avatar <username> [size]",
+        "desc": "Show Roblox avatar image."
+      },
+      "roblox groups": {
+        "usage": "/roblox groups <username>",
+        "desc": "List groups and ranks for a user."
+      },
+      "roblox username_history": {
+        "usage": "/roblox username_history <username> [limit]",
+        "desc": "Show recent usernames for a user."
+      },
+      "roblox badges": {
+        "usage": "/roblox badges <username> [limit]",
+        "desc": "Show recent badges earned by a user."
       }
     }
   },

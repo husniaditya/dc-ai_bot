@@ -5,6 +5,7 @@ const ROBLOX_USERS_API = 'https://users.roblox.com';
 const ROBLOX_THUMBS_API = 'https://thumbnails.roblox.com';
 const ROBLOX_FRIENDS_API = 'https://friends.roblox.com';
 const ROBLOX_GROUPS_API = 'https://groups.roblox.com';
+const ROBLOX_BADGES_API = 'https://badges.roblox.com';
 
 async function fetchJson(url, opts = {}) {
   const res = await fetch(url, {
@@ -90,6 +91,23 @@ async function resolveUserIdFromOptions(interaction) {
   return resolveUsernameToId(usernameOpt);
 }
 
+function formatDateTime(iso) {
+  try {
+    const d = new Date(iso);
+    return isNaN(d.getTime()) ? 'N/A' : d.toLocaleString();
+  } catch {
+    return 'N/A';
+  }
+}
+
+function getLimitOption(interaction, name, def, min, max) {
+  let v = interaction.options.getInteger(name) ?? def;
+  if (typeof v !== 'number' || isNaN(v)) v = def;
+  if (v < min) v = min;
+  if (v > max) v = max;
+  return v;
+}
+
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('roblox')
@@ -121,6 +139,20 @@ module.exports = {
         .addStringOption(o => o.setName('username').setDescription('Roblox username'))
         .addIntegerOption(o => o.setName('id').setDescription('Roblox user ID'))
         .addIntegerOption(o => o.setName('limit').setDescription('How many groups to show (1-10)').setMinValue(1).setMaxValue(10))
+    )
+    .addSubcommand(sub =>
+      sub.setName('username_history')
+        .setDescription('Show recent username history')
+        .addStringOption(o => o.setName('username').setDescription('Roblox username'))
+        .addIntegerOption(o => o.setName('id').setDescription('Roblox user ID'))
+        .addIntegerOption(o => o.setName('limit').setDescription('How many entries to show (1-15)').setMinValue(1).setMaxValue(15))
+    )
+    .addSubcommand(sub =>
+      sub.setName('badges')
+        .setDescription('List recently earned badges')
+        .addStringOption(o => o.setName('username').setDescription('Roblox username'))
+        .addIntegerOption(o => o.setName('id').setDescription('Roblox user ID'))
+        .addIntegerOption(o => o.setName('limit').setDescription('How many badges to show (1-12)').setMinValue(1).setMaxValue(12))
     ),
 
   async execute(interaction) {
@@ -136,6 +168,12 @@ module.exports = {
         case 'groups':
           await handleGroups(interaction);
           break;
+        case 'username_history':
+          await handleUsernameHistory(interaction);
+          break;
+        case 'badges':
+          await handleBadges(interaction);
+          break;
         default:
           await interaction.reply({ content: 'Unknown subcommand', ephemeral: true });
       }
@@ -145,7 +183,9 @@ module.exports = {
         ? 'User not found. Double-check the username/ID.'
         : err?.status === 429
           ? 'Roblox API rate limited. Please try again shortly.'
-          : 'Failed to process Roblox command.';
+          : err?.status === 403
+            ? 'This data may be private or requires authentication.'
+            : 'Failed to process Roblox command.';
 
       if (interaction.deferred) {
         await interaction.editReply({ content, ephemeral: true });
@@ -206,7 +246,7 @@ async function handleAvatar(interaction) {
 async function handleGroups(interaction) {
   await interaction.deferReply();
   const userId = await resolveUserIdFromOptions(interaction);
-  const limit = interaction.options.getInteger('limit') || 6;
+  const limit = getLimitOption(interaction, 'limit', 6, 1, 10);
 
   const [profile, groups] = await Promise.all([
     getUserProfile(userId),
@@ -238,6 +278,83 @@ async function handleGroups(interaction) {
       typeof memberCount === 'number' ? `Members: ${memberCount}` : null,
     ].filter(Boolean).join(' \u2022 ');
     embed.addFields({ name, value: value || '—', inline: false });
+  });
+
+  await interaction.editReply({ embeds: [embed] });
+}
+
+async function handleUsernameHistory(interaction) {
+  await interaction.deferReply();
+  const userId = await resolveUserIdFromOptions(interaction);
+  const limit = getLimitOption(interaction, 'limit', 10, 1, 15);
+
+  const qs = new URLSearchParams({ limit: String(limit), sortOrder: 'Desc' });
+  const url = `${ROBLOX_USERS_API}/v1/users/${userId}/username-history?${qs.toString()}`;
+  const data = await fetchJson(url);
+  const entries = Array.isArray(data?.data) ? data.data : [];
+
+  if (entries.length === 0) {
+    await interaction.editReply({ content: 'No username history found for this user.', ephemeral: true });
+    return;
+  }
+
+  const [profile, avatarUrl] = await Promise.all([
+    getUserProfile(userId),
+    getAvatarThumb(userId, '150x150').catch(() => null),
+  ]);
+
+  const embed = new EmbedBuilder()
+    .setTitle(`Username History: ${profile?.name || userId}`)
+    .setURL(`https://www.roblox.com/users/${userId}/profile`)
+    .setColor('#00A2FF')
+    .setThumbnail(avatarUrl || null);
+
+  entries.forEach((e, idx) => {
+    const name = e?.name || e?.username || 'Unknown';
+    const changedAt = e?.created || e?.updated || e?.changedAt; // API variants
+    const when = changedAt ? formatDateTime(changedAt) : '—';
+    embed.addFields({ name: `${idx + 1}. ${name}`, value: `Changed: ${when}`, inline: false });
+  });
+
+  await interaction.editReply({ embeds: [embed] });
+}
+
+async function handleBadges(interaction) {
+  await interaction.deferReply();
+  const userId = await resolveUserIdFromOptions(interaction);
+  const limit = getLimitOption(interaction, 'limit', 8, 1, 12);
+
+  const qs = new URLSearchParams({ limit: String(limit), sortOrder: 'Desc' });
+  const url = `${ROBLOX_BADGES_API}/v1/users/${userId}/badges?${qs.toString()}`;
+  const data = await fetchJson(url);
+  const badges = Array.isArray(data?.data) ? data.data : [];
+
+  if (badges.length === 0) {
+    await interaction.editReply({ content: 'No badges found or the user has hidden them.', ephemeral: true });
+    return;
+  }
+
+  const [profile, avatarUrl] = await Promise.all([
+    getUserProfile(userId),
+    getAvatarThumb(userId, '150x150').catch(() => null),
+  ]);
+
+  const embed = new EmbedBuilder()
+    .setTitle(`Recent Badges: ${profile?.name || userId}`)
+    .setURL(`https://www.roblox.com/users/${userId}/profile`)
+    .setColor('#00A2FF')
+    .setThumbnail(avatarUrl || null);
+
+  badges.slice(0, limit).forEach((b, idx) => {
+    const title = b?.name || 'Unnamed Badge';
+    const desc = truncate(b?.description || '');
+    const awarded = b?.awardedDate || b?.created || null; // awardedDate if provided
+    const info = [
+      awarded ? `Awarded: ${formatDateTime(awarded)}` : null,
+      b?.statTracking?.latestAwardedDate ? `Latest: ${formatDateTime(b.statTracking.latestAwardedDate)}` : null,
+    ].filter(Boolean).join(' • ');
+    const value = [desc || '—', info].filter(Boolean).join('\n');
+    embed.addFields({ name: `${idx + 1}. ${title}`, value: value || '—', inline: false });
   });
 
   await interaction.editReply({ embeds: [embed] });

@@ -1321,6 +1321,16 @@ export default function App(){
         { name:'valorant config', usage:'/valorant config', desc:'Configure Valorant player tracking and notifications (requires Manage Server).', requiresManage:true }
       ]
     },
+    {
+      key: 'roblox', title: 'Roblox', icon: 'fa-gamepad', accent: '#00bcd4',
+      items: [
+        { name:'roblox user', usage:'/roblox user <username>', desc:'Get Roblox user profile and stats.' },
+        { name:'roblox avatar', usage:'/roblox avatar <username> [size]', desc:'Show Roblox avatar image.' },
+        { name:'roblox groups', usage:'/roblox groups <username>', desc:'List groups and ranks for a user.' },
+        { name:'roblox username_history', usage:'/roblox username_history <username> [limit]', desc:'Show recent usernames for a user.' },
+        { name:'roblox badges', usage:'/roblox badges <username> [limit]', desc:'Show recent badges earned by a user.' }
+      ]
+    },
     // Streaming group (conditionally shown if user has Manage Server permission in guild)
     {
       key: 'streaming', title: 'Streaming Integration', icon: 'fa-video', accent: '#7c3aed',

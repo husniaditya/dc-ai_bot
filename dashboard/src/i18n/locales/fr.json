@@ -507,6 +507,9 @@
       },
       "valorant": {
         "title": "Valorant"
+      },
+      "roblox": {
+        "title": "Roblox"
       }
     },
     "toasts": {
@@ -806,6 +809,26 @@
       "valorant esports": {
         "usage": "/valorant esports [region] [days]",
         "desc": "Voir les prochains matchs esports Valorant et calendriers de tournois."
+      },
+      "roblox user": {
+        "usage": "/roblox user <username>",
+        "desc": "Obtenir le profil et les statistiques d'un utilisateur Roblox."
+      },
+      "roblox avatar": {
+        "usage": "/roblox avatar <username> [size]",
+        "desc": "Afficher l'image d'avatar Roblox."
+      },
+      "roblox groups": {
+        "usage": "/roblox groups <username>",
+        "desc": "Lister les groupes et grades d'un utilisateur."
+      },
+      "roblox username_history": {
+        "usage": "/roblox username_history <username> [limit]",
+        "desc": "Afficher les pseudonymes récents d'un utilisateur."
+      },
+      "roblox badges": {
+        "usage": "/roblox badges <username> [limit]",
+        "desc": "Afficher les badges récemment obtenus par un utilisateur."
       }
     }
   },
