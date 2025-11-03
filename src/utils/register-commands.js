@@ -116,6 +116,26 @@ const commands = [
           { name: 'id', description: 'Roblox user ID', type: 4, required: false },
           { name: 'limit', description: 'How many groups to show (1-10)', type: 4, required: false, min_value: 1, max_value: 10 }
         ]
+      },
+      {
+        name: 'username_history',
+        description: 'Show recent username history',
+        type: 1, // SUB_COMMAND
+        options: [
+          { name: 'username', description: 'Roblox username', type: 3, required: false },
+          { name: 'id', description: 'Roblox user ID', type: 4, required: false },
+          { name: 'limit', description: 'How many entries to show (1-15)', type: 4, required: false, min_value: 1, max_value: 15 }
+        ]
+      },
+      {
+        name: 'badges',
+        description: 'List recently earned badges',
+        type: 1, // SUB_COMMAND
+        options: [
+          { name: 'username', description: 'Roblox username', type: 3, required: false },
+          { name: 'id', description: 'Roblox user ID', type: 4, required: false },
+          { name: 'limit', description: 'How many badges to show (1-12)', type: 4, required: false, min_value: 1, max_value: 12 }
+        ]
       }
     ]
   },

@@ -507,6 +507,9 @@
       },
       "valorant": {
         "title": "Valorant"
+      },
+      "roblox": {
+        "title": "Roblox"
       }
     },
     "toasts": {
@@ -806,6 +809,26 @@
       "valorant esports": {
         "usage": "/valorant esports [region] [days]",
         "desc": "今後のValorantのeスポーツの試合とトーナメントスケジュールを表示します。"
+      },
+      "roblox user": {
+        "usage": "/roblox user <username>",
+        "desc": "Robloxユーザーのプロフィールと統計を取得。"
+      },
+      "roblox avatar": {
+        "usage": "/roblox avatar <username> [size]",
+        "desc": "Robloxアバター画像を表示。"
+      },
+      "roblox groups": {
+        "usage": "/roblox groups <username>",
+        "desc": "ユーザーの所属グループとランクを一覧表示。"
+      },
+      "roblox username_history": {
+        "usage": "/roblox username_history <username> [limit]",
+        "desc": "ユーザーの最近のユーザー名履歴を表示。"
+      },
+      "roblox badges": {
+        "usage": "/roblox badges <username> [limit]",
+        "desc": "ユーザーが最近獲得したバッジを表示。"
       }
     }
   },

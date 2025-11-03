@@ -10,6 +10,7 @@ const CWLDataExport = require('../../utils/cwl/CWLDataExport');
 const CWLInteractiveLeaderboard = require('../../utils/cwl/CWLInteractiveLeaderboard');
 const CWLStatisticsDashboard = require('../../utils/cwl/CWLStatisticsDashboard');
 const CWLClanManagement = require('../../utils/cwl/CWLClanManagement');
+const CWLLeaderboardCanvas = require('../../utils/cwl/CWLLeaderboardCanvas');
 const { 
   fetchClanInfo, 
   fetchCWLLeagueGroup,
@@ -139,14 +140,27 @@ async function pollGuildCWL(guild) {
 async function checkCWLStatus(guild, cfg, clanTag, clanInfo) {
   const stateManager = getCWLStateManager();
   
+  console.log(`[CWL DEBUG] Checking CWL status for clan ${clanTag} (${clanInfo.name})`);
+  
   // Fetch CWL league group data
   const leagueData = await fetchCWLLeagueGroup(clanTag);
+  
+  if (!leagueData) {
+    console.log(`[CWL DEBUG] Clan ${clanTag} is not in CWL`);
+    return;
+  }
+  
+  console.log(`[CWL DEBUG] Clan ${clanTag} is in CWL, season: ${leagueData.season}, rounds: ${leagueData.rounds?.length || 0}`);
   
   // Get current CWL state from database
   const currentState = await stateManager.getCurrentCWLState(guild.id, clanTag);
   
+  console.log(`[CWL DEBUG] Current DB state for clan ${clanTag}:`, currentState.cwl_state);
+  
   // Determine if state transition is needed
   const transitionAction = stateManager.getTransitionAction(currentState, leagueData);
+
+  console.log(`[CWL DEBUG] Transition check for clan ${clanTag}:`, JSON.stringify(transitionAction, null, 2));
 
   if (process.env.COC_DEBUG === '1') {
     console.log(`[CWL] Transition check for clan ${clanTag}:`, JSON.stringify(transitionAction, null, 2));
@@ -201,14 +215,21 @@ async function checkCWLRounds(guild, cfg, clanTag, clanInfo, leagueData, current
   const stateManager = getCWLStateManager();
   const announcedRounds = currentState.announced_rounds || [];
   
+  console.log(`[CWL DEBUG] Checking rounds for clan ${clanTag}, announced rounds:`, announcedRounds);
+  
   // Find clan in league data
   const ourClan = leagueData.clans?.find(c => cleanClanTag(c.tag) === clanTag);
-  if (!ourClan) return;
+  if (!ourClan) {
+    console.log(`[CWL DEBUG] Clan ${clanTag} not found in league data`);
+    return;
+  }
 
   // Check each round
   for (let roundIndex = 0; roundIndex < leagueData.rounds.length; roundIndex++) {
     const round = leagueData.rounds[roundIndex];
     const roundNumber = roundIndex + 1;
+
+    console.log(`[CWL DEBUG] Checking round ${roundNumber}, war tags:`, round.warTags);
 
     // Find our war in this round by checking all war tags
     let ourWarTag = null;
@@ -229,11 +250,21 @@ async function checkCWLRounds(guild, cfg, clanTag, clanInfo, leagueData, current
       }
     }
     
-    if (!ourWarTag) continue;
+    if (!ourWarTag) {
+      console.log(`[CWL DEBUG] Round ${roundNumber}: No war found for our clan`);
+      continue;
+    }
+
+    console.log(`[CWL DEBUG] Round ${roundNumber}: Found our war tag ${ourWarTag}`);
 
     // Fetch the war details
     const warData = await fetchCWLWar(ourWarTag);
-    if (!warData) continue;
+    if (!warData) {
+      console.log(`[CWL DEBUG] Round ${roundNumber}: Failed to fetch war data`);
+      continue;
+    }
+
+    console.log(`[CWL DEBUG] Round ${roundNumber}: War state is ${warData.state}, announced: ${announcedRounds.includes(roundNumber)}`);
 
     // === CONTINUOUS PLAYER PERFORMANCE TRACKING ===
     // Update player performance data on EVERY poll (not just when announcing)
@@ -256,13 +287,21 @@ async function checkCWLRounds(guild, cfg, clanTag, clanInfo, leagueData, current
       }
     }
 
-    // Skip announcement if already announced
-    if (announcedRounds.includes(roundNumber)) continue;
-
-    // Only announce if war is in progress or ended
-    if (warData.state === 'inWar' || warData.state === 'warEnded') {
-      await announceCWLRound(guild, cfg, clanTag, clanInfo, warData, roundNumber, leagueData);
-      await stateManager.markRoundAnnounced(guild.id, clanTag, roundNumber);
+    // If not yet announced and war is active or ended, announce once with canvas
+    if (!announcedRounds.includes(roundNumber)) {
+      if (warData.state === 'inWar' || warData.state === 'warEnded') {
+        console.log(`[CWL DEBUG] Round ${roundNumber}: Announcing new round (state: ${warData.state})`);
+        await announceCWLRound(guild, cfg, clanTag, clanInfo, warData, roundNumber, leagueData);
+        await stateManager.markRoundAnnounced(guild.id, clanTag, roundNumber);
+      }
+    } else if (warData.state === 'warEnded') {
+      console.log(`[CWL DEBUG] Round ${roundNumber}: Updating final canvas (already announced, now ended)`);
+      // Already announced earlier (likely during inWar). Update the existing canvas message with final results.
+      await updateCWLFinalRoundCanvas(guild, cfg, clanTag, clanInfo, warData, roundNumber, leagueData);
+    } else if (warData.state === 'inWar') {
+      console.log(`[CWL DEBUG] Round ${roundNumber}: Updating in-war canvas (already announced, still in progress)`);
+      // Already announced and war in progress: refresh canvas every poll (~1 minute)
+      await updateCWLInWarCanvas(guild, cfg, clanTag, clanInfo, warData, roundNumber, leagueData);
     }
   }
 }
@@ -384,12 +423,12 @@ async function announceCWLRound(guild, cfg, clanTag, clanInfo, warData, roundNum
   try {
     const clanConfigs = cfg.clanConfigs || {};
     const clanConfig = clanConfigs[clanTag] || {};
-    // Require CWL Leaderboard channel (no fallback to war channels)
-    const channelId = clanConfig.cwlLeaderboardChannelId;
+    // Use CWL Announce channel for round announcements (NOT leaderboard channel)
+    const channelId = clanConfig.cwlAnnounceChannelId;
 
     if (!channelId) {
-      console.warn(`[CWL] ⚠️  Clan ${clanTag} (${clanInfo.name}) has no CWL Leaderboard Channel configured!`);
-      console.warn(`[CWL] ℹ️  Please set 'CWL Leaderboard' channel in Dashboard → Games & Socials → Clash of Clans → Clan Configuration`);
+      console.warn(`[CWL] ⚠️  Clan ${clanTag} (${clanInfo.name}) has no CWL Announce Channel configured!`);
+      console.warn(`[CWL] ℹ️  Please set 'CWL Announcements' channel in Dashboard → Games & Socials → Clash of Clans → Clan Configuration`);
       return;
     }
 
@@ -399,7 +438,7 @@ async function announceCWLRound(guild, cfg, clanTag, clanInfo, warData, roundNum
       return;
     }
 
-    // CRITICAL: Ensure warData.clan is OUR clan, not the opponent
+    console.log(`[CWL] Announcing round ${roundNumber} for ${warData.clan.name} vs ${warData.opponent.name} in channel ${channel.name} (cwlAnnounceChannelId)`);
     // The API might return clans in any order, so we need to check and swap if needed
     const ourClanTag = cleanClanTag(clanTag);
     const clan1Tag = cleanClanTag(warData.clan?.tag);
@@ -445,7 +484,7 @@ async function announceCWLRound(guild, cfg, clanTag, clanInfo, warData, roundNum
 
     const embed = {
       title: `🏆 CWL Round ${roundNumber} ${warData.state === 'warEnded' ? 'Result' : 'Update'}`,
-      description: `**${warData.clan.name}** vs **${warData.opponent.name}**`,
+      description: `**${warData.clan.name}** vs **${warData.opponent.name}**\n\n🕐 Last Updated: <t:${Math.floor(Date.now() / 1000)}:R>`,
       color: warColor,
       fields: [
         { name: 'Round', value: `${roundNumber}`, inline: true },
@@ -459,11 +498,71 @@ async function announceCWLRound(guild, cfg, clanTag, clanInfo, warData, roundNum
       timestamp: new Date().toISOString()
     };
 
-    const message = await channel.send({ embeds: [embed] });
+    // Build player list for canvas from DB performance (authoritative)
+    const perfSvc = getCWLPlayerPerformance();
+    if (!perfSvc) {
+      console.error('[CWL] ERROR: getCWLPlayerPerformance() returned null/undefined');
+      throw new Error('CWLPlayerPerformance service not initialized');
+    }
+    const seasonForPlayers = getCWLStateManager().getCurrentSeason();
+    console.log(`[CWL DEBUG] Calling perfSvc.getRoundPlayerPerformance with:`, { guild: guild.id, clan: cleanClanTag(clanTag), season: seasonForPlayers, round: roundNumber });
+    const perfRows = await perfSvc.getRoundPlayerPerformance(guild.id, cleanClanTag(clanTag), seasonForPlayers, roundNumber);
+    console.log(`[CWL DEBUG] Retrieved ${perfRows.length} player performance rows for round ${roundNumber}`);
+    
+    // Build a lookup for opponent positions
+    const opponentMembers = Array.isArray(warData.opponent?.members) ? warData.opponent.members : [];
+    const opponentByTag = new Map(opponentMembers.map(m => [m.tag, m]));
 
-    // Store leaderboard message ID
-    const stateManager = getCWLStateManager();
-    await stateManager.storeCWLMessageId(guild.id, clanTag, 'leaderboard', message.id);
+    const players = perfRows.map((r, idx) => {
+      const details = [];
+      // We only persist the best (or total) metrics per player per round; map to a single detail entry
+      if (r.attack_order && r.stars_earned != null) {
+        const target = r.target_tag ? opponentByTag.get(r.target_tag) : null;
+        details.push({
+          defenderPosition: r.target_position ?? (target?.mapPosition ?? null),
+          stars: Number(r.stars_earned) || 0,
+          destructionPercentage: Number(r.destruction_percentage) || 0
+        });
+      }
+      
+      return {
+        rank: idx + 1,
+        name: r.player_name,
+        role: 'Member',
+        townHallLevel: r.townhall_level || 1, // ✅ CORRECT - attacker's TH from database
+        averageStars: (r.attacks_used > 0 ? (Number(r.stars_earned) / Number(r.attacks_used || 1)).toFixed(2) : '0.00'),
+        warsParticipated: 1,
+        winRate: warData.state === 'warEnded' ? (warData.clan.stars >= warData.opponent.stars ? '100.0' : '0.0') : '0.0',
+        currentWarAttackDetails: details
+      };
+    });
+
+    // Compose warData object as expected by canvas war generator
+    const canvasWarData = {
+      clanName: warData.clan?.name || clanInfo.name,
+      clanTag: clanTag,
+      currentWar: warData,
+      opponent: warData.opponent?.name
+    };
+
+    const warState = warData.state === 'preparation' ? 'preparation' : (warData.state === 'inWar' ? 'inWar' : 'warEnded');
+    const canvas = new CWLLeaderboardCanvas();
+    const canvasBuffer = await canvas.generateCWLWarLeaderboard(
+      players,
+      { ...cfg, clan_name: canvasWarData.clanName, clan_tag: clanTag },
+      1,
+      1,
+      canvasWarData,
+      warState
+    );
+
+  const message = await channel.send({ embeds: [embed], files: [{ attachment: canvasBuffer, name: `cwl_round_${roundNumber}.png` }] });
+
+  // Store per-round leaderboard message ID in standings table so we can edit later on war end
+  const stateManager = getCWLStateManager();
+  const cwlLeaderboardSvc = getCWLLeaderboard();
+  const seasonForMsg = stateManager.getCurrentSeason();
+  await cwlLeaderboardSvc.updateLeaderboardMessageId(guild.id, clanTag, seasonForMsg, roundNumber, message.id);
 
     // === NEW ENHANCED FEATURES ===
     
@@ -471,13 +570,12 @@ async function announceCWLRound(guild, cfg, clanTag, clanInfo, warData, roundNum
     // This announcement function only handles the announcement and related features
     
     // 1. Send leaderboard update (if war ended)
-    const leaderboard = getCWLLeaderboard();
-    const season = stateManager.getCurrentSeason();
+  const leaderboard = getCWLLeaderboard();
+  const season = stateManager.getCurrentSeason();
     if (warData.state === 'warEnded') {
       const leaderboardEmbed = await leaderboard.generateLeaderboardEmbed(guild.id, clanTag, season);
       if (leaderboardEmbed) {
-        const leaderboardMsg = await channel.send({ embeds: [leaderboardEmbed] });
-        await leaderboard.updateLeaderboardMessageId(guild.id, clanTag, season, roundNumber, leaderboardMsg.id);
+        await channel.send({ embeds: [leaderboardEmbed] });
       }
       
       // 2. Send predictions update (after round 3+)
@@ -519,6 +617,316 @@ async function announceCWLRound(guild, cfg, clanTag, clanInfo, warData, roundNum
     console.log(`[CWL] Announced round ${roundNumber} for clan ${clanTag}`);
   } catch (error) {
     console.error(`[CWL] Error announcing round ${roundNumber}:`, error.message);
+    console.error(`[CWL] Error stack:`, error.stack);
+    console.error(`[CWL] perfSvc type:`, typeof getCWLPlayerPerformance());
+    console.error(`[CWL] perfSvc value:`, getCWLPlayerPerformance());
+  }
+}
+
+/**
+ * Update existing CWL round canvas message with final results after war ends
+ */
+async function updateCWLFinalRoundCanvas(guild, cfg, clanTag, clanInfo, warData, roundNumber, leagueData) {
+  try {
+    const clanConfigs = cfg.clanConfigs || {};
+    const clanConfig = clanConfigs[clanTag] || {};
+    // Use CWL Announce channel (same as initial announcement)
+    const channelId = clanConfig.cwlAnnounceChannelId;
+    if (!channelId) return;
+
+    const channel = guild.channels.cache.get(channelId);
+    if (!channel) return;
+
+    const stateManager = getCWLStateManager();
+    const cwlLeaderboardSvc = getCWLLeaderboard();
+    const season = stateManager.getCurrentSeason();
+
+    // Fetch the previously stored message id for this round from standings table
+    const messageId = await getCWLStandingMessageId(cwlLeaderboardSvc, guild.id, clanTag, season, roundNumber);
+    if (!messageId) return; // No message to update
+
+    // Ensure perspective: our clan should be in warData.clan
+    const ourClanTag = cleanClanTag(clanTag);
+    const clan1Tag = cleanClanTag(warData.clan?.tag);
+    const clan2Tag = cleanClanTag(warData.opponent?.tag);
+    if (clan2Tag === ourClanTag && clan1Tag !== ourClanTag) {
+      const temp = warData.clan;
+      warData.clan = warData.opponent;
+      warData.opponent = temp;
+      if (process.env.COC_DEBUG === '1') {
+        console.log(`[CWL] (update) Swapped clan/opponent for correct perspective (clan ${clanTag})`);
+      }
+    }
+
+  // Rebuild players and canvas like in announceCWLRound, but from DB performance
+    const perfSvc = getCWLPlayerPerformance();
+    const perfRows = await perfSvc.getRoundPlayerPerformance(guild.id, cleanClanTag(clanTag), season, roundNumber);
+    const opponentMembers = Array.isArray(warData.opponent?.members) ? warData.opponent.members : [];
+    const opponentByTag = new Map(opponentMembers.map(m => [m.tag, m]));
+    
+    const players = perfRows.map((r, idx) => {
+      const details = [];
+      if (r.attack_order && r.stars_earned != null) {
+        const target = r.target_tag ? opponentByTag.get(r.target_tag) : null;
+        details.push({
+          defenderPosition: r.target_position ?? (target?.mapPosition ?? null),
+          stars: Number(r.stars_earned) || 0,
+          destructionPercentage: Number(r.destruction_percentage) || 0
+        });
+      }
+      
+      return {
+        rank: idx + 1,
+        name: r.player_name,
+        role: 'Member',
+        townHallLevel: r.townhall_level || 1, // ✅ CORRECT - attacker's TH from database
+        averageStars: (r.attacks_used > 0 ? (Number(r.stars_earned) / Number(r.attacks_used || 1)).toFixed(2) : '0.00'),
+        warsParticipated: 1,
+        winRate: '0.0',
+        currentWarAttackDetails: details
+      };
+    });
+
+    const canvasWarData = {
+      clanName: warData.clan?.name || clanInfo.name,
+      clanTag: clanTag,
+      currentWar: warData,
+      opponent: warData.opponent?.name
+    };
+    const canvas = new CWLLeaderboardCanvas();
+    const canvasBuffer = await canvas.generateCWLWarLeaderboard(
+      players,
+      { ...cfg, clan_name: canvasWarData.clanName, clan_tag: clanTag },
+      1,
+      1,
+      canvasWarData,
+      'warEnded'
+    );
+
+    // Build updated embed for final result
+    let warResult = 'Tie';
+    let warColor = 0xFFFF00; // Yellow
+    const ourStars = warData.clan.stars || 0;
+    const theirStars = warData.opponent.stars || 0;
+    if (ourStars > theirStars) {
+      warResult = 'Victory';
+      warColor = 0x00FF00;
+    } else if (ourStars < theirStars) {
+      warResult = 'Defeat';
+      warColor = 0xFF0000;
+    } else {
+      const ourDestruction = warData.clan.destructionPercentage || 0;
+      const theirDestruction = warData.opponent.destructionPercentage || 0;
+      if (ourDestruction > theirDestruction) {
+        warResult = 'Victory';
+        warColor = 0x00FF00;
+      } else if (ourDestruction < theirDestruction) {
+        warResult = 'Defeat';
+        warColor = 0xFF0000;
+      }
+    }
+    const finalEmbed = {
+      title: `🏆 CWL Round ${roundNumber} Result`,
+      description: `**${warData.clan.name}** vs **${warData.opponent.name}**\n\n🕐 Last Updated: <t:${Math.floor(Date.now() / 1000)}:R>`,
+      color: warColor,
+      fields: [
+        { name: 'Round', value: `${roundNumber}`, inline: true },
+        { name: 'Status', value: warResult, inline: true },
+        { name: 'Our Stars', value: `${ourStars}⭐`, inline: true },
+        { name: 'Enemy Stars', value: `${theirStars}⭐`, inline: true },
+        { name: 'Our Destruction', value: `${(warData.clan.destructionPercentage || 0).toFixed(1)}%`, inline: true },
+        { name: 'Enemy Destruction', value: `${(warData.opponent.destructionPercentage || 0).toFixed(1)}%`, inline: true }
+      ],
+      footer: { text: `CWL ${leagueData.season || ''}` },
+      timestamp: new Date().toISOString()
+    };
+
+    // Edit the previous message with the final canvas and refreshed embed
+    try {
+      const msg = await channel.messages.fetch(messageId);
+      await msg.edit({ embeds: [finalEmbed], files: [{ attachment: canvasBuffer, name: `cwl_round_${roundNumber}.png` }] });
+      console.log(`[CWL DEBUG] Successfully updated final canvas for round ${roundNumber}`);
+    } catch (e) {
+      console.error(`[CWL] Could not update final canvas for round ${roundNumber}:`, e.message);
+      
+      // If message not found (deleted/moved), create a new final announcement
+      if (e.message.includes('Unknown Message') || e.code === 10008) {
+        console.log(`[CWL DEBUG] Message ${messageId} not found. Creating new final announcement for round ${roundNumber}`);
+        try {
+          const newMsg = await channel.send({ embeds: [finalEmbed], files: [{ attachment: canvasBuffer, name: `cwl_round_${roundNumber}.png` }] });
+          await cwlLeaderboardSvc.updateLeaderboardMessageId(guild.id, clanTag, season, roundNumber, newMsg.id);
+          console.log(`[CWL DEBUG] Created new final message ${newMsg.id} for round ${roundNumber}`);
+        } catch (createError) {
+          console.error(`[CWL] Failed to create new final canvas message:`, createError.message);
+        }
+      }
+      
+      if (process.env.COC_DEBUG === '1') {
+        console.warn(`[CWL] Could not update final canvas for round ${roundNumber}:`, e.message);
+      }
+    }
+  } catch (error) {
+    if (process.env.COC_DEBUG === '1') {
+      console.error('[CWL] Error updating final CWL round canvas:', error.message);
+    }
+  }
+}
+
+/**
+ * Update existing CWL round canvas message while war is active (inWar)
+ * Runs each poll (min 60s) to keep the canvas fresh
+ */
+async function updateCWLInWarCanvas(guild, cfg, clanTag, clanInfo, warData, roundNumber, leagueData) {
+  try {
+    const clanConfigs = cfg.clanConfigs || {};
+    const clanConfig = clanConfigs[clanTag] || {};
+    // Use CWL Announce channel (same as initial announcement)
+    const channelId = clanConfig.cwlAnnounceChannelId;
+    
+    if (!channelId) {
+      console.log(`[CWL DEBUG] updateCWLInWarCanvas: No cwlAnnounceChannelId configured for clan ${clanTag}`);
+      return;
+    }
+
+    const channel = guild.channels.cache.get(channelId);
+    if (!channel) {
+      console.log(`[CWL DEBUG] updateCWLInWarCanvas: Channel ${channelId} not found`);
+      return;
+    }
+
+    const stateManager = getCWLStateManager();
+    const cwlLeaderboardSvc = getCWLLeaderboard();
+    const season = stateManager.getCurrentSeason();
+
+    // Previously stored message id for this round
+    const messageId = await getCWLStandingMessageId(cwlLeaderboardSvc, guild.id, clanTag, season, roundNumber);
+    
+    if (!messageId) {
+      console.log(`[CWL DEBUG] updateCWLInWarCanvas: No message ID stored for round ${roundNumber}. Creating new announcement instead.`);
+      // If no message exists yet, create initial announcement (shouldn't happen if announced properly during inWar start)
+      await announceCWLRound(guild, cfg, clanTag, clanInfo, warData, roundNumber, leagueData);
+      return;
+    }
+    
+    console.log(`[CWL DEBUG] updateCWLInWarCanvas: Updating message ${messageId} for round ${roundNumber}`);
+
+    // Ensure perspective: our clan should be in warData.clan
+    const ourClanTag = cleanClanTag(clanTag);
+    const clan1Tag = cleanClanTag(warData.clan?.tag);
+    const clan2Tag = cleanClanTag(warData.opponent?.tag);
+    if (clan2Tag === ourClanTag && clan1Tag !== ourClanTag) {
+      const temp = warData.clan;
+      warData.clan = warData.opponent;
+      warData.opponent = temp;
+      if (process.env.COC_DEBUG === '1') {
+        console.log(`[CWL] (inWar update) Swapped clan/opponent for correct perspective (clan ${clanTag})`);
+      }
+    }
+
+    // Build players like in announceCWLRound, but from DB performance for in-war refresh
+    const perfSvc2 = getCWLPlayerPerformance();
+    const perfRows2 = await perfSvc2.getRoundPlayerPerformance(guild.id, cleanClanTag(clanTag), season, roundNumber);
+    const opponentMembers2 = Array.isArray(warData.opponent?.members) ? warData.opponent.members : [];
+    const opponentByTag2 = new Map(opponentMembers2.map(m => [m.tag, m]));
+    
+    const players = perfRows2.map((r, idx) => {
+      const details = [];
+      if (r.attack_order && r.stars_earned != null) {
+        const target = r.target_tag ? opponentByTag2.get(r.target_tag) : null;
+        details.push({
+          defenderPosition: r.target_position ?? (target?.mapPosition ?? null),
+          stars: Number(r.stars_earned) || 0,
+          destructionPercentage: Number(r.destruction_percentage) || 0
+        });
+      }
+      
+      return {
+        rank: idx + 1,
+        name: r.player_name,
+        role: 'Member',
+        townHallLevel: r.townhall_level || 1, // ✅ CORRECT - attacker's TH from database
+        averageStars: (r.attacks_used > 0 ? (Number(r.stars_earned) / Number(r.attacks_used || 1)).toFixed(2) : '0.00'),
+        warsParticipated: 1,
+        winRate: '0.0',
+        currentWarAttackDetails: details
+      };
+    });
+
+    const canvasWarData = {
+      clanName: warData.clan?.name || clanInfo.name,
+      clanTag: clanTag,
+      currentWar: warData,
+      opponent: warData.opponent?.name
+    };
+
+    const canvas = new CWLLeaderboardCanvas();
+    const canvasBuffer = await canvas.generateCWLWarLeaderboard(
+      players,
+      { ...cfg, clan_name: canvasWarData.clanName, clan_tag: clanTag },
+      1,
+      1,
+      canvasWarData,
+      'inWar'
+    );
+
+    // Build updated in-war embed with current totals
+    const inWarEmbed = {
+      title: `⚔️ CWL Round ${roundNumber} Update`,
+      description: `**${warData.clan.name}** vs **${warData.opponent.name}**\n\n🕐 Last Updated: <t:${Math.floor(Date.now() / 1000)}:R>`,
+      color: 0xFF6B35,
+      fields: [
+        { name: 'Round', value: `${roundNumber}`, inline: true },
+        { name: 'Status', value: 'In Progress', inline: true },
+        { name: 'Our Stars', value: `${warData.clan.stars || 0}⭐`, inline: true },
+        { name: 'Enemy Stars', value: `${warData.opponent.stars || 0}⭐`, inline: true },
+        { name: 'Our Destruction', value: `${(warData.clan.destructionPercentage || 0).toFixed(1)}%`, inline: true },
+        { name: 'Enemy Destruction', value: `${(warData.opponent.destructionPercentage || 0).toFixed(1)}%`, inline: true }
+      ],
+      footer: { text: `CWL ${leagueData.season || ''}` },
+      timestamp: new Date().toISOString()
+    };
+
+    // Edit the previous message with refreshed embed + attachment
+    try {
+      const msg = await channel.messages.fetch(messageId);
+      await msg.edit({ embeds: [inWarEmbed], files: [{ attachment: canvasBuffer, name: `cwl_round_${roundNumber}.png` }] });
+      console.log(`[CWL DEBUG] updateCWLInWarCanvas: Successfully updated message ${messageId} for round ${roundNumber}`);
+    } catch (e) {
+      console.error(`[CWL] Could not update in-war canvas for round ${roundNumber}:`, e.message);
+      
+      // If message not found (deleted/moved), create a new announcement
+      if (e.message.includes('Unknown Message') || e.code === 10008) {
+        console.log(`[CWL DEBUG] Message ${messageId} not found. Creating new announcement for round ${roundNumber}`);
+        try {
+          const newMsg = await channel.send({ embeds: [inWarEmbed], files: [{ attachment: canvasBuffer, name: `cwl_round_${roundNumber}.png` }] });
+          // Update the stored message ID
+          await cwlLeaderboardSvc.updateLeaderboardMessageId(guild.id, clanTag, season, roundNumber, newMsg.id);
+          console.log(`[CWL DEBUG] Created new message ${newMsg.id} for round ${roundNumber}`);
+        } catch (createError) {
+          console.error(`[CWL] Failed to create new canvas message:`, createError.message);
+        }
+      }
+      
+      if (process.env.COC_DEBUG === '1') {
+        console.warn(`[CWL] Could not update in-war canvas for round ${roundNumber}:`, e.message);
+      }
+    }
+  } catch (error) {
+    console.error('[CWL] Error updating in-war CWL canvas:', error.message, error.stack);
+    if (process.env.COC_DEBUG === '1') {
+      console.error('[CWL] Error updating in-war CWL canvas:', error.message);
+    }
+  }
+}
+
+// Helper: get stored message id from standings row (uses service’s getStandingsHistory)
+async function getCWLStandingMessageId(cwlLeaderboardSvc, guildId, clanTag, season, roundNumber) {
+  try {
+    const history = await cwlLeaderboardSvc.getStandingsHistory(guildId, clanTag, season);
+    const round = history.find(r => r.round_number === roundNumber);
+    return round?.leaderboard_message_id || null;
+  } catch {
+    return null;
   }
 }
 
