@@ -372,7 +372,7 @@ class LeaderboardInteractionHandler {
             
             const embed = new EmbedBuilder()
                 .setTitle(`${viewEmoji} ${clanData.clanName} ${viewTitle}`)
-                .setDescription(LeaderboardButtons.createPageIndicator(page, totalPages, clanData.players.length))
+                .setDescription(`${LeaderboardButtons.createPageIndicator(page, totalPages, clanData.players.length)}\n\n🕐 Last Updated: <t:${Math.floor(Date.now() / 1000)}:R>`)
                 .setImage('attachment://leaderboard.png')
                 .setColor(view === 'war' ? '#e74c3c' : '#f39c12')
                 .setTimestamp()
@@ -629,7 +629,7 @@ class LeaderboardInteractionHandler {
                 embed = new EmbedBuilder()
                     .setTitle(`📈 Donation Leaderboard Summary${clanTag ? ` - ${clanTag}` : ''}`)
                     .setColor('#2ecc71')
-                    .setDescription(`Overview for ${leaderboardData.clanName || 'Clan'} (${(config.donation_leaderboard_time_range || 'current_season').replace('_',' ')})`)
+                    .setDescription(`Overview for ${leaderboardData.clanName || 'Clan'} (${(config.donation_leaderboard_time_range || 'current_season').replace('_',' ')})\n\n🕐 Last Updated: <t:${Math.floor(Date.now() / 1000)}:R>`)
                     .addFields([
                         { name: '👥 Players Tracked', value: String(totalPlayers), inline: true },
                         { name: '📦 Total Donations', value: String(totalDonations), inline: true },
@@ -890,7 +890,7 @@ class LeaderboardInteractionHandler {
             
             const embed = new EmbedBuilder()
                 .setTitle(`${viewEmoji} ${leaderboardData.clanName || 'Clan'} ${viewTitle}`)
-                .setDescription(LeaderboardButtons.createPageIndicator(page, totalPages, leaderboardData.players.length))
+                .setDescription(`${LeaderboardButtons.createPageIndicator(page, totalPages, leaderboardData.players.length)}\n\n🕐 Last Updated: <t:${Math.floor(Date.now() / 1000)}:R>`)
                 .setImage('attachment://leaderboard.png')
                 .setColor(view === 'war' ? '#e74c3c' : '#f39c12')
                 .setTimestamp()

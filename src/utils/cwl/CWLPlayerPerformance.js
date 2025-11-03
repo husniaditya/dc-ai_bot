@@ -79,12 +79,15 @@ class CWLPlayerPerformance {
           await this.sqlPool.query(
             `INSERT INTO guild_clashofclans_cwl_player_performance (
               guild_id, clan_tag, season, round_number, player_tag, player_name,
+              townhall_level, map_position,
               attacks_used, attacks_remaining, stars_earned, destruction_percentage,
               target_position, target_tag, target_townhall_level,
               attack_order, is_best_attack, three_star, attack_time
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
             ON DUPLICATE KEY UPDATE
               player_name = VALUES(player_name),
+              townhall_level = VALUES(townhall_level),
+              map_position = VALUES(map_position),
               attacks_used = VALUES(attacks_used),
               attacks_remaining = VALUES(attacks_remaining),
               stars_earned = VALUES(stars_earned),
@@ -103,6 +106,8 @@ class CWLPlayerPerformance {
               roundNumber,
               member.tag,
               member.name,
+              member.townhallLevel || null, // Attacker's TH level from API
+              member.mapPosition || null,   // Attacker's position in war lineup
               attacksUsed,
               attacksRemaining,
               totalStars,
@@ -124,6 +129,45 @@ class CWLPlayerPerformance {
       // console.log(`[CWL Performance] Recorded round ${roundNumber} attacks for ${clanTag}`);
     } catch (error) {
       console.error('[CWL Performance] Error recording round attacks:', error.message);
+    }
+  }
+
+  /**
+   * Get player performance rows for a specific round (used for canvas)
+   * @param {string} guildId
+   * @param {string} clanTag - cleaned tag without leading '#'
+   * @param {string} season - YYYY-MM
+   * @param {number} roundNumber
+   * @returns {Array} rows for the round
+   */
+  async getRoundPlayerPerformance(guildId, clanTag, season, roundNumber) {
+    try {
+      const [rows] = await this.sqlPool.query(
+        `SELECT 
+           player_tag,
+           player_name,
+           townhall_level,
+           map_position,
+           attacks_used,
+           attacks_remaining,
+           stars_earned,
+           destruction_percentage,
+           target_position,
+           target_tag,
+           target_townhall_level,
+           attack_order,
+           is_best_attack,
+           three_star,
+           attack_time
+         FROM guild_clashofclans_cwl_player_performance
+         WHERE guild_id = ? AND clan_tag = ? AND season = ? AND round_number = ?
+         ORDER BY map_position ASC`,
+        [guildId, clanTag, season, roundNumber]
+      );
+      return rows || [];
+    } catch (error) {
+      console.error('[CWL Performance] Error getting round performance:', error.message);
+      return [];
     }
   }
 

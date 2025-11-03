@@ -1258,7 +1258,11 @@ class LeaderboardCanvas {
             const defenderPos = (typeof attack.defenderPosition === 'number' && attack.defenderPosition > 0)
                 ? attack.defenderPosition
                 : '?';
-            const attackText = `${defenderPos}/${attack.attackNumber} `;
+            let attackText = `${defenderPos}`;
+            if (typeof attack.attackNumber === 'number' && attack.attackNumber > 0) {
+                attackText += `/${attack.attackNumber}`;
+            }
+            attackText += ' ';
             const pctVal = typeof attack.destructionPercentage === 'number' ? attack.destructionPercentage : parseFloat(attack.destructionPercentage || '0');
             const percentText = ` ${pctVal.toFixed ? pctVal.toFixed(2) : pctVal}%`;
             
