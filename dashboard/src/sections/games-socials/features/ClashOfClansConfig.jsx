@@ -303,7 +303,52 @@ export default function ClashOfClansConfig({
                     {t('gamesSocials.clashofclans.tracking.trackCWL', 'Track Clan War League')}
                   </label>
                 </div>
+                
+                <div className="form-check form-switch">
+                  <input
+                    id="trackEventsToggle"
+                    className="form-check-input"
+                    type="checkbox"
+                    checked={config.trackEvents || config.track_events || false}
+                    onChange={e => onChange(prev => ({ 
+                      ...prev, 
+                      trackEvents: e.target.checked,
+                      track_events: e.target.checked
+                    }))}
+                  />
+                  <label 
+                    className="form-check-label user-select-none" 
+                    htmlFor="trackEventsToggle"
+                    style={{ cursor: 'pointer' }}
+                  >
+                    {t('gamesSocials.clashofclans.tracking.trackEvents', 'Track Game Events (Trader, Raid, Games, Season)')}
+                  </label>
+                </div>
               </div>
+
+              {/* Event Tracking Channel - Only show when enabled */}
+              {(config.trackEvents || config.track_events) && (
+                <div className="mb-3">
+                  <label className="form-label">{t('gamesSocials.clashofclans.fields.eventsChannel', 'Events Channel')}</label>
+                  <select
+                    className="form-select"
+                    value={config.eventsChannelId || config.events_channel_id || ''}
+                    onChange={e => onChange(prev => ({ 
+                      ...prev, 
+                      eventsChannelId: e.target.value || null,
+                      events_channel_id: e.target.value || null
+                    }))}
+                  >
+                    <option value="">{t('gamesSocials.common.select')}</option>
+                    {discordChannels.map(ch => (
+                      <option key={ch.id} value={ch.id}>#{ch.name}</option>
+                    ))}
+                  </select>
+                  <div className="form-text">
+                    {t('gamesSocials.clashofclans.fields.eventsChannelHelp', 'Auto-updating message showing Trader Shop, Raid Weekend, Clan Games, and Season Challenge timers (updates every 5 minutes)')}
+                  </div>
+                </div>
+              )}
 
               {/* Donation event-based tracking is not supported; threshold input removed */}
             </div>
