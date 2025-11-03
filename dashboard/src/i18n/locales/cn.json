@@ -2035,7 +2035,9 @@
         "cwlAnnouncements": "部落戰聯賽公告",
         "cwlAnnouncementsHelp": "部落戰聯賽公告頻道",
         "cwlLeaderboard": "部落戰聯賽排行榜",
-        "cwlLeaderboardHelp": "部落戰聯賽排行榜和統計頻道"
+        "cwlLeaderboardHelp": "部落戰聯賽排行榜和統計頻道",
+        "eventsChannel": "活動頻道",
+        "eventsChannelHelp": "全服務器範圍消息顯示商人商店、突襲週末、部落遊戲和賽季挑戰計時器，使用Discord原生倒計時（客戶端自動更新）"
       },
       "announce": {
         "war": "戰爭",
@@ -2081,6 +2083,7 @@
         "trackDonationLeaderboard": "啟用自動捐贈排行榜發佈",
         "trackDonationLeaderboardToggle": "啟用自動捐贈排行榜發佈",
         "trackCWL": "追蹤部落戰聯賽",
+        "trackEvents": "追蹤遊戲活動（商人、突襲、遊戲、賽季）",
         "donationThreshold": "最小捐贈門檻",
         "donationThresholdHint": "觸發公告的每週最小捐贈數量"
       },

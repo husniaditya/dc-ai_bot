@@ -2035,7 +2035,9 @@
         "clanNameHint": "クラン名を入力してください（例：エリート戦士）",
         "warAnnouncements": "戦争アナウンス",
         "memberAnnouncements": "メンバーアナウンス",
-        "donationAnnouncements": "寄付アナウンス"
+        "donationAnnouncements": "寄付アナウンス",
+        "eventsChannel": "イベントチャンネル",
+        "eventsChannelHelp": "サーバー全体のメッセージで商人の店、襲撃週末、クランゲーム、シーズンチャレンジのタイマーをDiscordネイティブカウントダウンで表示（クライアント側自動更新）"
       },
       "announce": {
         "war": "戦争",
@@ -2077,6 +2079,7 @@
         "trackDonationLeaderboard": "自動寄付リーダーボード投稿を有効にする",
         "trackDonationLeaderboardToggle": "自動寄付リーダーボード投稿を有効にする",
         "trackCWL": "クランウォーリーグを追跡",
+        "trackEvents": "ゲームイベントを追跡（商人、襲撃、ゲーム、シーズン）",
         "donationThreshold": "最小寄付閾値",
         "donationThresholdHint": "アナウンスをトリガーするための週間最小寄付数"
       },

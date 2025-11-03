@@ -343,6 +343,11 @@ async function setGuildClashOfClansConfig(guildId, partial) {
   if (partial.trackDonationLeaderboard !== undefined) next.trackDonationLeaderboard = partial.trackDonationLeaderboard;
   if (partial.trackCWL !== undefined) next.trackCWL = partial.trackCWL;
   if (partial.track_cwl !== undefined) next.trackCWL = partial.track_cwl;
+  // Handle events tracking
+  if (partial.trackEvents !== undefined) next.trackEvents = partial.trackEvents;
+  if (partial.track_events !== undefined) next.trackEvents = partial.track_events;
+  if (partial.eventsChannelId !== undefined) next.eventsChannelId = partial.eventsChannelId;
+  if (partial.events_channel_id !== undefined) next.eventsChannelId = partial.events_channel_id;
   if (partial.donationLeaderboardSchedule !== undefined) next.donationLeaderboardSchedule = partial.donationLeaderboardSchedule;
   if (partial.donationLeaderboardTime !== undefined) next.donationLeaderboardTime = partial.donationLeaderboardTime;
   if (partial.donationLeaderboardTemplate !== undefined) next.donationLeaderboardTemplate = partial.donationLeaderboardTemplate;
@@ -526,12 +531,13 @@ async function setGuildClashOfClansConfig(guildId, partial) {
           donation_leaderboard_channel_id, war_leaderboard_channel_id,
           donation_message_id, war_preparing_message_id, war_active_message_id, 
           war_mention_target, member_mention_target, donation_mention_target,
-          enabled, interval_sec, track_wars, track_members, track_donations, track_donation_leaderboard, track_cwl,
+          enabled, interval_sec, track_wars, track_members, track_donations, track_donation_leaderboard, track_cwl, track_events,
+          events_channel_id,
           donation_threshold, donation_leaderboard_schedule, donation_leaderboard_time,
           war_start_template, war_end_template, member_join_template, donation_template, 
           donation_leaderboard_template, embed_enabled, clan_data,
           war_current_state, war_last_state_change, war_state_data
-        ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+        ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
       `, [
         guildId, '', '', 0, // Empty clan data
         null, null, null, // No announcement channels
@@ -539,7 +545,8 @@ async function setGuildClashOfClansConfig(guildId, partial) {
         next.donationMessageId, next.warPreparingMessageId, next.warActiveMessageId,
         next.warMentionTarget || '', next.memberMentionTarget || '', next.donationMentionTarget || '',
         next.enabled ? 1 : 0, next.intervalSec || 3600, 
-        next.trackWars ? 1 : 0, next.trackMembers ? 1 : 0, next.trackDonations ? 1 : 0, next.trackDonationLeaderboard ? 1 : 0, next.trackCWL ? 1 : 0,
+        next.trackWars ? 1 : 0, next.trackMembers ? 1 : 0, next.trackDonations ? 1 : 0, next.trackDonationLeaderboard ? 1 : 0, next.trackCWL ? 1 : 0, next.trackEvents ? 1 : 0,
+        next.eventsChannelId || null,
         next.donationThreshold || 100, next.donationLeaderboardSchedule || 'hourly', next.donationLeaderboardTime || '20:00',
         next.warStartTemplate, next.warEndTemplate, next.memberJoinTemplate, next.donationTemplate,
         next.donationLeaderboardTemplate, next.embedEnabled ? 1 : 0, JSON.stringify(next.clanData || {}),
@@ -559,12 +566,13 @@ async function setGuildClashOfClansConfig(guildId, partial) {
             donation_leaderboard_channel_id, war_leaderboard_channel_id,
             donation_message_id, war_preparing_message_id, war_active_message_id, 
             war_mention_target, member_mention_target, donation_mention_target,
-            enabled, interval_sec, track_wars, track_members, track_donations, track_donation_leaderboard, track_cwl,
+            enabled, interval_sec, track_wars, track_members, track_donations, track_donation_leaderboard, track_cwl, track_events,
+            events_channel_id,
             donation_threshold, donation_leaderboard_schedule, donation_leaderboard_time,
             war_start_template, war_end_template, member_join_template, donation_template, 
             donation_leaderboard_template, embed_enabled, clan_data,
             war_current_state, war_last_state_change, war_state_data
-          ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+          ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
         `, [
           guildId, clan.tag, clan.name, clan.order,
           clan.warAnnounceChannelId || null, clan.memberAnnouncementChannelId || null, clan.donationAnnounceChannelId || null,
@@ -577,7 +585,8 @@ async function setGuildClashOfClansConfig(guildId, partial) {
           Array.isArray(clan.memberMentionTargets) ? clan.memberMentionTargets.join(',') : '',
           Array.isArray(clan.donationMentionTargets) ? clan.donationMentionTargets.join(',') : '',
           next.enabled ? 1 : 0, next.intervalSec || 3600, 
-          next.trackWars ? 1 : 0, next.trackMembers ? 1 : 0, next.trackDonations ? 1 : 0, next.trackDonationLeaderboard ? 1 : 0, next.trackCWL ? 1 : 0,
+          next.trackWars ? 1 : 0, next.trackMembers ? 1 : 0, next.trackDonations ? 1 : 0, next.trackDonationLeaderboard ? 1 : 0, next.trackCWL ? 1 : 0, next.trackEvents ? 1 : 0,
+          next.eventsChannelId || null,
           next.donationThreshold || 100, next.donationLeaderboardSchedule || 'hourly', next.donationLeaderboardTime || '20:00',
           next.warStartTemplate, next.warEndTemplate, next.memberJoinTemplate, next.donationTemplate,
           next.donationLeaderboardTemplate, next.embedEnabled ? 1 : 0, JSON.stringify(next.clanData || {}),

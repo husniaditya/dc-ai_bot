@@ -318,31 +318,36 @@ class EventsTracker {
 
   /**
    * Generate Discord embed description for all events
+   * Uses Discord timestamps for native countdown timers
    * @returns {string} Formatted embed description
    */
   generateEmbedDescription() {
     const events = this.getEventStates();
     const lines = [];
     
-    // Trader Shop
-    lines.push(`${events.trader.emoji} **Trader Shop:** ${events.trader.timeLeft} left`);
+    // Trader Shop - Convert to Unix timestamp
+    const traderEndTime = Math.floor(new Date(events.trader.endTime).getTime() / 1000);
+    lines.push(`${events.trader.emoji} **Trader Shop:** <t:${traderEndTime}:R>`);
     
     // Raid Weekend
+    const raidEndTime = Math.floor(new Date(events.raid.endTime).getTime() / 1000);
     if (events.raid.active) {
-      lines.push(`${events.raid.emoji} **Raid Weekend:** Ongoing (${events.raid.timeLeft} left)`);
+      lines.push(`${events.raid.emoji} **Raid Weekend:** Ongoing (ends <t:${raidEndTime}:R>)`);
     } else {
-      lines.push(`${events.raid.emoji} **Raid Weekend:** ${events.raid.timeLeft} left`);
+      lines.push(`${events.raid.emoji} **Raid Weekend:** Starts <t:${raidEndTime}:R>`);
     }
     
     // Clan Games
+    const clanGamesTime = Math.floor(new Date(events.clanGames.startTime || events.clanGames.endTime).getTime() / 1000);
     if (events.clanGames.active) {
-      lines.push(`${events.clanGames.emoji} **Clan Games:** Ongoing (${events.clanGames.timeLeft} left)`);
+      lines.push(`${events.clanGames.emoji} **Clan Games:** Ongoing (ends <t:${clanGamesTime}:R>)`);
     } else {
-      lines.push(`${events.clanGames.emoji} **Clan Games:** ${events.clanGames.timeLeft} left${events.clanGames.note ? ' *' : ''}`);
+      lines.push(`${events.clanGames.emoji} **Clan Games:** Starts <t:${clanGamesTime}:R>${events.clanGames.note ? ' *' : ''}`);
     }
     
     // Season Challenges
-    lines.push(`${events.season.emoji} **Season Challenges:** ${events.season.timeLeft} left`);
+    const seasonEndTime = Math.floor(new Date(events.season.endTime).getTime() / 1000);
+    lines.push(`${events.season.emoji} **Season Challenges:** Ends <t:${seasonEndTime}:R>`);
     
     if (events.clanGames.note) {
       lines.push('\n*Clan Games timing is estimated and may vary');

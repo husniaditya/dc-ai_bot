@@ -2035,7 +2035,9 @@
         "clanNameHint": "Geben Sie Ihren Clan-Namen ein (z.B. Elite Warriors)",
         "warAnnouncements": "Kriegsankündigungen",
         "memberAnnouncements": "Mitgliederankündigungen",
-        "donationAnnouncements": "Spendenankündigungen"
+        "donationAnnouncements": "Spendenankündigungen",
+        "eventsChannel": "Ereigniskanal",
+        "eventsChannelHelp": "Serverweite Nachricht mit Händlerladen, Raid-Wochenende, Clan-Spiele und Saison-Herausforderungen Timer mit nativen Discord-Countdowns (automatische clientseitige Aktualisierung)"
       },
       "announce": {
         "war": "Krieg",
@@ -2077,6 +2079,7 @@
         "trackDonationLeaderboard": "Automatische Spenden-Bestenlisten-Veröffentlichung aktivieren",
         "trackDonationLeaderboardToggle": "Automatische Spenden-Bestenlisten-Veröffentlichung aktivieren",
         "trackCWL": "Clankriegsliga verfolgen",
+        "trackEvents": "Spielereignisse verfolgen (Händler, Raid, Spiele, Saison)",
         "donationThreshold": "Minimaler Spendenschwellenwert",
         "donationThresholdHint": "Mindestspenden pro Woche um Ankündigungen auszulösen"
       },

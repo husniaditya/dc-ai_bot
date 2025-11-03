@@ -2035,7 +2035,9 @@
         "clanNameHint": "Ingrese el nombre de su clan (ej. Guerreros Elite)",
         "warAnnouncements": "Anuncios de Guerra",
         "memberAnnouncements": "Anuncios de Miembros",
-        "donationAnnouncements": "Anuncios de Donaciones"
+        "donationAnnouncements": "Anuncios de Donaciones",
+        "eventsChannel": "Canal de Eventos",
+        "eventsChannelHelp": "Mensaje global del servidor con temporizadores de Tienda del Comerciante, Fin de Semana de Asalto, Juegos de Clan y Desafíos de Temporada con countdowns nativos de Discord (auto-actualización del lado del cliente)"
       },
       "announce": {
         "war": "Guerra",
@@ -2077,6 +2079,7 @@
         "trackDonationLeaderboard": "Habilitar Publicación Automática de Tabla de Liderazgo de Donaciones",
         "trackDonationLeaderboardToggle": "Habilitar Publicación Automática de Tabla de Liderazgo de Donaciones",
         "trackCWL": "Rastrear Liga de Guerra de Clanes",
+        "trackEvents": "Rastrear Eventos del Juego (Comerciante, Asalto, Juegos, Temporada)",
         "donationThreshold": "Umbral Mínimo de Donaciones",
         "donationThresholdHint": "Donaciones mínimas por semana para activar anuncios"
       },

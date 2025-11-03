@@ -92,6 +92,9 @@ function createClashOfClansRoutes(client, store) {
         trackWarLeaderboard: req.body.trackWarLeaderboard || req.body.track_war_leaderboard,
         // CWL tracking
         trackCWL: req.body.trackCWL || req.body.track_cwl,
+        // Events tracking
+        trackEvents: req.body.trackEvents || req.body.track_events,
+        eventsChannelId: req.body.eventsChannelId || req.body.events_channel_id,
         // Map frontend tracking fields to backend
         trackWarEvents: req.body.trackWarEvents,
         trackMemberEvents: req.body.trackMemberEvents,
@@ -170,6 +173,74 @@ function createClashOfClansRoutes(client, store) {
                 
               } catch (clanError) {
                 console.error(`[API] Error processing leaderboards for clan ${clanTag}:`, clanError.message);
+              }
+            }
+            
+            // Create guild-wide events message (once per guild, outside clan loop)
+            // Events are global to CoC, not clan-specific
+            if (partial.trackEvents && cfg.eventsChannelId) {
+              try {
+                const EventsTracker = require('../../utils/coc/EventsTracker');
+                const { EmbedBuilder } = require('discord.js');
+                
+                // Get existing events message ID from primary clan (clan_order = 0)
+                let eventsMessageId = null;
+                try {
+                  const [rows] = await store.sqlPool.execute(
+                    'SELECT events_message_id FROM guild_clashofclans_watch WHERE guild_id = ? AND clan_order = 0 LIMIT 1',
+                    [guild.id]
+                  );
+                  if (rows.length > 0) {
+                    eventsMessageId = rows[0].events_message_id;
+                  }
+                } catch (dbErr) {
+                  console.warn(`[API] Error fetching events_message_id for guild ${guild.id}:`, dbErr.message);
+                }
+                
+                const eventsTracker = new EventsTracker();
+                const eventStates = eventsTracker.getEventStates();
+                const description = eventsTracker.generateEmbedDescription();
+                
+                const channel = await guild.channels.fetch(cfg.eventsChannelId).catch(() => null);
+                if (channel) {
+                  const embed = new EmbedBuilder()
+                    .setColor('#FFA500')
+                    .setTitle('🗓️ Clash of Clans Events')
+                    .setDescription(description)
+                    .setFooter({ text: `Guild-wide • Updates every 5 minutes` })
+                    .setTimestamp();
+                  
+                  // Try to update existing message or create new one
+                  if (eventsMessageId) {
+                    const existingMessage = await channel.messages.fetch(eventsMessageId).catch(() => null);
+                    if (existingMessage) {
+                      await existingMessage.edit({ embeds: [embed] });
+                      await store.sqlPool.execute(
+                        'UPDATE guild_clashofclans_watch SET events_state_data = ?, events_last_update = NOW() WHERE guild_id = ? AND clan_order = 0',
+                        [JSON.stringify(eventStates), guild.id]
+                      );
+                      console.log(`[API] Updated events message for guild ${guild.id}`);
+                    } else {
+                      // Message deleted, create new one
+                      const newMessage = await channel.send({ embeds: [embed] });
+                      await store.sqlPool.execute(
+                        'UPDATE guild_clashofclans_watch SET events_message_id = ?, events_state_data = ?, events_last_update = NOW() WHERE guild_id = ? AND clan_order = 0',
+                        [newMessage.id, JSON.stringify(eventStates), guild.id]
+                      );
+                      console.log(`[API] Created new events message for guild ${guild.id}`);
+                    }
+                  } else {
+                    // No existing message, create new one
+                    const newMessage = await channel.send({ embeds: [embed] });
+                    await store.sqlPool.execute(
+                      'UPDATE guild_clashofclans_watch SET events_message_id = ?, events_state_data = ?, events_last_update = NOW() WHERE guild_id = ? AND clan_order = 0',
+                      [newMessage.id, JSON.stringify(eventStates), guild.id]
+                    );
+                    console.log(`[API] Created initial events message for guild ${guild.id}`);
+                  }
+                }
+              } catch (eventsError) {
+                console.error(`[API] Error creating events message for guild ${guild.id}:`, eventsError.message);
               }
             }
           } else {

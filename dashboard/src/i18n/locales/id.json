@@ -2046,7 +2046,9 @@
         "clanNameHint": "Masukkan nama clan Anda (contoh: Pejuang Elite)",
         "warAnnouncements": "Pengumuman Perang",
         "memberAnnouncements": "Pengumuman Anggota",
-        "donationAnnouncements": "Pengumuman Donasi"
+        "donationAnnouncements": "Pengumuman Donasi",
+        "eventsChannel": "Saluran Acara",
+        "eventsChannelHelp": "Pesan server-wide menampilkan penghitung waktu Toko Pedagang, Akhir Pekan Raid, Permainan Klan, dan Tantangan Musim dengan countdown Discord asli (auto-update sisi klien)"
       },
       "announce": {
         "war": "Perang",
@@ -2086,8 +2088,9 @@
         "trackWarStats": "Aktifkan Posting Statistik Perang Otomatis",
         "trackWarStatsToggle": "Aktifkan Posting Statistik Perang Otomatis",
         "trackDonationLeaderboard": "Aktifkan Posting Leaderboard Donasi Otomatis",
-        "trackDonationLeaderboardToggle": "Aktifkan Posting Leaderboard Donasi Otomatis",
+        "trackDonationLeaderboardToggle": "Aktifkan Posting Leaderboard Otomatis",
         "trackCWL": "Lacak Liga Perang Klan",
+        "trackEvents": "Lacak Acara Permainan (Pedagang, Raid, Permainan, Musim)",
         "donationThreshold": "Batas Minimum Donasi",
         "donationThresholdHint": "Minimum donasi per minggu untuk memicu pengumuman"
       },

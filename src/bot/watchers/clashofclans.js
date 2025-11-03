@@ -1098,15 +1098,16 @@ async function pollGuild(guild) {
           console.log(`[COC] Donation leaderboard skipped for clan ${cleanTag}: trackEnabled=${trackDonationLeaderboard}, schedule=${donationLeaderboardSchedule}, channel=${donationLeaderboardChannelId}`);
         }
       }
-
-      // Update events message (every poll cycle, ~5 minutes)
-      await updateEventsMessage(guild, cfg, cleanTag, clanInfo);
       
     } catch (error) {
       cocStats.totalErrors++;
       console.error(`[COC] Error polling clan ${clanTag}:`, error.message);
     }
   }
+  
+  // Update events message once per guild (after processing all clans)
+  // Events are global to CoC, not clan-specific, so single message per guild
+  await updateEventsMessage(guild, cfg);
   
   saveStateDebounced();
 }
@@ -1153,12 +1154,13 @@ function startCOCWatcher(client) {
 
 /**
  * Update CoC events message (Trader, Raid Weekend, Clan Games, Season)
- * Posts/edits a persistent message showing countdown timers for all events
+ * Posts/edits a single guild-wide message showing countdown timers for all events
  * Updates every 5 minutes when enabled
+ * Events are global to CoC, not clan-specific, so single message per guild
  */
-async function updateEventsMessage(guild, cfg, cleanTag, clanInfo) {
+async function updateEventsMessage(guild, cfg) {
   try {
-    // Get per-clan events configuration from database
+    // Get guild-level events configuration from primary clan (clan_order = 0)
     let trackEvents = false;
     let eventsChannelId = null;
     let eventsMessageId = null;
@@ -1166,8 +1168,8 @@ async function updateEventsMessage(guild, cfg, cleanTag, clanInfo) {
 
     try {
       const [rows] = await store.sqlPool.execute(
-        'SELECT id, track_events, events_channel_id, events_message_id, events_last_update FROM guild_clashofclans_watch WHERE guild_id = ? AND clan_tag = ? LIMIT 1',
-        [guild.id, cleanTag]
+        'SELECT id, track_events, events_channel_id, events_message_id, events_last_update FROM guild_clashofclans_watch WHERE guild_id = ? AND clan_order = 0 LIMIT 1',
+        [guild.id]
       );
       if (rows.length > 0) {
         configId = rows[0].id;
@@ -1176,14 +1178,14 @@ async function updateEventsMessage(guild, cfg, cleanTag, clanInfo) {
         eventsMessageId = rows[0].events_message_id;
       }
     } catch (dbErr) {
-      console.warn(`[COC] Error fetching events config for clan ${cleanTag}:`, dbErr.message);
+      console.warn(`[COC] Error fetching events config for guild ${guild.id}:`, dbErr.message);
       return;
     }
 
     // Skip if events tracking is not enabled or no channel configured
     if (!trackEvents || !eventsChannelId) {
       if (process.env.COC_DEBUG === '1') {
-        console.log(`[COC] Events tracking disabled or no channel for clan ${cleanTag} (enabled: ${trackEvents}, channel: ${eventsChannelId})`);
+        console.log(`[COC] Events tracking disabled or no channel for guild ${guild.id} (enabled: ${trackEvents}, channel: ${eventsChannelId})`);
       }
       return;
     }
@@ -1194,17 +1196,17 @@ async function updateEventsMessage(guild, cfg, cleanTag, clanInfo) {
       try {
         channel = await guild.channels.fetch(eventsChannelId);
       } catch (fetchErr) {
-        console.warn(`[COC] Could not fetch events channel ${eventsChannelId} for clan ${cleanTag}:`, fetchErr.message);
+        console.warn(`[COC] Could not fetch events channel ${eventsChannelId} for guild ${guild.id}:`, fetchErr.message);
         return;
       }
     }
 
     if (!channel) {
-      console.warn(`[COC] Events channel ${eventsChannelId} not found for clan ${cleanTag}`);
+      console.warn(`[COC] Events channel ${eventsChannelId} not found for guild ${guild.id}`);
       return;
     }
 
-    // Generate event states and embed description
+    // Generate event states and embed description with Discord timestamps
     const eventsTracker = new EventsTracker();
     const eventStates = eventsTracker.getEventStates();
     const description = eventsTracker.generateEmbedDescription();
@@ -1214,7 +1216,7 @@ async function updateEventsMessage(guild, cfg, cleanTag, clanInfo) {
       .setColor('#FFA500')
       .setTitle('🗓️ Clash of Clans Events')
       .setDescription(description)
-      .setFooter({ text: `${clanInfo?.name || cleanTag} • Updates every 5 minutes` })
+      .setFooter({ text: `Guild-wide • Updates every 5 minutes` })
       .setTimestamp();
 
     // Try to update existing message, or create new one
@@ -1230,11 +1232,11 @@ async function updateEventsMessage(guild, cfg, cleanTag, clanInfo) {
         );
 
         if (process.env.COC_DEBUG === '1') {
-          console.log(`[COC] Updated events message for clan ${cleanTag} (message: ${eventsMessageId})`);
+          console.log(`[COC] Updated events message for guild ${guild.id} (message: ${eventsMessageId})`);
         }
       } catch (fetchErr) {
         // Message was deleted, create a new one
-        console.warn(`[COC] Events message ${eventsMessageId} not found for clan ${cleanTag}, creating new message`);
+        console.warn(`[COC] Events message ${eventsMessageId} not found for guild ${guild.id}, creating new message`);
         const newMessage = await channel.send({ embeds: [embed] });
         
         await store.sqlPool.execute(
@@ -1243,7 +1245,7 @@ async function updateEventsMessage(guild, cfg, cleanTag, clanInfo) {
         );
 
         if (process.env.COC_DEBUG === '1') {
-          console.log(`[COC] Created new events message for clan ${cleanTag} (message: ${newMessage.id})`);
+          console.log(`[COC] Created new events message for guild ${guild.id} (message: ${newMessage.id})`);
         }
       }
     } else {
@@ -1256,11 +1258,11 @@ async function updateEventsMessage(guild, cfg, cleanTag, clanInfo) {
       );
 
       if (process.env.COC_DEBUG === '1') {
-        console.log(`[COC] Created initial events message for clan ${cleanTag} (message: ${newMessage.id})`);
+        console.log(`[COC] Created initial events message for guild ${guild.id} (message: ${newMessage.id})`);
       }
     }
   } catch (err) {
-    console.error(`[COC] Error updating events message for clan ${cleanTag}:`, err.message);
+    console.error(`[COC] Error updating events message for guild ${guild.id}:`, err.message);
   }
 }
 
