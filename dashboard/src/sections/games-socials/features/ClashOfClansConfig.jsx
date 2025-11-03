@@ -345,7 +345,7 @@ export default function ClashOfClansConfig({
                     ))}
                   </select>
                   <div className="form-text">
-                    {t('gamesSocials.clashofclans.fields.eventsChannelHelp', 'Auto-updating message showing Trader Shop, Raid Weekend, Clan Games, and Season Challenge timers (updates every 5 minutes)')}
+                    {t('gamesSocials.clashofclans.fields.eventsChannelHelp', 'Guild-wide auto-updating message showing Trader Shop, Raid Weekend, Clan Games, and Season Challenge timers (updates every 5 minutes)')}
                   </div>
                 </div>
               )}

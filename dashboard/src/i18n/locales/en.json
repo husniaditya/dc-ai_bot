@@ -2124,7 +2124,9 @@
         "cwlAnnouncements": "CWL Announcements",
         "cwlAnnouncementsHelp": "Channel for Clan War League announcements",
         "cwlLeaderboard": "CWL Leaderboard",
-        "cwlLeaderboardHelp": "Channel for CWL leaderboard and statistics"
+        "cwlLeaderboardHelp": "Channel for CWL leaderboard and statistics",
+        "eventsChannel": "Events Channel",
+        "eventsChannelHelp": "Guild-wide message showing Trader Shop, Raid Weekend, Clan Games, and Season Challenge timers with Discord native countdowns (auto-updates client-side)"
       },
       "announce": {
         "war": "War",
@@ -2166,6 +2168,7 @@
         "trackDonationLeaderboard": "Enable Automatic Donation Leaderboard Posting",
         "trackDonationLeaderboardToggle": "Enable Automatic Donation Leaderboard Posting",
         "trackCWL": "Track Clan War League",
+        "trackEvents": "Track Game Events (Trader, Raid, Games, Season)",
         "donationThreshold": "Minimum Donation Threshold",
         "donationThresholdHint": "Minimum donations per week to trigger announcements"
       },

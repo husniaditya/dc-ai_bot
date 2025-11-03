@@ -2035,7 +2035,9 @@
         "clanNameHint": "Entrez le nom de votre clan (ex. Guerriers Élite)",
         "warAnnouncements": "Annonces de Guerre",
         "memberAnnouncements": "Annonces de Membres",
-        "donationAnnouncements": "Annonces de Dons"
+        "donationAnnouncements": "Annonces de Dons",
+        "eventsChannel": "Canal d'Événements",
+        "eventsChannelHelp": "Message à l'échelle du serveur montrant les minuteries de Boutique du Commerçant, Week-end de Raid, Jeux de Clan et Défis de Saison avec des comptes à rebours Discord natifs (mise à jour automatique côté client)"
       },
       "announce": {
         "war": "Guerre",
@@ -2077,6 +2079,7 @@
         "trackDonationLeaderboard": "Activer la Publication Automatique du Classement des Dons",
         "trackDonationLeaderboardToggle": "Activer la Publication Automatique du Classement des Dons",
         "trackCWL": "Suivre la Ligue de Guerre de Clan",
+        "trackEvents": "Suivre les Événements du Jeu (Commerçant, Raid, Jeux, Saison)",
         "donationThreshold": "Seuil Minimum de Dons",
         "donationThresholdHint": "Dons minimum par semaine pour déclencher les annonces"
       },
