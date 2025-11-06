@@ -87,6 +87,20 @@ class CWLLeaderboard {
       
       const ourClanTag = cleanTag(clanTag);
       
+      // Check if this round is already finalized - if so, skip updates
+      const [existingRound] = await this.sqlPool.query(
+        `SELECT war_finalized FROM guild_clashofclans_cwl_round_standings
+         WHERE guild_id = ? AND clan_tag = ? AND season = ? AND round_number = ?`,
+        [guildId, clanTag, season, roundNumber]
+      );
+      
+      if (existingRound && existingRound[0]?.war_finalized) {
+        if (process.env.COC_DEBUG === '1') {
+          console.log(`[CWL Leaderboard] Round ${roundNumber} already finalized, skipping update`);
+        }
+        return;
+      }
+      
       // Prefer official leagueGroup standings when available; fallback to derived totals from wars
       let position = 0;
       let positionSource = 'official';
@@ -128,13 +142,25 @@ class CWLLeaderboard {
       // console.log(`[CWL Leaderboard] Top 3: ${sortedClans.slice(0, 3).map((c, i) => `${i+1}. ${c.name} (${c.stars}⭐)`).join(', ')}`);
 
       // Get round-specific war result data
-  // Keep per-round stars/destruction for round standings
-  let roundStars = 0;
-  let roundDestruction = 0;
+      // Keep per-round stars/destruction for round standings
+      let roundStars = 0;
+      let roundDestruction = 0;
       let isWin = false;
       let isLoss = false;
 
       if (warData && warData.clan) {
+        // IMPORTANT: Ensure our clan is in warData.clan (API can return clans in any order)
+        const clan1Tag = cleanTag(warData.clan?.tag);
+        const clan2Tag = cleanTag(warData.opponent?.tag);
+        
+        if (clan2Tag === ourClanTag && clan1Tag !== ourClanTag) {
+          // Swap so our clan is always in warData.clan
+          const temp = warData.clan;
+          warData.clan = warData.opponent;
+          warData.opponent = temp;
+          console.log(`[CWL Leaderboard] Swapped clan/opponent for correct perspective (clan ${clanTag}, round ${roundNumber})`);
+        }
+        
         // Use this round's war stats for the round standings row
         roundStars = warData.clan.stars || 0;
         roundDestruction = warData.clan.destructionPercentage || 0;
@@ -178,18 +204,22 @@ class CWLLeaderboard {
       // console.log(`[CWL Leaderboard] Win/Loss calculation for round ${roundNumber}:`);
       // console.log(`[CWL Leaderboard] Previous: ${previousRounds[0]?.total_wins || 0}W-${previousRounds[0]?.total_losses || 0}L, This round: ${isWin ? 'WIN' : (isLoss ? 'LOSS' : 'TIE')}, New total: ${cumulativeWins}W-${cumulativeLosses}L`);
 
+      // Determine if war is finalized (warEnded state)
+      const warFinalized = warData?.state === 'warEnded';
+
       await this.sqlPool.query(
         `INSERT INTO guild_clashofclans_cwl_round_standings (
           guild_id, clan_tag, season, round_number,
           position, stars_earned, destruction_percentage,
-          wins, losses, league_name, total_clans
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          wins, losses, league_name, total_clans, war_finalized
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ON DUPLICATE KEY UPDATE
           position = VALUES(position),
           stars_earned = VALUES(stars_earned),
           destruction_percentage = VALUES(destruction_percentage),
           wins = VALUES(wins),
           losses = VALUES(losses),
+          war_finalized = VALUES(war_finalized),
           updated_at = CURRENT_TIMESTAMP`,
         [
           guildId,
@@ -202,7 +232,8 @@ class CWLLeaderboard {
           cumulativeWins,
           cumulativeLosses,
           leagueGroup.league?.name || 'Unknown',
-          (leagueGroup.clans || []).length
+          (leagueGroup.clans || []).length,
+          warFinalized ? 1 : 0
         ]
       );
 
@@ -366,6 +397,30 @@ class CWLLeaderboard {
       );
     } catch (error) {
       console.error('[CWL Leaderboard] Error updating message ID:', error.message);
+    }
+  }
+
+  /**
+   * Mark a round as finalized (war ended and final canvas posted)
+   * @param {string} guildId - Guild ID
+   * @param {string} clanTag - Clan tag
+   * @param {string} season - Season (YYYY-MM)
+   * @param {number} roundNumber - Round number
+   */
+  async markRoundFinalized(guildId, clanTag, season, roundNumber) {
+    try {
+      await this.sqlPool.query(
+        `UPDATE guild_clashofclans_cwl_round_standings
+         SET war_finalized = 1
+         WHERE guild_id = ? AND clan_tag = ? AND season = ? AND round_number = ?`,
+        [guildId, clanTag, season, roundNumber]
+      );
+      
+      if (process.env.COC_DEBUG === '1') {
+        console.log(`[CWL Leaderboard] Marked round ${roundNumber} as finalized`);
+      }
+    } catch (error) {
+      console.error('[CWL Leaderboard] Error marking round finalized:', error.message);
     }
   }
 }

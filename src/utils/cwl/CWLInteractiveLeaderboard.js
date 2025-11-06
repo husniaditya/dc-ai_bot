@@ -106,7 +106,12 @@ class CWLInteractiveLeaderboard {
     const guildId = interaction.guildId;
 
     try {
-      await interaction.deferReply({ flags: 64 }); // 64 = EPHEMERAL
+      // For refresh, update the message instead of sending ephemeral reply
+      if (action === 'refresh') {
+        await interaction.deferUpdate();
+      } else {
+        await interaction.deferReply({ flags: 64 }); // 64 = EPHEMERAL
+      }
 
       switch (action) {
         case 'refresh':
@@ -242,9 +247,11 @@ class CWLInteractiveLeaderboard {
     const embed = await dashboardManager.generateDashboardEmbed(guildId, clanTag, season);
     if (embed) {
       const buttons = this.createLeaderboardButtons(clanTag, season);
-      await interaction.editReply({ content: '✅ Dashboard refreshed!', embeds: [embed], components: buttons });
+      // Update the original message instead of sending a new reply
+      await interaction.editReply({ embeds: [embed], components: buttons });
     } else {
-      await interaction.editReply({ content: '❌ Could not refresh dashboard!' });
+      // If no data, send ephemeral error message
+      await interaction.followUp({ content: '❌ Could not refresh dashboard!', flags: 64 });
     }
   }
 

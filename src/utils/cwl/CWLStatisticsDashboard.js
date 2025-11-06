@@ -19,7 +19,8 @@ class CWLStatisticsDashboard {
         attackEfficiency: await this.getAttackEfficiency(guildId, clanTag, season),
         participation: await this.getParticipation(guildId, clanTag, season),
         matchupAnalysis: await this.getMatchupAnalysis(guildId, clanTag, season),
-        trends: await this.getTrends(guildId, clanTag, season)
+        trends: await this.getTrends(guildId, clanTag, season),
+        leagueStandings: await this.getLeagueStandings(guildId, clanTag, season)
       };
 
       return stats;
@@ -93,14 +94,14 @@ class CWLStatisticsDashboard {
    * Get attack efficiency metrics
    */
   async getAttackEfficiency(guildId, clanTag, season) {
+    // Note: The table stores aggregate data per player per round, not individual attacks
+    // We need to calculate efficiency based on the three_star field and total attacks
     const [efficiency] = await this.sqlPool.query(
       `SELECT 
-        SUM(CASE WHEN stars_earned = 3 THEN 1 ELSE 0 END) as three_star_attacks,
-        SUM(CASE WHEN stars_earned = 2 THEN 1 ELSE 0 END) as two_star_attacks,
-        SUM(CASE WHEN stars_earned = 1 THEN 1 ELSE 0 END) as one_star_attacks,
-        SUM(CASE WHEN stars_earned = 0 THEN 1 ELSE 0 END) as zero_star_attacks,
-        AVG(CASE WHEN stars_earned > 0 THEN destruction_percentage ELSE NULL END) as avg_destruction_on_star,
-        AVG(CASE WHEN stars_earned = 0 THEN destruction_percentage ELSE NULL END) as avg_destruction_no_star
+        SUM(three_star) as three_star_attacks,
+        SUM(attacks_used) as total_attacks,
+        SUM(stars_earned) as total_stars,
+        AVG(destruction_percentage) as avg_destruction
        FROM guild_clashofclans_cwl_player_performance
        WHERE guild_id = ? AND clan_tag = ? AND season = ?
        AND attacks_used > 0`,
@@ -108,15 +109,25 @@ class CWLStatisticsDashboard {
     );
 
     const data = efficiency[0];
-    const totalAttacks = data.three_star_attacks + data.two_star_attacks + data.one_star_attacks + data.zero_star_attacks;
+    const totalAttacks = data.total_attacks || 0;
+    const threeStars = data.three_star_attacks || 0;
+    const totalStars = data.total_stars || 0;
+
+    // Calculate approximate two-star attacks
+    // Since we don't track individual attacks, we estimate based on average stars
+    const avgStarsPerAttack = totalAttacks > 0 ? totalStars / totalAttacks : 0;
+    
+    // Rough estimation: if avg stars is > 2.5, assume more 3-stars, otherwise more 2-stars
+    const estimatedTwoStars = Math.max(0, Math.round((totalStars - (threeStars * 3)) / 2));
 
     return {
-      ...data,
-      three_star_rate: totalAttacks > 0 ? (data.three_star_attacks / totalAttacks * 100) : 0,
-      two_star_rate: totalAttacks > 0 ? (data.two_star_attacks / totalAttacks * 100) : 0,
-      one_star_rate: totalAttacks > 0 ? (data.one_star_attacks / totalAttacks * 100) : 0,
-      zero_star_rate: totalAttacks > 0 ? (data.zero_star_attacks / totalAttacks * 100) : 0,
-      star_success_rate: totalAttacks > 0 ? ((totalAttacks - data.zero_star_attacks) / totalAttacks * 100) : 0
+      three_star_attacks: threeStars,
+      two_star_attacks: estimatedTwoStars,
+      total_attacks: totalAttacks,
+      three_star_rate: totalAttacks > 0 ? (threeStars / totalAttacks * 100) : 0,
+      two_star_rate: totalAttacks > 0 ? (estimatedTwoStars / totalAttacks * 100) : 0,
+      star_success_rate: totalAttacks > 0 ? ((totalStars / totalAttacks) / 3 * 100) : 0,
+      avg_destruction: data.avg_destruction || 0
     };
   }
 
@@ -134,18 +145,24 @@ class CWLStatisticsDashboard {
        FROM guild_clashofclans_cwl_player_performance
        WHERE guild_id = ? AND clan_tag = ? AND season = ?
        GROUP BY player_tag, player_name
-       ORDER BY attacks_missed DESC, rounds_participated DESC`,
+       ORDER BY attacks_missed ASC, rounds_participated DESC`,
       [guildId, clanTag, season]
     );
 
     const totalRounds = 7;
-    const activeThreshold = 3;
+    const activeThreshold = 3; // Consider active if participated in 3+ rounds
+
+    // Perfect attendance: players who have participated and never missed an attack
+    // Note: Some players might not have participated yet (rounds_participated = 0)
+    const perfectAttendance = participation.filter(p => 
+      p.rounds_participated > 0 && (p.attacks_missed === 0 || p.attacks_missed === null)
+    ).length;
 
     return {
       players: participation,
       active_players: participation.filter(p => p.rounds_participated >= activeThreshold).length,
       inactive_players: participation.filter(p => p.attacks_missed > 0).length,
-      perfect_attendance: participation.filter(p => p.attacks_missed === 0 && p.rounds_participated > 0).length
+      perfect_attendance: perfectAttendance
     };
   }
 
@@ -190,20 +207,156 @@ class CWLStatisticsDashboard {
   }
 
   /**
+   * Get league-wide standings (all clans in the league)
+   * @param {string} guildId - Guild ID
+   * @param {string} clanTag - Clan tag (our clan)
+   * @param {string} season - Season (YYYY-MM)
+   * @returns {Array} League standings
+   */
+  async getLeagueStandings(guildId, clanTag, season) {
+    try {
+      // Get league name from database first
+      const [cwlState] = await this.sqlPool.query(
+        `SELECT league_name FROM guild_clashofclans_cwl_state
+         WHERE guild_id = ? AND clan_tag = ? AND season = ?`,
+        [guildId, clanTag, season]
+      );
+      
+      const leagueName = cwlState && cwlState.length > 0 ? cwlState[0].league_name : null;
+      
+      // Import fetchCWLLeagueGroup here to avoid circular dependency
+      const { fetchCWLLeagueGroup } = require('../../bot/services/clashofclans');
+      
+      // Fetch league group data from API
+      const leagueData = await fetchCWLLeagueGroup(clanTag);
+      if (!leagueData || !leagueData.clans) return null;
+
+      // Calculate total stars and destruction for each clan
+      const clanStats = new Map();
+      
+      // Initialize with clan data from league group (has current stars!)
+      for (const clan of leagueData.clans) {
+        const cleanTag = clan.tag.replace(/^#/, '').toUpperCase();
+        clanStats.set(cleanTag, {
+          name: clan.name,
+          tag: clan.tag,
+          stars: 0,
+          destruction: 0,
+          wins: 0,
+          losses: 0
+        });
+      }
+
+      // Process ALL wars (including in-progress) to get current star totals
+      if (leagueData.rounds && Array.isArray(leagueData.rounds)) {
+        const { fetchCWLWar } = require('../../bot/services/clashofclans');
+        
+        for (const round of leagueData.rounds) {
+          if (!round.warTags) continue;
+          
+          for (const warTag of round.warTags) {
+            if (!warTag || warTag === '#0') continue;
+            
+            try {
+              const war = await fetchCWLWar(warTag);
+              if (!war || !war.clan || !war.opponent) continue;
+              
+              const clanTag1 = war.clan.tag.replace(/^#/, '').toUpperCase();
+              const clanTag2 = war.opponent.tag.replace(/^#/, '').toUpperCase();
+              
+              const clan1Stats = clanStats.get(clanTag1);
+              const clan2Stats = clanStats.get(clanTag2);
+              
+              // Add stars from this war (regardless of state)
+              if (clan1Stats) {
+                clan1Stats.stars += war.clan.stars || 0;
+                clan1Stats.destruction += war.clan.destructionPercentage || 0;
+                
+                // Only count W/L for finished wars
+                if (war.state === 'warEnded') {
+                  if ((war.clan.stars || 0) > (war.opponent.stars || 0)) {
+                    clan1Stats.wins++;
+                  } else if ((war.clan.stars || 0) < (war.opponent.stars || 0)) {
+                    clan1Stats.losses++;
+                  } else {
+                    // Tie - check destruction
+                    if ((war.clan.destructionPercentage || 0) > (war.opponent.destructionPercentage || 0)) {
+                      clan1Stats.wins++;
+                    } else if ((war.clan.destructionPercentage || 0) < (war.opponent.destructionPercentage || 0)) {
+                      clan1Stats.losses++;
+                    }
+                  }
+                }
+              }
+              
+              if (clan2Stats) {
+                clan2Stats.stars += war.opponent.stars || 0;
+                clan2Stats.destruction += war.opponent.destructionPercentage || 0;
+                
+                // Only count W/L for finished wars
+                if (war.state === 'warEnded') {
+                  if ((war.opponent.stars || 0) > (war.clan.stars || 0)) {
+                    clan2Stats.wins++;
+                  } else if ((war.opponent.stars || 0) < (war.clan.stars || 0)) {
+                    clan2Stats.losses++;
+                  } else {
+                    // Tie - check destruction
+                    if ((war.opponent.destructionPercentage || 0) > (war.clan.destructionPercentage || 0)) {
+                      clan2Stats.wins++;
+                    } else if ((war.opponent.destructionPercentage || 0) < (war.clan.destructionPercentage || 0)) {
+                      clan2Stats.losses++;
+                    }
+                  }
+                }
+              }
+            } catch (warError) {
+              console.error('[CWL Dashboard] Error fetching war:', warError.message);
+              // Continue with next war
+            }
+          }
+        }
+      }
+
+      // Convert to array and sort by stars, then destruction
+      const standings = Array.from(clanStats.values())
+        .sort((a, b) => {
+          if (b.stars !== a.stars) return b.stars - a.stars;
+          return b.destruction - a.destruction;
+        })
+        .map((clan, index) => ({
+          position: index + 1,
+          name: clan.name,
+          tag: clan.tag,
+          stars: clan.stars,
+          destruction: clan.destruction,
+          wins: clan.wins,
+          losses: clan.losses,
+          isOurClan: clan.tag.replace(/^#/, '').toUpperCase() === clanTag.toUpperCase()
+        }));
+
+      return {
+        league: leagueName || leagueData.season || 'Unknown',
+        season: leagueData.season,
+        standings: standings
+      };
+    } catch (error) {
+      console.error('[CWL Dashboard] Error getting league standings:', error.message);
+      return null;
+    }
+  }
+
+  /**
    * Get performance trends
    */
   async getTrends(guildId, clanTag, season) {
+    // Get round-by-round totals from standings table (more accurate)
     const [trends] = await this.sqlPool.query(
       `SELECT 
         round_number,
-        SUM(stars_earned) as round_stars,
-        AVG(destruction_percentage) as round_destruction,
-        SUM(three_star) as round_three_stars,
-        COUNT(*) as round_attacks
-       FROM guild_clashofclans_cwl_player_performance
+        stars_earned as round_stars,
+        destruction_percentage as round_destruction
+       FROM guild_clashofclans_cwl_round_standings
        WHERE guild_id = ? AND clan_tag = ? AND season = ?
-       AND attacks_used > 0
-       GROUP BY round_number
        ORDER BY round_number`,
       [guildId, clanTag, season]
     );
@@ -213,10 +366,13 @@ class CWLStatisticsDashboard {
       return { rounds: trends, trend: 'insufficient_data' };
     }
 
+    // Recent rounds: last 3 rounds (or available rounds)
     const recentRounds = trends.slice(-3);
-    const avgRecentStars = recentRounds.reduce((sum, r) => sum + r.round_stars, 0) / recentRounds.length;
+    const avgRecentStars = recentRounds.reduce((sum, r) => sum + parseFloat(r.round_stars || 0), 0) / recentRounds.length;
+    
+    // Earlier rounds: everything before the recent rounds
     const earlierRounds = trends.slice(0, Math.max(1, trends.length - 3));
-    const avgEarlierStars = earlierRounds.reduce((sum, r) => sum + r.round_stars, 0) / earlierRounds.length;
+    const avgEarlierStars = earlierRounds.reduce((sum, r) => sum + parseFloat(r.round_stars || 0), 0) / earlierRounds.length;
 
     const trend = avgRecentStars > avgEarlierStars * 1.1 ? 'improving' : 
                   avgRecentStars < avgEarlierStars * 0.9 ? 'declining' : 'stable';
@@ -236,7 +392,7 @@ class CWLStatisticsDashboard {
     const stats = await this.getDashboardStats(guildId, clanTag, season);
     if (!stats) return null;
 
-    const { overview, topPerformers, attackEfficiency, participation, matchupAnalysis, trends } = stats;
+    const { overview, topPerformers, attackEfficiency, participation, matchupAnalysis, trends, leagueStandings } = stats;
 
     // Check if we have any data at all
     if (!overview || overview.total_players === 0) {
@@ -328,6 +484,25 @@ class CWLStatisticsDashboard {
                `**Recent Avg:** ${(parseFloat(trends.avg_recent_stars) || 0).toFixed(1)}⭐\n` +
                `**Earlier Avg:** ${(parseFloat(trends.avg_earlier_stars) || 0).toFixed(1)}⭐`,
         inline: true
+      });
+    }
+
+    // Add league standings
+    if (leagueStandings && leagueStandings.standings && leagueStandings.standings.length > 0) {
+      const topClans = leagueStandings.standings
+        .slice(0, 8) // Show top 8 clans
+        .map(clan => {
+          const positionEmoji = clan.position === 1 ? '🥇' : clan.position === 2 ? '🥈' : clan.position === 3 ? '🥉' : `${clan.position}.`;
+          const clanIndicator = clan.isOurClan ? '**' : '';
+          const record = clan.wins || clan.losses ? ` (${clan.wins}W-${clan.losses}L)` : '';
+          return `${positionEmoji} ${clanIndicator}${clan.name}${clanIndicator}: ${clan.stars}⭐${record}`;
+        })
+        .join('\n');
+
+      embed.fields.push({
+        name: `🏅 League Standings (${leagueStandings.league})`,
+        value: topClans || 'No data',
+        inline: false
       });
     }
 

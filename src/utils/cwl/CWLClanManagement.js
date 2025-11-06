@@ -86,6 +86,7 @@ class CWLClanManagement {
     } = thresholds;
 
     try {
+      // First, let's see what the raw query returns
       const [players] = await this.sqlPool.query(
         `SELECT 
           player_tag,
@@ -93,8 +94,10 @@ class CWLClanManagement {
           SUM(stars_earned) as total_stars,
           AVG(destruction_percentage) as avg_destruction,
           SUM(attacks_used) as attacks_used,
-          SUM(attacks_remaining) as attacks_missed,
-          COUNT(DISTINCT round_number) as rounds_participated
+          SUM(attacks_remaining) as total_attacks_remaining,
+          SUM(CASE WHEN attacks_used > 0 OR attacks_remaining < 1 THEN attacks_remaining ELSE 0 END) as attacks_missed,
+          COUNT(DISTINCT round_number) as rounds_participated,
+          COUNT(*) as total_records
          FROM guild_clashofclans_cwl_player_performance
          WHERE guild_id = ? AND clan_tag = ? AND season = ?
          GROUP BY player_tag, player_name`,
@@ -106,14 +109,19 @@ class CWLClanManagement {
       const warnings = [];
 
       for (const player of players) {
-        const participationRate = player.attacks_used / (player.attacks_used + player.attacks_missed);
-        const starEfficiency = player.attacks_used > 0 ? player.total_stars / player.attacks_used : 0;
+        // Convert string values to numbers to avoid concatenation issues
+        const attacksUsed = parseInt(player.attacks_used) || 0;
+        const attacksMissed = parseInt(player.attacks_missed) || 0;
+        const totalStars = parseInt(player.total_stars) || 0;
+        
+        const participationRate = attacksUsed / (attacksUsed + attacksMissed);
+        const starEfficiency = attacksUsed > 0 ? totalStars / attacksUsed : 0;
 
         const issues = [];
 
         // Check participation
-        if (player.attacks_missed > maxMissedAttacks) {
-          issues.push(`Missed ${player.attacks_missed} attacks`);
+        if (attacksMissed > maxMissedAttacks) {
+          issues.push(`Missed ${attacksMissed} attacks`);
         }
 
         if (participationRate < minParticipationRate) {
@@ -121,16 +129,16 @@ class CWLClanManagement {
         }
 
         // Check performance
-        if (starEfficiency < minStarEfficiency && player.attacks_used >= 3) {
+        if (starEfficiency < minStarEfficiency && attacksUsed >= 3) {
           issues.push(`Low stars: ${starEfficiency.toFixed(2)}/attack`);
         }
 
-        if (player.avg_destruction < minDestructionPercent && player.attacks_used >= 3) {
+        if (player.avg_destruction < minDestructionPercent && attacksUsed >= 3) {
           issues.push(`Low destruction: ${(parseFloat(player.avg_destruction) || 0).toFixed(1)}%`);
         }
 
         // Categorize
-        if (player.attacks_missed >= 3) {
+        if (attacksMissed >= 3) {
           inactive.push({ ...player, issues });
         } else if (issues.length >= 2) {
           underperforming.push({ ...player, issues });
@@ -236,9 +244,17 @@ class CWLClanManagement {
     }
 
     if (warnings.length > 0) {
+      const warningsList = warnings
+        .slice(0, 15)
+        .map(p => `**${p.player_name}**: ${p.issues.join(', ')}`)
+        .join('\n');
+      
+      const warningsValue = warningsList + 
+        (warnings.length > 15 ? `\n\n_...and ${warnings.length - 15} more players_` : '');
+      
       fields.push({
         name: '💡 Minor Issues',
-        value: `${warnings.length} players with minor performance concerns`,
+        value: warningsValue,
         inline: false
       });
     }
