@@ -204,22 +204,21 @@ class CWLLeaderboard {
       // console.log(`[CWL Leaderboard] Win/Loss calculation for round ${roundNumber}:`);
       // console.log(`[CWL Leaderboard] Previous: ${previousRounds[0]?.total_wins || 0}W-${previousRounds[0]?.total_losses || 0}L, This round: ${isWin ? 'WIN' : (isLoss ? 'LOSS' : 'TIE')}, New total: ${cumulativeWins}W-${cumulativeLosses}L`);
 
-      // Determine if war is finalized (warEnded state)
-      const warFinalized = warData?.state === 'warEnded';
+      // Don't auto-set war_finalized here - let updateCWLFinalRoundCanvas handle it after updating the canvas
+      // This prevents premature finalization before the canvas is updated with final results
 
       await this.sqlPool.query(
         `INSERT INTO guild_clashofclans_cwl_round_standings (
           guild_id, clan_tag, season, round_number,
           position, stars_earned, destruction_percentage,
-          wins, losses, league_name, total_clans, war_finalized
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          wins, losses, league_name, total_clans
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ON DUPLICATE KEY UPDATE
           position = VALUES(position),
           stars_earned = VALUES(stars_earned),
           destruction_percentage = VALUES(destruction_percentage),
           wins = VALUES(wins),
           losses = VALUES(losses),
-          war_finalized = VALUES(war_finalized),
           updated_at = CURRENT_TIMESTAMP`,
         [
           guildId,
@@ -232,8 +231,7 @@ class CWLLeaderboard {
           cumulativeWins,
           cumulativeLosses,
           leagueGroup.league?.name || 'Unknown',
-          (leagueGroup.clans || []).length,
-          warFinalized ? 1 : 0
+          (leagueGroup.clans || []).length
         ]
       );
 

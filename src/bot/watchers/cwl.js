@@ -549,9 +549,16 @@ async function announceCWLRound(guild, cfg, clanTag, clanInfo, warData, roundNum
     const seasonForPlayers = getCWLStateManager().getCurrentSeason();
     const perfRows = await perfSvc.getRoundPlayerPerformance(guild.id, cleanClanTag(clanTag), seasonForPlayers, roundNumber);
     
+    // Get cumulative stats for all rounds up to current round (for Avg, Wars, WR columns)
+    const cumulativeStats = await getCumulativeCWLStats(guild.id, cleanClanTag(clanTag), seasonForPlayers, roundNumber);
+    
     // Build a lookup for opponent positions
     const opponentMembers = Array.isArray(warData.opponent?.members) ? warData.opponent.members : [];
     const opponentByTag = new Map(opponentMembers.map(m => [m.tag, m]));
+    
+    // Build a lookup for clan members to get roles from clanInfo
+    const clanMemberList = Array.isArray(clanInfo?.memberList) ? clanInfo.memberList : [];
+    const clanMemberByTag = new Map(clanMemberList.map(m => [m.tag, m]));
 
     const players = perfRows.map((r, idx) => {
       const details = [];
@@ -565,14 +572,25 @@ async function announceCWLRound(guild, cfg, clanTag, clanInfo, warData, roundNum
         });
       }
       
+      // Get cumulative stats for this player
+      const playerStats = cumulativeStats.get(r.player_tag) || {
+        totalStars: 0,
+        totalAttacks: 0,
+        roundsParticipated: 0,
+        roundsWon: 0
+      };
+      
+      // Get player role from clanInfo
+      const clanMember = clanMemberByTag.get(r.player_tag);
+      
       return {
         rank: idx + 1,
         name: r.player_name,
-        role: 'Member',
+        role: formatRole(clanMember?.role),
         townHallLevel: r.townhall_level || 1, // ✅ CORRECT - attacker's TH from database
-        averageStars: (r.attacks_used > 0 ? (Number(r.stars_earned) / Number(r.attacks_used || 1)).toFixed(2) : '0.00'),
-        warsParticipated: 1,
-        winRate: warData.state === 'warEnded' ? (warData.clan.stars >= warData.opponent.stars ? '100.0' : '0.0') : '0.0',
+        averageStars: playerStats.totalAttacks > 0 ? (playerStats.totalStars / playerStats.totalAttacks).toFixed(2) : '0.00',
+        warsParticipated: playerStats.roundsParticipated,
+        winRate: playerStats.roundsParticipated > 0 ? ((playerStats.roundsWon / playerStats.roundsParticipated) * 100).toFixed(1) : '0.0', // Personal win rate
         currentWarAttackDetails: details
       };
     });
@@ -604,10 +622,8 @@ async function announceCWLRound(guild, cfg, clanTag, clanInfo, warData, roundNum
   const seasonForMsg = stateManager.getCurrentSeason();
   await cwlLeaderboardSvc.updateLeaderboardMessageId(guild.id, clanTag, seasonForMsg, roundNumber, message.id);
 
-    // If war is already ended when announced, mark as finalized immediately
-    if (warData.state === 'warEnded') {
-      await cwlLeaderboardSvc.markRoundFinalized(guild.id, clanTag, seasonForMsg, roundNumber);
-    }
+    // Don't mark as finalized here - let updateCWLFinalRoundCanvas handle it
+    // This allows the canvas to be updated with final results even if war ends between polls
 
     // === NEW ENHANCED FEATURES ===
     
@@ -689,9 +705,8 @@ async function updateCWLFinalRoundCanvas(guild, cfg, clanTag, clanInfo, warData,
     // Check if already finalized
     const standingsHistory = await cwlLeaderboardSvc.getStandingsHistory(guild.id, clanTag, season);
     const roundData = standingsHistory.find(r => r.round_number === roundNumber);
+    
     if (roundData?.war_finalized) {
-      if (process.env.COC_DEBUG === '1') {
-      }
       return;
     }
 
@@ -715,8 +730,16 @@ async function updateCWLFinalRoundCanvas(guild, cfg, clanTag, clanInfo, warData,
   // Rebuild players and canvas like in announceCWLRound, but from DB performance
     const perfSvc = getCWLPlayerPerformance();
     const perfRows = await perfSvc.getRoundPlayerPerformance(guild.id, cleanClanTag(clanTag), season, roundNumber);
+    
+    // Get cumulative stats for all rounds up to current round (for Avg, Wars, WR columns)
+    const cumulativeStats = await getCumulativeCWLStats(guild.id, cleanClanTag(clanTag), season, roundNumber);
+    
     const opponentMembers = Array.isArray(warData.opponent?.members) ? warData.opponent.members : [];
     const opponentByTag = new Map(opponentMembers.map(m => [m.tag, m]));
+    
+    // Build a lookup for clan members to get roles from clanInfo
+    const clanMemberList = Array.isArray(clanInfo?.memberList) ? clanInfo.memberList : [];
+    const clanMemberByTag = new Map(clanMemberList.map(m => [m.tag, m]));
     
     const players = perfRows.map((r, idx) => {
       const details = [];
@@ -729,14 +752,25 @@ async function updateCWLFinalRoundCanvas(guild, cfg, clanTag, clanInfo, warData,
         });
       }
       
+      // Get cumulative stats for this player
+      const playerStats = cumulativeStats.get(r.player_tag) || {
+        totalStars: 0,
+        totalAttacks: 0,
+        roundsParticipated: 0,
+        roundsWon: 0
+      };
+      
+      // Get player role from clanInfo
+      const clanMember = clanMemberByTag.get(r.player_tag);
+      
       return {
         rank: idx + 1,
         name: r.player_name,
-        role: 'Member',
+        role: formatRole(clanMember?.role),
         townHallLevel: r.townhall_level || 1, // ✅ CORRECT - attacker's TH from database
-        averageStars: (r.attacks_used > 0 ? (Number(r.stars_earned) / Number(r.attacks_used || 1)).toFixed(2) : '0.00'),
-        warsParticipated: 1,
-        winRate: '0.0',
+        averageStars: playerStats.totalAttacks > 0 ? (playerStats.totalStars / playerStats.totalAttacks).toFixed(2) : '0.00',
+        warsParticipated: playerStats.roundsParticipated,
+        winRate: playerStats.roundsParticipated > 0 ? ((playerStats.roundsWon / playerStats.roundsParticipated) * 100).toFixed(1) : '0.0', // Personal win rate
         currentWarAttackDetails: details
       };
     });
@@ -891,8 +925,16 @@ async function updateCWLInWarCanvas(guild, cfg, clanTag, clanInfo, warData, roun
     // Build players like in announceCWLRound, but from DB performance for in-war refresh
     const perfSvc2 = getCWLPlayerPerformance();
     const perfRows2 = await perfSvc2.getRoundPlayerPerformance(guild.id, cleanClanTag(clanTag), season, roundNumber);
+    
+    // Get cumulative stats for all rounds up to current round (for Avg, Wars, WR columns)
+    const cumulativeStats2 = await getCumulativeCWLStats(guild.id, cleanClanTag(clanTag), season, roundNumber);
+    
     const opponentMembers2 = Array.isArray(warData.opponent?.members) ? warData.opponent.members : [];
     const opponentByTag2 = new Map(opponentMembers2.map(m => [m.tag, m]));
+    
+    // Build a lookup for clan members to get roles from clanInfo
+    const clanMemberList2 = Array.isArray(clanInfo?.memberList) ? clanInfo.memberList : [];
+    const clanMemberByTag2 = new Map(clanMemberList2.map(m => [m.tag, m]));
     
     const players = perfRows2.map((r, idx) => {
       const details = [];
@@ -905,14 +947,25 @@ async function updateCWLInWarCanvas(guild, cfg, clanTag, clanInfo, warData, roun
         });
       }
       
+      // Get cumulative stats for this player
+      const playerStats = cumulativeStats2.get(r.player_tag) || {
+        totalStars: 0,
+        totalAttacks: 0,
+        roundsParticipated: 0,
+        roundsWon: 0
+      };
+      
+      // Get player role from clanInfo
+      const clanMember = clanMemberByTag2.get(r.player_tag);
+      
       return {
         rank: idx + 1,
         name: r.player_name,
-        role: 'Member',
+        role: formatRole(clanMember?.role),
         townHallLevel: r.townhall_level || 1, // ✅ CORRECT - attacker's TH from database
-        averageStars: (r.attacks_used > 0 ? (Number(r.stars_earned) / Number(r.attacks_used || 1)).toFixed(2) : '0.00'),
-        warsParticipated: 1,
-        winRate: '0.0',
+        averageStars: playerStats.totalAttacks > 0 ? (playerStats.totalStars / playerStats.totalAttacks).toFixed(2) : '0.00',
+        warsParticipated: playerStats.roundsParticipated,
+        winRate: playerStats.roundsParticipated > 0 ? ((playerStats.roundsWon / playerStats.roundsParticipated) * 100).toFixed(1) : '0.0', // Personal win rate
         currentWarAttackDetails: details
       };
     });
@@ -989,6 +1042,80 @@ async function getCWLStandingMessageId(cwlLeaderboardSvc, guildId, clanTag, seas
     return round?.leaderboard_message_id || null;
   } catch {
     return null;
+  }
+}
+
+/**
+ * Format role name for display
+ * @param {string} role - Role from API (member, admin, coLeader, leader)
+ * @returns {string} Formatted role (Member, Admin, Co-leader, Leader)
+ */
+function formatRole(role) {
+  if (!role) return 'Member';
+  if (role === 'coLeader') return 'Co-leader';
+  return role.charAt(0).toUpperCase() + role.slice(1).toLowerCase();
+}
+
+/**
+ * Get cumulative CWL stats for all players up to a specific round
+ * Returns Map<playerTag, { totalStars, totalAttacks, roundsParticipated, roundsWon }>
+ */
+async function getCumulativeCWLStats(guildId, clanTag, season, upToRound) {
+  try {
+    // Get player cumulative stats with rounds they participated in
+    const [rows] = await store.sqlPool.query(
+      `SELECT 
+        player_tag,
+        SUM(stars_earned) as total_stars,
+        SUM(attacks_used) as total_attacks,
+        COUNT(DISTINCT round_number) as rounds_participated,
+        GROUP_CONCAT(DISTINCT round_number ORDER BY round_number) as participated_rounds
+       FROM guild_clashofclans_cwl_player_performance
+       WHERE guild_id = ? AND clan_tag = ? AND season = ? AND round_number <= ?
+       GROUP BY player_tag`,
+      [guildId, clanTag, season, upToRound]
+    );
+    
+    // Get which rounds the clan won from standings table
+    const [standingsRows] = await store.sqlPool.query(
+      `SELECT 
+        round_number,
+        wins
+       FROM guild_clashofclans_cwl_round_standings
+       WHERE guild_id = ? AND clan_tag = ? AND season = ? AND round_number <= ?`,
+      [guildId, clanTag, season, upToRound]
+    );
+    
+    // Build a set of rounds where the clan won
+    const wonRounds = new Set();
+    for (const row of standingsRows) {
+      if (parseInt(row.wins) > 0) {
+        wonRounds.add(parseInt(row.round_number));
+      }
+    }
+    
+    const statsMap = new Map();
+    for (const row of rows) {
+      // Parse which rounds this player participated in
+      const participatedRounds = row.participated_rounds 
+        ? row.participated_rounds.split(',').map(r => parseInt(r))
+        : [];
+      
+      // Count how many rounds this player participated in AND the clan won
+      const playerWins = participatedRounds.filter(round => wonRounds.has(round)).length;
+      
+      statsMap.set(row.player_tag, {
+        totalStars: parseInt(row.total_stars) || 0,
+        totalAttacks: parseInt(row.total_attacks) || 0,
+        roundsParticipated: parseInt(row.rounds_participated) || 0,
+        roundsWon: playerWins // Personal wins - only rounds they participated in
+      });
+    }
+    
+    return statsMap;
+  } catch (error) {
+    console.error('[CWL] Error getting cumulative stats:', error);
+    return new Map();
   }
 }
 
