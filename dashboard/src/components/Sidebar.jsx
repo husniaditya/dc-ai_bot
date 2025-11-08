@@ -33,7 +33,9 @@ export default function Sidebar({
             {key:'moderation', label: t('navigation.moderation'), icon:'fa-shield-halved'},
             {key:'games', label: t('navigation.games'), icon:'fa-gamepad'},
             {key:'settings', label: t('navigation.settings'), icon:'fa-sliders'}
-          ].map(item => (
+          ].filter(item => {
+            return true;
+          }).map(item => (
             <button
               key={item.key}
               type="button"
@@ -49,6 +51,22 @@ export default function Sidebar({
           ))}
         </div>
         <div className="dash-sidebar-footer mt-4">
+          {/* API Docs moved above logout button, only for allowed server */}
+          {selectedGuild === '935480450707759165' && (
+            <div className="dash-menu mb-2">
+              <button
+                type="button"
+                data-label={t('navigation.apiDocs') || 'API Docs'}
+                onMouseEnter={()=>preloadSection('api-docs')}
+                onFocus={()=>preloadSection('api-docs')}
+                onClick={()=>{ startTransition(()=> setDashSection('api-docs')); setSidebarOpen(false); }}
+                className={'dash-menu-item'+(dashSection==='api-docs'? ' active':'')}
+              >
+                <i className="fa-solid fa-book menu-ico"></i>
+                <span className="menu-label">{t('navigation.apiDocs') || 'API Docs'}</span>
+              </button>
+            </div>
+          )}
           <button
             type="button"
             data-label={t('navigation.logout')}

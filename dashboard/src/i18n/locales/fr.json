@@ -2446,5 +2446,75 @@
       "setupGuide": "Guide de Configuration",
       "copyright": "Choco Maid • Discord AI Bot"
     }
+  },
+  "apiDocs": {
+    "title": "Documentation API",
+    "subtitle": "Référence API interactive avec tests en direct",
+    "fullDocs": "Docs Complètes",
+    "postmanCollection": "Collection Postman",
+    "categories": "Catégories",
+    "stats": {
+      "title": "Statistiques API",
+      "totalEndpoints": "Total Endpoints:",
+      "categories": "Catégories:",
+      "baseUrl": "URL de base:"
+    },
+    "endpointsHeader": "Endpoints {{name}}",
+    "endpointLabel": "Endpoint",
+    "parameters": "Paramètres",
+    "headers": "Headers",
+    "requestBodyExample": "Exemple de Body",
+    "responseExample": "Exemple de Réponse",
+    "testTitle": "Tester cet Endpoint",
+    "pathParams": "Paramètres de Chemin",
+    "queryParams": "Paramètres Query",
+    "requestBody": "Body (JSON)",
+    "send": "Envoyer la Requête",
+    "sending": "Envoi de la requête...",
+    "response": "Réponse",
+    "copy": "Copier",
+    "status": "Statut:",
+    "selectEndpointTitle": "Sélectionner un Endpoint",
+    "selectEndpointHelp": "Choisissez un endpoint pour voir les détails et le tester.",
+    "authRequired": {
+      "title": "Authentification Requise",
+      "desc": "Cet endpoint nécessite un JWT valide dans l'en‑tête Authorization."
+    },
+    "table": {
+      "name": "Nom",
+      "type": "Type",
+      "required": "Requis",
+      "description": "Description"
+    },
+    "tooltips": {
+      "requiresAuth": "Nécessite une authentification",
+      "copyResponse": "Copier la réponse"
+    },
+    "accessDenied": {
+      "title": "Accès Refusé",
+      "restricted": "Accès à la Documentation API Restreint",
+      "onlyAuthorized": "La documentation API est disponible uniquement pour les serveurs autorisés.",
+      "currentServerId": "ID du Serveur actuel:",
+      "contactAdmin": "Si vous pensez qu'il s'agit d'une erreur, contactez l'administrateur.",
+      "footerNote": "Cette fonctionnalité est restreinte à certains serveurs pour des raisons de sécurité."
+    },
+    "toasts": {
+      "apiSuccess": "Requête API réussie",
+      "apiFailed": "Échec de la requête API",
+      "requestFailed": "Requête échouée",
+      "copied": "Réponse copiée dans le presse‑papiers",
+      "copyFailed": "Échec de la copie"
+    },
+    "categoryNames": {
+      "authentication": "Authentification",
+      "analytics": "Analytique",
+      "guilds": "Serveurs",
+      "moderation": "Modération",
+      "settings": "Paramètres",
+      "auto-responses": "Réponses Automatiques",
+      "commands": "Commandes",
+      "leveling": "XP & Nivellement",
+      "games-social": "Jeux & Social"
+    }
   }
 }

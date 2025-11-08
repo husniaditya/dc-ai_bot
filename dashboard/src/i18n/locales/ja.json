@@ -2445,5 +2445,75 @@
       "setupGuide": "セットアップガイド",
       "copyright": "Choco Maid • Discord AI Bot"
     }
+  },
+  "apiDocs": {
+    "title": "APIドキュメント",
+    "subtitle": "ライブテスト可能なインタラクティブAPIリファレンス",
+    "fullDocs": "完全ドキュメント",
+    "postmanCollection": "Postmanコレクション",
+    "categories": "カテゴリ",
+    "stats": {
+      "title": "API統計",
+      "totalEndpoints": "総エンドポイント:",
+      "categories": "カテゴリ:",
+      "baseUrl": "ベースURL:"
+    },
+    "endpointsHeader": "{{name}} エンドポイント",
+    "endpointLabel": "エンドポイント",
+    "parameters": "パラメータ",
+    "headers": "ヘッダー",
+    "requestBodyExample": "リクエストBody例",
+    "responseExample": "レスポンス例",
+    "testTitle": "このエンドポイントをテスト",
+    "pathParams": "パスパラメータ",
+    "queryParams": "クエリパラメータ",
+    "requestBody": "Body (JSON)",
+    "send": "リクエスト送信",
+    "sending": "送信中...",
+    "response": "レスポンス",
+    "copy": "コピー",
+    "status": "ステータス:",
+    "selectEndpointTitle": "エンドポイントを選択",
+    "selectEndpointHelp": "一覧からエンドポイントを選び、詳細表示とライブテストを行います。",
+    "authRequired": {
+      "title": "認証が必要",
+      "desc": "このエンドポイントはAuthorizationヘッダーの有効なJWTが必要です。"
+    },
+    "table": {
+      "name": "名前",
+      "type": "タイプ",
+      "required": "必須",
+      "description": "説明"
+    },
+    "tooltips": {
+      "requiresAuth": "認証が必要",
+      "copyResponse": "レスポンスをコピー"
+    },
+    "accessDenied": {
+      "title": "アクセス拒否",
+      "restricted": "APIドキュメントへのアクセスは制限されています",
+      "onlyAuthorized": "APIドキュメントは許可されたサーバーのみ利用可能です。",
+      "currentServerId": "現在のサーバーID:",
+      "contactAdmin": "エラーだと思われる場合は管理者に連絡してください。",
+      "footerNote": "この機能はセキュリティのため特定のサーバーに制限されています。"
+    },
+    "toasts": {
+      "apiSuccess": "APIリクエスト成功",
+      "apiFailed": "APIリクエスト失敗",
+      "requestFailed": "リクエスト失敗",
+      "copied": "レスポンスをコピーしました",
+      "copyFailed": "コピーに失敗しました"
+    },
+    "categoryNames": {
+      "authentication": "認証",
+      "analytics": "分析",
+      "guilds": "サーバー",
+      "moderation": "モデレーション",
+      "settings": "設定",
+      "auto-responses": "自動返信",
+      "commands": "コマンド",
+      "leveling": "XP＆レベリング",
+      "games-social": "ゲーム＆ソーシャル"
+    }
   }
 }

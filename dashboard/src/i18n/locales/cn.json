@@ -2439,5 +2439,75 @@
       "setupGuide": "设置指南",
       "copyright": "Choco Maid • Discord AI Bot"
     }
+  },
+  "apiDocs": {
+    "title": "API文档",
+    "subtitle": "可交互的API参考与实时测试",
+    "fullDocs": "完整文档",
+    "postmanCollection": "Postman集合",
+    "categories": "分类",
+    "stats": {
+      "title": "API统计",
+      "totalEndpoints": "接口总数:",
+      "categories": "分类:",
+      "baseUrl": "基础URL:"
+    },
+    "endpointsHeader": "{{name}} 接口",
+    "endpointLabel": "接口",
+    "parameters": "参数",
+    "headers": "请求头",
+    "requestBodyExample": "请求Body示例",
+    "responseExample": "响应示例",
+    "testTitle": "测试此接口",
+    "pathParams": "路径参数",
+    "queryParams": "查询参数",
+    "requestBody": "请求Body (JSON)",
+    "send": "发送请求",
+    "sending": "正在发送...",
+    "response": "响应",
+    "copy": "复制",
+    "status": "状态:",
+    "selectEndpointTitle": "请选择接口",
+    "selectEndpointHelp": "从列表中选择一个接口以查看详细信息并实时测试。",
+    "authRequired": {
+      "title": "需要认证",
+      "desc": "此接口需要在Authorization头中提供有效的JWT令牌。"
+    },
+    "table": {
+      "name": "名称",
+      "type": "类型",
+      "required": "必需",
+      "description": "描述"
+    },
+    "tooltips": {
+      "requiresAuth": "需要认证",
+      "copyResponse": "复制响应"
+    },
+    "accessDenied": {
+      "title": "访问被拒绝",
+      "restricted": "API文档访问受限",
+      "onlyAuthorized": "API文档仅对授权服务器开放。",
+      "currentServerId": "当前服务器ID:",
+      "contactAdmin": "如果认为是错误，请联系服务器管理员。",
+      "footerNote": "此功能因安全原因仅限特定服务器使用。"
+    },
+    "toasts": {
+      "apiSuccess": "API请求成功",
+      "apiFailed": "API请求失败",
+      "requestFailed": "请求失败",
+      "copied": "响应已复制到剪贴板",
+      "copyFailed": "复制失败"
+    },
+    "categoryNames": {
+      "authentication": "认证",
+      "analytics": "分析",
+      "guilds": "服务器",
+      "moderation": "审核",
+      "settings": "设置",
+      "auto-responses": "自动回复",
+      "commands": "命令",
+      "leveling": "XP与等级",
+      "games-social": "游戏与社交"
+    }
   }
 }

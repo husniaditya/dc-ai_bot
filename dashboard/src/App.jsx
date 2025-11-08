@@ -8,6 +8,7 @@ const CommandsSection = React.lazy(()=> import('./sections/CommandsSection.jsx')
 const PersonalizationSection = React.lazy(()=> import('./sections/PersonalizationSection.jsx'));
 const ModerationSection = React.lazy(()=> import('./sections/ModerationSection.jsx'));
 const GamesSocialsSection = React.lazy(()=> import('./sections/GamesSocialsSection.jsx'));
+const ApiDocsSection = React.lazy(()=> import('./sections/ApiDocsSection.jsx'));
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './theme.css';
 import './styles/responsive-tables.css';
@@ -1426,7 +1427,10 @@ export default function App(){
   const gamesContent = <React.Suspense >
     <GamesSocialsSection guildId={selectedGuild} pushToast={pushToast} />
   </React.Suspense>;
-  const sectionMap = { overview: overviewContent, autos: autosContent, commands: commandsContent, personal: personalizationContent, moderation: moderationContent, games: gamesContent, settings: settingsContent };
+  const apiDocsContent = <React.Suspense fallback={<div className="text-muted small p-3">Loading API Documentation...</div>}>
+    <ApiDocsSection guildId={selectedGuild} pushToast={pushToast} />
+  </React.Suspense>;
+  const sectionMap = { overview: overviewContent, autos: autosContent, commands: commandsContent, personal: personalizationContent, moderation: moderationContent, games: gamesContent, 'api-docs': apiDocsContent, settings: settingsContent };
 
   // Preload lazily loaded sections to reduce Suspense flashes
   function preloadSection(key){
@@ -1440,6 +1444,7 @@ export default function App(){
   case 'settings': import('./sections/SettingsSection.jsx'); break;
   case 'autos': import('./sections/AutosSection.jsx'); break;
   case 'games': import('./sections/GamesSocialsSection.jsx'); break;
+  case 'api-docs': import('./sections/ApiDocsSection.jsx'); break;
       default: break;
     }
   }
