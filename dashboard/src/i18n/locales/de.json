@@ -2435,5 +2435,75 @@
       "setupGuide": "Einrichtungsanleitung",
       "copyright": "Choco Maid • Discord AI Bot"
     }
+  },
+  "apiDocs": {
+    "title": "API-Dokumentation",
+    "subtitle": "Interaktive API-Referenz mit Live-Tests",
+    "fullDocs": "Volle Doku",
+    "postmanCollection": "Postman-Sammlung",
+    "categories": "Kategorien",
+    "stats": {
+      "title": "API-Statistiken",
+      "totalEndpoints": "Gesamt Endpoints:",
+      "categories": "Kategorien:",
+      "baseUrl": "Basis-URL:"
+    },
+    "endpointsHeader": "{{name}} Endpoints",
+    "endpointLabel": "Endpoint",
+    "parameters": "Parameter",
+    "headers": "Header",
+    "requestBodyExample": "Beispiel Body",
+    "responseExample": "Beispiel Antwort",
+    "testTitle": "Endpoint Testen",
+    "pathParams": "Pfad-Parameter",
+    "queryParams": "Query-Parameter",
+    "requestBody": "Body (JSON)",
+    "send": "Request Senden",
+    "sending": "Sende Request...",
+    "response": "Antwort",
+    "copy": "Kopieren",
+    "status": "Status:",
+    "selectEndpointTitle": "Endpoint Auswählen",
+    "selectEndpointHelp": "Wähle einen Endpoint aus der Liste, um Details zu sehen und ihn zu testen.",
+    "authRequired": {
+      "title": "Authentifizierung Erforderlich",
+      "desc": "Dieser Endpoint benötigt ein gültiges JWT im Authorization-Header."
+    },
+    "table": {
+      "name": "Name",
+      "type": "Typ",
+      "required": "Erforderlich",
+      "description": "Beschreibung"
+    },
+    "tooltips": {
+      "requiresAuth": "Benötigt Authentifizierung",
+      "copyResponse": "Antwort kopieren"
+    },
+    "accessDenied": {
+      "title": "Zugriff Verweigert",
+      "restricted": "API-Dokumentationszugriff Beschränkt",
+      "onlyAuthorized": "Die API-Dokumentation ist nur für autorisierte Server verfügbar.",
+      "currentServerId": "Aktuelle Server-ID:",
+      "contactAdmin": "Falls dies ein Fehler ist, kontaktiere den Administrator.",
+      "footerNote": "Diese Funktion ist aus Sicherheitsgründen auf bestimmte Server beschränkt."
+    },
+    "toasts": {
+      "apiSuccess": "API-Request erfolgreich",
+      "apiFailed": "API-Request fehlgeschlagen",
+      "requestFailed": "Request fehlgeschlagen",
+      "copied": "Antwort in die Zwischenablage kopiert",
+      "copyFailed": "Kopieren fehlgeschlagen"
+    },
+    "categoryNames": {
+      "authentication": "Authentifizierung",
+      "analytics": "Analysen",
+      "guilds": "Server",
+      "moderation": "Moderation",
+      "settings": "Einstellungen",
+      "auto-responses": "Auto-Antworten",
+      "commands": "Befehle",
+      "leveling": "XP & Leveln",
+      "games-social": "Spiele & Soziales"
+    }
   }
 }

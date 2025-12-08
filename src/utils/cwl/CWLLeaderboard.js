@@ -184,6 +184,11 @@ class CWLLeaderboard {
               isLoss = true;
             }
           }
+          
+          // Add 10 bonus stars for winning the war (CWL rule)
+          if (isWin) {
+            roundStars += 10;
+          }
         }
       }
 

@@ -1217,6 +1217,531 @@ html:not(.dark) .moderation-config-form label {
   color: #445066 !important;
 }
 
+/* --------------------------------------------- */
+/* API Documentation Section Styles              */
+/* --------------------------------------------- */
+
+/* Dark theme styles (default) */
+.api-docs-section .list-group-item.active {
+  z-index: 1;
+}
+
+.api-docs-section code {
+  color: #ff79c6;
+  background: rgba(255, 121, 198, 0.1);
+  padding: 2px 6px;
+  border-radius: 3px;
+}
+
+.api-docs-section pre {
+  margin-bottom: 0;
+  background: #0f1419;
+  border: 1px solid rgba(88, 101, 242, 0.4);
+  border-radius: 6px;
+  padding: 16px;
+  color: #e6edf3;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+}
+
+.api-docs-section pre code {
+  color: #e6edf3;
+  background: transparent;
+  padding: 0;
+  font-size: 0.875rem;
+}
+
+.api-docs-section .badge {
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+.api-docs-section .card {
+  background: rgba(30, 33, 42, 0.8);
+  border: 1px solid rgba(88, 101, 242, 0.15);
+  backdrop-filter: blur(10px);
+}
+
+.api-docs-section .card-header {
+  background: rgba(20, 23, 32, 0.9);
+  border-bottom: 1px solid rgba(88, 101, 242, 0.2);
+  color: #ffffff;
+  font-weight: 600;
+}
+/* Distinct header style to differentiate header from its child list items */
+.api-docs-section .api-docs-header {
+  background: linear-gradient(135deg, #3b1d70 0%, #6d28d9 50%, #9333ea 100%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.2);
+}
+
+/* Light theme: slightly brighter cool-purple to stand apart from active items */
+html:not(.dark) .api-docs-section .api-docs-header {
+  background: linear-gradient(135deg, #4f46e5 0%, #6366f1 45%, #8b5cf6 100%);
+  color: #f8fafc;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.api-docs-section .card-body {
+  color: #e4e4e7;
+}
+
+.api-docs-section .form-label {
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 0.95rem;
+  letter-spacing: 0.3px;
+}
+
+.api-docs-section .text-muted {
+  color: #a1a1aa !important;
+}
+
+.api-docs-section h6 {
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.api-docs-section p {
+  color: #d4d4d8;
+}
+
+.api-docs-section .list-group-item {
+  background: rgba(255, 255, 255, 0.02);
+  border-color: rgba(255, 255, 255, 0.08);
+  color: #e4e4e7;
+  transition: all 0.2s ease;
+}
+
+.api-docs-section .list-group-item:hover {
+  background: rgba(88, 101, 242, 0.25);
+  border-color: rgba(88, 101, 242, 0.5);
+  color: #ffffff;
+  transform: translateX(2px);
+}
+
+.api-docs-section .list-group-item:hover:not(.active) {
+  background: rgba(88, 101, 242, 0.25);
+}
+
+.api-docs-section .list-group-item.active {
+  background: linear-gradient(135deg, #5865F2 0%, #4752C4 100%);
+  border-color: #5865F2;
+  color: #fff;
+}
+
+.api-docs-section .list-group-item.active .badge {
+  background: rgba(255, 255, 255, 0.25) !important;
+  color: #fff !important;
+}
+
+.api-docs-section .list-group-item.active i {
+  color: #fff;
+}
+
+.api-docs-section .list-group-item.active strong,
+.api-docs-section .list-group-item.active code,
+.api-docs-section .list-group-item.active .text-muted {
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+.api-docs-section .list-group-item.active .fa-lock {
+  color: #fbbf24 !important;
+}
+
+.api-docs-section .table {
+  color: #f4f4f5;
+  font-size: 0.9rem;
+  background: transparent;
+}
+
+.api-docs-section .api-table {
+  background: transparent !important;
+}
+
+.api-docs-section .api-table thead {
+  background: transparent !important;
+}
+
+.api-docs-section .api-table tbody {
+  background: transparent !important;
+}
+
+.api-docs-section .table th {
+  background: linear-gradient(135deg, rgba(88, 101, 242, 0.25) 0%, rgba(88, 101, 242, 0.18) 100%);
+  color: #ffffff;
+  border-color: rgba(88, 101, 242, 0.5);
+  font-weight: 700;
+  padding: 12px;
+  letter-spacing: 0.3px;
+}
+
+.api-docs-section .table td {
+  border-color: rgba(255, 255, 255, 0.12);
+  padding: 10px 12px;
+  vertical-align: middle;
+  color: #f4f4f5;
+  background: rgba(30, 33, 42, 0.4) !important;
+}
+
+.api-docs-section .table tbody tr {
+  background: transparent;
+}
+
+.api-docs-section .table tbody tr:hover td {
+  background: rgba(88, 101, 242, 0.12) !important;
+  transition: background 0.2s ease;
+}
+
+.api-docs-section .table code {
+  color: #86efac;
+  background: rgba(134, 239, 172, 0.12);
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+.api-docs-section .table .badge {
+  font-size: 0.65rem;
+}
+
+.api-docs-section textarea,
+.api-docs-section input {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #e4e4e7;
+}
+
+.api-docs-section textarea:focus,
+.api-docs-section input:focus {
+  background: rgba(0, 0, 0, 0.4);
+  border-color: #5865F2;
+  color: #fff;
+}
+
+.api-docs-section .alert {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Endpoint path styling - dark theme */
+.api-docs-section .endpoint-path {
+  background: rgba(88, 101, 242, 0.15);
+  border-color: rgba(88, 101, 242, 0.4) !important;
+  color: #a5b4fc;
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+/* Authentication alert - dark theme */
+.api-docs-section .auth-required-alert {
+  background: rgba(251, 191, 36, 0.12);
+  border: 1px solid rgba(251, 191, 36, 0.4);
+  color: #fcd34d;
+}
+
+.api-docs-section .auth-required-alert strong {
+  color: #fde047;
+  font-weight: 700;
+}
+
+.api-docs-section .auth-required-alert .fa-lock {
+  color: #fbbf24;
+}
+
+/* Access Denied card dark theme */
+.api-docs-section .access-denied-card {
+  background: rgba(30, 33, 42, 0.8);
+  border-color: #dc3545;
+}
+
+.api-docs-section .access-denied-card .card-body h5 {
+  color: #e4e4e7;
+}
+
+.api-docs-section .access-denied-footer {
+  background: rgba(20, 23, 32, 0.6);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Collapsible response example */
+.api-docs-section .cursor-pointer {
+  cursor: pointer;
+}
+
+.api-docs-section .btn-link:hover {
+  opacity: 0.8;
+}
+
+/* Light theme overrides for API docs */
+html:not(.dark) .api-docs-section code {
+  color: #c7254e;
+  background: rgba(199, 37, 78, 0.1);
+}
+
+html:not(.dark) .api-docs-section pre {
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+  color: #212529;
+}
+
+html:not(.dark) .api-docs-section pre code {
+  color: #212529;
+  background: transparent;
+}
+
+html:not(.dark) .api-docs-section .card {
+  background: #ffffff;
+  border: 1px solid #dee2e6;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+}
+
+html:not(.dark) .api-docs-section .card-body {
+  color: #212529;
+}
+
+html:not(.dark) .api-docs-section .form-label {
+  color: #1e293b;
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+html:not(.dark) .api-docs-section .text-muted {
+  color: #64748b !important;
+}
+
+html:not(.dark) .api-docs-section h6 {
+  color: #1e293b;
+  font-weight: 600;
+}
+
+html:not(.dark) .api-docs-section p {
+  color: #475569;
+}
+
+html:not(.dark) .api-docs-section .card-header {
+  background: #f8f9fa;
+  border-bottom: 1px solid #dee2e6;
+  color: #1e293b;
+  font-weight: 600;
+}
+
+html:not(.dark) .api-docs-section .card-header.bg-dark {
+  background: linear-gradient(135deg, #5865F2 0%, #4752C4 100%) !important;
+  color: #ffffff !important;
+}
+
+/* Ensure colored headers also apply in light theme */
+html:not(.dark) .api-docs-section .card-header.api-docs-header {
+  /* Softer, light-tinted gradient so dark text reads well */
+  background: linear-gradient(135deg, rgba(99,102,241,0.16) 0%, rgba(139,92,246,0.12) 50%, rgba(236,72,153,0.08) 100%) !important;
+  color: #1e293b !important; /* match light body heading color */
+  text-shadow: none !important;
+  border-bottom: 1px solid #cbd5e1 !important; /* subtle cool gray divider */
+}
+
+html:not(.dark) .api-docs-section .list-group-item {
+  background: #ffffff;
+  border-color: #dee2e6;
+  color: #212529;
+}
+
+html:not(.dark) .api-docs-section .list-group-item:hover {
+  background: #f8f9fa;
+}
+
+html:not(.dark) .api-docs-section .list-group-item.active {
+  background: linear-gradient(135deg, #5865F2 0%, #4752C4 100%);
+  border-color: #5865F2;
+  color: #f1f5f9; /* softer than pure white for better legibility on light theme */
+  /* Match dark theme weight (do not force bold on entire item) */
+  font-weight: inherit;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Fix: avoid blurry text on active items in light theme (caused by hover transform) */
+html:not(.dark) .api-docs-section .list-group-item.active,
+html:not(.dark) .api-docs-section .list-group-item.active:hover {
+  transform: none !important; /* keep on CPU layer to preserve subpixel AA */
+  filter: none !important;
+  text-shadow: none !important;
+}
+
+html:not(.dark) .api-docs-section .list-group-item.active i {
+  color: #ffffff;
+}
+
+html:not(.dark) .api-docs-section .list-group-item.active .badge {
+  background: rgba(255, 255, 255, 0.3) !important;
+  color: #f1f5f9 !important;
+}
+
+html:not(.dark) .api-docs-section .list-group-item.active strong,
+html:not(.dark) .api-docs-section .list-group-item.active code,
+html:not(.dark) .api-docs-section .list-group-item.active .text-muted {
+  color: #f1f5f9 !important;
+}
+
+html:not(.dark) .api-docs-section .list-group-item.active .fa-lock {
+  color: #fbbf24 !important;
+}
+
+html:not(.dark) .api-docs-section .table {
+  color: #212529;
+  font-size: 0.9rem;
+}
+
+html:not(.dark) .api-docs-section .table th {
+  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+  color: #1e293b;
+  border-color: #cbd5e1;
+  font-weight: 700;
+  padding: 12px;
+}
+
+html:not(.dark) .api-docs-section .table td {
+  border-color: #e2e8f0;
+  padding: 10px 12px;
+  background: #ffffff !important; /* override dark theme td background */
+  color: #1f2937; /* readable dark text */
+}
+
+html:not(.dark) .api-docs-section .table code {
+  color: #059669;
+  background: rgba(5, 150, 105, 0.1);
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+/* Light theme table row hover for readability */
+html:not(.dark) .api-docs-section .table tbody tr:hover td {
+  background: #f1f5f9 !important;
+}
+
+/* Endpoint path styling - light theme */
+html:not(.dark) .api-docs-section .endpoint-path {
+  background: #eff6ff;
+  border-color: #3b82f6 !important;
+  color: #1e40af;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+/* Authentication alert - light theme */
+html:not(.dark) .api-docs-section .auth-required-alert {
+  background: #fef3c7;
+  border: 1px solid #f59e0b;
+  color: #92400e;
+}
+
+html:not(.dark) .api-docs-section .auth-required-alert strong {
+  color: #78350f;
+  font-weight: 700;
+}
+
+html:not(.dark) .api-docs-section .auth-required-alert .fa-lock {
+  color: #d97706;
+}
+
+html:not(.dark) .api-docs-section textarea,
+html:not(.dark) .api-docs-section input {
+  background: #ffffff;
+  border: 1px solid #ced4da;
+  color: #495057;
+}
+
+html:not(.dark) .api-docs-section textarea:focus,
+html:not(.dark) .api-docs-section input:focus {
+  background: #ffffff;
+  border-color: #5865F2;
+  box-shadow: 0 0 0 0.2rem rgba(88, 101, 242, 0.15);
+}
+
+html:not(.dark) .api-docs-section .alert-info {
+  background: #e7f3ff;
+  border-color: #b3d7ff;
+  color: #004085;
+}
+
+html:not(.dark) .api-docs-section .alert-success {
+  background: #d4edda;
+  border-color: #c3e6cb;
+  color: #155724;
+}
+
+html:not(.dark) .api-docs-section .alert-danger {
+  background: #f8d7da;
+  border-color: #f5c6cb;
+  color: #721c24;
+}
+
+html:not(.dark) .api-docs-section .alert-warning {
+  background: #fff3cd;
+  border-color: #ffeaa7;
+  color: #856404;
+}
+
+html:not(.dark) .api-docs-section .btn-outline-primary {
+  color: #5865F2;
+  border-color: #5865F2;
+}
+
+html:not(.dark) .api-docs-section .btn-outline-primary:hover {
+  background: #5865F2;
+  color: #ffffff;
+}
+
+html:not(.dark) .api-docs-section .btn-outline-secondary {
+  color: #6c757d;
+  border-color: #6c757d;
+}
+
+html:not(.dark) .api-docs-section .btn-outline-secondary:hover {
+  background: #6c757d;
+  color: #ffffff;
+}
+
+html:not(.dark) .api-docs-section .badge.bg-secondary {
+  background: #6c757d !important;
+}
+
+/* Method badge colors for light theme */
+html:not(.dark) .api-docs-section .badge.bg-success {
+  background: #28a745 !important;
+}
+
+html:not(.dark) .api-docs-section .badge.bg-primary {
+  background: #5865F2 !important;
+}
+
+html:not(.dark) .api-docs-section .badge.bg-warning {
+  background: #ffc107 !important;
+  color: #000 !important;
+}
+
+html:not(.dark) .api-docs-section .badge.bg-danger {
+  background: #dc3545 !important;
+}
+
+/* Access Denied card light theme */
+html:not(.dark) .api-docs-section .access-denied-card {
+  background: #ffffff;
+  border-color: #dc3545;
+}
+
+html:not(.dark) .api-docs-section .access-denied-footer {
+  background: #f8f9fa;
+  border-top: 1px solid #dee2e6;
+}
+
 /* Enhanced scheduler form styling */
 .moderation-config-form .btn-outline-secondary {
   background: rgba(255,255,255,0.06) !important;

@@ -1142,9 +1142,31 @@ async function announceCWLEnded(guild, cfg, clanTag, clanInfo, leagueData, curre
 
     console.log(`[CWL] Announcing CWL ended for ${clanInfo.name} in channel ${channel.name} (cwlAnnounceChannelId)`);
 
-    // Calculate final standings if available
+    // Get final standings from database (authoritative source)
+    const stateManager = getCWLStateManager();
+    const cwlLeaderboardSvc = getCWLLeaderboard();
+    const season = stateManager.getCurrentSeason();
+    
     let standingsText = '';
-    if (leagueData && leagueData.clans) {
+    
+    // Get ALL rounds' standings from database to calculate totals
+    const allRounds = await cwlLeaderboardSvc.getStandingsHistory(guild.id, clanTag, season);
+    
+    if (allRounds && allRounds.length > 0) {
+      // Calculate cumulative totals from all rounds
+      const totalStars = allRounds.reduce((sum, round) => sum + (parseInt(round.stars_earned) || 0), 0);
+      const totalDestruction = allRounds.reduce((sum, round) => sum + (parseFloat(round.destruction_percentage) || 0), 0);
+      const avgDestruction = allRounds.length > 0 ? (totalDestruction / allRounds.length) : 0;
+      
+      // Get final position from the last round
+      const finalRound = allRounds[allRounds.length - 1];
+      
+      standingsText = `**Position:** ${finalRound.position}/${finalRound.total_clans}\n`;
+      standingsText += `**Stars Earned:** ${totalStars}⭐\n`;
+      standingsText += `**Destruction:** ${avgDestruction.toFixed(1)}%\n`;
+      standingsText += `**Record:** ${finalRound.wins || 0}W - ${finalRound.losses || 0}L`;
+    } else if (leagueData && leagueData.clans) {
+      // Fallback to API data if database is empty (shouldn't happen)
       const sortedClans = [...leagueData.clans].sort((a, b) => b.stars - a.stars);
       const ourClan = sortedClans.find(c => cleanClanTag(c.tag) === clanTag);
       const ourPosition = sortedClans.indexOf(ourClan) + 1;

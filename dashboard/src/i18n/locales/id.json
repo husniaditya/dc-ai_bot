@@ -109,6 +109,76 @@
       "unsavedChanges": "Anda memiliki perubahan yang belum disimpan. Yakin ingin keluar?"
     }
   },
+  "apiDocs": {
+    "title": "Dokumentasi API",
+    "subtitle": "Referensi API interaktif dengan pengujian langsung",
+    "fullDocs": "Dokumentasi Lengkap",
+    "postmanCollection": "Koleksi Postman",
+    "categories": "Kategori",
+    "stats": {
+      "title": "Statistik API",
+      "totalEndpoints": "Total Endpoint:",
+      "categories": "Kategori:",
+      "baseUrl": "URL Dasar:"
+    },
+    "endpointsHeader": "Endpoint {{name}}",
+    "endpointLabel": "Endpoint",
+    "parameters": "Parameter",
+    "headers": "Header",
+    "requestBodyExample": "Contoh Body",
+    "responseExample": "Contoh Respons",
+    "testTitle": "Uji Endpoint Ini",
+    "pathParams": "Parameter Path",
+    "queryParams": "Parameter Query",
+    "requestBody": "Body (JSON)",
+    "send": "Kirim Request",
+    "sending": "Mengirim Request...",
+    "response": "Respons",
+    "copy": "Salin",
+    "status": "Status:",
+    "selectEndpointTitle": "Pilih Endpoint",
+    "selectEndpointHelp": "Pilih endpoint dari daftar untuk melihat detail dan mengujinya.",
+    "authRequired": {
+      "title": "Autentikasi Diperlukan",
+      "desc": "Endpoint ini memerlukan JWT yang valid di header Authorization."
+    },
+    "table": {
+      "name": "Nama",
+      "type": "Tipe",
+      "required": "Wajib",
+      "description": "Deskripsi"
+    },
+    "tooltips": {
+      "requiresAuth": "Memerlukan autentikasi",
+      "copyResponse": "Salin respons"
+    },
+    "accessDenied": {
+      "title": "Akses Ditolak",
+      "restricted": "Akses Dokumentasi API Dibatasi",
+      "onlyAuthorized": "Dokumentasi API hanya tersedia untuk server yang diotorisasi.",
+      "currentServerId": "ID Server Saat Ini:",
+      "contactAdmin": "Jika ini kesalahan, hubungi administrator server.",
+      "footerNote": "Fitur ini dibatasi pada server tertentu demi keamanan."
+    },
+    "toasts": {
+      "apiSuccess": "Request API berhasil",
+      "apiFailed": "Request API gagal",
+      "requestFailed": "Request gagal",
+      "copied": "Respons disalin ke clipboard",
+      "copyFailed": "Gagal menyalin"
+    },
+    "categoryNames": {
+      "authentication": "Autentikasi",
+      "analytics": "Analitik",
+      "guilds": "Guild",
+      "moderation": "Moderasi",
+      "settings": "Pengaturan",
+      "auto-responses": "Respons Otomatis",
+      "commands": "Perintah",
+      "leveling": "XP & Leveling",
+      "games-social": "Game & Sosial"
+    }
+  },
   "auth": {
     "login": "Masuk",
     "logout": "Keluar",
