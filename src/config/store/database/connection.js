@@ -437,6 +437,19 @@ async function initializeTables() {
     PRIMARY KEY (guild_id, command_name)
   ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci`);
 
+  // Guild AI Chat History Table
+  await sqlPool.query(`CREATE TABLE IF NOT EXISTS guild_ai_chat_history (
+    id BIGINT(20) NOT NULL AUTO_INCREMENT,
+    guild_id VARCHAR(32) NOT NULL,
+    user_id VARCHAR(32) NOT NULL,
+    role ENUM('user','assistant','system') NOT NULL,
+    content TEXT NOT NULL,
+    created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP(),
+    PRIMARY KEY (id),
+    KEY idx_guild_user (guild_id, user_id),
+    KEY idx_created (created_at)
+  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci`);
+
   // Guild Genshin Watch Table
   await sqlPool.query(`CREATE TABLE IF NOT EXISTS guild_genshin_watch (
     id INT(11) NOT NULL AUTO_INCREMENT,
