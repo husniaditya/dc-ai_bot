@@ -2446,5 +2446,75 @@
       "setupGuide": "Guía de Configuración",
       "copyright": "Choco Maid • Discord AI Bot"
     }
+  },
+  "apiDocs": {
+    "title": "Documentación API",
+    "subtitle": "Referencia API interactiva con pruebas en vivo",
+    "fullDocs": "Documentación Completa",
+    "postmanCollection": "Colección Postman",
+    "categories": "Categorías",
+    "stats": {
+      "title": "Estadísticas API",
+      "totalEndpoints": "Total Endpoints:",
+      "categories": "Categorías:",
+      "baseUrl": "URL Base:"
+    },
+    "endpointsHeader": "Endpoints de {{name}}",
+    "endpointLabel": "Endpoint",
+    "parameters": "Parámetros",
+    "headers": "Headers",
+    "requestBodyExample": "Ejemplo de Body",
+    "responseExample": "Ejemplo de Respuesta",
+    "testTitle": "Probar Este Endpoint",
+    "pathParams": "Parámetros de Ruta",
+    "queryParams": "Parámetros Query",
+    "requestBody": "Body (JSON)",
+    "send": "Enviar Request",
+    "sending": "Enviando Request...",
+    "response": "Respuesta",
+    "copy": "Copiar",
+    "status": "Estado:",
+    "selectEndpointTitle": "Selecciona un Endpoint",
+    "selectEndpointHelp": "Elige un endpoint de la lista para ver detalles y probarlo.",
+    "authRequired": {
+      "title": "Autenticación Requerida",
+      "desc": "Este endpoint requiere un JWT válido en el header Authorization."
+    },
+    "table": {
+      "name": "Nombre",
+      "type": "Tipo",
+      "required": "Requerido",
+      "description": "Descripción"
+    },
+    "tooltips": {
+      "requiresAuth": "Requiere autenticación",
+      "copyResponse": "Copiar respuesta"
+    },
+    "accessDenied": {
+      "title": "Acceso Denegado",
+      "restricted": "Acceso a Documentación API Restringido",
+      "onlyAuthorized": "La documentación API solo está disponible para servidores autorizados.",
+      "currentServerId": "ID del Servidor Actual:",
+      "contactAdmin": "Si crees que es un error, contacta al administrador.",
+      "footerNote": "Esta función está restringida a servidores específicos por seguridad."
+    },
+    "toasts": {
+      "apiSuccess": "Request API exitosa",
+      "apiFailed": "Request API fallida",
+      "requestFailed": "Request fallida",
+      "copied": "Respuesta copiada al portapapeles",
+      "copyFailed": "Error al copiar"
+    },
+    "categoryNames": {
+      "authentication": "Autenticación",
+      "analytics": "Analítica",
+      "guilds": "Servidores",
+      "moderation": "Moderación",
+      "settings": "Configuración",
+      "auto-responses": "Respuestas Automáticas",
+      "commands": "Comandos",
+      "leveling": "XP y Nivelación",
+      "games-social": "Juegos y Social"
+    }
   }
 }

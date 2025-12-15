@@ -13,7 +13,7 @@ import {
   getChannels, 
   getRoles 
 } from '../../api';
-import LoadingSection from '../../components/LoadingSection';
+import LoadingNawsome from '../../components/LoadingNawsome';
 import { useI18n } from '../../i18n';
 
 // Components
@@ -461,14 +461,16 @@ export default function GamesSocialsSection({ guildId, pushToast }) {
   const genshinHasChanges = hasUnsavedChanges(genshinConfig, genshinOriginal);
   const valorantHasChanges = hasUnsavedChanges(valorantConfig, valorantOriginal);
 
+  if (showOverlay) {
+    return (
+      <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '600px' }}>
+        <LoadingNawsome />
+      </div>
+    );
+  }
+
   return (
-    <LoadingSection
-      loading={showOverlay}
-      title={t('gamesSocials.loading.title')}
-      message={t('gamesSocials.loading.message')}
-      className="p-4 games-socials-wrapper position-relative"
-      style={{ minHeight: '600px' }}
-    >
+    <div className="p-4 games-socials-wrapper position-relative" style={{ minHeight: '600px' }}>
       {/* Header */}
       <div className="d-flex align-items-center gap-2 mb-3">
         <h5 className="mb-0">{t('gamesSocials.title')}</h5>
@@ -690,10 +692,10 @@ export default function GamesSocialsSection({ guildId, pushToast }) {
               </div>
             </>
           ) : (
-            <PlaceholderService service={currentService} />
-          )}
-        </>
-      )}
-    </LoadingSection>
+          <PlaceholderService service={currentService} />
+        )}
+      </>
+    )}
+    </div>
   );
 }

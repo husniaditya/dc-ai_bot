@@ -59,6 +59,7 @@
     "personal": "Bot Personalization",
     "moderation": "Moderation",
     "games": "Games & Socials",
+    "apiDocs": "API Docs",
     "settings": "Settings",
     "logout": "Logout",
     "signOut": "Sign out",
@@ -2472,6 +2473,76 @@
       "features": "Features",
       "setupGuide": "Setup Guide",
       "copyright": "Choco Maid • Discord AI Bot"
+    }
+  },
+  "apiDocs": {
+    "title": "API Documentation",
+    "subtitle": "Interactive API reference with live testing capabilities",
+    "fullDocs": "Full Docs",
+    "postmanCollection": "Postman Collection",
+    "categories": "Categories",
+    "stats": {
+      "title": "API Statistics",
+      "totalEndpoints": "Total Endpoints:",
+      "categories": "Categories:",
+      "baseUrl": "Base URL:"
+    },
+    "endpointsHeader": "{{name}} Endpoints",
+    "endpointLabel": "Endpoint",
+    "parameters": "Parameters",
+    "headers": "Headers",
+    "requestBodyExample": "Request Body Example",
+    "responseExample": "Response Example",
+    "testTitle": "Test This Endpoint",
+    "pathParams": "Path Parameters",
+    "queryParams": "Query Parameters",
+    "requestBody": "Request Body (JSON)",
+    "send": "Send Request",
+    "sending": "Sending Request...",
+    "response": "Response",
+    "copy": "Copy",
+    "status": "Status:",
+    "selectEndpointTitle": "Select an Endpoint",
+    "selectEndpointHelp": "Choose an endpoint from the list to view details and test it live.",
+    "authRequired": {
+      "title": "Authentication Required",
+      "desc": "This endpoint requires a valid JWT token in the Authorization header."
+    },
+    "table": {
+      "name": "Name",
+      "type": "Type",
+      "required": "Required",
+      "description": "Description"
+    },
+    "tooltips": {
+      "requiresAuth": "Requires authentication",
+      "copyResponse": "Copy response"
+    },
+    "accessDenied": {
+      "title": "Access Denied",
+      "restricted": "API Documentation Access Restricted",
+      "onlyAuthorized": "The API documentation is only available for authorized servers.",
+      "currentServerId": "Current Server ID:",
+      "contactAdmin": "If you believe this is an error, please contact the server administrator.",
+      "footerNote": "This feature is restricted to specific servers for security purposes."
+    },
+    "toasts": {
+      "apiSuccess": "API request successful",
+      "apiFailed": "API request failed",
+      "requestFailed": "Request failed",
+      "copied": "Response copied to clipboard",
+      "copyFailed": "Copy failed"
+    },
+    "categoryNames": {
+      "authentication": "Authentication",
+      "analytics": "Analytics",
+      "guilds": "Guilds",
+      "moderation": "Moderation",
+      "settings": "Settings",
+      "auto-responses": "Auto Responses",
+      "commands": "Commands",
+      "leveling": "XP & Leveling",
+      "games-social": "Games & Social"
     }
   }
 }

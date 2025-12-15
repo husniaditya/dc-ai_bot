@@ -83,7 +83,7 @@ class CWLStateManager {
       };
 
       if (leagueData) {
-        updateData.league_name = leagueData.season || null;
+        updateData.league_name = leagueData.league?.name || null;
         
         // Extract war tags from league data
         if (leagueData.rounds && Array.isArray(leagueData.rounds)) {

@@ -38,6 +38,13 @@ class CWLPredictions {
    */
   async predictFinalPosition(guildId, clanTag, season) {
     try {
+      console.log(`[CWL Predictions] ==========================================`);
+      console.log(`[CWL Predictions] Predict Final Position Called`);
+      console.log(`[CWL Predictions] Guild ID: "${guildId}" (type: ${typeof guildId})`);
+      console.log(`[CWL Predictions] Clan Tag: "${clanTag}" (type: ${typeof clanTag})`);
+      console.log(`[CWL Predictions] Season: "${season}" (type: ${typeof season})`);
+      console.log(`[CWL Predictions] ==========================================`);
+      
       // Get current standings
       const [standings] = await this.sqlPool.query(
         `SELECT * FROM guild_clashofclans_cwl_round_standings
@@ -46,7 +53,13 @@ class CWLPredictions {
         [guildId, clanTag, season]
       );
 
+      console.log(`[CWL Predictions] Query returned ${standings.length} rows`);
+      if (standings.length > 0) {
+        console.log(`[CWL Predictions] First row:`, JSON.stringify(standings[0], null, 2));
+      }
+      
       if (standings.length === 0) {
+        console.log('[CWL Predictions] ❌ No standings data - returning null');
         return {
           predicted_position: null,
           confidence: 'none',
@@ -59,6 +72,8 @@ class CWLPredictions {
       const totalRounds = 7; // CWL always has 7 rounds
       const roundsRemaining = totalRounds - roundsPlayed;
 
+      console.log(`[CWL Predictions] Current round: ${roundsPlayed}, remaining: ${roundsRemaining}`);
+
       // Get historical performance
       const [history] = await this.sqlPool.query(
         `SELECT * FROM guild_clashofclans_cwl_round_standings
@@ -67,16 +82,18 @@ class CWLPredictions {
         [guildId, clanTag, season]
       );
 
-      // Calculate average stars per round from ALL rounds (not just current)
-      // Since stars_earned now stores per-round data, we need to sum all rounds
-      const [totalStarsResult] = await this.sqlPool.query(
-        `SELECT SUM(stars_earned) as total_stars, SUM(destruction_percentage) as total_destruction
-         FROM guild_clashofclans_cwl_round_standings
+      console.log(`[CWL Predictions] History rows: ${history.length}`);
+
+      // Get cumulative total stars from the CWL state table (authoritative source)
+      const [cwlState] = await this.sqlPool.query(
+        `SELECT total_stars FROM guild_clashofclans_cwl_state
          WHERE guild_id = ? AND clan_tag = ? AND season = ?`,
         [guildId, clanTag, season]
       );
       
-      const totalStars = totalStarsResult[0]?.total_stars || 0;
+      console.log(`[CWL Predictions] CWL state rows: ${cwlState ? cwlState.length : 0}`);
+      
+      const totalStars = cwlState && cwlState.length > 0 ? (cwlState[0].total_stars || 0) : 0;
       const avgStarsPerRound = roundsPlayed > 0 ? totalStars / roundsPlayed : 0;
       
       console.log(`[CWL Predictions] Season ${season}, Round ${roundsPlayed}: Total stars = ${totalStars}, Avg = ${avgStarsPerRound}`);
@@ -142,6 +159,7 @@ class CWLPredictions {
       );
 
       if (cwlState.length === 0) {
+        console.log('[CWL Predictions] No CWL state found for medal bonuses');
         return {
           predicted_bonuses: [],
           confidence: 'none'
@@ -149,7 +167,20 @@ class CWLPredictions {
       }
 
       const leagueName = cwlState[0].league_name;
+      console.log(`[CWL Predictions] League name from DB: "${leagueName}"`);
+      console.log(`[CWL Predictions] Available leagues:`, Object.keys(this.MEDAL_BONUSES));
+      
       const bonuses = this.MEDAL_BONUSES[leagueName] || [];
+      
+      if (bonuses.length === 0) {
+        console.log(`[CWL Predictions] No bonuses found for league: "${leagueName}"`);
+        return {
+          predicted_bonuses: [],
+          confidence: 'none',
+          league: leagueName
+        };
+      }
+      
       const position = positionPrediction.predicted_position - 1; // Convert to 0-indexed
 
       // Get bonus medals for predicted position and nearby positions

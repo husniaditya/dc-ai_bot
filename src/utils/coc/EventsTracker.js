@@ -325,24 +325,26 @@ class EventsTracker {
     const events = this.getEventStates();
     const lines = [];
     
-    // Trader Shop - Convert to Unix timestamp
-    const traderEndTime = Math.floor(new Date(events.trader.endTime).getTime() / 1000);
-    lines.push(`${events.trader.emoji} **Trader Shop:** <t:${traderEndTime}:R>`);
+    // Trader Shop - Convert to Unix timestamp (uses nextRefresh property)
+    const traderTime = Math.floor(new Date(events.trader.nextRefresh).getTime() / 1000);
+    lines.push(`${events.trader.emoji} **Trader Shop:** <t:${traderTime}:R>`);
     
     // Raid Weekend
-    const raidEndTime = Math.floor(new Date(events.raid.endTime).getTime() / 1000);
     if (events.raid.active) {
+      const raidEndTime = Math.floor(new Date(events.raid.endTime).getTime() / 1000);
       lines.push(`${events.raid.emoji} **Raid Weekend:** Ongoing (ends <t:${raidEndTime}:R>)`);
     } else {
-      lines.push(`${events.raid.emoji} **Raid Weekend:** Starts <t:${raidEndTime}:R>`);
+      const raidStartTime = Math.floor(new Date(events.raid.startTime).getTime() / 1000);
+      lines.push(`${events.raid.emoji} **Raid Weekend:** Starts <t:${raidStartTime}:R>`);
     }
     
     // Clan Games
-    const clanGamesTime = Math.floor(new Date(events.clanGames.startTime || events.clanGames.endTime).getTime() / 1000);
     if (events.clanGames.active) {
-      lines.push(`${events.clanGames.emoji} **Clan Games:** Ongoing (ends <t:${clanGamesTime}:R>)`);
+      const clanGamesEndTime = Math.floor(new Date(events.clanGames.endTime).getTime() / 1000);
+      lines.push(`${events.clanGames.emoji} **Clan Games:** Ongoing (ends <t:${clanGamesEndTime}:R>)`);
     } else {
-      lines.push(`${events.clanGames.emoji} **Clan Games:** Starts <t:${clanGamesTime}:R>${events.clanGames.note ? ' *' : ''}`);
+      const clanGamesStartTime = Math.floor(new Date(events.clanGames.startTime).getTime() / 1000);
+      lines.push(`${events.clanGames.emoji} **Clan Games:** Starts <t:${clanGamesStartTime}:R>${events.clanGames.note ? ' *' : ''}`);
     }
     
     // Season Challenges

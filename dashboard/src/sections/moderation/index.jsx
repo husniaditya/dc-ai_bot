@@ -3,7 +3,7 @@ import { getChannels, getRoles } from '../../api';
 import { MODERATION_FEATURES } from './constants';
 import FeatureCard from './components/FeatureCard';
 import ConfigurationModal from './components/ConfigurationModal';
-import LoadingSection from '../../components/LoadingSection';
+import LoadingNawsome from '../../components/LoadingNawsome';
 import { useI18n } from '../../i18n';
 
 export default function ModerationSection({ guildId, pushToast, settings }) {
@@ -253,14 +253,16 @@ export default function ModerationSection({ guildId, pushToast, settings }) {
   );
   const pct = Math.round((enabledCount / total) * 100);
 
+  if (loading) {
+    return (
+      <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '600px' }}>
+        <LoadingNawsome />
+      </div>
+    );
+  }
+
   return (
-    <LoadingSection
-      loading={loading}
-  title={t('moderation.loading.title')}
-  message={t('moderation.loading.message')}
-      className="moderation-section fade-in-soft position-relative"
-      style={{ minHeight: '600px' }}
-    >
+    <div className="moderation-section fade-in-soft position-relative" style={{ minHeight: '600px' }}>
       <div className="d-flex align-items-center gap-2 mb-3">
         <h5 className="mb-0">{t('moderation.title')}</h5>
         <span className="badge badge-soft">
@@ -323,6 +325,6 @@ export default function ModerationSection({ guildId, pushToast, settings }) {
           showToast={showToast}
         />
       )}
-    </LoadingSection>
+    </div>
   );
 }

@@ -1,80 +1,7 @@
-// Database connection management for MongoDB and MariaDB
-let mongooseAvailable = false;
-let SettingModel = null;
-let AutoResponseModel = null;
+// Database Schema Backup - Auto-generated from discord.sql
+// This file contains all CREATE TABLE statements for the discord_bot database
 
-// MariaDB / MySQL support
-let mariaAvailable = false;
-let sqlPool = null; // mysql2/promise pool
-
-async function initMongo() {
-  const uri = process.env.MONGODB_URI;
-  if (!uri) return false;
-  
-  try {
-    const mongoose = require('mongoose');
-    await mongoose.connect(uri, { dbName: process.env.MONGODB_DB || undefined });
-    mongooseAvailable = true;
-    
-    const settingSchema = new mongoose.Schema({ 
-      _id: { type: String, default: 'singleton' }, 
-      autoReplyEnabled: Boolean, 
-      autoReplyCooldownMs: Number 
-    });
-    SettingModel = mongoose.model('Setting', settingSchema);
-    
-    const autoResponseSchema = new mongoose.Schema({ 
-      key: { type: String, unique: true }, 
-      pattern: String, 
-      flags: String, 
-      replies: [mongoose.Schema.Types.Mixed] 
-    });
-    AutoResponseModel = mongoose.model('AutoResponse', autoResponseSchema);
-    
-    console.log('Config store: Mongo initialized');
-    return true;
-  } catch (e) {
-    console.error('Mongo init failed, falling back to in-memory/seed:', e.message);
-    mongooseAvailable = false;
-    return false;
-  }
-}
-
-async function initMaria() {
-  const host = process.env.MARIADB_HOST;
-  const user = process.env.MARIADB_USER;
-  const password = process.env.MARIADB_PASS;
-  const database = process.env.MARIADB_DB;
-  
-  if (!host || !user || !database) return false;
-  
-  try {
-    const mysql = require('mysql2/promise');
-    sqlPool = await mysql.createPool({
-      host,
-      user,
-      password,
-      database,
-      port: process.env.MARIADB_PORT ? parseInt(process.env.MARIADB_PORT, 10) : 3306,
-      waitForConnections: true,
-      connectionLimit: 5,
-      namedPlaceholders: true
-    });
-    
-    // Initialize all database tables
-    await initializeTables();
-    
-    mariaAvailable = true;
-    console.log('Config store: MariaDB initialized');
-    return true;
-  } catch (e) {
-    console.error('MariaDB init failed, falling back to in-memory/seed:', e.message);
-    mariaAvailable = false;
-    return false;
-  }
-}
-
-async function initializeTables() {
+async function createTables(sqlPool) {
   // Auto Responses Table
   await sqlPool.query(`CREATE TABLE IF NOT EXISTS auto_responses (
     \`key\` VARCHAR(100) NOT NULL,
@@ -435,19 +362,6 @@ async function initializeTables() {
     created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP(),
     updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP() ON UPDATE CURRENT_TIMESTAMP(),
     PRIMARY KEY (guild_id, command_name)
-  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci`);
-
-  // Guild AI Chat History Table
-  await sqlPool.query(`CREATE TABLE IF NOT EXISTS guild_ai_chat_history (
-    id BIGINT(20) NOT NULL AUTO_INCREMENT,
-    guild_id VARCHAR(32) NOT NULL,
-    user_id VARCHAR(32) NOT NULL,
-    role ENUM('user','assistant','system') NOT NULL,
-    content TEXT NOT NULL,
-    created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP(),
-    PRIMARY KEY (id),
-    KEY idx_guild_user (guild_id, user_id),
-    KEY idx_created (created_at)
   ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci`);
 
   // Guild Genshin Watch Table
@@ -847,28 +761,8 @@ async function initializeTables() {
       OPTIMIZE TABLE guild_command_logs;
     END
   `);
+
+  console.log('All database tables created successfully!');
 }
 
-async function initPersistence() {
-  // Prefer MariaDB if configured, else Mongo, else in-memory
-  if (process.env.MARIADB_HOST) {
-    const ok = await initMaria();
-    if (ok) return 'mariadb';
-  }
-  if (process.env.MONGODB_URI) {
-    const ok = await initMongo();
-    if (ok) return 'mongo';
-  }
-  return 'memory';
-}
-
-module.exports = {
-  initMongo,
-  initMaria,
-  initPersistence,
-  get mongooseAvailable() { return mongooseAvailable; },
-  get SettingModel() { return SettingModel; },
-  get AutoResponseModel() { return AutoResponseModel; },
-  get mariaAvailable() { return mariaAvailable; },
-  get sqlPool() { return sqlPool; }
-};
+module.exports = { createTables };

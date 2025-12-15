@@ -1,0 +1,1650 @@
+{
+	"info": {
+		"_postman_id": "dc-ai-bot-api-collection",
+		"name": "Discord AI Bot API",
+		"description": "Complete API collection for Discord AI Bot with comprehensive moderation, analytics, and media integration endpoints.\n\n**Base URL (Production):** https://chocomaid.xyz/api\n**Base URL (Development):** http://localhost:3000/api\n\n**Authentication:** JWT Bearer Token (use OAuth2 flow or legacy login)\n\n**Documentation:** https://github.com/husniaditya/dc-ai_bot",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "discord-ai-bot"
+	},
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{authToken}}",
+				"type": "string"
+			}
+		]
+	},
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "https://chocomaid.xyz/api",
+			"type": "string"
+		},
+		{
+			"key": "authToken",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "guildId",
+			"value": "",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "Authentication",
+			"item": [
+				{
+					"name": "Get OAuth URL",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/auth/oauth/discord/url?preferApp=false&isMobile=false",
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "oauth", "discord", "url"],
+							"query": [
+								{
+									"key": "preferApp",
+									"value": "false",
+									"description": "Prefer Discord app over browser"
+								},
+								{
+									"key": "isMobile",
+									"value": "false",
+									"description": "Indicate mobile device"
+								}
+							]
+						},
+						"description": "Get Discord OAuth2 authorization URL. User should visit this URL to authorize the application."
+					}
+				},
+				{
+					"name": "Exchange OAuth Code",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const jsonData = pm.response.json();",
+									"    pm.collectionVariables.set('authToken', jsonData.token);",
+									"    pm.environment.set('authToken', jsonData.token);",
+									"    console.log('Auth token saved to collection and environment');",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"code\": \"OAUTH_AUTHORIZATION_CODE\",\n  \"state\": \"STATE_FROM_PREVIOUS_REQUEST\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/oauth/discord/exchange",
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "oauth", "discord", "exchange"]
+						},
+						"description": "Exchange OAuth authorization code for JWT token. After successful authentication, the token is automatically saved to collection variables."
+					}
+				},
+				{
+					"name": "Validate Token",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/auth/validate",
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "validate"]
+						},
+						"description": "Validate the current JWT token and get user information."
+					}
+				},
+				{
+					"name": "Get User Profile",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/auth/user/me",
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "user", "me"]
+						},
+						"description": "Get current authenticated user's profile information."
+					}
+				},
+				{
+					"name": "Select Guild",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Extract guildId from request body and save it",
+									"const requestBody = JSON.parse(pm.request.body.raw);",
+									"pm.collectionVariables.set('guildId', requestBody.guildId);",
+									"console.log('Guild ID saved to collection variables:', requestBody.guildId);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"guildId\": \"{{guildId}}\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/user/select-guild",
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "user", "select-guild"]
+						},
+						"description": "Select a guild for the current session. Guild ID is saved to collection variables."
+					}
+				},
+				{
+					"name": "Logout",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/auth/logout",
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "logout"]
+						},
+						"description": "Logout and invalidate current session."
+					}
+				}
+			],
+			"description": "Authentication and authorization endpoints for OAuth2 flow and user management."
+		},
+		{
+			"name": "Analytics",
+			"item": [
+				{
+					"name": "Get Analytics Overview",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/analytics/overview?guildId={{guildId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["analytics", "overview"],
+							"query": [
+								{
+									"key": "guildId",
+									"value": "{{guildId}}"
+								}
+							]
+						},
+						"description": "Get comprehensive analytics overview including guild stats, command usage, security metrics, and system health."
+					}
+				},
+				{
+					"name": "Get Command Analytics",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/analytics/commands?guildId={{guildId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["analytics", "commands"],
+							"query": [
+								{
+									"key": "guildId",
+									"value": "{{guildId}}"
+								}
+							]
+						},
+						"description": "Get detailed command analytics including top commands, daily trends, and performance metrics."
+					}
+				},
+				{
+					"name": "Get System Status",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/analytics/status",
+							"host": ["{{baseUrl}}"],
+							"path": ["analytics", "status"]
+						},
+						"description": "Get bot system status including Discord connection, database status, and system health metrics."
+					}
+				},
+				{
+					"name": "Get Guilds List",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/analytics/guilds",
+							"host": ["{{baseUrl}}"],
+							"path": ["analytics", "guilds"]
+						},
+						"description": "Get list of all guilds where the bot is present."
+					}
+				},
+				{
+					"name": "Get Channels List",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/analytics/channels?guildId={{guildId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["analytics", "channels"],
+							"query": [
+								{
+									"key": "guildId",
+									"value": "{{guildId}}"
+								}
+							]
+						},
+						"description": "Get list of all text-based channels in the guild."
+					}
+				},
+				{
+					"name": "Get Roles List",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/analytics/roles?guildId={{guildId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["analytics", "roles"],
+							"query": [
+								{
+									"key": "guildId",
+									"value": "{{guildId}}"
+								}
+							]
+						},
+						"description": "Get list of all roles in the guild."
+					}
+				}
+			],
+			"description": "Analytics and status endpoints for monitoring bot performance and guild statistics."
+		},
+		{
+			"name": "Guilds",
+			"item": [
+				{
+					"name": "Get User's Guilds",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/guilds",
+							"host": ["{{baseUrl}}"],
+							"path": ["guilds"]
+						},
+						"description": "Get all guilds the authenticated user can manage and where the bot is present."
+					}
+				},
+				{
+					"name": "Get Guild Emojis",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/guilds/:guildId/emojis",
+							"host": ["{{baseUrl}}"],
+							"path": ["guilds", ":guildId", "emojis"],
+							"variable": [
+								{
+									"key": "guildId",
+									"value": "{{guildId}}"
+								}
+							]
+						},
+						"description": "Get all custom emojis from the guild."
+					}
+				}
+			],
+			"description": "Guild management endpoints for accessing guild information and resources."
+		},
+		{
+			"name": "Settings",
+			"item": [
+				{
+					"name": "Get Settings",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/settings?guildId={{guildId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["settings"],
+							"query": [
+								{
+									"key": "guildId",
+									"value": "{{guildId}}"
+								}
+							]
+						},
+						"description": "Get guild or global settings configuration."
+					}
+				},
+				{
+					"name": "Update Settings",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"autoReplyEnabled\": true,\n  \"autoReplyCooldownMs\": 3000,\n  \"language\": \"en\",\n  \"timezone\": \"America/New_York\",\n  \"hourFormat\": 24,\n  \"embedColor\": \"#5865F2\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/settings?guildId={{guildId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["settings"],
+							"query": [
+								{
+									"key": "guildId",
+									"value": "{{guildId}}"
+								}
+							]
+						},
+						"description": "Update guild or global settings."
+					}
+				}
+			],
+			"description": "Settings management for guild and global configuration."
+		},
+		{
+			"name": "Auto Responses",
+			"item": [
+				{
+					"name": "Get Auto Responses",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/auto-responses?guildId={{guildId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["auto-responses"],
+							"query": [
+								{
+									"key": "guildId",
+									"value": "{{guildId}}"
+								}
+							]
+						},
+						"description": "Get all auto responses configured for the guild."
+					}
+				},
+				{
+					"name": "Create Auto Response",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"key\": \"hello\",\n  \"value\": \"Hi there! How can I help you?\",\n  \"enabled\": true,\n  \"useRegex\": false,\n  \"caseSensitive\": false,\n  \"exactMatch\": false\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auto-responses?guildId={{guildId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["auto-responses"],
+							"query": [
+								{
+									"key": "guildId",
+									"value": "{{guildId}}"
+								}
+							]
+						},
+						"description": "Create a new auto response trigger."
+					}
+				},
+				{
+					"name": "Update Auto Response",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"value\": \"Hello! Welcome to our server!\",\n  \"enabled\": true\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auto-responses/:key?guildId={{guildId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["auto-responses", ":key"],
+							"query": [
+								{
+									"key": "guildId",
+									"value": "{{guildId}}"
+								}
+							],
+							"variable": [
+								{
+									"key": "key",
+									"value": "hello"
+								}
+							]
+						},
+						"description": "Update an existing auto response."
+					}
+				},
+				{
+					"name": "Delete Auto Response",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/auto-responses/:key?guildId={{guildId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["auto-responses", ":key"],
+							"query": [
+								{
+									"key": "guildId",
+									"value": "{{guildId}}"
+								}
+							],
+							"variable": [
+								{
+									"key": "key",
+									"value": "hello"
+								}
+							]
+						},
+						"description": "Delete an auto response."
+					}
+				},
+				{
+					"name": "Test Auto Response",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"message\": \"hello there\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auto-responses/test?guildId={{guildId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["auto-responses", "test"],
+							"query": [
+								{
+									"key": "guildId",
+									"value": "{{guildId}}"
+								}
+							]
+						},
+						"description": "Test if a message matches any auto response triggers."
+					}
+				}
+			],
+			"description": "Auto response management for automated message replies."
+		},
+		{
+			"name": "Commands",
+			"item": [
+				{
+					"name": "Get All Commands",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/commands?guildId={{guildId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["commands"],
+							"query": [
+								{
+									"key": "guildId",
+									"value": "{{guildId}}"
+								}
+							]
+						},
+						"description": "Get all available commands and their enabled/disabled state."
+					}
+				},
+				{
+					"name": "Toggle Command",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"commandName\": \"ping\",\n  \"enabled\": false\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/commands/toggle?guildId={{guildId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["commands", "toggle"],
+							"query": [
+								{
+									"key": "guildId",
+									"value": "{{guildId}}"
+								}
+							]
+						},
+						"description": "Enable or disable a specific command."
+					}
+				}
+			],
+			"description": "Command management for enabling/disabling bot commands."
+		},
+		{
+			"name": "Moderation",
+			"item": [
+				{
+					"name": "Get Moderation Features",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-Guild-Id",
+								"value": "{{guildId}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/moderation/features",
+							"host": ["{{baseUrl}}"],
+							"path": ["moderation", "features"]
+						},
+						"description": "Get all moderation feature states and configurations."
+					}
+				},
+				{
+					"name": "Toggle Moderation Feature",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "X-Guild-Id",
+								"value": "{{guildId}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"enabled\": true\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/moderation/features/:featureKey/toggle",
+							"host": ["{{baseUrl}}"],
+							"path": ["moderation", "features", ":featureKey", "toggle"],
+							"variable": [
+								{
+									"key": "featureKey",
+									"value": "automod",
+									"description": "automod, welcome, roles, xp, scheduler, logging, antiraid"
+								}
+							]
+						},
+						"description": "Enable or disable a moderation feature."
+					}
+				},
+				{
+					"name": "AutoMod",
+					"item": [
+						{
+							"name": "Get AutoMod Rules",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "X-Guild-Id",
+										"value": "{{guildId}}"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/moderation/automod/rules",
+									"host": ["{{baseUrl}}"],
+									"path": ["moderation", "automod", "rules"]
+								},
+								"description": "Get all automod rules for the guild."
+							}
+						},
+						{
+							"name": "Create AutoMod Rule",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "X-Guild-Id",
+										"value": "{{guildId}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"name\": \"Spam Filter\",\n  \"triggerType\": \"spam\",\n  \"actionType\": \"delete\",\n  \"enabled\": true,\n  \"config\": {\n    \"threshold\": 5,\n    \"timeWindow\": 10\n  }\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/moderation/automod/rules",
+									"host": ["{{baseUrl}}"],
+									"path": ["moderation", "automod", "rules"]
+								},
+								"description": "Create a new automod rule."
+							}
+						},
+						{
+							"name": "Update AutoMod Rule",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "X-Guild-Id",
+										"value": "{{guildId}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"enabled\": false\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/moderation/automod/rules/:ruleId",
+									"host": ["{{baseUrl}}"],
+									"path": ["moderation", "automod", "rules", ":ruleId"],
+									"variable": [
+										{
+											"key": "ruleId",
+											"value": "1"
+										}
+									]
+								},
+								"description": "Update an automod rule."
+							}
+						},
+						{
+							"name": "Delete AutoMod Rule",
+							"request": {
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "X-Guild-Id",
+										"value": "{{guildId}}"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/moderation/automod/rules/:ruleId",
+									"host": ["{{baseUrl}}"],
+									"path": ["moderation", "automod", "rules", ":ruleId"],
+									"variable": [
+										{
+											"key": "ruleId",
+											"value": "1"
+										}
+									]
+								},
+								"description": "Delete an automod rule."
+							}
+						},
+						{
+							"name": "Get Profanity Words",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "X-Guild-Id",
+										"value": "{{guildId}}"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/moderation/profanity/words",
+									"host": ["{{baseUrl}}"],
+									"path": ["moderation", "profanity", "words"]
+								},
+								"description": "Get all profanity words for the guild."
+							}
+						},
+						{
+							"name": "Add Profanity Word",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "X-Guild-Id",
+										"value": "{{guildId}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"word\": \"badword\",\n  \"severity\": \"high\",\n  \"language\": \"en\",\n  \"caseSensitive\": false,\n  \"wholeWordOnly\": true,\n  \"enabled\": true\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/moderation/profanity/words",
+									"host": ["{{baseUrl}}"],
+									"path": ["moderation", "profanity", "words"]
+								},
+								"description": "Add a new profanity word filter."
+							}
+						},
+						{
+							"name": "Get Profanity Patterns",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "X-Guild-Id",
+										"value": "{{guildId}}"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/moderation/profanity/patterns",
+									"host": ["{{baseUrl}}"],
+									"path": ["moderation", "profanity", "patterns"]
+								},
+								"description": "Get all profanity regex patterns for the guild."
+							}
+						},
+						{
+							"name": "Add Profanity Pattern",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "X-Guild-Id",
+										"value": "{{guildId}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"pattern\": \"b[a@]dw[o0]rd\",\n  \"description\": \"Variants of badword\",\n  \"severity\": \"high\",\n  \"flags\": \"gi\",\n  \"enabled\": true\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/moderation/profanity/patterns",
+									"host": ["{{baseUrl}}"],
+									"path": ["moderation", "profanity", "patterns"]
+								},
+								"description": "Add a new profanity regex pattern."
+							}
+						}
+					],
+					"description": "Auto-moderation rules and profanity filtering."
+				},
+				{
+					"name": "Welcome System",
+					"item": [
+						{
+							"name": "Get Welcome Config",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "X-Guild-Id",
+										"value": "{{guildId}}"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/moderation/welcome/config",
+									"host": ["{{baseUrl}}"],
+									"path": ["moderation", "welcome", "config"]
+								},
+								"description": "Get welcome system configuration."
+							}
+						},
+						{
+							"name": "Update Welcome Config",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "X-Guild-Id",
+										"value": "{{guildId}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"enabled\": true,\n  \"channelId\": \"channel_id\",\n  \"message\": \"Welcome {user} to {server}!\",\n  \"embedEnabled\": true,\n  \"embedColor\": \"#5865F2\",\n  \"autoRoleIds\": [\"role_id\"]\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/moderation/welcome/config",
+									"host": ["{{baseUrl}}"],
+									"path": ["moderation", "welcome", "config"]
+								},
+								"description": "Update welcome system configuration."
+							}
+						}
+					],
+					"description": "Welcome message system configuration."
+				},
+				{
+					"name": "XP & Leveling",
+					"item": [
+						{
+							"name": "Get XP Config",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "X-Guild-Id",
+										"value": "{{guildId}}"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/moderation/xp/config",
+									"host": ["{{baseUrl}}"],
+									"path": ["moderation", "xp", "config"]
+								},
+								"description": "Get XP system configuration."
+							}
+						},
+						{
+							"name": "Update XP Config",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "X-Guild-Id",
+										"value": "{{guildId}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"enabled\": true,\n  \"xpPerMessage\": 15,\n  \"cooldownSeconds\": 30\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/moderation/xp/config",
+									"host": ["{{baseUrl}}"],
+									"path": ["moderation", "xp", "config"]
+								},
+								"description": "Update XP system configuration."
+							}
+						},
+						{
+							"name": "Get XP Leaderboard",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "X-Guild-Id",
+										"value": "{{guildId}}"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/moderation/xp/leaderboard?limit=10&offset=0",
+									"host": ["{{baseUrl}}"],
+									"path": ["moderation", "xp", "leaderboard"],
+									"query": [
+										{
+											"key": "limit",
+											"value": "10"
+										},
+										{
+											"key": "offset",
+											"value": "0"
+										}
+									]
+								},
+								"description": "Get XP leaderboard."
+							}
+						},
+						{
+							"name": "Get User XP",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "X-Guild-Id",
+										"value": "{{guildId}}"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/moderation/xp/user/:userId",
+									"host": ["{{baseUrl}}"],
+									"path": ["moderation", "xp", "user", ":userId"],
+									"variable": [
+										{
+											"key": "userId",
+											"value": "USER_ID"
+										}
+									]
+								},
+								"description": "Get XP information for a specific user."
+							}
+						},
+						{
+							"name": "Add XP to User",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "X-Guild-Id",
+										"value": "{{guildId}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"amount\": 100,\n  \"source\": \"manual\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/moderation/xp/user/:userId/add",
+									"host": ["{{baseUrl}}"],
+									"path": ["moderation", "xp", "user", ":userId", "add"],
+									"variable": [
+										{
+											"key": "userId",
+											"value": "USER_ID"
+										}
+									]
+								},
+								"description": "Manually add XP to a user (admin only)."
+							}
+						},
+						{
+							"name": "Get Level Rewards",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "X-Guild-Id",
+										"value": "{{guildId}}"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/moderation/xp/rewards",
+									"host": ["{{baseUrl}}"],
+									"path": ["moderation", "xp", "rewards"]
+								},
+								"description": "Get all level rewards."
+							}
+						},
+						{
+							"name": "Add Level Reward",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "X-Guild-Id",
+										"value": "{{guildId}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"level\": 10,\n  \"roleId\": \"role_id\",\n  \"removePrevious\": false\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/moderation/xp/rewards",
+									"host": ["{{baseUrl}}"],
+									"path": ["moderation", "xp", "rewards"]
+								},
+								"description": "Add a new level reward."
+							}
+						}
+					],
+					"description": "XP and leveling system management."
+				},
+				{
+					"name": "Scheduler",
+					"item": [
+						{
+							"name": "Get Scheduled Messages",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "X-Guild-Id",
+										"value": "{{guildId}}"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/moderation/scheduler/messages",
+									"host": ["{{baseUrl}}"],
+									"path": ["moderation", "scheduler", "messages"]
+								},
+								"description": "Get all scheduled messages."
+							}
+						},
+						{
+							"name": "Create Scheduled Message",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "X-Guild-Id",
+										"value": "{{guildId}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"title\": \"Daily Announcement\",\n  \"channelId\": \"channel_id\",\n  \"message\": \"Good morning everyone!\",\n  \"scheduleType\": \"cron\",\n  \"scheduleValue\": \"0 9 * * *\",\n  \"enabled\": true\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/moderation/scheduler/messages",
+									"host": ["{{baseUrl}}"],
+									"path": ["moderation", "scheduler", "messages"]
+								},
+								"description": "Create a new scheduled message."
+							}
+						},
+						{
+							"name": "Update Scheduled Message",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "X-Guild-Id",
+										"value": "{{guildId}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"enabled\": false\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/moderation/scheduler/messages/:messageId",
+									"host": ["{{baseUrl}}"],
+									"path": ["moderation", "scheduler", "messages", ":messageId"],
+									"variable": [
+										{
+											"key": "messageId",
+											"value": "1"
+										}
+									]
+								},
+								"description": "Update a scheduled message."
+							}
+						},
+						{
+							"name": "Delete Scheduled Message",
+							"request": {
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "X-Guild-Id",
+										"value": "{{guildId}}"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/moderation/scheduler/messages/:messageId",
+									"host": ["{{baseUrl}}"],
+									"path": ["moderation", "scheduler", "messages", ":messageId"],
+									"variable": [
+										{
+											"key": "messageId",
+											"value": "1"
+										}
+									]
+								},
+								"description": "Delete a scheduled message."
+							}
+						}
+					],
+					"description": "Scheduled messages management."
+				},
+				{
+					"name": "Anti-Raid",
+					"item": [
+						{
+							"name": "Get Anti-Raid Config",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "X-Guild-Id",
+										"value": "{{guildId}}"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/moderation/antiraid/config",
+									"host": ["{{baseUrl}}"],
+									"path": ["moderation", "antiraid", "config"]
+								},
+								"description": "Get anti-raid protection configuration."
+							}
+						},
+						{
+							"name": "Update Anti-Raid Config",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "X-Guild-Id",
+										"value": "{{guildId}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"enabled\": true,\n  \"joinRate\": 10,\n  \"joinWindow\": 120,\n  \"action\": \"kick\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/moderation/antiraid/config",
+									"host": ["{{baseUrl}}"],
+									"path": ["moderation", "antiraid", "config"]
+								},
+								"description": "Update anti-raid protection configuration."
+							}
+						}
+					],
+					"description": "Anti-raid protection system."
+				},
+				{
+					"name": "Audit Logging",
+					"item": [
+						{
+							"name": "Get Audit Log Config",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "X-Guild-Id",
+										"value": "{{guildId}}"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/moderation/logging/config",
+									"host": ["{{baseUrl}}"],
+									"path": ["moderation", "logging", "config"]
+								},
+								"description": "Get audit logging configuration."
+							}
+						},
+						{
+							"name": "Update Audit Log Config",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "X-Guild-Id",
+										"value": "{{guildId}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"enabled\": true,\n  \"channelId\": \"channel_id\",\n  \"logTypes\": {\n    \"messageDelete\": true,\n    \"messageEdit\": true\n  }\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/moderation/logging/config",
+									"host": ["{{baseUrl}}"],
+									"path": ["moderation", "logging", "config"]
+								},
+								"description": "Update audit logging configuration."
+							}
+						},
+						{
+							"name": "Get Audit Logs",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "X-Guild-Id",
+										"value": "{{guildId}}"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/moderation/logging/logs?limit=50&offset=0",
+									"host": ["{{baseUrl}}"],
+									"path": ["moderation", "logging", "logs"],
+									"query": [
+										{
+											"key": "limit",
+											"value": "50"
+										},
+										{
+											"key": "offset",
+											"value": "0"
+										},
+										{
+											"key": "actionType",
+											"value": "message_delete",
+											"disabled": true
+										}
+									]
+								},
+								"description": "Get audit logs with optional filtering."
+							}
+						}
+					],
+					"description": "Audit logging system."
+				}
+			],
+			"description": "Comprehensive moderation system including AutoMod, Welcome, XP, Scheduler, Anti-Raid, and Audit Logging."
+		},
+		{
+			"name": "Roles",
+			"item": [
+				{
+					"name": "Get Reaction Roles",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/roles/reaction-roles?guildId={{guildId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["roles", "reaction-roles"],
+							"query": [
+								{
+									"key": "guildId",
+									"value": "{{guildId}}"
+								}
+							]
+						},
+						"description": "Get all reaction role configurations."
+					}
+				},
+				{
+					"name": "Create Reaction Role",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"channelId\": \"channel_id\",\n  \"emoji\": \"👍\",\n  \"roleId\": \"role_id\",\n  \"description\": \"React for Member role\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/roles/reaction-roles?guildId={{guildId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["roles", "reaction-roles"],
+							"query": [
+								{
+									"key": "guildId",
+									"value": "{{guildId}}"
+								}
+							]
+						},
+						"description": "Create a new reaction role."
+					}
+				}
+			],
+			"description": "Role management including reaction roles and self-assignable roles."
+		},
+		{
+			"name": "Media Integrations",
+			"item": [
+				{
+					"name": "YouTube",
+					"item": [
+						{
+							"name": "Get YouTube Config",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/youtube/config?guildId={{guildId}}",
+									"host": ["{{baseUrl}}"],
+									"path": ["youtube", "config"],
+									"query": [
+										{
+											"key": "guildId",
+											"value": "{{guildId}}"
+										}
+									]
+								},
+								"description": "Get YouTube integration configuration."
+							}
+						},
+						{
+							"name": "Update YouTube Config",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"channelId\": \"youtube_channel_id\",\n  \"announcementChannelId\": \"discord_channel_id\",\n  \"roleMentionId\": \"role_id\",\n  \"enabled\": true\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/youtube/config?guildId={{guildId}}",
+									"host": ["{{baseUrl}}"],
+									"path": ["youtube", "config"],
+									"query": [
+										{
+											"key": "guildId",
+											"value": "{{guildId}}"
+										}
+									]
+								},
+								"description": "Update YouTube integration configuration."
+							}
+						},
+						{
+							"name": "Resolve YouTube Channel",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"input\": \"https://www.youtube.com/@channelname\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/youtube/resolve-channel?guildId={{guildId}}",
+									"host": ["{{baseUrl}}"],
+									"path": ["youtube", "resolve-channel"],
+									"query": [
+										{
+											"key": "guildId",
+											"value": "{{guildId}}"
+										}
+									]
+								},
+								"description": "Resolve YouTube channel ID from URL or handle."
+							}
+						}
+					],
+					"description": "YouTube integration endpoints."
+				},
+				{
+					"name": "Twitch",
+					"item": [
+						{
+							"name": "Get Twitch Config",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/twitch/config?guildId={{guildId}}",
+									"host": ["{{baseUrl}}"],
+									"path": ["twitch", "config"],
+									"query": [
+										{
+											"key": "guildId",
+											"value": "{{guildId}}"
+										}
+									]
+								},
+								"description": "Get Twitch integration configuration."
+							}
+						},
+						{
+							"name": "Update Twitch Config",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"streamerName\": \"twitch_username\",\n  \"announcementChannelId\": \"discord_channel_id\",\n  \"roleMentionId\": \"role_id\",\n  \"enabled\": true\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/twitch/config?guildId={{guildId}}",
+									"host": ["{{baseUrl}}"],
+									"path": ["twitch", "config"],
+									"query": [
+										{
+											"key": "guildId",
+											"value": "{{guildId}}"
+										}
+									]
+								},
+								"description": "Update Twitch integration configuration."
+							}
+						}
+					],
+					"description": "Twitch integration endpoints."
+				},
+				{
+					"name": "Clash of Clans",
+					"item": [
+						{
+							"name": "Get CoC Config",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/clashofclans/config?guildId={{guildId}}",
+									"host": ["{{baseUrl}}"],
+									"path": ["clashofclans", "config"],
+									"query": [
+										{
+											"key": "guildId",
+											"value": "{{guildId}}"
+										}
+									]
+								},
+								"description": "Get Clash of Clans integration configuration."
+							}
+						},
+						{
+							"name": "Update CoC Config",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"clanTag\": \"#ABC123\",\n  \"donationChannelId\": \"channel_id\",\n  \"warChannelId\": \"channel_id\",\n  \"enabled\": true\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/clashofclans/config?guildId={{guildId}}",
+									"host": ["{{baseUrl}}"],
+									"path": ["clashofclans", "config"],
+									"query": [
+										{
+											"key": "guildId",
+											"value": "{{guildId}}"
+										}
+									]
+								},
+								"description": "Update Clash of Clans integration configuration."
+							}
+						}
+					],
+					"description": "Clash of Clans integration endpoints."
+				},
+				{
+					"name": "Genshin Impact",
+					"item": [
+						{
+							"name": "Get Genshin Config",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/genshin/config?guildId={{guildId}}",
+									"host": ["{{baseUrl}}"],
+									"path": ["genshin", "config"],
+									"query": [
+										{
+											"key": "guildId",
+											"value": "{{guildId}}"
+										}
+									]
+								},
+								"description": "Get Genshin Impact integration configuration."
+							}
+						},
+						{
+							"name": "Update Genshin Config",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"uid\": \"123456789\",\n  \"region\": \"os_asia\",\n  \"enabled\": true\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/genshin/config?guildId={{guildId}}",
+									"host": ["{{baseUrl}}"],
+									"path": ["genshin", "config"],
+									"query": [
+										{
+											"key": "guildId",
+											"value": "{{guildId}}"
+										}
+									]
+								},
+								"description": "Update Genshin Impact integration configuration."
+							}
+						}
+					],
+					"description": "Genshin Impact integration endpoints."
+				},
+				{
+					"name": "Valorant",
+					"item": [
+						{
+							"name": "Get Valorant Config",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/valorant/config?guildId={{guildId}}",
+									"host": ["{{baseUrl}}"],
+									"path": ["valorant", "config"],
+									"query": [
+										{
+											"key": "guildId",
+											"value": "{{guildId}}"
+										}
+									]
+								},
+								"description": "Get Valorant integration configuration."
+							}
+						},
+						{
+							"name": "Update Valorant Config",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"riotId\": \"PlayerName\",\n  \"tagLine\": \"TAG\",\n  \"region\": \"ap\",\n  \"enabled\": true\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/valorant/config?guildId={{guildId}}",
+									"host": ["{{baseUrl}}"],
+									"path": ["valorant", "config"],
+									"query": [
+										{
+											"key": "guildId",
+											"value": "{{guildId}}"
+										}
+									]
+								},
+								"description": "Update Valorant integration configuration."
+							}
+						}
+					],
+					"description": "Valorant integration endpoints."
+				}
+			],
+			"description": "Media integration endpoints for YouTube, Twitch, Clash of Clans, Genshin Impact, and Valorant."
+		}
+	]
+}
