@@ -1,6 +1,43 @@
 const express = require('express');
 const { chatGroq, chatGroqWithTools } = require('../../utils/ai-client');
 const { audit } = require('../middleware/audit');
+const safeRegex = require('safe-regex');
+
+/**
+ * Validate regex pattern for safety (prevent ReDoS attacks)
+ * @param {string} pattern - The regex pattern to validate
+ * @param {string} flags - The regex flags
+ * @returns {Object} - { safe: boolean, error?: string }
+ */
+function validateRegexPattern(pattern, flags = '') {
+  // Length limit to prevent extremely long patterns
+  const MAX_PATTERN_LENGTH = 500;
+  
+  if (!pattern || typeof pattern !== 'string') {
+    return { safe: false, error: 'Pattern must be a non-empty string' };
+  }
+  
+  if (pattern.length > MAX_PATTERN_LENGTH) {
+    return { safe: false, error: `Pattern exceeds maximum length of ${MAX_PATTERN_LENGTH} characters` };
+  }
+  
+  // Test regex syntax validity
+  try {
+    new RegExp(pattern, flags);
+  } catch (e) {
+    return { safe: false, error: `Invalid regex syntax: ${e.message}` };
+  }
+  
+  // Check for ReDoS vulnerability using safe-regex
+  if (!safeRegex(pattern)) {
+    return { 
+      safe: false, 
+      error: 'Pattern may cause ReDoS (Regular Expression Denial of Service). Please simplify the pattern and avoid nested quantifiers or overlapping alternations.' 
+    };
+  }
+  
+  return { safe: true };
+}
 
 /**
  * AI Chat route with function calling capabilities
@@ -991,11 +1028,10 @@ function createAiChatRoutes(client, store, commandMap) {
           return { error: 'Parameters "pattern" and "description" are required' };
         }
 
-        // Validate regex pattern
-        try {
-          new RegExp(params.pattern, params.flags || 'gi');
-        } catch (e) {
-          return { error: `Invalid regex pattern: ${e.message}` };
+        // Validate regex pattern for safety and syntax
+        const validation = validateRegexPattern(params.pattern, params.flags || 'gi');
+        if (!validation.safe) {
+          return { error: validation.error };
         }
 
         try {
@@ -1092,10 +1128,9 @@ function createAiChatRoutes(client, store, commandMap) {
 
         // Validate regex if pattern is being updated
         if (params.pattern) {
-          try {
-            new RegExp(params.pattern, params.flags || 'gi');
-          } catch (e) {
-            return { error: `Invalid regex pattern: ${e.message}` };
+          const validation = validateRegexPattern(params.pattern, params.flags || 'gi');
+          if (!validation.safe) {
+            return { error: validation.error };
           }
         }
 

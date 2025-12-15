@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
+import DOMPurify from 'dompurify';
 
 /**
  * FloatingAIChat - AI-powered chat assistant for the dashboard
@@ -412,7 +413,7 @@ export default function FloatingAIChat({ guildId, apiBase, onDataChange }) {
                 <div className="ai-chat-message-content">
                   <div 
                     className="ai-chat-message-text"
-                    dangerouslySetInnerHTML={{ __html: formatMessageContent(msg.content) }}
+                    dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(formatMessageContent(msg.content)) }}
                   />
                   {msg.functionCalled && (
                     <div className="ai-function-badge">
