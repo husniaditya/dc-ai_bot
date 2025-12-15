@@ -50,13 +50,31 @@ const escapeHtml = (text) => {
 
 export default function FloatingAIChat({ guildId, apiBase, onDataChange }) {
   const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState([
-    {
-      role: 'assistant',
-      content: '👋 **Hi! I\'m Chocomaid AI Assistant.**\n\nI can help you:\n• Manage your Discord bot\n• Check analytics & statistics\n• Configure auto-responses\n• View XP leaderboards\n• And much more!\n\n*What would you like to know?*',
-      timestamp: new Date().toISOString()
+  
+  // Load chat history from localStorage on mount
+  const [messages, setMessages] = useState(() => {
+    const storageKey = `ai-chat-history-${guildId || 'global'}`;
+    const saved = localStorage.getItem(storageKey);
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed;
+        }
+      } catch (e) {
+        console.warn('Failed to parse saved chat history:', e);
+      }
     }
-  ]);
+    // Default welcome message
+    return [
+      {
+        role: 'assistant',
+        content: '👋 **Hi! I\'m Chocomaid AI Assistant.**\n\nI can help you:\n• Manage your Discord bot\n• Check analytics & statistics\n• Configure auto-responses\n• View XP leaderboards\n• And much more!\n\n*What would you like to know?*',
+        timestamp: new Date().toISOString()
+      }
+    ];
+  });
+  
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [position, setPosition] = useState(() => {
@@ -70,6 +88,17 @@ export default function FloatingAIChat({ guildId, apiBase, onDataChange }) {
   const messagesContainerRef = useRef(null);
   const inputRef = useRef(null);
   const fabRef = useRef(null);
+
+  // Save messages to localStorage whenever they change
+  useEffect(() => {
+    const storageKey = `ai-chat-history-${guildId || 'global'}`;
+    // Only save if there are messages beyond the initial welcome
+    if (messages.length > 0) {
+      // Limit stored messages to last 50 to prevent localStorage bloat
+      const messagesToSave = messages.slice(-50);
+      localStorage.setItem(storageKey, JSON.stringify(messagesToSave));
+    }
+  }, [messages, guildId]);
 
   // Auto-scroll to bottom when new messages arrive
   const scrollToBottom = () => {
@@ -110,7 +139,7 @@ export default function FloatingAIChat({ guildId, apiBase, onDataChange }) {
         },
         body: JSON.stringify({
           message: input,
-          history: messages.slice(-5) // Send last 5 messages for context
+          history: messages.slice(-3) // Reduced from 5 to 3 messages for token efficiency
         })
       });
 
@@ -132,7 +161,33 @@ export default function FloatingAIChat({ guildId, apiBase, onDataChange }) {
 
       // If a CRUD operation was performed, trigger refresh
       if (data.functionCalled && onDataChange) {
-        const crudFunctions = ['create_auto_response', 'update_auto_response', 'delete_auto_response', 'toggle_auto_response'];
+        const crudFunctions = [
+          // Auto-response functions
+          'create_auto_response', 
+          'update_auto_response', 
+          'delete_auto_response', 
+          'toggle_auto_response',
+          // Command functions
+          'toggle_command',
+          'enable_multiple_commands',
+          'disable_multiple_commands',
+          // Automod functions
+          'create_automod_rule',
+          'update_automod_rule',
+          'delete_automod_rule',
+          'toggle_automod_rule',
+          // Profanity functions
+          'add_profanity_word',
+          'update_profanity_word',
+          'delete_profanity_word',
+          'add_profanity_pattern',
+          'update_profanity_pattern',
+          'delete_profanity_pattern',
+          // Role management functions (slash command roles only)
+          'add_slash_command_role',
+          'remove_slash_command_role',
+          'update_slash_command_role'
+        ];
         if (crudFunctions.includes(data.functionCalled)) {
           setTimeout(() => onDataChange(), 500); // Slight delay to ensure backend is updated
         }
@@ -165,6 +220,8 @@ export default function FloatingAIChat({ guildId, apiBase, onDataChange }) {
   };
 
   const clearChat = () => {
+    const storageKey = `ai-chat-history-${guildId || 'global'}`;
+    localStorage.removeItem(storageKey);
     setMessages([
       {
         role: 'assistant',
@@ -411,7 +468,7 @@ export default function FloatingAIChat({ guildId, apiBase, onDataChange }) {
               </button>
             </div>
             <div className="ai-chat-hints">
-              Try: "Show bot status" • "List auto responses" • "Create auto-response for 'hello'" • "Delete auto-response 'greeting'"
+              Try: "Show bot status" • "List auto responses" • "List guild roles" • "Get role config" • "Add role 123456789 to slash commands"
             </div>
           </div>
         </div>

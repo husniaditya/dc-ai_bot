@@ -1142,6 +1142,342 @@ function createAiChatRoutes(client, store, commandMap) {
           return { error: `Failed to delete profanity pattern: ${error.message}` };
         }
       }
+    },
+    {
+      name: 'list_guild_roles',
+      description: 'List all roles in the guild with their properties',
+      parameters: {},
+      handler: async (params, guildId) => {
+        if (!guildId) return { error: 'No guild selected' };
+        
+        try {
+          const guild = client.guilds.cache.get(guildId);
+          if (!guild) return { error: 'Guild not found' };
+          
+          const roles = Array.from(guild.roles.cache.values())
+            .filter(role => role.id !== guild.id) // Exclude @everyone
+            .map(role => ({
+              id: role.id,
+              name: role.name,
+              color: role.hexColor,
+              position: role.position,
+              permissions: role.permissions.toArray(),
+              mentionable: role.mentionable,
+              hoist: role.hoist,
+              managed: role.managed,
+              memberCount: role.members.size
+            }))
+            .sort((a, b) => b.position - a.position);
+          
+          return {
+            success: true,
+            count: roles.length,
+            roles: roles
+          };
+        } catch (error) {
+          return { error: `Failed to list roles: ${error.message}` };
+        }
+      }
+    },
+    {
+      name: 'get_role_config',
+      description: 'Get role management configuration for slash command roles',
+      parameters: {},
+      handler: async (params, guildId) => {
+        if (!guildId) return { error: 'No guild selected' };
+        
+        try {
+          const db = require('../../config/store/database/connection');
+          
+          // Get slash command roles with all columns
+          const [slashRoles] = await db.sqlPool.query(
+            `SELECT id, command_name, description, role_id, role_type, require_permission, allowed_roles, status 
+            FROM guild_self_assignable_roles WHERE guild_id=? AND status=1`,
+            [guildId]
+          );
+          
+          const guild = client.guilds.cache.get(guildId);
+          
+          return {
+            success: true,
+            count: slashRoles.length,
+            roles: slashRoles.map(sr => {
+              const role = guild ? guild.roles.cache.get(sr.role_id) : null;
+              return {
+                id: sr.id,
+                roleId: sr.role_id,
+                roleName: role ? role.name : 'Unknown Role',
+                roleType: sr.role_type,
+                commandName: sr.command_name,
+                description: sr.description,
+                requirePermission: sr.require_permission === 1,
+                allowedRoles: JSON.parse(sr.allowed_roles || '[]'),
+                status: sr.status
+              };
+            })
+          };
+        } catch (error) {
+          return { error: `Failed to get role config: ${error.message}` };
+        }
+      }
+    },
+    {
+      name: 'add_slash_command_role',
+      description: 'Add a role to the slash command role list. Users can assign these roles to themselves using /role command. You can provide either roleId OR roleName.',
+      parameters: {
+        roleId: { type: 'string', description: 'Role ID to make self-assignable (provide either roleId or roleName)' },
+        roleName: { type: 'string', description: 'Role name to search and make self-assignable (provide either roleId or roleName)' },
+        type: { type: 'string', description: 'Type: "toggle" (add/remove), "add_only", or "remove_only"', default: 'toggle' }
+      },
+      handler: async (params, guildId) => {
+        if (!guildId) return { error: 'No guild selected' };
+        
+        if (!params.roleId && !params.roleName) {
+          return { error: 'Either "roleId" or "roleName" parameter is required' };
+        }
+        
+        try {
+          const db = require('../../config/store/database/connection');
+          const guild = client.guilds.cache.get(guildId);
+          if (!guild) return { error: 'Guild not found' };
+          
+          let role;
+          let resolvedRoleId;
+          
+          // If roleName is provided, search for the role
+          if (params.roleName) {
+            const searchName = params.roleName.toLowerCase().trim();
+            role = guild.roles.cache.find(r => 
+              r.name.toLowerCase() === searchName || 
+              r.name.toLowerCase().includes(searchName)
+            );
+            
+            if (!role) {
+              // Try to find similar roles
+              const similarRoles = guild.roles.cache
+                .filter(r => r.name.toLowerCase().includes(searchName))
+                .map(r => r.name)
+                .slice(0, 5);
+              
+              if (similarRoles.length > 0) {
+                return { 
+                  error: `Role "${params.roleName}" not found. Did you mean: ${similarRoles.join(', ')}?` 
+                };
+              }
+              return { error: `Role "${params.roleName}" not found in guild` };
+            }
+            
+            resolvedRoleId = role.id;
+          } else {
+            // Use provided roleId
+            resolvedRoleId = params.roleId;
+            role = guild.roles.cache.get(resolvedRoleId);
+            
+            if (!role) {
+              return { error: 'Role not found in guild' };
+            }
+          }
+          
+          // Check if role already exists
+          const [existing] = await db.sqlPool.query(
+            'SELECT id FROM guild_self_assignable_roles WHERE guild_id=? AND role_id=?',
+            [guildId, resolvedRoleId]
+          );
+          
+          if (existing.length > 0) {
+            return { error: `Role "${role.name}" is already in the slash command role list` };
+          }
+          
+          // Insert into database with actual table columns
+          const roleType = params.type || 'toggle';
+          const commandName = 'Choose Roles';
+          const description = 'Pick your roles';
+          
+          await db.sqlPool.query(
+            `INSERT INTO guild_self_assignable_roles 
+            (guild_id, command_name, description, role_id, role_type, require_permission, allowed_roles, status) 
+            VALUES (?, ?, ?, ?, ?, 0, '[]', 1)`,
+            [guildId, commandName, description, resolvedRoleId, roleType]
+          );
+          
+          return {
+            success: true,
+            message: `Role "${role.name}" added to slash command roles under "${commandName}"`,
+            role: {
+              roleId: resolvedRoleId,
+              name: role.name,
+              roleType: roleType,
+              commandName: commandName
+            }
+          };
+        } catch (error) {
+          return { error: `Failed to add slash command role: ${error.message}` };
+        }
+      }
+    },
+    {
+      name: 'remove_slash_command_role',
+      description: 'Remove a role from the slash command role list. You can provide either roleId OR roleName.',
+      parameters: {
+        roleId: { type: 'string', description: 'Role ID to remove from self-assignable roles (provide either roleId or roleName)' },
+        roleName: { type: 'string', description: 'Role name to search and remove from self-assignable roles (provide either roleId or roleName)' }
+      },
+      handler: async (params, guildId) => {
+        if (!guildId) return { error: 'No guild selected' };
+        
+        if (!params.roleId && !params.roleName) {
+          return { error: 'Either "roleId" or "roleName" parameter is required' };
+        }
+        
+        try {
+          const db = require('../../config/store/database/connection');
+          const guild = client.guilds.cache.get(guildId);
+          if (!guild) return { error: 'Guild not found' };
+          
+          let resolvedRoleId;
+          let roleName;
+          
+          // If roleName is provided, search for the role
+          if (params.roleName) {
+            const searchName = params.roleName.toLowerCase().trim();
+            const role = guild.roles.cache.find(r => 
+              r.name.toLowerCase() === searchName || 
+              r.name.toLowerCase().includes(searchName)
+            );
+            
+            if (!role) {
+              return { error: `Role "${params.roleName}" not found in guild` };
+            }
+            
+            resolvedRoleId = role.id;
+            roleName = role.name;
+          } else {
+            // Use provided roleId
+            resolvedRoleId = params.roleId;
+            const role = guild.roles.cache.get(resolvedRoleId);
+            roleName = role ? role.name : resolvedRoleId;
+          }
+          
+          const [result] = await db.sqlPool.query(
+            'DELETE FROM guild_self_assignable_roles WHERE guild_id=? AND role_id=?',
+            [guildId, resolvedRoleId]
+          );
+          
+          if (result.affectedRows === 0) {
+            return { error: `Role "${roleName}" not found in slash command role list` };
+          }
+          
+          return {
+            success: true,
+            message: `Role "${roleName}" removed from slash command roles`
+          };
+        } catch (error) {
+          return { error: `Failed to remove slash command role: ${error.message}` };
+        }
+      }
+    },
+    {
+      name: 'update_slash_command_role',
+      description: 'Update a slash command role configuration. You can provide either roleId OR roleName.',
+      parameters: {
+        roleId: { type: 'string', description: 'Role ID to update (provide either roleId or roleName)' },
+        roleName: { type: 'string', description: 'Role name to search and update (provide either roleId or roleName)' },
+        roleType: { type: 'string', description: 'New role type: "toggle", "add_only", or "remove_only"' },
+        commandName: { type: 'string', description: 'New command name' },
+        description: { type: 'string', description: 'New description' },
+        status: { type: 'number', description: 'Enable (1) or disable (0) the role' }
+      },
+      handler: async (params, guildId) => {
+        if (!guildId) return { error: 'No guild selected' };
+        
+        if (!params.roleId && !params.roleName) {
+          return { error: 'Either "roleId" or "roleName" parameter is required' };
+        }
+        
+        try {
+          const db = require('../../config/store/database/connection');
+          const guild = client.guilds.cache.get(guildId);
+          if (!guild) return { error: 'Guild not found' };
+          
+          let resolvedRoleId;
+          let roleName;
+          
+          // If roleName is provided, search for the role
+          if (params.roleName) {
+            const searchName = params.roleName.toLowerCase().trim();
+            const role = guild.roles.cache.find(r => 
+              r.name.toLowerCase() === searchName || 
+              r.name.toLowerCase().includes(searchName)
+            );
+            
+            if (!role) {
+              return { error: `Role "${params.roleName}" not found in guild` };
+            }
+            
+            resolvedRoleId = role.id;
+            roleName = role.name;
+          } else {
+            // Use provided roleId
+            resolvedRoleId = params.roleId;
+            const role = guild.roles.cache.get(resolvedRoleId);
+            roleName = role ? role.name : resolvedRoleId;
+          }
+          
+          // Build update query dynamically based on provided params
+          const updates = [];
+          const values = [];
+          
+          if (params.roleType !== undefined) {
+            updates.push('role_type=?');
+            values.push(params.roleType);
+          }
+          if (params.commandName !== undefined) {
+            updates.push('command_name=?');
+            values.push(params.commandName);
+          }
+          if (params.description !== undefined) {
+            updates.push('description=?');
+            values.push(params.description);
+          }
+          if (params.status !== undefined) {
+            updates.push('status=?');
+            values.push(params.status);
+          }
+          
+          if (updates.length === 0) {
+            return { error: 'No update parameters provided (roleType, commandName, description, or status)' };
+          }
+          
+          // Add updated_at timestamp
+          updates.push('updated_at=CURRENT_TIMESTAMP()');
+          
+          values.push(guildId, resolvedRoleId);
+          
+          const [result] = await db.sqlPool.query(
+            `UPDATE guild_self_assignable_roles SET ${updates.join(', ')} WHERE guild_id=? AND role_id=?`,
+            values
+          );
+          
+          if (result.affectedRows === 0) {
+            return { error: `Role "${roleName}" not found in slash command role list` };
+          }
+          
+          return {
+            success: true,
+            message: `Slash command role "${roleName}" updated successfully`,
+            role: {
+              roleId: resolvedRoleId,
+              name: roleName,
+              roleType: params.roleType,
+              commandName: params.commandName,
+              description: params.description,
+              status: params.status
+            }
+          };
+        } catch (error) {
+          return { error: `Failed to update slash command role: ${error.message}` };
+        }
+      }
     }
   ];
 
@@ -1241,6 +1577,7 @@ Your capabilities:
 - Manage auto-moderation rules (spam, caps, links, profanity, etc.)
 - Manage profanity filters (words and regex patterns)
 - Generate profanity detection patterns with character substitutions
+- Manage self-assignable roles via slash commands
 - Retrieve analytics and statistics
 - Check moderation settings
 
@@ -1258,6 +1595,10 @@ Use the available tools when users ask to:
 - List/add/update/delete profanity words
 - List/add/update/delete profanity patterns
 - Generate regex patterns for profanity detection
+- List guild roles and their properties
+- Get role configuration (slash command roles)
+- Add/remove/update slash command roles (self-assignable via /role command)
+- Add/remove/update slash command roles
 - Get bot status or statistics
 - View leaderboards or analytics
 
@@ -1271,7 +1612,7 @@ Be conversational, concise, and use markdown formatting for better readability.`
 
         const result = await chatGroqWithTools(message, tools, history, {
           systemPrompt,
-          temperature: 0.7
+          temperature: 0.5 // Reduced from 0.7 for token efficiency and more focused responses
         });
 
         // Check if a tool was called
