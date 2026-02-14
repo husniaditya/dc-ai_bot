@@ -111,12 +111,15 @@ function createAuthRoutes(client, store) {
         }
         
         // Verify the state was actually saved
-        const [verifyRows] = await store.sqlPool.query(
+        const verifyResult = await store.sqlPool.query(
           'SELECT state FROM oauth_states WHERE state = ? AND active = 1',
           [state]
         );
         
-        if (verifyRows.length === 0) {
+        // Handle different result structures - mysql2 may return [rows, fields] or just rows
+        const verifyRows = Array.isArray(verifyResult[0]) ? verifyResult[0] : verifyResult;
+        
+        if (!verifyRows || verifyRows.length === 0) {
           console.error('[OAuth] State verification failed - not found in database:', state);
           return false;
         } else if (process.env.DEBUG_PERSONALIZATION === '1') {

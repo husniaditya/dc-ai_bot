@@ -197,6 +197,12 @@ function createAiChatRoutes(client, store, commandMap) {
           return { error: 'Parameter "replies" is required and must be a non-empty array' };
         }
 
+        // Validate text length to prevent ReDoS
+        const MAX_TEXT_LENGTH = 200;
+        if (params.text.length > MAX_TEXT_LENGTH) {
+          return { error: `Text exceeds maximum length of ${MAX_TEXT_LENGTH} characters` };
+        }
+
         // Build regex pattern based on match type
         const matchType = params.matchType || 'contains';
         const text = params.text.trim();
@@ -213,6 +219,12 @@ function createAiChatRoutes(client, store, commandMap) {
           default:
             pattern = text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
             break;
+        }
+
+        // Validate the generated pattern for safety
+        const validation = validateRegexPattern(pattern, params.flags || 'i');
+        if (!validation.safe) {
+          return { error: `Generated pattern is unsafe: ${validation.error}` };
         }
 
         // Create auto-response entry
@@ -271,6 +283,13 @@ function createAiChatRoutes(client, store, commandMap) {
           // Update pattern if text or matchType changed
           if (params.text || params.matchType) {
             const text = (params.text || current.rawText || '').trim();
+            
+            // Validate text length to prevent ReDoS
+            const MAX_TEXT_LENGTH = 200;
+            if (text.length > MAX_TEXT_LENGTH) {
+              return { error: `Text exceeds maximum length of ${MAX_TEXT_LENGTH} characters` };
+            }
+            
             const matchType = params.matchType || current.matchType || 'contains';
             let pattern;
 
@@ -285,6 +304,13 @@ function createAiChatRoutes(client, store, commandMap) {
               default:
                 pattern = text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
                 break;
+            }
+
+            // Validate the generated pattern for safety
+            const flags = params.flags || current.flags || 'i';
+            const validation = validateRegexPattern(pattern, flags);
+            if (!validation.safe) {
+              return { error: `Generated pattern is unsafe: ${validation.error}` };
             }
 
             entry.pattern = pattern;
