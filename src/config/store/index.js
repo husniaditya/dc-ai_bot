@@ -9,6 +9,7 @@ const autoResponsesService = require('./services/autoResponses');
 const analyticsService = require('./services/analytics');
 const usersService = require('./services/users');
 const commandsService = require('./services/commands');
+const aiChatService = require('./services/aiChat');
 
 // Additional services that need to be created for full compatibility
 const personalizationService = require('./services/personalization');
@@ -298,6 +299,12 @@ module.exports = {
   getGuildLevelRewards: moderationService.getGuildLevelRewards,
   addGuildLevelReward: moderationService.addGuildLevelReward,
   removeGuildLevelReward: moderationService.removeGuildLevelReward,
+  
+  // AI Chat History API
+  saveAIChatMessage: aiChatService.saveAIChatMessage,
+  getAIChatHistory: aiChatService.getAIChatHistory,
+  clearAIChatHistory: aiChatService.clearAIChatHistory,
+  cleanupOldChatHistory: aiChatService.cleanupOldChatHistory,
   
   // Direct database access for special cases
   get sqlPool() { return db.sqlPool; }
