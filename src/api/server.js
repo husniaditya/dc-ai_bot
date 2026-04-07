@@ -29,6 +29,7 @@ const rolesRoutes = require('./routes/roles');
 const guildsRoutes = require('./routes/guilds');
 const moderationRoutes = require('./routes/moderation');
 const schedulerRoutes = require('./routes/scheduler');
+const aiChatRoutes = require('./routes/ai-chat');
 
 function createApiServer(client, store, commandMap, startTimestamp) {
   const app = express();
@@ -64,6 +65,7 @@ function createApiServer(client, store, commandMap, startTimestamp) {
   app.use('/api/guilds', authMiddleware, guildsRoutes(client, store));
   app.use('/api/moderation', authMiddleware, moderationRoutes(client, store));
   app.use('/api/scheduler', authMiddleware, schedulerRoutes);
+  app.use('/api/ai', authMiddleware, aiChatRoutes(client, store, commandMap));
   
   // Root status endpoint for dashboard compatibility
   app.get('/api/status', authMiddleware, (req, res) => {

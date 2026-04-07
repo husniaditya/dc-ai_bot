@@ -58,6 +58,7 @@ https://chocomaid.xyz
 - **Intuitive UI**: Glass-morphism design with dark/light theme support
 - **Advanced Tools**: Regex tester, bulk operations, and analytics dashboard
 - **Comprehensive Moderation**: Full suite of moderation tools and configuration
+- **🤖 AI Dashboard Assistant**: Natural language interface for bot management (powered by Groq/Llama)
 
 ### 🛡️ Advanced Moderation System
 
@@ -77,7 +78,26 @@ https://chocomaid.xyz
 - **📋 Audit Logging**: Comprehensive activity tracking and moderation logs
 - **🛡️ Anti-Raid Protection**: Real-time raid detection and automated response system
 
+### 🤖 AI Dashboard Assistant (NEW)
+
+Manage your Discord bot using natural language! The AI Assistant powered by Groq (Llama 3.3 70B) can perform actions directly on your server configuration.
+
+**Function Calling Capabilities (36+ Tools):**
+- **Bot Management**: Get bot status, uptime, guild statistics
+- **Command Control**: Enable/disable commands, bulk operations, view command info
+- **Auto-Responses**: Create, update, delete, and toggle auto-responses
+- **Auto-Moderation**: Manage spam, caps, links, invite filtering rules
+- **Profanity Filters**: Add/remove blocked words and regex patterns
+- **Smart Pattern Generation**: AI generates regex patterns with character substitutions (a→@, e→3, etc.)
+- **Analytics**: View XP leaderboards, command statistics, moderation logs
+
+**AI-Powered Content Generation:**
+- **Welcome Message Generator**: Generate contextual welcome messages based on community type
+- **12 Community Types**: Gaming, Coding, Design, Music, Art, Education, Business, Anime, Fitness, News, Streaming, General
+- **DM Message Generation**: Create personalized direct message greetings
+
 ### 🛠️ Core Capabilities
+
 - **Modular Architecture**: Clean, maintainable codebase with proper separation of concerns
 - **Rate Limiting**: Built-in protection against spam and abuse
 - **Error Handling**: Comprehensive error tracking and graceful failure recovery
@@ -172,7 +192,8 @@ Automatic formatting for dates and timestamps based on selected language:
 ### Backend
 - **Runtime**: Node.js 16.9.0+
 - **Framework**: Discord.js v14.21.0
-- **AI Engine**: Google Generative AI (Gemini 2.0 Flash)
+- **AI Engine**: Google Generative AI (Gemini 2.0 Flash) for Discord commands
+- **AI Assistant**: Groq API (Llama 3.3 70B Versatile) for dashboard with function calling
 - **Database**: MongoDB 6.x / MySQL 8.x support
 - **API**: Express.js 5.x with CORS and rate limiting
 
@@ -379,12 +400,32 @@ Use `/explain_image` with up to 3 image attachments:
 
 ## 🤖 AI Integration
 
-### Gemini 2.0 Flash Integration
+### Gemini 2.0 Flash Integration (Discord Bot)
 - **Model**: Latest Gemini 2.0 Flash for optimal performance
 - **Context Retention**: Maintains conversation history for follow-up questions
 - **Error Handling**: Exponential backoff with up to 3 retry attempts
 - **Memory Management**: Intelligent prompt caching (3-minute duration)
 - **Safety Features**: Content filtering and response validation
+
+### Groq/Llama Integration (Dashboard AI Assistant)
+- **Model**: Llama 3.3 70B Versatile via Groq API
+- **Function Calling**: 36+ tools for bot management via natural language
+- **Tool Categories**:
+  - Bot status and statistics
+  - Command management (enable/disable, bulk operations)
+  - Auto-response CRUD operations
+  - Auto-moderation rule management
+  - Profanity word and pattern management
+  - XP leaderboard queries
+  - Moderation status checks
+- **Smart Pattern Generation**: AI generates regex patterns with character substitutions
+- **Persistent Memory**: Conversation history maintained per session
+
+### AI-Powered Content Generation
+- **Welcome Message Generator**: Context-aware message generation
+- **Community Type Presets**: 12 community types (Gaming, Coding, Design, Music, Art, Education, Business, Anime, Fitness, News, Streaming, General)
+- **DM Message Generation**: Personalized direct message greetings
+- **Variable Support**: Automatic placeholder insertion ({user}, {server}, etc.)
 
 ### Conversation Features
 - **Contextual Follow-ups**: Use `/askfollow` to continue conversations
@@ -502,6 +543,8 @@ Use `/explain_image` with up to 3 image attachments:
 
 ### Current Features ✅
 - **AI Integration**: Gemini 2.0 Flash with image analysis and conversation context
+- **🤖 AI Dashboard Assistant**: Natural language bot management with 36+ function calling tools (Groq/Llama 3.3 70B)
+- **✨ AI Content Generation**: Welcome message and DM generator with 12 community type presets
 - **Dashboard Interface**: Modern web interface for all configurations
 - **Comprehensive Moderation**: Full suite including anti-raid, auto-mod, welcome system
 - **XP & Leveling**: Complete progression system with rewards and leaderboards

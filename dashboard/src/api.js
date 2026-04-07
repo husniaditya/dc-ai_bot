@@ -244,6 +244,19 @@ export async function deleteAuditLogEntry(logId, guildId) {
   });
 }
 
+// AI Chat API functions
+export async function sendAIChatMessage(message, history = [], guildId) {
+  const url = `/api/ai/chat${guildId ? `?guildId=${guildId}` : ''}`;
+  return authFetch(url, {
+    method: 'POST',
+    body: JSON.stringify({ message, history })
+  });
+}
+
+export async function getAITools() {
+  return authFetch('/api/ai/tools');
+}
+
 // Anti-Raid Configuration API functions
 export async function getAntiRaidConfig(guildId) {
   const headers = guildId ? { 'X-Guild-Id': guildId } : {};
