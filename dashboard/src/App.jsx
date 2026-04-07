@@ -30,6 +30,7 @@ import LoginView from './components/LoginView.jsx';
 import GuildSelectionView from './components/GuildSelectionView.jsx';
 import Toasts from './components/Toasts.jsx';
 import LanguageSyncHandler from './components/LanguageSyncHandler.jsx';
+import FloatingAIChat from './components/FloatingAIChat.jsx';
 // Highcharts libs will be loaded dynamically (not via React.lazy because they export objects, not components)
 // We'll load them when the Overview section is first viewed
 // Option B: removed DataTables – using pure React table implementation
@@ -1483,6 +1484,8 @@ export default function App(){
       <i className="fa-solid fa-bars"></i>
     </button>}
     {sidebarOpen && <div className="sidebar-backdrop d-lg-none" onClick={()=>setSidebarOpen(false)} />}
+    {/* Floating AI Chat - positioned above mobile menu */}
+    <FloatingAIChat guildId={selectedGuild} apiBase={API_BASE} onDataChange={refresh} />
     <AutoResponseModal
       show={showAutoModal}
       modalAuto={modalAuto}

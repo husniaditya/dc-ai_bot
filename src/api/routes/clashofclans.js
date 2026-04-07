@@ -2,16 +2,47 @@ const express = require('express');
 const { PermissionsBitField } = require('discord.js');
 const { audit } = require('../middleware/audit');
 
+// Whitelist of allowed API domains (SSRF protection)
+const ALLOWED_API_DOMAIN = 'api.clashofclans.com';
+const COC_API_BASE_URL = `https://${ALLOWED_API_DOMAIN}/v1`;
+
 /**
  * Validates if a clan tag has the correct format
  * @param {string} tag - Clan tag to validate (with or without #)
  * @returns {boolean} Whether the tag is valid
  */
 function isValidClanTag(tag) {
-  if (!tag) return false;
-  const cleanTag = tag.replace('#', '').trim();
+  if (!tag || typeof tag !== 'string') return false;
+  const cleanTag = tag.replace(/^#/, '').trim();
   // Valid CoC clan tag characters: 0289PYLQGRJCUV, Length: 3-9 characters
-  return /^[0289PYLQGRJCUV]{3,9}$/i.test(cleanTag);
+  // Must match exactly - no additional characters allowed
+  return /^[0289PYLQGRJCUV]{3,9}$/.test(cleanTag.toUpperCase());
+}
+
+/**
+ * Safely constructs a Clash of Clans API URL with proper encoding
+ * @param {string} endpoint - API endpoint (e.g., '/clans', '/clans/{tag}/members')
+ * @param {string} clanTag - Validated clan tag (without #)
+ * @returns {string} Safe URL for API request
+ */
+function buildSafeApiUrl(endpoint, clanTag = null) {
+  let url = COC_API_BASE_URL;
+  
+  if (clanTag) {
+    // Validate clan tag before using it
+    if (!isValidClanTag(clanTag)) {
+      throw new Error('Invalid clan tag format');
+    }
+    
+    const cleanTag = clanTag.replace(/^#/, '').trim().toUpperCase();
+    // Encode the clan tag to prevent URL manipulation
+    const encodedTag = encodeURIComponent(`#${cleanTag}`);
+    url += endpoint.replace('{tag}', encodedTag);
+  } else {
+    url += endpoint;
+  }
+  
+  return url;
 }
 
 function createClashOfClansRoutes(client, store) {
@@ -314,12 +345,12 @@ function createClashOfClansRoutes(client, store) {
         return res.status(400).json({ error: 'clan_tag_required' });
       }
 
-      const cleanTag = clanTag.trim().replace(/^#/, '').toUpperCase();
-      
       // Validate clan tag format (Clash of Clans specific character set)
-      if (!cleanTag || !/^[0289PYLQGRJCUV]{3,9}$/.test(cleanTag)) {
+      if (!isValidClanTag(clanTag)) {
         return res.status(400).json({ error: 'invalid_clan_tag' });
       }
+      
+      const cleanTag = clanTag.trim().replace(/^#/, '').toUpperCase();
       
       try {
         const apiKey = process.env.COC_API_TOKEN;
@@ -333,7 +364,9 @@ function createClashOfClansRoutes(client, store) {
           });
         }
         
-        const response = await fetch(`https://api.clashofclans.com/v1/clans/%23${cleanTag}`, {
+        // Use safe URL construction to prevent SSRF
+        const apiUrl = buildSafeApiUrl('/clans/{tag}', cleanTag);
+        const response = await fetch(apiUrl, {
           headers: {
             'Authorization': `Bearer ${apiKey}`,
             'Accept': 'application/json'
@@ -379,12 +412,12 @@ function createClashOfClansRoutes(client, store) {
         return res.status(400).json({ error: 'clan_tag_required' });
       }
 
-      const cleanTag = clanTag.trim().replace(/^#/, '').toUpperCase();
-      
       // Validate clan tag format (Clash of Clans clan tags: 3-9 chars, specific character set)
-      if (!cleanTag || !/^[0289PYLQGRJCUV]{3,9}$/.test(cleanTag)) {
+      if (!isValidClanTag(clanTag)) {
         return res.status(400).json({ error: 'invalid_clan_tag' });
       }
+      
+      const cleanTag = clanTag.trim().replace(/^#/, '').toUpperCase();
       
       // Try to get clan info from Clash of Clans API
       let clanName = null;
@@ -395,7 +428,9 @@ function createClashOfClansRoutes(client, store) {
         const apiKey = process.env.COC_API_TOKEN;
         
         if (apiKey) {
-          const response = await fetch(`https://api.clashofclans.com/v1/clans/%23${cleanTag}`, {
+          // Use safe URL construction to prevent SSRF
+          const apiUrl = buildSafeApiUrl('/clans/{tag}', cleanTag);
+          const response = await fetch(apiUrl, {
             headers: {
               'Authorization': `Bearer ${apiKey}`,
               'Accept': 'application/json'

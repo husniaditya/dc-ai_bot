@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useI18n } from '../i18n';
+import LightPillar from './LightPillar';
 
 // Modern homepage with typing animation and feature showcase
 export default function LoginView({ error, authProcessing, loginLoading, startDiscordLogin }) {
@@ -137,8 +138,29 @@ export default function LoginView({ error, authProcessing, loginLoading, startDi
   return (
     <div className="home-viewport">
       {/* Hero Section */}
-      <section className="hero-section">
-        <div className="container">
+      <section className="hero-section" style={{ position: 'relative', overflow: 'hidden' }}>
+        {/* Animated Background */}
+        <div style={{ 
+          position: 'absolute', 
+          top: 0, 
+          left: 0, 
+          width: '100%', 
+          height: '100%', 
+          zIndex: 0,
+          opacity: 0.6
+        }}>
+          <LightPillar
+            linesGradient={['#8b5cf6', '#a78bfa', '#c4b5fd']}
+            enabledWaves={['middle', 'bottom']}
+            lineCount={[8, 6]}
+            lineDistance={[3, 4]}
+            animationSpeed={0.8}
+            interactive={true}
+            parallax={true}
+            mixBlendMode="screen"
+          />
+        </div>
+        <div className="container" style={{ position: 'relative', zIndex: 1 }}>
           <div className="row align-items-center">
             <div className="col-lg-6 hero-content">
               <div className="logo-badge mb-4 fade-in">
