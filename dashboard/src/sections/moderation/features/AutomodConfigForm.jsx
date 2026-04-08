@@ -3,7 +3,8 @@ import { useI18n } from '../../../i18n';
 import { ChannelSelector, FormField, SwitchToggle, RoleSelector } from '../components/SharedComponents';
 import DeleteConfirmationModal from '../components/DeleteConfirmationModal';
 import { getProfanityWords, addProfanityWord, updateProfanityWord, deleteProfanityWord, 
-         getProfanityPatterns, addProfanityPattern, updateProfanityPattern, deleteProfanityPattern } from '../../../api';
+         getProfanityPatterns, addProfanityPattern, updateProfanityPattern, deleteProfanityPattern,
+         generateProfanityWords, generateProfanityPatterns } from '../../../api';
 
 // Custom Channel Picker Component
 function ChannelPicker({ value, onChange, channels }) {
@@ -309,6 +310,14 @@ export default function AutomodConfigForm({ config, updateConfig, channels, role
   // Individual save loading states
   const [savingWord, setSavingWord] = useState(false);
   const [savingPattern, setSavingPattern] = useState(false);
+  
+  // AI generation states
+  const [aiWordsLang, setAiWordsLang] = useState('en');
+  const [aiWordsGenerating, setAiWordsGenerating] = useState(false);
+  const [aiGeneratedWords, setAiGeneratedWords] = useState([]);
+  const [aiPatternsLang, setAiPatternsLang] = useState('en');
+  const [aiPatternsGenerating, setAiPatternsGenerating] = useState(false);
+  const [aiGeneratedPatterns, setAiGeneratedPatterns] = useState([]);
   const [wordForm, setWordForm] = useState({
     word: '',
     severity: 'medium',
@@ -536,6 +545,67 @@ export default function AutomodConfigForm({ config, updateConfig, channels, role
     }
   };
 
+  // AI generate profanity words
+  const handleAiGenerateWords = async () => {
+    if (aiWordsGenerating) return;
+    setAiWordsGenerating(true);
+    setAiGeneratedWords([]);
+    try {
+      const res = await generateProfanityWords(aiWordsLang, guildId);
+      if (res?.words?.length) {
+        setAiGeneratedWords(res.words);
+      } else {
+        showToast?.('info', t('moderation.features.automod.profanity.aiGenerate.noResults'));
+      }
+    } catch (e) {
+      console.error('AI words generate failed:', e);
+      showToast?.('error', t('moderation.features.automod.profanity.aiGenerate.failed'));
+    } finally {
+      setAiWordsGenerating(false);
+    }
+  };
+
+  const addAiGeneratedWord = async (word) => {
+    try {
+      await addProfanityWord({
+        word,
+        severity: 'medium',
+        language: aiWordsLang,
+        caseSensitive: false,
+        wholeWordOnly: true,
+        enabled: true
+      }, guildId);
+      setAiGeneratedWords(prev => prev.filter(w => w !== word));
+      await loadProfanityData();
+      showToast?.('success', t('moderation.features.automod.toasts.wordAdded', { word }));
+    } catch (e) {
+      showToast?.('error', t('moderation.features.automod.toasts.wordSaveFailed', { error: e.message || t('errors.general') }));
+    }
+  };
+
+  const addAllAiGeneratedWords = async () => {
+    if (!aiGeneratedWords.length) return;
+    setAiWordsGenerating(true);
+    let added = 0;
+    for (const word of aiGeneratedWords) {
+      try {
+        await addProfanityWord({
+          word,
+          severity: 'medium',
+          language: aiWordsLang,
+          caseSensitive: false,
+          wholeWordOnly: true,
+          enabled: true
+        }, guildId);
+        added++;
+      } catch { /* skip duplicates */ }
+    }
+    setAiGeneratedWords([]);
+    await loadProfanityData();
+    setAiWordsGenerating(false);
+    if (added) showToast?.('success', t('moderation.features.automod.profanity.aiGenerate.addedCount', { count: added }));
+  };
+
   // Delete confirmation handlers for words
   const requestDeleteWord = (wordId, word) => {
     setWordToDelete({ id: wordId, word });
@@ -659,6 +729,65 @@ export default function AutomodConfigForm({ config, updateConfig, channels, role
     } finally {
       setSavingPattern(false);
     }
+  };
+
+  // AI generate profanity patterns
+  const handleAiGeneratePatterns = async () => {
+    if (aiPatternsGenerating) return;
+    setAiPatternsGenerating(true);
+    setAiGeneratedPatterns([]);
+    try {
+      const res = await generateProfanityPatterns(aiPatternsLang, guildId);
+      if (res?.patterns?.length) {
+        setAiGeneratedPatterns(res.patterns);
+      } else {
+        showToast?.('info', t('moderation.features.automod.profanity.aiGenerate.noResults'));
+      }
+    } catch (e) {
+      console.error('AI patterns generate failed:', e);
+      showToast?.('error', t('moderation.features.automod.profanity.aiGenerate.failed'));
+    } finally {
+      setAiPatternsGenerating(false);
+    }
+  };
+
+  const addAiGeneratedPattern = async (pat) => {
+    try {
+      await addProfanityPattern({
+        pattern: pat.pattern,
+        description: pat.description,
+        severity: pat.severity || 'medium',
+        flags: 'gi',
+        enabled: true
+      }, guildId);
+      setAiGeneratedPatterns(prev => prev.filter(p => p.pattern !== pat.pattern));
+      await loadProfanityData();
+      showToast?.('success', t('moderation.features.automod.toasts.patternAdded'));
+    } catch (e) {
+      showToast?.('error', t('moderation.features.automod.toasts.patternSaveFailed', { error: e.message || t('errors.general') }));
+    }
+  };
+
+  const addAllAiGeneratedPatterns = async () => {
+    if (!aiGeneratedPatterns.length) return;
+    setAiPatternsGenerating(true);
+    let added = 0;
+    for (const pat of aiGeneratedPatterns) {
+      try {
+        await addProfanityPattern({
+          pattern: pat.pattern,
+          description: pat.description,
+          severity: pat.severity || 'medium',
+          flags: 'gi',
+          enabled: true
+        }, guildId);
+        added++;
+      } catch { /* skip duplicates */ }
+    }
+    setAiGeneratedPatterns([]);
+    await loadProfanityData();
+    setAiPatternsGenerating(false);
+    if (added) showToast?.('success', t('moderation.features.automod.profanity.aiGenerate.addedCount', { count: added }));
   };
 
   // Delete confirmation handlers for patterns
@@ -1940,6 +2069,77 @@ export default function AutomodConfigForm({ config, updateConfig, channels, role
                     </label>
                   </div>
                 </div>
+
+                {/* AI Generate Words Section */}
+                {!editingWord && (
+                  <div className="border rounded p-3 mb-2" style={{ background: 'rgba(88, 101, 242, 0.06)' }}>
+                    <h6 className="small fw-semibold mb-2">
+                      <i className="fa-solid fa-wand-magic-sparkles me-1 text-primary"></i>
+                      {t('moderation.features.automod.profanity.aiGenerate.title')}
+                    </h6>
+                    <p className="small text-muted mb-2">{t('moderation.features.automod.profanity.aiGenerate.wordsHelp')}</p>
+                    <div className="d-flex gap-2 mb-2">
+                      <select
+                        className="form-select form-select-sm"
+                        style={{ maxWidth: '180px' }}
+                        value={aiWordsLang}
+                        onChange={(e) => setAiWordsLang(e.target.value)}
+                        disabled={aiWordsGenerating}
+                      >
+                        <option value="en">{t('languages.en')}</option>
+                        <option value="id">{t('languages.id')}</option>
+                        <option value="es">{t('languages.es')}</option>
+                        <option value="fr">{t('languages.fr')}</option>
+                        <option value="de">{t('languages.de')}</option>
+                        <option value="ja">{t('languages.ja')}</option>
+                        <option value="cn">{t('languages.cn')}</option>
+                      </select>
+                      <button
+                        type="button"
+                        className="btn btn-outline-primary btn-sm d-flex align-items-center gap-1 flex-shrink-0"
+                        onClick={handleAiGenerateWords}
+                        disabled={aiWordsGenerating}
+                      >
+                        {aiWordsGenerating ? (
+                          <><span className="spinner-border spinner-border-sm" role="status"></span> {t('moderation.features.automod.profanity.aiGenerate.generating')}</>
+                        ) : (
+                          <><i className="fa-solid fa-wand-magic-sparkles"></i> {t('moderation.features.automod.profanity.aiGenerate.button')}</>
+                        )}
+                      </button>
+                    </div>
+                    {aiGeneratedWords.length > 0 && (
+                      <div>
+                        <div className="d-flex align-items-center justify-content-between mb-2">
+                          <small className="fw-semibold">{t('moderation.features.automod.profanity.aiGenerate.results', { count: aiGeneratedWords.length })}</small>
+                          <button
+                            type="button"
+                            className="btn btn-success btn-sm"
+                            style={{ fontSize: '0.7rem', padding: '0.15rem 0.5rem' }}
+                            onClick={addAllAiGeneratedWords}
+                            disabled={aiWordsGenerating}
+                          >
+                            <i className="fa-solid fa-plus me-1"></i>
+                            {t('moderation.features.automod.profanity.aiGenerate.addAll')}
+                          </button>
+                        </div>
+                        <div className="d-flex flex-wrap gap-1" style={{ maxHeight: '150px', overflowY: 'auto' }}>
+                          {aiGeneratedWords.map((w, idx) => (
+                            <span key={idx} className="badge bg-secondary d-flex align-items-center gap-1" style={{ fontSize: '0.75rem' }}>
+                              {w}
+                              <button
+                                type="button"
+                                className="btn-close btn-close-white ms-1"
+                                style={{ fontSize: '0.5rem' }}
+                                onClick={() => addAiGeneratedWord(w)}
+                                title={t('common.add')}
+                              ></button>
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
               <div className="modal-footer">
                 <button type="button" className="btn btn-secondary btn-sm modal-action-btn" onClick={closeWordForm}>
@@ -2092,6 +2292,87 @@ export default function AutomodConfigForm({ config, updateConfig, channels, role
                     </div>
                   )}
                 </div>
+
+                {/* AI Generate Patterns Section */}
+                {!editingPattern && (
+                  <div className="border rounded p-3 mt-3" style={{ background: 'rgba(88, 101, 242, 0.06)' }}>
+                    <h6 className="small fw-semibold mb-2">
+                      <i className="fa-solid fa-wand-magic-sparkles me-1 text-primary"></i>
+                      {t('moderation.features.automod.profanity.aiGenerate.title')}
+                    </h6>
+                    <p className="small text-muted mb-2">{t('moderation.features.automod.profanity.aiGenerate.patternsHelp')}</p>
+                    <div className="d-flex gap-2 mb-2">
+                      <select
+                        className="form-select form-select-sm"
+                        style={{ maxWidth: '180px' }}
+                        value={aiPatternsLang}
+                        onChange={(e) => setAiPatternsLang(e.target.value)}
+                        disabled={aiPatternsGenerating}
+                      >
+                        <option value="en">{t('languages.en')}</option>
+                        <option value="id">{t('languages.id')}</option>
+                        <option value="es">{t('languages.es')}</option>
+                        <option value="fr">{t('languages.fr')}</option>
+                        <option value="de">{t('languages.de')}</option>
+                        <option value="ja">{t('languages.ja')}</option>
+                        <option value="cn">{t('languages.cn')}</option>
+                      </select>
+                      <button
+                        type="button"
+                        className="btn btn-outline-primary btn-sm d-flex align-items-center gap-1 flex-shrink-0"
+                        onClick={handleAiGeneratePatterns}
+                        disabled={aiPatternsGenerating}
+                      >
+                        {aiPatternsGenerating ? (
+                          <><span className="spinner-border spinner-border-sm" role="status"></span> {t('moderation.features.automod.profanity.aiGenerate.generating')}</>
+                        ) : (
+                          <><i className="fa-solid fa-wand-magic-sparkles"></i> {t('moderation.features.automod.profanity.aiGenerate.button')}</>
+                        )}
+                      </button>
+                    </div>
+                    {aiGeneratedPatterns.length > 0 && (
+                      <div>
+                        <div className="d-flex align-items-center justify-content-between mb-2">
+                          <small className="fw-semibold">{t('moderation.features.automod.profanity.aiGenerate.results', { count: aiGeneratedPatterns.length })}</small>
+                          <button
+                            type="button"
+                            className="btn btn-success btn-sm"
+                            style={{ fontSize: '0.7rem', padding: '0.15rem 0.5rem' }}
+                            onClick={addAllAiGeneratedPatterns}
+                            disabled={aiPatternsGenerating}
+                          >
+                            <i className="fa-solid fa-plus me-1"></i>
+                            {t('moderation.features.automod.profanity.aiGenerate.addAll')}
+                          </button>
+                        </div>
+                        <div style={{ maxHeight: '150px', overflowY: 'auto' }}>
+                          {aiGeneratedPatterns.map((p, idx) => (
+                            <div key={idx} className="d-flex align-items-center justify-content-between py-1 border-bottom" style={{ fontSize: '0.75rem' }}>
+                              <div>
+                                <code className="text-warning">/{p.pattern}/gi</code>
+                                {p.description && <span className="text-muted ms-2">— {p.description}</span>}
+                                <span className={`badge ms-2 ${
+                                  p.severity === 'extreme' ? 'bg-danger' :
+                                  p.severity === 'high' ? 'bg-warning' :
+                                  p.severity === 'medium' ? 'bg-info' : 'bg-secondary'
+                                }`} style={{ fontSize: '0.6rem' }}>{p.severity}</span>
+                              </div>
+                              <button
+                                type="button"
+                                className="btn btn-outline-success btn-sm"
+                                style={{ fontSize: '0.65rem', padding: '0.1rem 0.35rem' }}
+                                onClick={() => addAiGeneratedPattern(p)}
+                                title={t('common.add')}
+                              >
+                                <i className="fa-solid fa-plus"></i>
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
               <div className="modal-footer">
                 <button type="button" className="btn btn-secondary btn-sm modal-action-btn" onClick={closePatternForm}>

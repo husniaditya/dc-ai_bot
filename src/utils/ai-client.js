@@ -2,7 +2,9 @@ const { GoogleGenAI } = require('@google/genai');
 const axios = require('axios');
 require('dotenv').config();
 
-const apiKey = process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY;
+const apiKeyRaw = process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY;
+// Support comma-separated keys — use the first one
+const apiKey = apiKeyRaw ? apiKeyRaw.split(',')[0].trim() : null;
 if (!apiKey) {
   console.warn('No GOOGLE_API_KEY or GEMINI_API_KEY set. AI features will be disabled.');
 }
@@ -25,7 +27,7 @@ async function askGemini(prompt, generationConfig = {}) {
   const contents = buildContentsFromPrompt(prompt);
   try {
     const response = await backoff(()=>client.models.generateContent({
-      model: 'models/gemini-2.0-flash',
+      model: 'models/gemini-2.5-flash',
       contents,
       generationConfig: Object.assign({ maxOutputTokens: 512, temperature: 0.2 }, generationConfig)
     }));
@@ -47,7 +49,7 @@ async function explainImage(imageUrl, prompt) {
   const response = await backoff(()=>axios.get(imageUrl, { responseType: 'arraybuffer' }));
   const imageBuffer = Buffer.from(response.data, 'binary');
   const imageBase64 = imageBuffer.toString('base64');
-  const model = client.getGenerativeModel ? client.getGenerativeModel({ model: 'gemini-2.0-flash' }) : client.models;
+  const model = client.getGenerativeModel ? client.getGenerativeModel({ model: 'gemini-2.5-flash' }) : client.models;
   const contents = [
     { role: 'user', parts: [
       { text: prompt || 'Explain this image.' },
@@ -56,7 +58,7 @@ async function explainImage(imageUrl, prompt) {
   ];
   try {
     const result = await backoff(()=>model.generateContent({
-      model: 'models/gemini-2.0-flash',
+      model: 'models/gemini-2.5-flash',
       contents
     }));
     const text = result?.candidates?.[0]?.content?.parts?.map(p => p?.text || '').join('') || 'No explanation found.';

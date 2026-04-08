@@ -20,6 +20,29 @@ function createWelcomeRoutes(client, store) {
     }
   });
 
+  // Generate welcome message using AI
+  router.post('/generate', async (req, res) => {
+    try {
+      const { communityType, serverName } = req.body;
+      if (!communityType) return res.status(400).json({ error: 'community_type_required' });
+
+      const { askGemini } = require('../../utils/ai-client');
+      const prompt = `Generate a short, friendly Discord welcome message for a ${communityType} community${serverName ? ` called "${serverName}"` : ''}. ` +
+        `Use {user} as the placeholder for the new member's mention and {server} as the server name placeholder. ` +
+        `Keep it under 200 characters, include 1-2 relevant emojis, and make it warm and inviting. ` +
+        `Reply with ONLY the welcome message text, no quotes or explanation.`;
+
+      const result = await askGemini(prompt, { maxOutputTokens: 256, temperature: 0.8 });
+      const message = (result?.text || '').trim().replace(/^"|"$/g, '');
+
+      if (!message) return res.status(500).json({ error: 'ai_empty_response' });
+      res.json({ message });
+    } catch (e) {
+      console.error('AI welcome generate error:', e.message);
+      res.status(500).json({ error: 'ai_generation_failed' });
+    }
+  });
+
   // Update welcome config
   router.put('/', async (req, res) => {
     try {

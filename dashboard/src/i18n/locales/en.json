@@ -1274,6 +1274,18 @@
               "warning": "This action cannot be undone.",
               "confirm": "Delete Pattern"
             }
+          },
+          "aiGenerate": {
+            "title": "AI Generate",
+            "button": "AI Generate",
+            "generating": "Generating...",
+            "wordsHelp": "Select a language and let AI generate common profanity words not yet in your database.",
+            "patternsHelp": "Select a language and let AI generate regex patterns for profanity detection.",
+            "results": "{{count}} results generated",
+            "addAll": "Add All",
+            "addedCount": "{{count}} items added successfully",
+            "noResults": "No new items to generate. Your database may already be comprehensive.",
+            "failed": "AI generation failed. Please try again."
           }
         },
         "common": {
@@ -2321,6 +2333,26 @@
     "channel": "Welcome Channel",
     "message": "Welcome Message",
     "roles": "Auto Roles",
+    "communityType": {
+      "label": "Community Type",
+      "select": "-- Select community type --",
+      "gaming": "Gaming",
+      "coding": "Coding / Programming",
+      "art": "Art & Design",
+      "music": "Music",
+      "anime": "Anime & Manga",
+      "education": "Education",
+      "social": "Social / Hangout",
+      "business": "Business / Startup",
+      "sports": "Sports & Fitness",
+      "other": "Other",
+      "help": "Select your community type to generate an AI-tailored welcome message."
+    },
+    "aiGenerate": {
+      "button": "AI Generate",
+      "generating": "Generating...",
+      "tooltip": "Generate a welcome message using AI based on the selected community type"
+    },
     "toasts": {
       "saved": "Welcome settings saved",
       "saveFailed": "Saving failed",

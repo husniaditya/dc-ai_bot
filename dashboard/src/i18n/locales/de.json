@@ -1505,6 +1505,18 @@
               "warning": "Diese Aktion kann nicht rückgängig gemacht werden.",
               "confirm": "Muster löschen"
             }
+          },
+          "aiGenerate": {
+            "title": "KI-Generierung",
+            "button": "KI-Generierung",
+            "generating": "Generiere...",
+            "wordsHelp": "Wähle eine Sprache und lass die KI gängige Schimpfwörter generieren, die noch nicht in deiner Datenbank sind.",
+            "patternsHelp": "Wähle eine Sprache und lass die KI Regex-Muster zur Erkennung von Schimpfwörtern generieren.",
+            "results": "{{count}} Ergebnisse generiert",
+            "addAll": "Alle hinzufügen",
+            "addedCount": "{{count}} Einträge erfolgreich hinzugefügt",
+            "noResults": "Keine neuen Einträge zu generieren. Deine Datenbank ist möglicherweise bereits umfassend.",
+            "failed": "KI-Generierung fehlgeschlagen. Bitte versuche es erneut."
           }
         },
         "common": {
@@ -2282,6 +2294,26 @@
     "channel": "Willkommenskanal",
     "message": "Willkommensnachricht",
     "roles": "Automatische Rollen",
+    "communityType": {
+      "label": "Community-Typ",
+      "select": "-- Community-Typ auswählen --",
+      "gaming": "Gaming",
+      "coding": "Coding / Programmierung",
+      "art": "Kunst & Design",
+      "music": "Musik",
+      "anime": "Anime & Manga",
+      "education": "Bildung",
+      "social": "Sozial / Treffpunkt",
+      "business": "Business / Startup",
+      "sports": "Sport & Fitness",
+      "other": "Sonstiges",
+      "help": "Wähle deinen Community-Typ, um eine KI-generierte Willkommensnachricht zu erstellen."
+    },
+    "aiGenerate": {
+      "button": "KI-Generierung",
+      "generating": "Generiere...",
+      "tooltip": "Erstelle eine Willkommensnachricht mit KI basierend auf dem gewählten Community-Typ"
+    },
     "toasts": {
       "saved": "Willkommenseinstellungen gespeichert",
       "saveFailed": "Speichern fehlgeschlagen",

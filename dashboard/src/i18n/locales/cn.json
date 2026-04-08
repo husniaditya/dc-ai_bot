@@ -1249,6 +1249,18 @@
               "warning": "此動作無法復原。",
               "confirm": "刪除樣式"
             }
+          },
+          "aiGenerate": {
+            "title": "AI 生成",
+            "button": "AI 生成",
+            "generating": "生成中...",
+            "wordsHelp": "選擇語言，讓AI生成資料庫中尚未包含的常見不雅詞彙。",
+            "patternsHelp": "選擇語言，讓AI生成用於檢測不雅內容的正則表達式模式。",
+            "results": "已生成 {{count}} 個結果",
+            "addAll": "全部添加",
+            "addedCount": "成功添加 {{count}} 個項目",
+            "noResults": "沒有新項目可生成。您的資料庫可能已經很完整。",
+            "failed": "AI生成失敗，請重試。"
           }
         },
         "common": {
@@ -2286,6 +2298,26 @@
     "channel": "歡迎頻道",
     "message": "歡迎訊息",
     "roles": "自動身分組",
+    "communityType": {
+      "label": "社群類型",
+      "select": "-- 選擇社群類型 --",
+      "gaming": "遊戲",
+      "coding": "程式設計 / 編程",
+      "art": "藝術與設計",
+      "music": "音樂",
+      "anime": "動漫",
+      "education": "教育",
+      "social": "社交 / 閒聊",
+      "business": "商業 / 創業",
+      "sports": "體育與健身",
+      "other": "其他",
+      "help": "選擇您的社群類型，讓AI為您生成量身定制的歡迎訊息。"
+    },
+    "aiGenerate": {
+      "button": "AI 生成",
+      "generating": "生成中...",
+      "tooltip": "根據所選的社群類型使用AI生成歡迎訊息"
+    },
     "toasts": {
       "saved": "歡迎設定已儲存",
       "saveFailed": "儲存失敗",

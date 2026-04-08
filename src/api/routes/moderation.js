@@ -1106,6 +1106,103 @@ function createModerationRoutes(client, store) {
     }
   });
 
+  // AI-generate profanity words for a language (excluding ones already in DB)
+  router.post('/profanity/words/generate', async (req, res) => {
+    try {
+      const guildId = req.headers['x-guild-id'];
+      if (!guildId) return res.status(400).json({ error: 'Guild ID required' });
+
+      const { language } = req.body;
+      if (!language) return res.status(400).json({ error: 'Language is required' });
+
+      const existingWords = await store.getGuildProfanityWords(guildId);
+      const existingList = existingWords.map(w => w.word.toLowerCase());
+
+      const { askGemini } = require('../../utils/ai-client');
+      const prompt = `Generate a JSON array of 20 common profanity/swear words in the "${language}" language that are typically filtered in Discord servers. ` +
+        `Include slurs, insults, and vulgar words commonly blocked by automod systems. ` +
+        `${existingList.length ? `Exclude these words already in the database: ${existingList.join(', ')}. ` : ''}` +
+        `Return ONLY a valid JSON array of strings, no explanation. Example: ["word1","word2"]`;
+
+      const result = await askGemini(prompt, { maxOutputTokens: 1024, temperature: 0.3 });
+      const text = (result?.text || '').trim();
+
+      // Parse the JSON array from the response
+      const match = text.match(/\[[\s\S]*\]/);
+      if (!match) return res.status(500).json({ error: 'ai_invalid_response' });
+
+      let words;
+      try {
+        words = JSON.parse(match[0]);
+      } catch {
+        return res.status(500).json({ error: 'ai_parse_failed' });
+      }
+
+      // Filter out already existing words
+      const filtered = words
+        .filter(w => typeof w === 'string' && w.trim())
+        .map(w => w.trim().toLowerCase())
+        .filter(w => !existingList.includes(w));
+
+      res.json({ words: filtered });
+    } catch (e) {
+      console.error('AI profanity words generate error:', e.message);
+      res.status(500).json({ error: 'ai_generation_failed' });
+    }
+  });
+
+  // AI-generate profanity regex patterns for a language (excluding ones already in DB)
+  router.post('/profanity/patterns/generate', async (req, res) => {
+    try {
+      const guildId = req.headers['x-guild-id'];
+      if (!guildId) return res.status(400).json({ error: 'Guild ID required' });
+
+      const { language } = req.body;
+      if (!language) return res.status(400).json({ error: 'Language is required' });
+
+      const existingPatterns = await store.getGuildProfanityPatterns(guildId);
+      const existingList = existingPatterns.map(p => p.pattern);
+
+      const { askGemini } = require('../../utils/ai-client');
+      const prompt = `Generate a JSON array of 10 regex patterns for detecting profanity/swear words in "${language}" language for a Discord automod system. ` +
+        `Each pattern should catch common character substitutions and repetitions (e.g. "b+a+d+" to match "baaad"). ` +
+        `${existingList.length ? `Exclude patterns already in the database: ${existingList.join(', ')}. ` : ''}` +
+        `Return ONLY a valid JSON array of objects with "pattern", "description", and "severity" (low/medium/high/extreme) fields. ` +
+        `Example: [{"pattern":"b+a+d+","description":"Matches bad with repeated chars","severity":"medium"}]`;
+
+      const result = await askGemini(prompt, { maxOutputTokens: 2048, temperature: 0.3 });
+      const text = (result?.text || '').trim();
+
+      const match = text.match(/\[[\s\S]*\]/);
+      if (!match) return res.status(500).json({ error: 'ai_invalid_response' });
+
+      let patterns;
+      try {
+        patterns = JSON.parse(match[0]);
+      } catch {
+        return res.status(500).json({ error: 'ai_parse_failed' });
+      }
+
+      // Filter out already existing patterns and validate
+      const filtered = patterns
+        .filter(p => p && typeof p.pattern === 'string' && p.pattern.trim())
+        .filter(p => !existingList.includes(p.pattern.trim()))
+        .filter(p => {
+          try { new RegExp(p.pattern, 'gi'); return true; } catch { return false; }
+        })
+        .map(p => ({
+          pattern: p.pattern.trim(),
+          description: p.description || '',
+          severity: ['low', 'medium', 'high', 'extreme'].includes(p.severity) ? p.severity : 'medium'
+        }));
+
+      res.json({ patterns: filtered });
+    } catch (e) {
+      console.error('AI profanity patterns generate error:', e.message);
+      res.status(500).json({ error: 'ai_generation_failed' });
+    }
+  });
+
   return router;
 }
 

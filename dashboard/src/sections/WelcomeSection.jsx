@@ -1,15 +1,47 @@
-import React from 'react';
+import React, { useState } from 'react';
 import LoadingSection from '../components/LoadingSection';
 import { useI18n } from '../i18n';
+import { generateWelcomeMessage } from '../api';
 
-export default function WelcomeSection({ welcomeCfg, welcomeChannels, welcomeDirty, resetWelcome, saveWelcome, welcomeLoading, resolvedGuildName, setWelcomeCfg, toggleWelcomeEnabled }) {
+const COMMUNITY_TYPES = [
+  { value: '', labelKey: 'welcome.communityType.select' },
+  { value: 'gaming', labelKey: 'welcome.communityType.gaming' },
+  { value: 'coding', labelKey: 'welcome.communityType.coding' },
+  { value: 'art', labelKey: 'welcome.communityType.art' },
+  { value: 'music', labelKey: 'welcome.communityType.music' },
+  { value: 'anime', labelKey: 'welcome.communityType.anime' },
+  { value: 'education', labelKey: 'welcome.communityType.education' },
+  { value: 'social', labelKey: 'welcome.communityType.social' },
+  { value: 'business', labelKey: 'welcome.communityType.business' },
+  { value: 'sports', labelKey: 'welcome.communityType.sports' },
+  { value: 'other', labelKey: 'welcome.communityType.other' }
+];
+
+export default function WelcomeSection({ welcomeCfg, welcomeChannels, welcomeDirty, resetWelcome, saveWelcome, welcomeLoading, resolvedGuildName, setWelcomeCfg, toggleWelcomeEnabled, selectedGuild }) {
   const { t } = useI18n();
+  const [communityType, setCommunityType] = useState('');
+  const [aiGenerating, setAiGenerating] = useState(false);
   
   function substitutedPreview() {
     const sampleUser='@NewUser';
     const guildName = resolvedGuildName || '{server}';
     const msgRaw = (welcomeCfg.messageText||'').trim() || 'Welcome {user} to {server}!';
     return msgRaw.replace(/\{user\}/g, sampleUser).replace(/\{server\}/g, guildName);
+  }
+
+  async function handleAiGenerate() {
+    if (!communityType || aiGenerating) return;
+    setAiGenerating(true);
+    try {
+      const res = await generateWelcomeMessage(communityType, resolvedGuildName || '', selectedGuild);
+      if (res?.message) {
+        setWelcomeCfg(w => ({ ...w, messageText: res.message }));
+      }
+    } catch (e) {
+      console.error('AI generate failed:', e);
+    } finally {
+      setAiGenerating(false);
+    }
   }
   
   return (
@@ -44,6 +76,23 @@ export default function WelcomeSection({ welcomeCfg, welcomeChannels, welcomeDir
               <option value="text">Plain Text</option>
               <option value="embed">Embed</option>
             </select>
+          </div>
+          <div>
+            <label className="form-label mb-1">{t('welcome.communityType.label')}</label>
+            <div className="d-flex gap-2">
+      <select className="form-select" disabled={welcomeCfg.enabled===false} value={communityType} onChange={e=>setCommunityType(e.target.value)}>
+                {COMMUNITY_TYPES.map(ct => <option key={ct.value} value={ct.value}>{t(ct.labelKey)}</option>)}
+              </select>
+              <button
+                className="btn btn-outline-primary btn-sm d-flex align-items-center gap-1 flex-shrink-0"
+                disabled={welcomeCfg.enabled===false || !communityType || aiGenerating}
+                onClick={handleAiGenerate}
+                title={t('welcome.aiGenerate.tooltip')}
+              >
+                {aiGenerating ? <><span className="spinner-border spinner-border-sm" role="status"></span> {t('welcome.aiGenerate.generating')}</> : <><i className="fas fa-wand-magic-sparkles"></i> {t('welcome.aiGenerate.button')}</>}
+              </button>
+            </div>
+            <div className="form-text">{t('welcome.communityType.help')}</div>
           </div>
           <div>
             <label className="form-label mb-1">Message Content</label>

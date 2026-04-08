@@ -1314,6 +1314,18 @@
               "warning": "Esta acción no se puede deshacer.",
               "confirm": "Eliminar patrón"
             }
+          },
+          "aiGenerate": {
+            "title": "Generación con IA",
+            "button": "Generar con IA",
+            "generating": "Generando...",
+            "wordsHelp": "Selecciona un idioma y deja que la IA genere palabras vulgares comunes que aún no están en tu base de datos.",
+            "patternsHelp": "Selecciona un idioma y deja que la IA genere patrones regex para la detección de vulgaridades.",
+            "results": "{{count}} resultados generados",
+            "addAll": "Agregar todos",
+            "addedCount": "{{count}} elementos agregados exitosamente",
+            "noResults": "No hay nuevos elementos para generar. Tu base de datos ya puede ser completa.",
+            "failed": "Falló la generación con IA. Inténtalo de nuevo."
           }
         },
         "common": {
@@ -2293,6 +2305,26 @@
     "channel": "Canal de bienvenida",
     "message": "Mensaje de bienvenida",
     "roles": "Roles automáticos",
+    "communityType": {
+      "label": "Tipo de comunidad",
+      "select": "-- Seleccionar tipo de comunidad --",
+      "gaming": "Gaming",
+      "coding": "Programación / Código",
+      "art": "Arte & Diseño",
+      "music": "Música",
+      "anime": "Anime & Manga",
+      "education": "Educación",
+      "social": "Social / Reunión",
+      "business": "Negocios / Startup",
+      "sports": "Deportes & Fitness",
+      "other": "Otro",
+      "help": "Selecciona tu tipo de comunidad para generar un mensaje de bienvenida personalizado con IA."
+    },
+    "aiGenerate": {
+      "button": "Generar con IA",
+      "generating": "Generando...",
+      "tooltip": "Generar un mensaje de bienvenida usando IA basado en el tipo de comunidad seleccionado"
+    },
     "toasts": {
       "saved": "Configuración de bienvenida guardada",
       "saveFailed": "Error al guardar",

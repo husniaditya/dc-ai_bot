@@ -265,6 +265,7 @@ export async function updatePersonalization(p, guildId){ return authFetch('/api/
 export async function invalidatePersonalizationCache(guildId){ return authFetch('/api/personalization/invalidate', { method:'POST', body: JSON.stringify({ guildId }) }); }
 export async function getWelcome(guildId){ return authFetch('/api/welcome' + (guildId?`?guildId=${guildId}`:'')); }
 export async function updateWelcome(p, guildId){ return authFetch('/api/welcome' + (guildId?`?guildId=${guildId}`:''), { method:'PUT', body: JSON.stringify(p) }); }
+export async function generateWelcomeMessage(communityType, serverName, guildId){ return authFetch('/api/welcome/generate' + (guildId?`?guildId=${guildId}`:''), { method:'POST', body: JSON.stringify({ communityType, serverName }) }); }
 export async function getChannels(guildId){ return authFetch('/api/channels' + (guildId?`?guildId=${guildId}`:'')); }
 export async function getRoles(guildId){ return authFetch('/api/roles' + (guildId?`?guildId=${guildId}`:'')); }
 export async function getGuildEmojis(guildId){ return authFetch('/api/guilds/' + guildId + '/emojis'); }
@@ -447,6 +448,24 @@ export async function deleteProfanityPattern(patternId, guildId) {
   return authFetch(`/api/moderation/profanity/patterns/${patternId}`, {
     method: 'DELETE',
     headers
+  });
+}
+
+export async function generateProfanityWords(language, guildId) {
+  const headers = guildId ? { 'X-Guild-Id': guildId } : {};
+  return authFetch('/api/moderation/profanity/words/generate', {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({ language })
+  });
+}
+
+export async function generateProfanityPatterns(language, guildId) {
+  const headers = guildId ? { 'X-Guild-Id': guildId } : {};
+  return authFetch('/api/moderation/profanity/patterns/generate', {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({ language })
   });
 }
 

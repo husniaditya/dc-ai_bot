@@ -1525,6 +1525,18 @@
               "warning": "Tindakan ini tidak bisa dibatalkan.",
               "confirm": "Hapus Pola"
             }
+          },
+          "aiGenerate": {
+            "title": "Buat dengan AI",
+            "button": "Buat dengan AI",
+            "generating": "Membuat...",
+            "wordsHelp": "Pilih bahasa dan biarkan AI menghasilkan kata-kata kasar umum yang belum ada di database Anda.",
+            "patternsHelp": "Pilih bahasa dan biarkan AI menghasilkan pola regex untuk mendeteksi kata-kata kasar.",
+            "results": "{{count}} hasil dihasilkan",
+            "addAll": "Tambah Semua",
+            "addedCount": "{{count}} item berhasil ditambahkan",
+            "noResults": "Tidak ada item baru untuk dihasilkan. Database Anda mungkin sudah lengkap.",
+            "failed": "Pembuatan AI gagal. Silakan coba lagi."
           }
         },
         "common": {
@@ -2374,6 +2386,26 @@
     "channel": "Saluran Sambutan",
     "message": "Pesan Sambutan",
     "roles": "Peran Otomatis",
+    "communityType": {
+      "label": "Tipe Komunitas",
+      "select": "-- Pilih tipe komunitas --",
+      "gaming": "Gaming",
+      "coding": "Coding / Pemrograman",
+      "art": "Seni & Desain",
+      "music": "Musik",
+      "anime": "Anime & Manga",
+      "education": "Pendidikan",
+      "social": "Sosial / Nongkrong",
+      "business": "Bisnis / Startup",
+      "sports": "Olahraga & Kebugaran",
+      "other": "Lainnya",
+      "help": "Pilih tipe komunitas Anda untuk membuat pesan sambutan yang disesuaikan oleh AI."
+    },
+    "aiGenerate": {
+      "button": "Buat dengan AI",
+      "generating": "Membuat...",
+      "tooltip": "Buat pesan sambutan menggunakan AI berdasarkan tipe komunitas yang dipilih"
+    },
     "toasts": {
       "saved": "Pengaturan sambutan berhasil disimpan",
       "saveFailed": "Gagal menyimpan",

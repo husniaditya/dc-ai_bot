@@ -1505,6 +1505,18 @@
               "warning": "Cette action est irréversible.",
               "confirm": "Supprimer le motif"
             }
+          },
+          "aiGenerate": {
+            "title": "Génération IA",
+            "button": "Générer par IA",
+            "generating": "Génération...",
+            "wordsHelp": "Sélectionnez une langue et laissez l'IA générer des mots vulgaires courants absents de votre base de données.",
+            "patternsHelp": "Sélectionnez une langue et laissez l'IA générer des motifs regex pour la détection de vulgarités.",
+            "results": "{{count}} résultats générés",
+            "addAll": "Tout ajouter",
+            "addedCount": "{{count}} éléments ajoutés avec succès",
+            "noResults": "Aucun nouvel élément à générer. Votre base de données est peut-être déjà complète.",
+            "failed": "Échec de la génération IA. Veuillez réessayer."
           }
         },
         "common": {
@@ -2293,6 +2305,26 @@
     "channel": "Salon de bienvenue",
     "message": "Message de bienvenue",
     "roles": "Rôles automatiques",
+    "communityType": {
+      "label": "Type de communauté",
+      "select": "-- Sélectionner le type de communauté --",
+      "gaming": "Gaming",
+      "coding": "Code / Programmation",
+      "art": "Art & Design",
+      "music": "Musique",
+      "anime": "Anime & Manga",
+      "education": "Éducation",
+      "social": "Social / Détente",
+      "business": "Business / Startup",
+      "sports": "Sport & Fitness",
+      "other": "Autre",
+      "help": "Sélectionnez votre type de communauté pour générer un message de bienvenue personnalisé par IA."
+    },
+    "aiGenerate": {
+      "button": "Générer par IA",
+      "generating": "Génération...",
+      "tooltip": "Générer un message de bienvenue par IA basé sur le type de communauté sélectionné"
+    },
     "toasts": {
       "saved": "Paramètres de bienvenue enregistrés",
       "saveFailed": "Échec de l'enregistrement",

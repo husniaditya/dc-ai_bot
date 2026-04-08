@@ -1,12 +1,45 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useI18n } from '../../../i18n';
 import { ChannelSelector, RoleSelector, FormField, SwitchToggle } from '../components/SharedComponents';
+import { generateWelcomeMessage } from '../../../api';
+
+const COMMUNITY_TYPES = [
+  { value: '', labelKey: 'welcome.communityType.select' },
+  { value: 'gaming', labelKey: 'welcome.communityType.gaming' },
+  { value: 'coding', labelKey: 'welcome.communityType.coding' },
+  { value: 'art', labelKey: 'welcome.communityType.art' },
+  { value: 'music', labelKey: 'welcome.communityType.music' },
+  { value: 'anime', labelKey: 'welcome.communityType.anime' },
+  { value: 'education', labelKey: 'welcome.communityType.education' },
+  { value: 'social', labelKey: 'welcome.communityType.social' },
+  { value: 'business', labelKey: 'welcome.communityType.business' },
+  { value: 'sports', labelKey: 'welcome.communityType.sports' },
+  { value: 'other', labelKey: 'welcome.communityType.other' }
+];
 
 // Welcome Messages Configuration
-export default function WelcomeConfigForm({ config, updateConfig, channels, roles }) {
+export default function WelcomeConfigForm({ config, updateConfig, channels, roles, guildId }) {
   const { t } = useI18n();
+  const [communityType, setCommunityType] = useState('');
+  const [aiGenerating, setAiGenerating] = useState(false);
   const defaultWelcome = t('moderation.features.welcome.defaults.messageText') || 'Welcome to {server}, {user}!';
   const defaultDm = t('moderation.features.welcome.defaults.dmMessage') || 'Welcome to {server}! Thanks for joining us.';
+
+  async function handleAiGenerate() {
+    if (!communityType || aiGenerating) return;
+    setAiGenerating(true);
+    try {
+      const res = await generateWelcomeMessage(communityType, '', guildId);
+      if (res?.message) {
+        updateConfig('messageText', res.message);
+      }
+    } catch (e) {
+      console.error('AI generate failed:', e);
+    } finally {
+      setAiGenerating(false);
+    }
+  }
+
   return (
     <div className="moderation-config-form space-y-4">
       {/* Information Section */}
@@ -45,6 +78,35 @@ export default function WelcomeConfigForm({ config, updateConfig, channels, role
           <option value="text">{t('moderation.features.welcome.fields.type.options.text')}</option>
           <option value="embed">{t('moderation.features.welcome.fields.type.options.embed')}</option>
         </select>
+      </FormField>
+
+      <FormField 
+        label={t('welcome.communityType.label')}
+        description={t('welcome.communityType.help')}
+      >
+        <div className="d-flex gap-2">
+          <select 
+            className="form-select form-select-sm custom-dropdown"
+            value={communityType}
+            onChange={(e) => setCommunityType(e.target.value)}
+          >
+            {COMMUNITY_TYPES.map(ct => (
+              <option key={ct.value} value={ct.value}>{t(ct.labelKey)}</option>
+            ))}
+          </select>
+          <button
+            className="btn btn-outline-primary btn-sm d-flex align-items-center gap-1 flex-shrink-0"
+            disabled={!communityType || aiGenerating}
+            onClick={handleAiGenerate}
+            title={t('welcome.aiGenerate.tooltip')}
+          >
+            {aiGenerating ? (
+              <><span className="spinner-border spinner-border-sm" role="status"></span> {t('welcome.aiGenerate.generating')}</>
+            ) : (
+              <><i className="fas fa-wand-magic-sparkles"></i> {t('welcome.aiGenerate.button')}</>
+            )}
+          </button>
+        </div>
       </FormField>
 
       <FormField 
